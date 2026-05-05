@@ -1,3 +1,14 @@
+* {
+  box-sizing: border-box;
+}
+
+img {
+  max-width: 100%;
+}
+
+table {
+  width: 100%;
+}
 /* ================= DASHBOARD ================= */
 .dashboard {
   background: #f8f9fb;
@@ -35,6 +46,7 @@
 .kpi-content {
   display: flex;
   flex-direction: column;
+  justify-content: center;   /* THIS FIXES VERTICAL ALIGNMENT */
   flex: 1;
 }
 
@@ -47,9 +59,9 @@
 
 /* KPI VALUE */
 .kpi-value {
-  margin-top: 10px;
-  padding-left: 30px;
-  font-size: 20px;
+  margin-top: 4px;
+  padding-left: 0;
+  font-size: 18px;
   font-weight: 700;
   line-height: 1.2;
   color: #ffffff !important;
@@ -567,7 +579,7 @@ background: linear-gradient(135deg, #22c55e, #16a34a);}
   align-items: center;
   padding: 12px 16px;
   border-radius: 14px;
-  height: 70px;
+  height: 90px;
   overflow: hidden;
 }
 
@@ -618,4 +630,335 @@ background: linear-gradient(135deg, #22c55e, #16a34a);}
   padding: 6px 10px;
   margin-bottom: 6px;
   border-radius: 6px;
+}
+
+/* ================= WHO'S ON LEAVE TODAY - KEKA STYLE ================= */
+.leave-today-panel {
+  margin-bottom: 16px;
+  border-left: 4px solid #3b82f6;
+}
+
+.leave-today-panel .panel-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.leave-today-panel h3 {
+  font-size: 16px;
+  font-weight: 600;
+  color: #1f2937;
+  margin: 0;
+}
+
+.leave-count-badge {
+  background: #dbeafe;
+  color: #1e40af;
+  padding: 4px 12px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.leave-users-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 12px;
+}
+
+.leave-user-card {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px;
+  background: #f8fafc;
+  border-radius: 10px;
+  border: 1px solid #e2e8f0;
+  transition: all 0.2s ease;
+}
+
+.leave-user-card:hover {
+  background: #f1f5f9;
+  border-color: #cbd5e1;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+}
+
+.leave-user-avatar {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid #3b82f6;
+}
+
+.leave-user-info {
+  flex: 1;
+}
+
+.leave-user-info h4 {
+  margin: 0 0 4px 0;
+  font-size: 14px;
+  font-weight: 600;
+  color: #1f2937;
+}
+
+.leave-dates {
+  margin: 0;
+  font-size: 12px;
+  color: #64748b;
+  font-weight: 500;
+}
+
+.leave-type-badge {
+  display: inline-block;
+  margin-top: 6px;
+  padding: 3px 8px;
+  background: #e0f2fe;
+  color: #0369a1;
+  border-radius: 4px;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: capitalize;
+}
+
+.view-all-leaves {
+  margin-top: 12px;
+  text-align: center;
+  padding-top: 12px;
+  border-top: 1px solid #e2e8f0;
+}
+
+.btn-link {
+  background: none;
+  border: none;
+  color: #2563eb;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: color 0.2s ease;
+}
+
+.btn-link:hover {
+  color: #1d4ed8;
+  text-decoration: underline;
+}
+
+/* Empty State */
+.empty-state {
+  text-align: center;
+  padding: 40px 20px;
+}
+
+.empty-icon {
+  font-size: 48px;
+  margin-bottom: 12px;
+}
+
+.empty-message {
+  font-size: 16px;
+  font-weight: 600;
+  color: #1f2937;
+  margin: 0 0 6px 0;
+}
+
+.empty-submessage {
+  font-size: 13px;
+  color: #64748b;
+  margin: 0;
+}
+
+/* ================= UPCOMING HOLIDAYS - KEKA STYLE ================= */
+.holidays-panel {
+  margin-bottom: 16px;
+  border-left: 4px solid #f59e0b;
+}
+
+.holidays-panel h3 {
+  font-size: 16px;
+  font-weight: 600;
+  color: #1f2937;
+  margin: 0 0 16px 0;
+}
+
+.holidays-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.holiday-item {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 14px;
+  background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+  border-radius: 10px;
+  border: 1px solid #fbbf24;
+  transition: all 0.2s ease;
+}
+
+.holiday-item:hover {
+  transform: translateX(4px);
+  box-shadow: 0 4px 12px rgba(251, 191, 36, 0.3);
+}
+
+.holiday-date {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-width: 60px;
+  height: 60px;
+  background: #ffffff;
+  border-radius: 8px;
+  border: 2px solid #f59e0b;
+}
+
+.holiday-day {
+  font-size: 24px;
+  font-weight: 700;
+  color: #b45309;
+  line-height: 1;
+}
+
+.holiday-month {
+  font-size: 12px;
+  font-weight: 600;
+  color: #92400e;
+  text-transform: uppercase;
+  margin-top: 2px;
+}
+
+.holiday-details {
+  flex: 1;
+}
+
+.holiday-details h4 {
+  margin: 0 0 4px 0;
+  font-size: 15px;
+  font-weight: 600;
+  color: #78350f;
+}
+
+.holiday-details p {
+  margin: 0;
+  font-size: 13px;
+  color: #92400e;
+}
+
+.holiday-day-name {
+  font-size: 13px;
+  font-weight: 600;
+  color: #b45309;
+  padding: 6px 12px;
+  background: #ffffff;
+  border-radius: 6px;
+}
+.calendar-event-box {
+  margin-top: 15px;
+  padding: 12px;
+  border: 1px solid #ddd;
+  border-radius: 10px;
+  background: #f9fafb;
+}
+
+.calendar-event-box h4 {
+  margin-bottom: 8px;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.event-card {
+  padding: 10px;
+  border-radius: 8px;
+  background: #e0f2fe;
+  border-left: 4px solid #0284c7;
+}
+
+.event-card p {
+  margin: 4px 0;
+  font-size: 13px;
+}
+.popup-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0,0,0,0.4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 999;
+}
+
+.popup-box {
+  background: white;
+  padding: 20px;
+  width: 400px;
+  max-height: 80vh;
+  overflow-y: auto;
+  border-radius: 10px;
+}
+
+.popup-item {
+  padding: 8px;
+  border-bottom: 1px solid #eee;
+  font-size: 14px;
+}
+
+.close-btn {
+  margin-top: 15px;
+  padding: 8px 12px;
+  background: #3b82f6;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+
+/* MOBILE */
+@media (max-width: 768px) {
+  .main-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* KPI ROW */
+
+
+
+
+/* TABLE SCROLL */
+.emp-scroll {
+  overflow-x: auto;
+}
+
+/* CHART ROW */
+.chart-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+}
+
+/* MOBILE */
+@media (max-width: 768px) {
+
+  .main-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .kpi-row {
+    grid-template-columns: 1fr;
+  }
+
+  .chart-row {
+    grid-template-columns: 1fr;
+  }
+
+  .bottom-grid {
+    grid-template-columns: 1fr;
+  }
 }

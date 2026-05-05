@@ -181,16 +181,18 @@ const enrichedData = data
     return true;
   })
   .map(pay => {
-    const emp = employees.find(e =>
-      String(e.employeeId) === String(pay.employeeId)
-    );
+    const emp = employees?.length
+  ? employees.find(e =>
+     String(e.employeeId || e.empId || e.code) === String(pay.employeeId || pay.empId)
+    )
+  : null;
 
     console.log(`✅ ENRICHING: ${pay.empName} (${pay.employeeId}) - Employee found: ${emp ? emp.fullName : 'NOT FOUND'}`);
 
     return {
       ...pay,
       // 🔥 FILL MISSING DATA FROM EMPLOYEE MASTER
-      empName: pay.empName || emp?.fullName,
+     empName: pay.empName || emp?.fullName || emp?.name,
       department: pay.department || emp?.department,
       employee: emp
     };
@@ -434,20 +436,19 @@ const handleExport = () => {
    sortType={sortType}
   setSortType={setSortType}
    onExport={handleExport}   // ✅ ADD THIS
-   onUpdatePayroll={() => navigate("/update-payroll")}   // ✅ ADD THIS
-    onProcessAll={handleProcessAll}   // ✅ ADD HERE
+  onUpdatePayroll={user?.role === "admin" ? () => navigate("/update-payroll") : undefined}
+    onProcessAll={user?.role === "admin" ? handleProcessAll : undefined}
 />
 
             <PayrollTable
   data={paginatedData}
   onViewPayslip={handleViewPayslip}
   onProfileView={handleProfileView}
-  onEditPayroll={handleEditPayroll}
-  onDownloadPayslip={handleDownloadPayslip}   // ✅ ADD THIS
-    onProcessPayroll={handleProcessPayroll}   // ✅ ADD THIS
-     onProcessAll={handleProcessAll}   // ✅ ADD
-     onStatusChange={handleStatusChange}   // ✅ ADD HERE
-
+    onDownloadPayslip={handleDownloadPayslip}   // ✅ ADD THIS
+ onEditPayroll={user?.role === "admin" ? handleEditPayroll : undefined}
+onProcessPayroll={user?.role === "admin" ? handleProcessPayroll : undefined}
+onProcessAll={user?.role === "admin" ? handleProcessAll : undefined}
+onStatusChange={user?.role === "admin" ? handleStatusChange : undefined}
 />
 
             <PayrollFooter 

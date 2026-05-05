@@ -38,7 +38,11 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
     logout();
     navigate("/");
   };
-
+const handleMenuClick = () => {
+  if (window.innerWidth <= 768) {
+    setIsOpen(false);
+  }
+};
   return (
     <div
       className={`${styles.sidebarContainer} ${
@@ -57,7 +61,7 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
         {isOpen && "Employee Portal"}
       </h2>
 
-      <ul className={styles.sidebarMenu}>
+     <ul className={styles.sidebarMenu} onClick={handleMenuClick}>
        
 
         {/* BASIC */}

@@ -106,8 +106,8 @@ const popupRef = useRef();
 
  // ✅ ADD HERE (IMPORTANT)
   const fieldMap = {
-    employeename: "name",
-    employeeId: "id",
+    employeename: "fullName",
+  employeeId: "employeeId",
     employeedepartment: "department",
     employeedesignation: "designation",
     employeelocation: "location",
@@ -223,6 +223,7 @@ const styles = {
   const currentDay = today.getDate();
 
   const filteredEmployees = useMemo(() => {
+      return employees.filter((emp) => {
 
     // ✅ ROLE BASED FILTER
 if (user?.role === "manager") {
@@ -246,7 +247,7 @@ return String(emp[actualField] || "")
 });
 
 if (!matchesColumnFilters) return false;
-    return employees.filter((emp) => {
+  
       const empDOB = formatDateForCompare(emp.dob);
       const empDOJ = formatDateForCompare(emp.doj);
       const empExit =
@@ -263,11 +264,11 @@ if (!matchesColumnFilters) return false;
 
       const lowerSearch = search.trim().toLowerCase();
       if (lowerSearch) {
-        const matches =
-          emp.name.toLowerCase().includes(lowerSearch) ||
-          emp.id.toLowerCase().includes(lowerSearch) ||
-          emp.designation.toLowerCase().includes(lowerSearch) ||
-          emp.email.toLowerCase().includes(lowerSearch);
+      const matches =
+  (emp.fullName || "").toLowerCase().includes(lowerSearch) ||
+  (emp.employeeId || "").toLowerCase().includes(lowerSearch) ||
+  (emp.designation || "").toLowerCase().includes(lowerSearch) ||
+  (emp.email || "").toLowerCase().includes(lowerSearch);
         if (!matches) return false;
       }
 

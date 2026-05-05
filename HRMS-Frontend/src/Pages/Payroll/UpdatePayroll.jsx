@@ -1,120 +1,145 @@
-import React, { useEffect, useState , useContext} from "react";
+import React, { useEffect, useState } from "react";
 import { getAllEmployees } from "../../api/employeeApi";
-import { createPayrollBatch } from "../../api/payrollApi";
+import { createPayrollBatch, getPayrollData, calculateAllSalaries, calculateAndApplySalary } from "../../api/payrollApi";
 import "./UpdatePayroll.css";
-import { useNavigate , useLocation} from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
+import SalaryCalculationModal from "./SalaryCalculationModal";
 
 const UpdatePayroll = () => {
-  
-   const navigate = useNavigate();   // ✅ ADD HERE
-   const location = useLocation();
+  const navigate = useNavigate();
+  const location = useLocation();
   const [employees, setEmployees] = useState([]);
   const [payrollData, setPayrollData] = useState({});
-  const [mode, setMode] = useState("EDIT"); // EDIT | REVIEW
-  const [month] = useState("April-2026");
+  const [mode, setMode] = useState("EDIT");
+  // Auto-generate current month in format "Month-YYYY" e.g. "April-2026"
+  const [month] = useState(() => {
+    const now = new Date();
+    const monthName = now.toLocaleString('en-US', { month: 'long' });
+    return `${monthName}-${now.getFullYear()}`;
+  });
+  const [saving, setSaving] = useState(false);
+  
+  // NEW: Salary calculation modal state
+  const [showCalcModal, setShowCalcModal] = useState(false);
+  const [selectedEmployee, setSelectedEmployee] = useState(null);
+  
+  // NEW: Bulk calculation state
+  const [bulkCalculating, setBulkCalculating] = useState(false);
+  const [showBulkModal, setShowBulkModal] = useState(false);
+  const [bulkResults, setBulkResults] = useState([]);
 
+  // ✅ FIX: Load BOTH employees AND existing payroll, then merge
   useEffect(() => {
-  getAllEmployees()
-    .then((res) => {
-      const data = Array.isArray(res) ? res : res.data;
+    const loadData = async () => {
+      try {
+        // Fetch both in parallel
+        const [empRes, payrollRes] = await Promise.all([
+          getAllEmployees(),
+          getPayrollData()
+        ]);
 
-      console.log("🔥 FETCHED EMPLOYEES:", data); // Debug
+        const empList = Array.isArray(empRes) ? empRes : empRes.data;
+        const existingPayroll = Array.isArray(payrollRes.data) ? payrollRes.data : [];
 
-      setEmployees(data);
+        setEmployees(empList);
 
-      const initial = {};
-      data.forEach((emp) => {
-        console.log(`Employee: ${emp.fullName}, Status: '${emp.status}'`); // Debug
-        
-        initial[emp.employeeId] = {
-          companyName: "OMOIKANE INNOVATIONS PVT LTD",
-          empName: emp.fullName,
-          department: emp.department,
-          doj: emp.doj || emp.joiningDate || "",
+        // Build a map of existing payroll by employeeId for quick lookup
+        const payrollMap = {};
+        existingPayroll.forEach(p => {
+          if (p.employeeId) payrollMap[p.employeeId] = p;
+        });
 
-          // ✅ MAP FROM DIRECTORY (FIXED - case-insensitive)
-          birthDate: emp.dob || emp.birthDate || "",
-          isActive: (emp.status || "").toUpperCase() === "ACTIVE" || emp.isActive === true,
+        const initial = {};
+        empList.forEach((emp) => {
+          // ✅ Use existing payroll values if available, otherwise default to 0
+          const existing = payrollMap[emp.employeeId] || {};
 
-          reportManager: emp.manager || "",
+          initial[emp.employeeId] = {
+            
+            companyName: existing.companyName || "OMOIKANE INNOVATIONS PVT LTD",
+            empName: emp.fullName || existing.empName,
+            department: emp.department || existing.department,
+            doj: emp.doj || emp.joiningDate || existing.doj || "",
+            birthDate: emp.dob || emp.birthDate || existing.birthDate || "",
+            isActive: (emp.status || "").toUpperCase() === "ACTIVE" || emp.isActive === true,
+            reportManager: emp.manager || existing.reportManager || "",
+             gratuity: existing.gratuity ?? 0,
 
-          esi: 0,
-          pf: 0,
-          tax: 0,
-          incentive: 0,
-          allowance: 0,
-          bonus: 0,
-          basic: 0,
-          hra: 0,
-          deduction: 0,
-          gross: 0,
-          net: 0,
-          conveyance: 0,
-          professionalTax: 0,
-          lopDeduction: 0,
-          otherDeduction: 0,
+            // ✅ PRESERVE existing payroll values — don't reset to 0
+            esi:            existing.esi            ?? 0,
+            pf:             existing.pf             ?? 0,
+            tax:            existing.tax            ?? 0,
+            incentive:      existing.incentive      ?? 0,
+            allowance:      existing.allowance      ?? 0,
+            bonus:          existing.bonus          ?? 0,
+            variableSalary: existing.variableSalary ?? 0,  // ✅ NEW: Variable salary
+            basic:          existing.basic          ?? 0,
+            hra:            existing.hra            ?? 0,
+            deduction:      existing.deduction      ?? 0,
+            gross:          existing.gross          ?? 0,
+            net:            existing.net            ?? 0,
+            conveyance:     existing.conveyance     ?? 0,
+            professionalTax:existing.professionalTax?? 0,
+            lopDeduction:   existing.lopDeduction   ?? 0,
+            otherDeduction: existing.otherDeduction ?? 0,
+            workingDays:    existing.workingDays    ?? 30,
+            paidDays:       existing.paidDays       ?? 30,
+            lopDays:        existing.lopDays        ?? 0,
+          };
+        });
 
-          workingDays: 30,
-          paidDays: 30,
-          lopDays: 0,
-        };
-      });
-
-      console.log("🔥 INITIAL PAYROLL DATA:", initial); // Debug
-
-      setPayrollData(initial);
-    })
-    .catch((err) => console.error("❌ Employee fetch error:", err));
-}, []);
-
-useEffect(() => {
-  if (location.state?.employee) {
-    const emp = location.state.employee;
-
-    setPayrollData((prev) => ({
-      ...prev,
-      [emp.employeeId]: {
-        ...prev[emp.employeeId],
-        empName: emp.empName,
-        department: emp.department,
-        basic: emp.basic || 0,
-        hra: emp.hra || 0,
-        allowance: emp.allowance || 0,
-        bonus: emp.bonus || 0,
-        incentive: emp.incentive || 0,
-        pf: emp.pf || 0,
-        esi: emp.esi || 0,
-        tax: emp.tax || 0,
-        deduction: emp.deduction || 0,
-        gross: emp.gross || 0,
-        net: emp.net || 0,
-        conveyance: emp.conveyance || 0,
-        professionalTax: emp.professionalTax || 0,
-        lopDeduction: emp.lopDeduction || 0,
-        otherDeduction: emp.otherDeduction || 0,
-        workingDays: emp.workingDays || 30,
-        paidDays: emp.paidDays || 30,
-        lopDays: emp.lopDays || 0,
-        reportManager: emp.reportManager || ""
+        setPayrollData(initial);
+      } catch (err) {
+        console.error("❌ Load error:", err);
       }
-    }));
+    };
 
-    setMode("EDIT"); // optional but useful
-  }
-}, [location.state]);
+    loadData();
+  }, []);
 
-useEffect(() => {
-  if (location.state?.employee) {
-    setMode("EDIT");
-  }
-}, []);
+  // If navigated from PayrollTable with a specific employee, pre-fill that employee
+  useEffect(() => {
+    if (location.state?.employee) {
+      const emp = location.state.employee;
+      setPayrollData((prev) => ({
+        ...prev,
+        [emp.employeeId]: {
+          ...prev[emp.employeeId],
+          empName: emp.empName,
+          department: emp.department,
+          basic:          emp.basic          ?? prev[emp.employeeId]?.basic          ?? 0,
+          hra:            emp.hra            ?? prev[emp.employeeId]?.hra            ?? 0,
+          allowance:      emp.allowance      ?? prev[emp.employeeId]?.allowance      ?? 0,
+          bonus:          emp.bonus          ?? prev[emp.employeeId]?.bonus          ?? 0,
+          variableSalary: emp.variableSalary ?? prev[emp.employeeId]?.variableSalary ?? 0,  // ✅ NEW
+          incentive:      emp.incentive      ?? prev[emp.employeeId]?.incentive      ?? 0,
+          pf:             emp.pf             ?? prev[emp.employeeId]?.pf             ?? 0,
+          esi:            emp.esi            ?? prev[emp.employeeId]?.esi            ?? 0,
+          tax:            emp.tax            ?? prev[emp.employeeId]?.tax            ?? 0,
+          deduction:      emp.deduction      ?? prev[emp.employeeId]?.deduction      ?? 0,
+          gross:          emp.gross          ?? prev[emp.employeeId]?.gross          ?? 0,
+          net:            emp.net            ?? prev[emp.employeeId]?.net            ?? 0,
+          conveyance:     emp.conveyance     ?? prev[emp.employeeId]?.conveyance     ?? 0,
+          professionalTax:emp.professionalTax?? prev[emp.employeeId]?.professionalTax?? 0,
+          lopDeduction:   emp.lopDeduction   ?? prev[emp.employeeId]?.lopDeduction   ?? 0,
+          otherDeduction: emp.otherDeduction ?? prev[emp.employeeId]?.otherDeduction ?? 0,
+          workingDays:    emp.workingDays    ?? prev[emp.employeeId]?.workingDays    ?? 30,
+          paidDays:       emp.paidDays       ?? prev[emp.employeeId]?.paidDays       ?? 30,
+          lopDays:        emp.lopDays        ?? prev[emp.employeeId]?.lopDays        ?? 0,
+          reportManager:  emp.reportManager  || prev[emp.employeeId]?.reportManager  || "",
+          gratuity: emp.gratuity ?? prev[emp.employeeId]?.gratuity ?? 0,
+        }
+      }));
+      setMode("EDIT");
+    }
+  }, [location.state]);
 
   // ---------------- CALCULATION ----------------
  const updateField = (id, field, value) => {
 
   const numericFields = [
     "esi","pf","tax","incentive","allowance",
-    "bonus","basic","hra","deduction",
+    "bonus","variableSalary","basic","hra","deduction",  // ✅ Added variableSalary
     "conveyance",
     "professionalTax",
     "lopDeduction",
@@ -141,6 +166,7 @@ useEffect(() => {
     updated.hra +
     updated.allowance +
     updated.bonus +
+    updated.variableSalary +  // ✅ Include variable salary in gross
     updated.incentive +
     updated.conveyance;
 
@@ -160,15 +186,17 @@ useEffect(() => {
 };
   // ---------------- SAVE ----------------
 const savePayroll = async () => {
+  setSaving(true);
+
   const payload = Object.keys(payrollData).map((id) => {
     const d = payrollData[id];
 
-    // ✅ CALCULATE GROSS AND NET
     const gross =
       Number(d.basic || 0) +
       Number(d.hra || 0) +
       Number(d.allowance || 0) +
       Number(d.bonus || 0) +
+      Number(d.variableSalary || 0) +  // ✅ Include variable salary
       Number(d.incentive || 0) +
       Number(d.conveyance || 0);
 
@@ -189,48 +217,165 @@ const savePayroll = async () => {
       empName: d.empName,
       department: d.department,
       month,
-      // ✅ STATUS MUST BE "ACTIVE" (not "Active")
       status: d.isActive ? "ACTIVE" : "INACTIVE",
       updatedAt: Date.now(),
       birthDate: d.birthDate,
       isActive: d.isActive,
-      basic: Number(d.basic || 0),
-      hra: Number(d.hra || 0),
-      allowance: Number(d.allowance || 0),
-      bonus: Number(d.bonus || 0),
-      incentive: Number(d.incentive || 0),
-      pf: Number(d.pf || 0),
-      esi: Number(d.esi || 0),
-      tax: Number(d.tax || 0),
-      deduction: Number(d.deduction || 0),
-      // ✅ USE CALCULATED VALUES
-      gross: gross,
-      net: net,
-      conveyance: Number(d.conveyance || 0),
-      professionalTax: Number(d.professionalTax || 0),
-      lopDeduction: Number(d.lopDeduction || 0),
+      basic:          Number(d.basic          || 0),
+      hra:            Number(d.hra            || 0),
+      allowance:      Number(d.allowance      || 0),
+      bonus:          Number(d.bonus          || 0),
+      variableSalary: Number(d.variableSalary || 0),  // ✅ Include variable salary
+      incentive:      Number(d.incentive      || 0),
+      pf:             Number(d.pf             || 0),
+      esi:            Number(d.esi            || 0),
+      tax:            Number(d.tax            || 0),
+      deduction:      Number(d.deduction      || 0),
+      gross,
+      net,
+      conveyance:     Number(d.conveyance     || 0),
+      professionalTax:Number(d.professionalTax|| 0),
+      lopDeduction:   Number(d.lopDeduction   || 0),
       otherDeduction: Number(d.otherDeduction || 0),
-      workingDays: Number(d.workingDays || 30),
-      paidDays: Number(d.paidDays || 30),
-      lopDays: Number(d.lopDays || 0),
-      reportManager: d.reportManager || ""
+      workingDays:    Number(d.workingDays    || 30),
+      paidDays:       Number(d.paidDays       || 30),
+      lopDays:        Number(d.lopDays        || 0),
+      reportManager:  d.reportManager || "",
+      gratuity: Number(d.gratuity || 0)
     };
   });
 
-  console.log("🔥 CLEAN PAYLOAD:", payload);
-
   try {
-    const res = await createPayrollBatch(payload);
-    console.log("🔥 RESPONSE:", res.data);
+    await createPayrollBatch(payload);
     alert("✅ Payroll Saved Successfully!");
-
-    // 🚀 NAVIGATE AFTER SUCCESS
     navigate("/payroll", { state: { refresh: Date.now() } });
   } catch (err) {
     console.error("❌ SAVE FAILED:", err.response?.data || err.message);
     alert("❌ Failed to save: " + (err.response?.data?.message || err.message));
+  } finally {
+    setSaving(false);
   }
 };
+
+  // NEW: Handle auto-calculate for single employee
+  const handleAutoCalculate = (id) => {
+    const empData = payrollData[id];
+    const employee = {
+      employeeId: id,
+      empId: id,
+      empName: empData.empName,
+      department: empData.department,
+    };
+    setSelectedEmployee(employee);
+    setShowCalcModal(true);
+  };
+
+  // NEW: Handle bulk calculate for all employees
+  const handleBulkCalculate = async () => {
+    setBulkCalculating(true);
+    setShowBulkModal(true);
+    setBulkResults([]);
+
+    try {
+      const response = await calculateAllSalaries(month);
+      const results = response.data;
+      
+      setBulkResults(results);
+      
+      // Show success message
+      alert(`✅ Successfully calculated salaries for ${results.length} employees!`);
+      
+      // Reload payroll data to show updated values
+      await handleCalculationSuccess();
+    } catch (error) {
+      console.error("Bulk calculation error:", error);
+      alert("Failed to calculate salaries: " + (error.response?.data?.message || error.message));
+    } finally {
+      setBulkCalculating(false);
+    }
+  };
+
+  // NEW: Apply bulk calculation results
+  const handleApplyBulkResults = async () => {
+    try {
+      // Apply each result
+      for (const result of bulkResults) {
+        await calculateAndApplySalary({
+          employeeId: result.employeeId,
+          month: month,
+          includeAttendance: true,
+          includeLeave: true,
+          includePerformance: true,
+        });
+      }
+      
+      alert("✅ All salaries applied successfully!");
+      setShowBulkModal(false);
+      await handleCalculationSuccess();
+    } catch (error) {
+      console.error("Apply bulk error:", error);
+      alert("Failed to apply salaries: " + (error.response?.data?.message || error.message));
+    }
+  };
+
+  // NEW: Handle calculation success
+  const handleCalculationSuccess = async () => {
+    // Reload payroll data
+    try {
+      const [empRes, payrollRes] = await Promise.all([
+        getAllEmployees(),
+        getPayrollData()
+      ]);
+
+      const empList = Array.isArray(empRes) ? empRes : empRes.data;
+      const existingPayroll = Array.isArray(payrollRes.data) ? payrollRes.data : [];
+
+      setEmployees(empList);
+
+      const payrollMap = {};
+      existingPayroll.forEach(p => {
+        if (p.employeeId) payrollMap[p.employeeId] = p;
+      });
+
+      const initial = {};
+      empList.forEach((emp) => {
+        const existing = payrollMap[emp.employeeId] || {};
+
+        initial[emp.employeeId] = {
+          companyName: existing.companyName || "OMOIKANE INNOVATIONS PVT LTD",
+          empName: emp.fullName || existing.empName,
+          department: emp.department || existing.department,
+          doj: emp.doj || emp.joiningDate || existing.doj || "",
+          birthDate: emp.dob || emp.birthDate || existing.birthDate || "",
+          isActive: (emp.status || "").toUpperCase() === "ACTIVE" || emp.isActive === true,
+          reportManager: emp.manager || existing.reportManager || "",
+          esi:            existing.esi            ?? 0,
+          pf:             existing.pf             ?? 0,
+          tax:            existing.tax            ?? 0,
+          incentive:      existing.incentive      ?? 0,
+          allowance:      existing.allowance      ?? 0,
+          bonus:          existing.bonus          ?? 0,
+          variableSalary: existing.variableSalary ?? 0,  // ✅ NEW: Variable salary
+          basic:          existing.basic          ?? 0,
+          hra:            existing.hra            ?? 0,
+          deduction:      existing.deduction      ?? 0,
+          gross:          existing.gross          ?? 0,
+          net:            existing.net            ?? 0,
+          conveyance:     existing.conveyance     ?? 0,
+          professionalTax:existing.professionalTax?? 0,
+          lopDeduction:   existing.lopDeduction   ?? 0,
+          otherDeduction: existing.otherDeduction ?? 0,
+          workingDays:    existing.workingDays    ?? 30,
+          paidDays:       existing.paidDays       ?? 30,
+          lopDays:        existing.lopDays        ?? 0,
+        };
+      });
+
+      setPayrollData(initial);
+    } catch (err) {
+      console.error("❌ Reload error:", err);
+    }
+  };
 
   return (
     <div className="update-payroll-container">
@@ -245,16 +390,40 @@ const savePayroll = async () => {
           Review Mode
         </button>
 
-        <button className="btn-primary" onClick={savePayroll}>
-          Save Payroll
+        <button
+          className="btn-calculate-all"
+          onClick={handleBulkCalculate}
+          disabled={bulkCalculating || saving}
+          style={{
+            background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
+            color: "white",
+            padding: "10px 20px",
+            border: "none",
+            borderRadius: "6px",
+            cursor: bulkCalculating ? "not-allowed" : "pointer",
+            fontWeight: "600",
+            opacity: bulkCalculating ? 0.7 : 1
+          }}
+        >
+          {bulkCalculating ? "⏳ Calculating All..." : "🔄 Calculate All Salaries"}
         </button>
 
-       <button
-  className="btn-danger"
-  onClick={() => navigate("/payroll")}
->
-  Cancel
-</button>
+        <button
+          className="btn-primary"
+          onClick={savePayroll}
+          disabled={saving}
+          style={{ opacity: saving ? 0.7 : 1, cursor: saving ? "not-allowed" : "pointer" }}
+        >
+          {saving ? "⏳ Saving..." : "Save Payroll"}
+        </button>
+
+        <button
+          className="btn-danger"
+          onClick={() => navigate("/payroll")}
+          disabled={saving}
+        >
+          Cancel
+        </button>
       </div>
 
       {/* FULL TABLE */}
@@ -276,6 +445,7 @@ const savePayroll = async () => {
               <th>Incentive</th>
               <th>Allowance</th>
               <th>Bonus</th>
+              <th>Variable Salary</th>
               <th>Basic</th>
               <th>HRA</th>
               <th>Deduction</th>
@@ -289,6 +459,8 @@ const savePayroll = async () => {
 <th>Working Days</th>
 <th>Paid Days</th>
 <th>LOP Days</th>
+<th>Gratuity</th>
+<th>🧮 Auto Calculate</th>
             </tr>
           </thead>
 
@@ -366,6 +538,21 @@ const savePayroll = async () => {
             value={d.bonus}
             disabled={mode === "REVIEW"}
             onChange={(e) => updateField(id, "bonus", e.target.value)}
+          />
+        </td>
+
+        <td>
+          <input
+            value={d.variableSalary}
+            disabled={mode === "REVIEW"}
+            onChange={(e) => updateField(id, "variableSalary", e.target.value)}
+            style={{
+              background: "#f0f9ff",
+              borderColor: "#0ea5e9",
+              color: "#0c4a6e"
+            }}
+            placeholder="0"
+            title="Variable Salary - Changes monthly (bonuses, incentives, etc.)"
           />
         </td>
 
@@ -450,6 +637,38 @@ const savePayroll = async () => {
     onChange={(e) => updateField(id, "lopDays", e.target.value)}
   />
 </td>
+<td>
+  <input
+    value={d.gratuity || 0}
+    disabled={true}   // ❗ keep disabled for now
+    style={{
+      background: "#fef9c3",
+      borderColor: "#facc15",
+      color: "#854d0e"
+    }}
+    title="Gratuity - Only applicable during employee exit"
+  />
+</td>
+<td>
+  <button
+    className="btn-auto-calc"
+    onClick={() => handleAutoCalculate(id)}
+    title="Calculate salary with real-time data"
+    style={{
+      padding: "8px 12px",
+      background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
+      color: "white",
+      border: "none",
+      borderRadius: "6px",
+      cursor: "pointer",
+      fontSize: "14px",
+      fontWeight: "600",
+      whiteSpace: "nowrap"
+    }}
+  >
+    🔄 Auto Calculate
+  </button>
+</td>
 
 
 
@@ -461,6 +680,173 @@ const savePayroll = async () => {
 </tbody>
         </table>
       </div>
+
+      {/* NEW: Salary Calculation Modal */}
+      {selectedEmployee && (
+        <SalaryCalculationModal
+          open={showCalcModal}
+          onClose={() => {
+            setShowCalcModal(false);
+            setSelectedEmployee(null);
+          }}
+          employee={selectedEmployee}
+          month={month}
+          onSuccess={handleCalculationSuccess}
+        />
+      )}
+
+      {/* NEW: Bulk Calculation Results Modal */}
+      {showBulkModal && (
+        <div className="modal-overlay" onClick={() => setShowBulkModal(false)}>
+          <div className="bulk-results-modal" onClick={(e) => e.stopPropagation()} style={{
+            background: "white",
+            borderRadius: "16px",
+            padding: "30px",
+            maxWidth: "900px",
+            width: "90%",
+            maxHeight: "80vh",
+            overflow: "auto",
+            boxShadow: "0 20px 60px rgba(0,0,0,0.3)"
+          }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "20px" }}>
+              <h2 style={{ margin: 0, fontSize: "24px", color: "#333" }}>
+                🔄 Bulk Salary Calculation Results
+              </h2>
+              <button
+                onClick={() => setShowBulkModal(false)}
+                style={{
+                  background: "none",
+                  border: "none",
+                  fontSize: "32px",
+                  cursor: "pointer",
+                  color: "#666"
+                }}
+              >
+                ×
+              </button>
+            </div>
+
+            {bulkCalculating ? (
+              <div style={{ textAlign: "center", padding: "40px" }}>
+                <div style={{ fontSize: "48px", marginBottom: "20px" }}>⏳</div>
+                <h3>Calculating salaries for all employees...</h3>
+                <p style={{ color: "#666" }}>This may take a few moments</p>
+              </div>
+            ) : bulkResults.length > 0 ? (
+              <>
+                <div style={{
+                  background: "#e7f3ff",
+                  padding: "15px",
+                  borderRadius: "8px",
+                  marginBottom: "20px",
+                  borderLeft: "4px solid #2196F3"
+                }}>
+                  <strong>✅ Successfully calculated {bulkResults.length} salaries</strong>
+                  <p style={{ margin: "5px 0 0 0", fontSize: "14px", color: "#666" }}>
+                    Review the results below and click "Apply All" to save to payroll
+                  </p>
+                </div>
+
+                <div style={{ maxHeight: "400px", overflow: "auto" }}>
+                  <table style={{ width: "100%", borderCollapse: "collapse" }}>
+                    <thead style={{ position: "sticky", top: 0, background: "#f8f9fa" }}>
+                      <tr>
+                        <th style={{ padding: "12px", textAlign: "left", borderBottom: "2px solid #dee2e6" }}>Employee</th>
+                        <th style={{ padding: "12px", textAlign: "right", borderBottom: "2px solid #dee2e6" }}>Gross</th>
+                        <th style={{ padding: "12px", textAlign: "right", borderBottom: "2px solid #dee2e6" }}>Deductions</th>
+                        <th style={{ padding: "12px", textAlign: "right", borderBottom: "2px solid #dee2e6" }}>Net Pay</th>
+                        <th style={{ padding: "12px", textAlign: "center", borderBottom: "2px solid #dee2e6" }}>Status</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {bulkResults.map((result, index) => (
+                        <tr key={index} style={{ borderBottom: "1px solid #dee2e6" }}>
+                          <td style={{ padding: "12px" }}>
+                            <div style={{ fontWeight: "600" }}>{result.empName}</div>
+                            <div style={{ fontSize: "12px", color: "#666" }}>{result.employeeId}</div>
+                          </td>
+                          <td style={{ padding: "12px", textAlign: "right", color: "#16a34a", fontWeight: "600" }}>
+                            ₹ {result.grossSalary?.toLocaleString('en-IN')}
+                          </td>
+                          <td style={{ padding: "12px", textAlign: "right", color: "#dc2626", fontWeight: "600" }}>
+                            ₹ {result.totalDeductions?.toLocaleString('en-IN')}
+                          </td>
+                          <td style={{ padding: "12px", textAlign: "right", fontSize: "16px", fontWeight: "700", color: "#2563eb" }}>
+                            ₹ {result.netSalary?.toLocaleString('en-IN')}
+                          </td>
+                          <td style={{ padding: "12px", textAlign: "center" }}>
+                            <span style={{
+                              padding: "4px 12px",
+                              borderRadius: "12px",
+                              fontSize: "12px",
+                              fontWeight: "600",
+                              background: "#dcfce7",
+                              color: "#15803d"
+                            }}>
+                              ✓ Calculated
+                            </span>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+
+                <div style={{
+                  marginTop: "20px",
+                  padding: "15px",
+                  background: "#f8f9fa",
+                  borderRadius: "8px",
+                  display: "flex",
+                  justifyContent: "space-between",
+                  alignItems: "center"
+                }}>
+                  <div>
+                    <div style={{ fontSize: "14px", color: "#666" }}>Total Net Payroll</div>
+                    <div style={{ fontSize: "24px", fontWeight: "700", color: "#2563eb" }}>
+                      ₹ {bulkResults.reduce((sum, r) => sum + (r.netSalary || 0), 0).toLocaleString('en-IN')}
+                    </div>
+                  </div>
+                  <div style={{ display: "flex", gap: "10px" }}>
+                    <button
+                      onClick={() => setShowBulkModal(false)}
+                      style={{
+                        padding: "12px 24px",
+                        background: "#f1f5f9",
+                        color: "#334155",
+                        border: "none",
+                        borderRadius: "8px",
+                        cursor: "pointer",
+                        fontWeight: "600"
+                      }}
+                    >
+                      Close
+                    </button>
+                    <button
+                      onClick={handleApplyBulkResults}
+                      style={{
+                        padding: "12px 24px",
+                        background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
+                        color: "white",
+                        border: "none",
+                        borderRadius: "8px",
+                        cursor: "pointer",
+                        fontWeight: "600"
+                      }}
+                    >
+                      ✅ Apply All to Payroll
+                    </button>
+                  </div>
+                </div>
+              </>
+            ) : (
+              <div style={{ textAlign: "center", padding: "40px", color: "#666" }}>
+                No results to display
+              </div>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 };

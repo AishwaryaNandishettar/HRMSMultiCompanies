@@ -68,6 +68,10 @@ login({
   token: data.token,
   empId: data.empId || data.employeeId, // ✅ PASS empId
   employeeId: data.employeeId || data.empId, // ✅ PASS employeeId
+   // ✅ ADD THESE 2 LINES ONLY
+  department: data.department || data.dept,
+  reportingManager: data.reportingManager || data.manager,
+  companyId: data.companyId
 });
 
 console.log("✅ LOGIN SUCCESSFUL - Redirecting to Home");

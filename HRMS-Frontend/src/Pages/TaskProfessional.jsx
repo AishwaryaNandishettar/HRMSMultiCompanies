@@ -1,4 +1,4 @@
-import { useState, useEffect, useContext } from "react";
+import { useState, useEffect, useContext, useRef } from "react";
 import "./TaskProfessional.css";
 import { AuthContext } from "../Context/Authcontext";
 import { TaskContext } from "../Context/TaskContext";
@@ -11,7 +11,7 @@ import {
 import { getAllEmployees } from "../api/employeeApi";
 import {
   FaPlus, FaTimes, FaCheck, FaEye, FaUndo,
-  FaFlag, FaUser, FaCalendarAlt, FaClock,
+  FaFlag, FaUser, FaCalendarAlt, FaClock, FaDownload,
 } from "react-icons/fa";
 
 /* ── status helpers ── */
@@ -68,8 +68,88 @@ export default function TaskProfessional() {
 
   const [form, setForm] = useState({
     title: "", description: "", priority: "MEDIUM",
-    assignee: "", dueDate: "",
+    assignee: "", assigneeId: "", assigneeName: "", dueDate: "",
   });
+
+  /* ── column header filters ── */
+  const [colFilters, setColFilters] = useState({
+    task: "", assignee: "", empName: "", empId: "", priority: "All", assignedDate: "", dueDate: "", status: "All",
+  });
+  const [openColFilter, setOpenColFilter] = useState(null);
+  const filterRef = useRef(null);
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handler = (e) => {
+      if (filterRef.current && !filterRef.current.contains(e.target)) {
+        setOpenColFilter(null);
+      }
+    };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, []);
+
+  /* ── export functions ── */
+  const [showExportMenu, setShowExportMenu] = useState(false);
+
+  const exportCSV = () => {
+    const headers = ["Task", "Description", "Assigned To", "Emp ID", "Assigned By", "Priority", "Assigned Date", "Due Date", "Progress", "Status"];
+    const rows = filtered.map(t => [
+      `"${t.title || ''}"`,
+      `"${(t.description || '').replace(/"/g, '""')}"`,
+      t.assignee || '',
+      t.assigneeId || '',
+      t.assignedBy || '',
+      t.priority || '',
+      t.createdAt ? new Date(t.createdAt).toLocaleDateString() : '',
+      t.dueDate ? new Date(t.dueDate).toLocaleDateString() : '',
+      `${t.progress || 0}%`,
+      t.status || '',
+    ]);
+    const csv = [headers.join(","), ...rows.map(r => r.join(","))].join("\n");
+    const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `tasks_report_${new Date().toISOString().split('T')[0]}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+    setShowExportMenu(false);
+  };
+
+  const exportExcel = () => {
+    // Build HTML table for Excel
+    const headers = ["Task", "Description", "Assigned To", "Emp ID", "Assigned By", "Priority", "Assigned Date", "Due Date", "Progress", "Status"];
+    const rows = filtered.map(t => [
+      t.title || '',
+      t.description || '',
+      t.assignee || '',
+      t.assigneeId || '',
+      t.assignedBy || '',
+      t.priority || '',
+      t.createdAt ? new Date(t.createdAt).toLocaleDateString() : '',
+      t.dueDate ? new Date(t.dueDate).toLocaleDateString() : '',
+      `${t.progress || 0}%`,
+      t.status || '',
+    ]);
+
+    let html = `<table><thead><tr>${headers.map(h => `<th>${h}</th>`).join('')}</tr></thead><tbody>`;
+    rows.forEach(r => {
+      html += `<tr>${r.map(c => `<td>${c}</td>`).join('')}</tr>`;
+    });
+    html += '</tbody></table>';
+
+    const blob = new Blob([`<html><body>${html}</body></html>`], {
+      type: "application/vnd.ms-excel;charset=utf-8;"
+    });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `tasks_report_${new Date().toISOString().split('T')[0]}.xls`;
+    a.click();
+    URL.revokeObjectURL(url);
+    setShowExportMenu(false);
+  };
 
   /* ── load ── */
   useEffect(() => {
@@ -82,15 +162,13 @@ export default function TaskProfessional() {
   }, []);
 
   useEffect(() => {
-    if (canManage) {
-      getAllEmployees()
-        .then((res) => {
-          const list = res?.data?.content || res?.data || [];
-          setEmployees(Array.isArray(list) ? list : []);
-        })
-        .catch(() => {});
-    }
-  }, [canManage]);
+    getAllEmployees()
+      .then((res) => {
+        const list = res?.data?.content || res?.data || [];
+        setEmployees(Array.isArray(list) ? list : []);
+      })
+      .catch(() => {});
+  }, []);
 
   /* ── role-based task list ── */
   const myTasks = isEmployee
@@ -105,7 +183,16 @@ export default function TaskProfessional() {
       t.assignee?.toLowerCase().includes(search.toLowerCase());
     const matchStatus   = statusFilter === "All"   || t.status === statusFilter;
     const matchPriority = priorityFilter === "All" || t.priority === priorityFilter;
-    return matchSearch && matchStatus && matchPriority;
+    
+    // Column filters
+    const matchColTask = !colFilters.task || t.title?.toLowerCase().includes(colFilters.task.toLowerCase());
+    const matchColAssignee = !colFilters.assignee || t.assignee?.toLowerCase().includes(colFilters.assignee.toLowerCase());
+    const matchColEmpName = !colFilters.empName || t.assigneeName?.toLowerCase().includes(colFilters.empName.toLowerCase()) || t.assignee?.toLowerCase().includes(colFilters.empName.toLowerCase());
+    const matchColEmpId = !colFilters.empId || t.assigneeId?.toLowerCase().includes(colFilters.empId.toLowerCase());
+    const matchColPriority = colFilters.priority === "All" || t.priority === colFilters.priority;
+    const matchColStatus = colFilters.status === "All" || t.status === colFilters.status;
+    
+    return matchSearch && matchStatus && matchPriority && matchColTask && matchColAssignee && matchColEmpName && matchColEmpId && matchColPriority && matchColStatus;
   });
 
   /* ── KPIs ── */
@@ -132,12 +219,14 @@ export default function TaskProfessional() {
         description: form.description,
         priority: form.priority,
         assignee: form.assignee,
+        assigneeId: form.assigneeId,
+        assigneeName: form.assigneeName,
         dueDate: form.dueDate || null,
         status: "ASSIGNED",
         progress: 0,
         history: [],
       });
-      setForm({ title: "", description: "", priority: "MEDIUM", assignee: "", dueDate: "" });
+      setForm({ title: "", description: "", priority: "MEDIUM", assignee: "", assigneeId: "", assigneeName: "", dueDate: "" });
       setShowCreate(false);
       await refresh();
     } catch { alert("Failed to create task."); }
@@ -197,11 +286,47 @@ export default function TaskProfessional() {
           <h2 className="tp-title">Task Management</h2>
           <span className="tp-role-badge">{role.toUpperCase()}</span>
         </div>
-        {canManage && (
-          <button className="tp-btn tp-btn-primary" onClick={() => setShowCreate(true)}>
-            <FaPlus /> Create Task
-          </button>
-        )}
+        <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
+          {/* Export button — all roles */}
+          <div style={{ position: 'relative' }} ref={filterRef}>
+            <button
+              className="tp-btn"
+              style={{ background: '#16a34a', color: '#fff', display: 'flex', alignItems: 'center', gap: 6 }}
+              onClick={() => setShowExportMenu(v => !v)}
+            >
+              <FaDownload /> Export
+            </button>
+            {showExportMenu && (
+              <div style={{
+                position: 'absolute', top: '110%', right: 0, background: '#fff',
+                border: '1px solid #e2e8f0', borderRadius: 8, boxShadow: '0 8px 24px rgba(0,0,0,0.12)',
+                zIndex: 100, minWidth: 160, overflow: 'hidden',
+              }}>
+                <button
+                  onClick={exportCSV}
+                  style={{ display: 'flex', alignItems: 'center', gap: 8, width: '100%', padding: '10px 16px', border: 'none', background: 'none', cursor: 'pointer', fontSize: 13, color: '#374151', textAlign: 'left' }}
+                  onMouseEnter={e => e.target.style.background = '#f1f5f9'}
+                  onMouseLeave={e => e.target.style.background = 'none'}
+                >
+                  📄 Download CSV
+                </button>
+                <button
+                  onClick={exportExcel}
+                  style={{ display: 'flex', alignItems: 'center', gap: 8, width: '100%', padding: '10px 16px', border: 'none', background: 'none', cursor: 'pointer', fontSize: 13, color: '#374151', textAlign: 'left', borderTop: '1px solid #f1f5f9' }}
+                  onMouseEnter={e => e.target.style.background = '#f1f5f9'}
+                  onMouseLeave={e => e.target.style.background = 'none'}
+                >
+                  📊 Download Excel
+                </button>
+              </div>
+            )}
+          </div>
+          {canManage && (
+            <button className="tp-btn tp-btn-primary" onClick={() => setShowCreate(true)}>
+              <FaPlus /> Create Task
+            </button>
+          )}
+        </div>
       </div>
 
       {/* KPI CARDS */}
@@ -267,12 +392,131 @@ export default function TaskProfessional() {
           <table className="tp-table">
             <thead>
               <tr>
-                <th>Task</th>
-                <th>{canManage ? "Assigned To" : "Assigned By"}</th>
-                <th>Priority</th>
-                <th>Due Date</th>
-                <th>Progress</th>
-                <th>Status</th>
+                {/* ── EMP ID column — FIRST ── */}
+                <th style={{ position: 'relative', minWidth: 120 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                    <span>Emp ID</span>
+                    <span
+                      style={{ cursor: 'pointer', opacity: 0.8, fontSize: 11 }}
+                      onClick={() => setOpenColFilter(openColFilter === 'empId' ? null : 'empId')}
+                    >▼</span>
+                  </div>
+                  {openColFilter === 'empId' && (
+                    <div className="tp-col-filter-popup">
+                      <input
+                        autoFocus
+                        className="tp-col-filter-input"
+                        placeholder="Filter Emp ID..."
+                        value={colFilters.empId || ''}
+                        onChange={e => setColFilters(f => ({ ...f, empId: e.target.value }))}
+                        onClick={e => e.stopPropagation()}
+                      />
+                      <button className="tp-col-filter-clear" onClick={() => { setColFilters(f => ({ ...f, empId: '' })); setOpenColFilter(null); }}>Clear</button>
+                    </div>
+                  )}
+                </th>
+
+                {/* ── TASK column with filter ── */}
+                <th style={{ position: 'relative', minWidth: 180 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                    <span>Task</span>
+                    <span
+                      style={{ cursor: 'pointer', opacity: 0.8, fontSize: 11 }}
+                      onClick={() => setOpenColFilter(openColFilter === 'task' ? null : 'task')}
+                    >▼</span>
+                  </div>
+                  {openColFilter === 'task' && (
+                    <div className="tp-col-filter-popup">
+                      <input
+                        autoFocus
+                        className="tp-col-filter-input"
+                        placeholder="Filter task..."
+                        value={colFilters.task}
+                        onChange={e => setColFilters(f => ({ ...f, task: e.target.value }))}
+                        onClick={e => e.stopPropagation()}
+                      />
+                      <button className="tp-col-filter-clear" onClick={() => { setColFilters(f => ({ ...f, task: '' })); setOpenColFilter(null); }}>Clear</button>
+                    </div>
+                  )}
+                </th>
+
+                {/* ── ASSIGNED TO/BY column with filter ── */}
+                <th style={{ position: 'relative', minWidth: 160 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                    <span>{canManage ? "Assigned To" : "Assigned By"}</span>
+                    <span
+                      style={{ cursor: 'pointer', opacity: 0.8, fontSize: 11 }}
+                      onClick={() => setOpenColFilter(openColFilter === 'assignee' ? null : 'assignee')}
+                    >▼</span>
+                  </div>
+                  {openColFilter === 'assignee' && (
+                    <div className="tp-col-filter-popup">
+                      <input
+                        autoFocus
+                        className="tp-col-filter-input"
+                        placeholder="Filter email..."
+                        value={colFilters.assignee}
+                        onChange={e => setColFilters(f => ({ ...f, assignee: e.target.value }))}
+                        onClick={e => e.stopPropagation()}
+                      />
+                      <button className="tp-col-filter-clear" onClick={() => { setColFilters(f => ({ ...f, assignee: '' })); setOpenColFilter(null); }}>Clear</button>
+                    </div>
+                  )}
+                </th>
+
+                {/* ── PRIORITY column with filter ── */}
+                <th style={{ position: 'relative' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                    <span>Priority</span>
+                    <span
+                      style={{ cursor: 'pointer', opacity: 0.8, fontSize: 11 }}
+                      onClick={() => setOpenColFilter(openColFilter === 'priority' ? null : 'priority')}
+                    >▼</span>
+                  </div>
+                  {openColFilter === 'priority' && (
+                    <div className="tp-col-filter-popup">
+                      {['All', 'HIGH', 'MEDIUM', 'LOW'].map(v => (
+                        <div
+                          key={v}
+                          className={`tp-col-filter-option ${colFilters.priority === v ? 'active' : ''}`}
+                          onClick={() => { setColFilters(f => ({ ...f, priority: v })); setOpenColFilter(null); }}
+                        >{v}</div>
+                      ))}
+                    </div>
+                  )}
+                </th>
+
+                {/* ── ASSIGNED DATE (new) ── */}
+                <th style={{ minWidth: 120 }}>Assigned Date</th>
+
+                {/* ── DUE DATE ── */}
+                <th style={{ minWidth: 120 }}>Due Date</th>
+
+                {/* ── PROGRESS ── */}
+                <th style={{ minWidth: 120 }}>Progress</th>
+
+                {/* ── STATUS column with filter ── */}
+                <th style={{ position: 'relative' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                    <span>Status</span>
+                    <span
+                      style={{ cursor: 'pointer', opacity: 0.8, fontSize: 11 }}
+                      onClick={() => setOpenColFilter(openColFilter === 'status' ? null : 'status')}
+                    >▼</span>
+                  </div>
+                  {openColFilter === 'status' && (
+                    <div className="tp-col-filter-popup">
+                      {['All', 'ASSIGNED', 'ACCEPTED', 'IN_PROGRESS', 'SUBMITTED', 'COMPLETED', 'REJECTED'].map(v => (
+                        <div
+                          key={v}
+                          className={`tp-col-filter-option ${colFilters.status === v ? 'active' : ''}`}
+                          onClick={() => { setColFilters(f => ({ ...f, status: v })); setOpenColFilter(null); }}
+                        >{v}</div>
+                      ))}
+                    </div>
+                  )}
+                </th>
+
                 <th>Actions</th>
               </tr>
             </thead>
@@ -282,6 +526,27 @@ export default function TaskProfessional() {
                 const overdue = days !== null && days < 0 && task.status !== "COMPLETED";
                 return (
                   <tr key={task.id} className={overdue ? "tp-overdue" : ""}>
+                    {/* ── EMP ID cell — FIRST ── */}
+                    <td>
+                      {(() => {
+                        // Use stored assigneeId first, then look up from employees list by email
+                        const empId = task.assigneeId ||
+                          employees.find(e => (e.email || e.workEmail) === task.assignee)?.employeeId ||
+                          employees.find(e => (e.email || e.workEmail) === task.assignee)?.empId ||
+                          null;
+                        return empId ? (
+                          <span style={{
+                            background: '#eff6ff', color: '#1d4ed8',
+                            padding: '2px 8px', borderRadius: '4px',
+                            fontSize: '12px', fontWeight: '600',
+                            fontFamily: 'monospace', whiteSpace: 'nowrap'
+                          }}>
+                            {empId}
+                          </span>
+                        ) : <span style={{ color: '#94a3b8', fontSize: 12 }}>—</span>;
+                      })()}
+                    </td>
+
                     <td>
                       <div className="tp-task-name">{task.title}</div>
                       {task.description && (
@@ -296,6 +561,16 @@ export default function TaskProfessional() {
                     <td>
                       <Badge text={task.priority || "—"} color={PRIORITY_COLOR[task.priority] || "#6b7280"} />
                     </td>
+
+                    {/* ── ASSIGNED DATE (new column) ── */}
+                    <td>
+                      {task.createdAt ? (
+                        <span style={{ fontSize: 12, color: '#374151' }}>
+                          {new Date(task.createdAt).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}
+                        </span>
+                      ) : "—"}
+                    </td>
+
                     <td>
                       {task.dueDate ? (
                         <span style={{ color: overdue ? "#ef4444" : "#374151", fontSize: 13 }}>
@@ -309,7 +584,6 @@ export default function TaskProfessional() {
                       ) : "—"}
                     </td>
                     <td style={{ minWidth: 120 }}>
-                      {/* Employee can drag progress when accepted */}
                       {isEmployee && task.assignee === userEmail &&
                        (task.status === "ACCEPTED" || task.status === "IN_PROGRESS") ? (
                         <div>
@@ -334,13 +608,10 @@ export default function TaskProfessional() {
                     </td>
                     <td>
                       <div className="tp-actions">
-                        {/* View detail */}
                         <button className="tp-btn-icon tp-btn-info" title="View"
                           onClick={() => { setSelectedTask(task); setShowDetail(true); }}>
                           <FaEye />
                         </button>
-
-                        {/* Employee: Accept / Reject when ASSIGNED */}
                         {isEmployee && task.assignee === userEmail && task.status === "ASSIGNED" && (
                           <>
                             <button className="tp-btn-icon tp-btn-success" title="Accept"
@@ -353,8 +624,6 @@ export default function TaskProfessional() {
                             </button>
                           </>
                         )}
-
-                        {/* Employee: Submit when IN_PROGRESS */}
                         {isEmployee && task.assignee === userEmail &&
                          (task.status === "IN_PROGRESS" || task.status === "ACCEPTED") && (
                           <button className="tp-btn-sm tp-btn-primary" title="Submit for approval"
@@ -362,8 +631,6 @@ export default function TaskProfessional() {
                             Submit
                           </button>
                         )}
-
-                        {/* Manager/Admin: Approve / Reject when SUBMITTED */}
                         {canManage && task.status === "SUBMITTED" && (
                           <>
                             <button className="tp-btn-icon tp-btn-success" title="Approve"
@@ -377,8 +644,6 @@ export default function TaskProfessional() {
                           </>
                         )}
                       </div>
-
-                      {/* Inline reject reason input */}
                       {rejectingId === task.id && (
                         <div className="tp-reject-box">
                           <input
@@ -445,11 +710,19 @@ export default function TaskProfessional() {
                 <label>Assign To (email) *</label>
                 {employees.length > 0 ? (
                   <select className="tp-input" value={form.assignee}
-                    onChange={(e) => setForm({ ...form, assignee: e.target.value })}>
+                    onChange={(e) => {
+                      const selected = employees.find(emp => (emp.email || emp.workEmail) === e.target.value);
+                      setForm({
+                        ...form,
+                        assignee: e.target.value,
+                        assigneeId: selected?.employeeId || selected?.empId || '',
+                        assigneeName: selected?.fullName || '',
+                      });
+                    }}>
                     <option value="">-- Select Employee --</option>
                     {employees.map((emp) => (
                       <option key={emp.id || emp.email} value={emp.email || emp.workEmail}>
-                        {emp.fullName} ({emp.email || emp.workEmail})
+                        {emp.fullName} ({emp.employeeId || emp.empId || emp.email || emp.workEmail})
                       </option>
                     ))}
                   </select>
@@ -490,8 +763,18 @@ export default function TaskProfessional() {
                   <span>{selectedTask.assignee || "—"}</span>
                 </div>
                 <div className="tp-detail-item">
+                  <label>Emp ID</label>
+                  <span style={{ fontFamily: 'monospace', fontWeight: 600, color: '#1d4ed8' }}>
+                    {selectedTask.assigneeId || "—"}
+                  </span>
+                </div>
+                <div className="tp-detail-item">
                   <label>Assigned By</label>
                   <span>{selectedTask.assignedBy || "—"}</span>
+                </div>
+                <div className="tp-detail-item">
+                  <label>Assigned Date</label>
+                  <span>{selectedTask.createdAt ? new Date(selectedTask.createdAt).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }) : "—"}</span>
                 </div>
                 <div className="tp-detail-item">
                   <label>Due Date</label>

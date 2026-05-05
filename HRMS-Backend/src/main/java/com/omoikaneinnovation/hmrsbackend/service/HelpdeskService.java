@@ -42,6 +42,14 @@ public class HelpdeskService {
         return repo.findAll();
     }
 
+    public List<HelpdeskTicket> getByUser(String email) {
+        return repo.findByRaisedBy(email);
+    }
+
+    public void delete(String id) {
+        repo.deleteById(id);
+    }
+
     public HelpdeskTicket updateStatus(String id, String status, String resolver) {
         HelpdeskTicket t = repo.findById(id).orElseThrow();
 

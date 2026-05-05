@@ -19,6 +19,7 @@ public class Employee {
     private String joiningDate;
 private String dob;
     private String userId;
+    private String companyId;
     private String status; // INVITED, ACTIVE, DISABLED
     private Instant createdAt = Instant.now();
 
@@ -44,6 +45,13 @@ private String dob;
         this.fullName = fullName;
     }
 
+public String getCompanyId() {
+    return companyId;
+}
+
+public void setCompanyId(String companyId) {
+    this.companyId = companyId;
+}
     public String getEmail() {
         return email;
     }

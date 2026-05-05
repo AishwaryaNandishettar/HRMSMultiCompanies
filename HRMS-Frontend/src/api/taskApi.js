@@ -4,7 +4,7 @@ const BASE_URL = "/api/tasks";
 
 export const getTasks = () => api.get(BASE_URL);
 export const getMyTasks = () => api.get(`${BASE_URL}/my`);
-export const getAllTasksAdmin = () => api.get(`${BASE_URL}/all`);
+export const getAllTasksAdmin = () => api.get(`${BASE_URL}`);
 export const createTaskApi = (task) => api.post(BASE_URL, task);
 
 export const updateTaskApi = (id, data) =>

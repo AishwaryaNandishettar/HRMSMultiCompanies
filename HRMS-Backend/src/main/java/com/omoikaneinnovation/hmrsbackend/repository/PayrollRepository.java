@@ -11,5 +11,7 @@ public interface PayrollRepository extends MongoRepository<Payroll, String> {
     List<Payroll> findByEmpCode(String empCode);
 
     Optional<Payroll> findByEmployeeId(String employeeId);
+     // ✅ ADD THIS (safe, no impact on existing logic)
+    Payroll findTopByEmployeeIdOrderByUpdatedAtDesc(String employeeId);
     
 }

@@ -79,15 +79,30 @@ import "./App.css";
 /* ================= APP LAYOUT ================= */
 function AppLayout() {
   const { user } = useContext(AuthContext);
-  const [isSidebarOpen, setIsSidebarOpen] = useState(true);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false); // ✅ default closed on mobile
   
 const [notifications, setNotifications] = useState([]);
 const [showNotif, setShowNotif] = useState(false);
   if (!user) return <Navigate to="/" replace />;
 
+  // ✅ Detect mobile to auto-close sidebar after nav
+  const isMobile = () => window.innerWidth <= 768;
+
+  const handleMenuToggle = () => {
+    setIsSidebarOpen(prev => !prev);
+  };
+
+  const handleOverlayClick = () => {
+    setIsSidebarOpen(false);
+  };
+
   return (
     <StickyNotesProvider>
       <div className="app-container">
+        {/* ✅ Mobile overlay — closes sidebar when tapped */}
+        {isSidebarOpen && isMobile() && (
+          <div className="sidebar-overlay" onClick={handleOverlayClick} />
+        )}
         <Sidebar isOpen={isSidebarOpen} setIsOpen={setIsSidebarOpen} />
         <div className="content-area">
          <Navbar
@@ -95,6 +110,7 @@ const [showNotif, setShowNotif] = useState(false);
   setNotifications={setNotifications}
   showNotif={showNotif}
   setShowNotif={setShowNotif}
+  onMenuToggle={handleMenuToggle}
 />
           <div className="page-content">
             <Routes>

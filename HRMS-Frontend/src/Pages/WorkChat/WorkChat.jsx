@@ -104,7 +104,7 @@ export default function WorkChat() {
 
         (incomingMsg) => {
           const current = selectedChatRef.current;
-          if (!current || current.type !== "USER") return;
+          if (!current) return;
 
           const isCurrentChat =
             (incomingMsg.senderEmail === LOGGED_IN_EMAIL &&
@@ -115,7 +115,10 @@ export default function WorkChat() {
           if (!isCurrentChat) return;
 
           // ❌ prevent duplicate
-          if (incomingMsg.senderEmail === LOGGED_IN_EMAIL) return;
+         if (
+  incomingMsg.senderEmail === LOGGED_IN_EMAIL &&
+  incomingMsg.receiverEmail === current?.email
+) return;
 
           setMessages((prev) => [...prev, incomingMsg]);
         },
@@ -141,7 +144,22 @@ export default function WorkChat() {
     fetchChatUsers(TOKEN)
       .then((data) => {
         console.log("✅ fetchChatUsers returned:", data);
-        setUsers(data.filter((u) => u.email?.toLowerCase() !== LOGGED_IN_EMAIL?.toLowerCase()));
+       setUsers(
+  Array.from(
+    new Map(
+      (data || []).map((u) => {
+        const email =
+          u.email || u.userEmail || u.empEmail || "";
+        return [email.toLowerCase(), u];
+      })
+    ).values()
+  ).filter((u) => {
+    const email =
+      u.email || u.userEmail || u.empEmail || "";
+
+    return email.toLowerCase() !== LOGGED_IN_EMAIL?.toLowerCase();
+  })
+);
       })
       .catch((err) => {
         console.error("❌ fetchChatUsers failed:", err);
@@ -167,7 +185,7 @@ export default function WorkChat() {
     setMessages([]);
     fetchChatMessages(
       LOGGED_IN_EMAIL,
-      selectedChat.email,
+      selectedChat?.email,
       TOKEN
     )
       .then(setMessages)
@@ -239,7 +257,7 @@ timestamp: new Date().toISOString(),
     files.forEach((file) => {
       tempMessages.push({
         senderEmail: LOGGED_IN_EMAIL,
-        receiverEmail: selectedChat.email,
+        receiverEmail: selectedChat?.email,
         content: text || "",
         fileName: file.name,
         fileUrl: URL.createObjectURL(file),
@@ -250,7 +268,7 @@ timestamp: new Date().toISOString(),
   } else if (text.trim()) {
     tempMessages.push({
       senderEmail: LOGGED_IN_EMAIL,
-      receiverEmail: selectedChat.email,
+      receiverEmail: selectedChat?.email,
       content: text,
       timestamp: new Date().toISOString(),
     });
@@ -263,22 +281,30 @@ timestamp: new Date().toISOString(),
       const formData = new FormData();
 
       formData.append("senderEmail", LOGGED_IN_EMAIL);
-      formData.append("receiverEmail", selectedChat.email);
+      formData.append("receiverEmail", selectedChat?.email);
       formData.append("text", text || "");
 
       files.forEach((f) => formData.append("files", f));
 
       await fetch(`${import.meta.env.VITE_API_URL}/chat/upload`, {
+        
         method: "POST",
         headers: {
           Authorization: `Bearer ${TOKEN}`,
         },
         body: formData,
       });
+
+      // 🔥 force refresh messages after upload
+fetchChatMessages(
+  LOGGED_IN_EMAIL,
+  selectedChat?.email,
+  TOKEN
+).then(setMessages);
     } else {
       sendMessageWS({
         senderEmail: LOGGED_IN_EMAIL,
-        receiverEmail: selectedChat.email,
+        receiverEmail: selectedChat?.email,
         content: text,
       });
     }
@@ -295,8 +321,8 @@ timestamp: new Date().toISOString(),
     }
 
     startCall(type, {
-      email: selectedChat.email,
-      name: selectedChat.name || selectedChat.email
+      email: selectedChat?.email,
+      name: selectedChat.name || selectedChat?.email
     });
   };
 

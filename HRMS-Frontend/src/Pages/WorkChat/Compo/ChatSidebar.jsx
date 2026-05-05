@@ -80,7 +80,7 @@ export default function ChatSidebar({
       ...u,
       type: "USER",
       id: u.email,
-      name: u.name,
+      name: u.name || u.email,
       pinned: u.pinned || false
     }));
 
@@ -162,7 +162,7 @@ export default function ChatSidebar({
 
           {pinnedChats.map((chat) => (
             <ChatItem
-              key={chat.id}
+              key={`${chat.type}-${chat.id}-${chat.email || ""}`}
               chat={chat}
               selectedChat={selectedChat}
               onClick={handleSelect}
@@ -178,7 +178,7 @@ export default function ChatSidebar({
 
         {normalChats.map((chat) => (
           <ChatItem
-            key={chat.id}
+           key={`${chat.type}-${chat.id}-${chat.email || ""}`}
             chat={chat}
             selectedChat={selectedChat}
             onClick={handleSelect}

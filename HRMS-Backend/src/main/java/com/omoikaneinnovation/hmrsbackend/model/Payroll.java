@@ -29,11 +29,14 @@ private String department;
 private Double esi;
 private Double deduction;
 private Double bonus;
+private Double variableSalary;  // ✅ NEW: Variable salary component
 private Double gross;
 private Double net;
     
 private String month;      // 2026-04
-private Long updatedAt;    // timestamp
+private Long updatedAt;    // timestamp when last updated
+private Long initiatedAt;  // timestamp when payroll was first initiated
+private String initiatedDate; // human-readable: "29 Apr 2026"
 private String birthDate;
 private Boolean isActive;
 private String recordStatus;   // ACTIVE / INACTIVE ✅ (for filtering)

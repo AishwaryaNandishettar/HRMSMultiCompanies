@@ -2,7 +2,7 @@ import "./Recruitment.css";
 import PipelineTable from "./PipelineTable";
 import React, { useState, useEffect, useContext } from "react";
 import { AuthContext } from "../../Context/Authcontext";
-import { createJob, getAllJobs , updateJobStatus} from "../../api/recruitmentApi"; // adjust path
+import { createJob, getAllJobs, updateJobStatus, updateJob } from "../../api/recruitmentApi"; // adjust path
 import { Eye } from "lucide-react";
 import {
   Briefcase,
@@ -62,6 +62,12 @@ const JobTable = ({ jobs , setJobs}) => {
   const [dateFilter, setDateFilter] = useState("All");
   const [selectedCandidate, setSelectedCandidate] = useState(null);
   const [viewJob, setViewJob] = useState(null);
+  const [pipelineModal, setPipelineModal] = useState(null); // job being updated in pipeline
+  const [pipelineForm, setPipelineForm] = useState({
+    status: '', interviewLevel: '', selectionLevel: '',
+    appliedDate: '', l1InterviewDate: '', l2InterviewDate: '',
+    offerDate: '', onboardingDate: ''
+  });
 const [showPostJob, setShowPostJob] = useState(false);
  
 const [formData, setFormData] = useState({
@@ -72,7 +78,11 @@ const [formData, setFormData] = useState({
   applicants: "",
   status: "Open",
   postedDate: "",
-  description: ""
+  description: "",
+  location: "",
+  jobType: "",
+  workMode: "",
+  noticePeriod: ""
 });
 
 
@@ -106,7 +116,11 @@ const handleSubmit = async (e) => {
       applicants: "",
       status: "Open",
       postedDate: "",
-      description: ""
+      description: "",
+      location: "",
+      jobType: "",
+      workMode: "",
+      noticePeriod: ""
     });
 
   } catch (err) {
@@ -233,6 +247,7 @@ const handleSubmit = async (e) => {
         <table className="job-table">
           <thead>
             <tr>
+              <th>Job ID</th>
               <th> 
                 <div className="th-wrap">
                   <span
@@ -324,35 +339,59 @@ const handleSubmit = async (e) => {
 
               return (
                 <tr key={i}>
+                 <td>
+                    <span style={{
+                      background: '#eff6ff',
+                      color: '#1d4ed8',
+                      padding: '2px 8px',
+                      borderRadius: '4px',
+                      fontSize: '12px',
+                      fontWeight: '600',
+                      fontFamily: 'monospace',
+                      whiteSpace: 'nowrap'
+                    }}>
+                      {job.jobId || `JOB-${String(i + 1).padStart(3, '0')}`}
+                    </span>
+                  </td>
                  <td>{job.jobTitle}</td>
                   <td>{job.department}</td>
 
-                   {/* STATUS (DISPLAY ONLY) */}
-                   {/* STATUS (NOW DROPDOWN) */}
+                   {/* HR ACTION — PIPELINE DROPDOWN */}
 <td>
   <select
     value={job.status}
-  onChange={async (e) => {
-  const newStatus = e.target.value;
+    onChange={async (e) => {
+      const newStatus = e.target.value;
+      const jobId = job._id || job.id;
 
-  const jobId = job._id || job.id;
+      // For Interview Stage or Selected — open pipeline modal for level/date input
+      if (newStatus === 'Interview Stage' || newStatus === 'Selected') {
+        setPipelineModal({ ...job, id: jobId });
+        setPipelineForm({
+          status: newStatus,
+          interviewLevel: job.interviewLevel || '',
+          selectionLevel: job.selectionLevel || '',
+          appliedDate: job.appliedDate || '',
+          l1InterviewDate: job.l1InterviewDate || '',
+          l2InterviewDate: job.l2InterviewDate || '',
+          offerDate: job.offerDate || '',
+          onboardingDate: job.onboardingDate || ''
+        });
+        return; // don't save yet — wait for modal
+      }
 
-  setJobs(prev =>
-    prev.map(j =>
-      (j._id || j.id) === jobId
-        ? { ...j, status: newStatus }
-        : j
-    )
-  );
-
-  try {
-    await updateJobStatus(jobId, newStatus);
-  } catch (err) {
-    console.error("Status update failed", err);
-  }
-}}
+      // For other statuses — save directly
+      setJobs(prev =>
+        prev.map(j => (j._id || j.id) === jobId ? { ...j, status: newStatus } : j)
+      );
+      try {
+        await updateJobStatus(jobId, newStatus);
+      } catch (err) {
+        console.error("Status update failed", err);
+      }
+    }}
   >
-    <option value="Seaching">Searching Profile</option>
+    <option value="Searching">Searching Profile</option>
     <option value="Open">Open</option>
     <option value="Closed">Closed</option>
     <option value="Interview Stage">Interview Stage</option>
@@ -360,6 +399,21 @@ const handleSubmit = async (e) => {
     <option value="Rejected">Rejected</option>
     <option value="Selected">Selected</option>
   </select>
+  {/* Show level badge below dropdown */}
+  {job.status === 'Interview Stage' && job.interviewLevel && (
+    <div style={{ marginTop: 4 }}>
+      <span style={{ background: '#fef3c7', color: '#92400e', padding: '2px 8px', borderRadius: 12, fontSize: 11, fontWeight: 700 }}>
+        {job.interviewLevel === 'L1' ? 'L1 Interview' : 'L2 Interview'}
+      </span>
+    </div>
+  )}
+  {job.status === 'Selected' && job.selectionLevel && (
+    <div style={{ marginTop: 4 }}>
+      <span style={{ background: '#dcfce7', color: '#166534', padding: '2px 8px', borderRadius: 12, fontSize: 11, fontWeight: 700 }}>
+        {job.selectionLevel}
+      </span>
+    </div>
+  )}
 </td>
 
                   <td>{job.applicants}</td>
@@ -392,20 +446,214 @@ const handleSubmit = async (e) => {
          
         
         {viewJob && (
-  <div className="modal">
-    <div className="modal-content">
-     <h2>{viewJob.jobTitle}</h2>
+  <div className="modal" onClick={() => setViewJob(null)}>
+    <div className="modal-content" onClick={e => e.stopPropagation()} style={{maxWidth: '560px', maxHeight: '85vh', overflowY: 'auto'}}>
+      
+      {/* Header */}
+      <div style={{background: 'linear-gradient(135deg, #1e3a5f, #2563eb)', padding: '20px 24px', borderRadius: '8px 8px 0 0', margin: '-20px -20px 20px -20px'}}>
+        <h2 style={{margin: 0, color: '#fff', fontSize: '18px'}}>{viewJob.jobTitle}</h2>
+        <div style={{marginTop: 6}}>
+          <span style={{background: 'rgba(255,255,255,0.2)', color: '#fff', padding: '2px 10px', borderRadius: '12px', fontSize: '12px', fontFamily: 'monospace', fontWeight: '600'}}>
+            {viewJob.jobId || '-'}
+          </span>
+        </div>
+      </div>
 
-<p><b>Designation:</b> {viewJob.designation}</p>
-<p><b>Department:</b> {viewJob.department}</p>
-<p><b>CTC:</b> {viewJob.ctc}</p>
+      {/* Quick Info Badges */}
+      <div style={{display: 'flex', flexWrap: 'wrap', gap: '8px', marginBottom: '16px'}}>
+        {viewJob.location && (
+          <span style={{display:'flex', alignItems:'center', gap:'4px', background:'#f0fdf4', color:'#166534', padding:'4px 10px', borderRadius:'20px', fontSize:'12px', fontWeight:'600', border:'1px solid #bbf7d0'}}>
+            📍 {viewJob.location}
+          </span>
+        )}
+        {viewJob.jobType && (
+          <span style={{display:'flex', alignItems:'center', gap:'4px', background:'#eff6ff', color:'#1d4ed8', padding:'4px 10px', borderRadius:'20px', fontSize:'12px', fontWeight:'600', border:'1px solid #bfdbfe'}}>
+            💼 {viewJob.jobType}
+          </span>
+        )}
+        {viewJob.workMode && (
+          <span style={{display:'flex', alignItems:'center', gap:'4px', background:'#fdf4ff', color:'#7e22ce', padding:'4px 10px', borderRadius:'20px', fontSize:'12px', fontWeight:'600', border:'1px solid #e9d5ff'}}>
+            🏠 {viewJob.workMode}
+          </span>
+        )}
+        {viewJob.noticePeriod && (
+          <span style={{display:'flex', alignItems:'center', gap:'4px', background:'#fff7ed', color:'#c2410c', padding:'4px 10px', borderRadius:'20px', fontSize:'12px', fontWeight:'600', border:'1px solid #fed7aa'}}>
+            ⏱️ {viewJob.noticePeriod}
+          </span>
+        )}
+      </div>
 
-<p><b>Description:</b></p>
-<p>{viewJob.description || "No description available"}</p>
+      {/* Details Grid */}
+      <div style={{display:'grid', gridTemplateColumns:'1fr 1fr', gap:'12px', marginBottom:'16px'}}>
+        <div style={{background:'#f8fafc', padding:'10px 14px', borderRadius:'8px', borderLeft:'3px solid #2563eb'}}>
+          <div style={{fontSize:'11px', color:'#64748b', fontWeight:'600', textTransform:'uppercase', marginBottom:'4px'}}>Designation</div>
+          <div style={{fontSize:'14px', fontWeight:'600', color:'#1f2937'}}>{viewJob.designation || '-'}</div>
+        </div>
+        <div style={{background:'#f8fafc', padding:'10px 14px', borderRadius:'8px', borderLeft:'3px solid #2563eb'}}>
+          <div style={{fontSize:'11px', color:'#64748b', fontWeight:'600', textTransform:'uppercase', marginBottom:'4px'}}>Department</div>
+          <div style={{fontSize:'14px', fontWeight:'600', color:'#1f2937'}}>{viewJob.department || '-'}</div>
+        </div>
+        <div style={{background:'#f8fafc', padding:'10px 14px', borderRadius:'8px', borderLeft:'3px solid #16a34a'}}>
+          <div style={{fontSize:'11px', color:'#64748b', fontWeight:'600', textTransform:'uppercase', marginBottom:'4px'}}>CTC</div>
+          <div style={{fontSize:'14px', fontWeight:'600', color:'#1f2937'}}>{viewJob.ctc || '-'}</div>
+        </div>
+        <div style={{background:'#f8fafc', padding:'10px 14px', borderRadius:'8px', borderLeft:'3px solid #16a34a'}}>
+          <div style={{fontSize:'11px', color:'#64748b', fontWeight:'600', textTransform:'uppercase', marginBottom:'4px'}}>Experience</div>
+          <div style={{fontSize:'14px', fontWeight:'600', color:'#1f2937'}}>{viewJob.experience || '-'}</div>
+        </div>
+      </div>
 
-      <button onClick={() => setViewJob(null)}>
+      {/* Job Description */}
+      <div style={{background:'#f8fafc', padding:'14px', borderRadius:'8px', marginBottom:'16px'}}>
+        <div style={{fontSize:'12px', color:'#64748b', fontWeight:'600', textTransform:'uppercase', marginBottom:'8px'}}>📋 Job Description</div>
+        <p style={{margin:0, fontSize:'13px', color:'#374151', lineHeight:'1.6', whiteSpace:'pre-wrap'}}>
+          {viewJob.description || 'No description available'}
+        </p>
+      </div>
+
+      <button
+        onClick={() => setViewJob(null)}
+        style={{width:'100%', padding:'10px', background:'#2563eb', color:'#fff', border:'none', borderRadius:'8px', fontWeight:'600', cursor:'pointer', fontSize:'14px'}}
+      >
         Close
       </button>
+    </div>
+  </div>
+)}
+
+{/* ── PIPELINE MODAL — Interview Stage / Selected ── */}
+{pipelineModal && (
+  <div style={{ position:'fixed', inset:0, background:'rgba(0,0,0,0.5)', display:'flex', alignItems:'center', justifyContent:'center', zIndex:1000 }}
+    onClick={() => setPipelineModal(null)}>
+    <div style={{ background:'#fff', borderRadius:12, padding:28, width:480, maxHeight:'85vh', overflowY:'auto', boxShadow:'0 20px 60px rgba(0,0,0,0.2)' }}
+      onClick={e => e.stopPropagation()}>
+
+      {/* Header */}
+      <div style={{ background:'linear-gradient(135deg,#1e3a5f,#2563eb)', padding:'16px 20px', borderRadius:'8px 8px 0 0', margin:'-28px -28px 20px -28px' }}>
+        <h3 style={{ margin:0, color:'#fff', fontSize:16 }}>
+          {pipelineForm.status === 'Interview Stage' ? '🎯 Interview Stage Details' : '✅ Selection Details'}
+        </h3>
+        <p style={{ margin:'4px 0 0', color:'rgba(255,255,255,0.8)', fontSize:12 }}>{pipelineModal.jobTitle} — {pipelineModal.department}</p>
+      </div>
+
+      {/* Interview Level (only for Interview Stage) */}
+      {pipelineForm.status === 'Interview Stage' && (
+        <div style={{ marginBottom:16 }}>
+          <label style={{ fontSize:13, fontWeight:600, color:'#374151', display:'block', marginBottom:6 }}>Interview Level *</label>
+          <div style={{ display:'flex', gap:10 }}>
+           {['L1', 'L2'].map(level => (
+              <button key={level}
+                onClick={() => setPipelineForm(f => ({ ...f, interviewLevel: level }))}
+                style={{
+                  flex:1, padding:'10px', border:`2px solid ${pipelineForm.interviewLevel === level ? '#2563eb' : '#e2e8f0'}`,
+                  borderRadius:8, background: pipelineForm.interviewLevel === level ? '#eff6ff' : '#fff',
+                  color: pipelineForm.interviewLevel === level ? '#1d4ed8' : '#374151',
+                  fontWeight:700, cursor:'pointer', fontSize:14
+                }}>
+                {level}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Selection Level (only for Selected) */}
+      {pipelineForm.status === 'Selected' && (
+        <div style={{ marginBottom:16 }}>
+          <label style={{ fontSize:13, fontWeight:600, color:'#374151', display:'block', marginBottom:6 }}>Selection Level *</label>
+          <div style={{ display:'flex', gap:10 }}>
+           {['L1', 'L2'].map(level => (
+              <button key={level}
+                onClick={() => setPipelineForm(f => ({ ...f, selectionLevel: level }))}
+                style={{
+                  flex:1, padding:'10px', border:`2px solid ${pipelineForm.selectionLevel === level ? '#16a34a' : '#e2e8f0'}`,
+                  borderRadius:8, background: pipelineForm.selectionLevel === level ? '#f0fdf4' : '#fff',
+                  color: pipelineForm.selectionLevel === level ? '#166534' : '#374151',
+                  fontWeight:700, cursor:'pointer', fontSize:14
+                }}>
+                {level}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Date Fields */}
+      <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:12, marginBottom:20 }}>
+        <div>
+          <label style={{ fontSize:12, fontWeight:600, color:'#64748b', display:'block', marginBottom:4 }}>📅 Applied Date</label>
+          <input type="date" style={{ width:'100%', padding:'8px', border:'1px solid #d1d5db', borderRadius:6, fontSize:13, boxSizing:'border-box' }}
+            value={pipelineForm.appliedDate}
+            onChange={e => setPipelineForm(f => ({ ...f, appliedDate: e.target.value }))} />
+        </div>
+        <div>
+          <label style={{ fontSize:12, fontWeight:600, color:'#64748b', display:'block', marginBottom:4 }}>🎯 L1 Interview Date</label>
+          <input type="date" style={{ width:'100%', padding:'8px', border:'1px solid #d1d5db', borderRadius:6, fontSize:13, boxSizing:'border-box' }}
+            value={pipelineForm.l1InterviewDate}
+            onChange={e => setPipelineForm(f => ({ ...f, l1InterviewDate: e.target.value }))} />
+        </div>
+        <div>
+          <label style={{ fontSize:12, fontWeight:600, color:'#64748b', display:'block', marginBottom:4 }}>🎯 L2 Interview Date</label>
+          <input type="date" style={{ width:'100%', padding:'8px', border:'1px solid #d1d5db', borderRadius:6, fontSize:13, boxSizing:'border-box' }}
+            value={pipelineForm.l2InterviewDate}
+            onChange={e => setPipelineForm(f => ({ ...f, l2InterviewDate: e.target.value }))} />
+        </div>
+        <div>
+          <label style={{ fontSize:12, fontWeight:600, color:'#64748b', display:'block', marginBottom:4 }}>📄 Offer Stage Date</label>
+          <input type="date" style={{ width:'100%', padding:'8px', border:'1px solid #d1d5db', borderRadius:6, fontSize:13, boxSizing:'border-box' }}
+            value={pipelineForm.offerDate}
+            onChange={e => setPipelineForm(f => ({ ...f, offerDate: e.target.value }))} />
+        </div>
+        <div style={{ gridColumn:'1 / -1' }}>
+          <label style={{ fontSize:12, fontWeight:600, color:'#64748b', display:'block', marginBottom:4 }}>🚀 Onboarding Date</label>
+          <input type="date" style={{ width:'100%', padding:'8px', border:'1px solid #d1d5db', borderRadius:6, fontSize:13, boxSizing:'border-box' }}
+            value={pipelineForm.onboardingDate}
+            onChange={e => setPipelineForm(f => ({ ...f, onboardingDate: e.target.value }))} />
+        </div>
+      </div>
+
+      {/* Actions */}
+      <div style={{ display:'flex', gap:10 }}>
+        <button onClick={() => setPipelineModal(null)}
+          style={{ flex:1, padding:'10px', background:'#f1f5f9', border:'none', borderRadius:8, cursor:'pointer', fontWeight:600, color:'#374151' }}>
+          Cancel
+        </button>
+        
+       <button
+  onClick={async () => {
+
+    // ✅ ADD THIS BLOCK HERE (VERY TOP)
+    if (pipelineForm.status === 'Interview Stage' && !pipelineForm.interviewLevel) {
+      alert("Please select Interview Level (L1 or L2)");
+      return;
+    }
+
+    if (pipelineForm.status === 'Selected' && !pipelineForm.selectionLevel) {
+      alert("Please select Selection Level");
+      return;
+    }
+
+    // existing code continues
+    const jobId = pipelineModal._id || pipelineModal.id;
+    const updates = { ...pipelineForm };
+
+    // Update UI immediately
+    setJobs(prev => prev.map(j =>
+      (j._id || j.id) === jobId ? { ...j, ...updates } : j
+    ));
+
+    try {
+      await updateJob(jobId, updates);
+    } catch (err) {
+      console.error("Pipeline update failed", err);
+    }
+
+    setPipelineModal(null);
+  }}
+>
+  ✓ Save Pipeline Details
+</button>
+      </div>
     </div>
   </div>
 )}
@@ -413,7 +661,7 @@ const handleSubmit = async (e) => {
 
 {showPostJob && (
   <div className="modal-overlay">
-    <div className="modal-content">
+    <div className="modal-content" style={{maxWidth: '520px', maxHeight: '85vh', overflowY: 'auto'}}>
 
       <h2>Post Job</h2>
 
@@ -423,14 +671,16 @@ const handleSubmit = async (e) => {
   name="jobTitle"
   value={formData.jobTitle}
   onChange={handleChange}
-  placeholder="Job Title"
+  placeholder="Job Title *"
+  required
 />
 
 <input
   name="department"
   value={formData.department}
   onChange={handleChange}
-  placeholder="Department"
+  placeholder="Department *"
+  required
 />
 
 <input
@@ -444,15 +694,52 @@ const handleSubmit = async (e) => {
   name="ctc"
   value={formData.ctc}
   onChange={handleChange}
-  placeholder="CTC"
+  placeholder="CTC (e.g. 6-8 LPA)"
 />
 
 <input
   name="applicants"
   value={formData.applicants}
   onChange={handleChange}
-  placeholder="Applicants"
+  placeholder="No. of Openings"
 />
+
+{/* Location */}
+<input
+  name="location"
+  value={formData.location}
+  onChange={handleChange}
+  placeholder="📍 Location (e.g. Bangalore, Mumbai)"
+/>
+
+{/* Job Type */}
+<select name="jobType" value={formData.jobType} onChange={handleChange}>
+  <option value="">💼 Job Type</option>
+  <option value="Full-time">Full-time</option>
+  <option value="Part-time">Part-time</option>
+  <option value="Contract">Contract</option>
+  <option value="Temporary">Temporary</option>
+  <option value="Internship">Internship</option>
+  <option value="Freelance">Freelance</option>
+</select>
+
+{/* Work Mode */}
+<select name="workMode" value={formData.workMode} onChange={handleChange}>
+  <option value="">🏠 Work Mode</option>
+  <option value="On-site">On-site</option>
+  <option value="Remote">Remote (Work from Home)</option>
+  <option value="Hybrid">Hybrid</option>
+</select>
+
+{/* Notice Period */}
+<select name="noticePeriod" value={formData.noticePeriod} onChange={handleChange}>
+  <option value="">⏱️ Notice Period</option>
+  <option value="Immediate Joining">Immediate Joining</option>
+  <option value="15 Days">15 Days</option>
+  <option value="30 Days">30 Days</option>
+  <option value="60 Days">60 Days</option>
+  <option value="90 Days">90 Days</option>
+</select>
 
 <select name="status" value={formData.status} onChange={handleChange}>
   <option>Open</option>
@@ -465,14 +752,15 @@ const handleSubmit = async (e) => {
   name="postedDate"
   value={formData.postedDate}
   onChange={handleChange}
-  placeholder="Posted Date"
+  placeholder="Posted Date (e.g. 13/04/2026)"
 />
 
 <textarea
   name="description"
   value={formData.description}
   onChange={handleChange}
-  placeholder="Job Description"
+  placeholder="Job Description — roles, responsibilities, requirements..."
+  rows={4}
 />
 
         <div className="modal-actions">

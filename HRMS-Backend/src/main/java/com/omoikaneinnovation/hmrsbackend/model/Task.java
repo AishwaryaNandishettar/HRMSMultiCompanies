@@ -24,6 +24,7 @@ public class Task {
     private String assignee;    // employee EMAIL
     private String assignedBy;  // manager/admin EMAIL
     private String assigneeName; // display name (optional)
+    private String assigneeId;   // employee ID (e.g. OMOI123)
 
     private String priority;    // HIGH, MEDIUM, LOW
     private String status;      // ASSIGNED, ACCEPTED, IN_PROGRESS, SUBMITTED, COMPLETED, REJECTED

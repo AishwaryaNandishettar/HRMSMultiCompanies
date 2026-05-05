@@ -96,10 +96,15 @@ res.forEach(r => {
 
   if (!grouped[key]) {
     grouped[key] = {
-      empId: r.empId,
-      empName: r.empId,
-      department: "Office",
-       reportingManager: r.managerName || "Manager1", // ✅ NEW
+   empId: r.empId || "-",
+
+empName:
+  r.empName ||
+  r.name ||
+  r.employeeName ||
+  "-",  
+      department: r.department || "-",
+       reportingManager: r.reportingManager || "-",
       month: r.month || month,
       present: 0,
       leave: 0,
@@ -110,19 +115,21 @@ res.forEach(r => {
       field: 0,
       totalHours: 0,
       days: 0,
-      approval: r.status,
-      status: r.status || "Pending" // ✅ ADD THIS
+      approval: r.approval,
+      status: r.approval || "Pending"
     };
   }
 
-  // ✅ Example logic (adjust based on backend fields)
-  grouped[key].present += r.status === "Present" ? 1 : 0;
-  grouped[key].leave += r.status === "Leave" ? 1 : 0;
-  grouped[key].lop += r.status === "LOP" ? 1 : 0;
-  grouped[key].halfDay += r.status === "HalfDay" ? 1 : 0;
-  grouped[key].late += r.late ? 1 : 0;
-  grouped[key].wfh += r.mode === "WFH" ? 1 : 0;
-  grouped[key].field += r.mode === "Field" ? 1 : 0;
+  // Backend already aggregates counts — use them directly
+  grouped[key].present = r.present || grouped[key].present;
+  grouped[key].leave = r.leave || grouped[key].leave;
+  grouped[key].lop = r.lop || grouped[key].lop;
+  grouped[key].halfDay = r.halfDay || grouped[key].halfDay;
+  grouped[key].late = r.late || grouped[key].late;
+  grouped[key].wfh = r.wfh || grouped[key].wfh;
+  grouped[key].field = r.field || grouped[key].field;
+  grouped[key].totalHours = r.avgHours || grouped[key].totalHours;
+  grouped[key].days += 1;
 
   grouped[key].totalHours += parseFloat(r.duration || 0);
   grouped[key].days += 1;
@@ -130,7 +137,7 @@ res.forEach(r => {
 
 // convert to array
 const mapped = Object.values(grouped).map(g => {
-  const avgHours = g.days > 0 ? (g.totalHours / g.days).toFixed(2) : 0;
+  const avgHours = g.totalHours > 0 ? parseFloat(g.totalHours).toFixed(2) : "0.00";
 
   // ✅ HR SUMMARY (INSIDE MAP)
   const workingDays = g.present + g.wfh + g.field;
@@ -140,10 +147,7 @@ const mapped = Object.values(grouped).map(g => {
   const attendancePercent =
     g.days > 0 ? ((workingDays / g.days) * 100).toFixed(1) : 0;
 
-  const overtime =
-    g.totalHours > g.days * 8
-      ? (g.totalHours - g.days * 8).toFixed(2)
-      : 0;
+  const overtime = 0; // calculated server-side if needed
 
   return {
     ...g,
@@ -198,14 +202,26 @@ setRecords(mapped);
   if (filters.fromMonth && r.month < filters.fromMonth) return false;
   if (filters.toMonth && r.month > filters.toMonth) return false;
 
-  // 👤 EMPLOYEE → only own data
-  if (role === ROLE_EMP) {
-    return matchesFilter && r.empId === "U1"; // 🔥 replace with logged-in user ID
-  }
 
-  // 👨‍💼 MANAGER → only team data
+ const currentEmpId =
+  loggedUser?.employeeId || loggedUser?.empId || loggedUser?.email;
+
+if (role === ROLE_EMP) {
+  // Match by empId (employee ID like OMOI123) or by email stored as empId
+  return matchesFilter && (
+    r.empId === currentEmpId ||
+    r.empId === loggedUser?.email ||
+    r.empId === loggedUser?.employeeId
+  );
+}
+
+  // 👨‍💼 MANAGER → only team data (employees whose reportingManager matches logged-in manager's name or email)
   if (role === ROLE_MGR) {
-    return matchesFilter && r.reportingManager === "Manager1"; // 🔥 replace with logged-in manager name
+    const managerIdentifier = loggedUser?.name || loggedUser?.managerName || loggedUser?.email || "";
+    return matchesFilter && (
+      r.reportingManager === managerIdentifier ||
+      r.reportingManager === loggedUser?.email
+    );
   }
 
   // 🏢 ADMIN → only approved/rejected

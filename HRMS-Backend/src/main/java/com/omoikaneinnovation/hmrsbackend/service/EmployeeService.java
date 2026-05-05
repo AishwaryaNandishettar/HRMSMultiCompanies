@@ -24,22 +24,41 @@
     @Autowired
     private com.omoikaneinnovation.hmrsbackend.repository.EmployeeRepository employeeRepo;
 
-    public java.util.List<com.omoikaneinnovation.hmrsbackend.model.Employee> getAllEmployees() {
-        return employeeRepo.findAll();
-    }
-        public User createEmployee(String name, String email, String password) {
-            User user = new User();
-            user.setName(name);
-            user.setEmail(email);
-            user.setPassword(passwordEncoder.encode(password));
-            user.setRole("EMPLOYEE");
-            user.setActive(true); // mark employee active by default
-            return userRepository.save(user);
-        }
-        public List<Employee> getCurrentMonthBirthdays() {
-        int currentMonth = LocalDate.now().getMonthValue();
+ public List<Employee> getAllEmployees(String companyId) {
+    return employeeRepo.findByCompanyId(companyId);
+}
+       public User createEmployee(String name, String email, String password, String companyId) {
 
-        return employeeRepo.findAll().stream()
+    User user = new User();
+    user.setName(name);
+    user.setEmail(email);
+    user.setPassword(passwordEncoder.encode(password));
+    user.setRole("EMPLOYEE");
+    user.setActive(true);
+   // ✅ ADD THIS (VERY IMPORTANT)
+    user.setCompanyId(companyId); // ✅ USE PARAM
+
+
+    User savedUser = userRepository.save(user);
+
+    Employee emp = new Employee();
+    emp.setFullName(name);
+    emp.setEmail(email);
+    emp.setStatus("ACTIVE");
+     // ✅ now this will NOT be null
+    emp.setCompanyId(savedUser.getCompanyId());
+
+    emp.setDepartment("IT");
+    emp.setDesignation("Employee");
+
+    employeeRepo.save(emp);
+
+    return savedUser;
+}
+      public List<Employee> getCurrentMonthBirthdays() {
+    int currentMonth = LocalDate.now().getMonthValue();
+
+    return employeeRepo.findAll().stream()
             .filter(emp -> {
                 if (emp.getDob() == null) return false;
                 return LocalDate.parse(emp.getDob()).getMonthValue() == currentMonth;

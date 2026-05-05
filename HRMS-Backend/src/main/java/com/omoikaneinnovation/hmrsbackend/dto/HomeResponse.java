@@ -20,6 +20,15 @@ public class HomeResponse {
     //List<Map<String, Object>> attendanceGraph
     private List<Map<String, Object>> attendanceGraph;
 private List<Map<String, Object>> leaveGraph;
+private List<Map<String, Object>> leaveUsers;
+
+public List<Map<String, Object>> getLeaveUsers() {
+    return leaveUsers;
+}
+
+public void setLeaveUsers(List<Map<String, Object>> leaveUsers) {
+    this.leaveUsers = leaveUsers;
+}
     /* ================= STATS ================= */
   @Data
 @AllArgsConstructor

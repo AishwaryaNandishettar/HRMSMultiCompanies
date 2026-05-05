@@ -16,9 +16,9 @@ export const createJob = async (data) => {
   return res.data;
 };
 
-// Update full job
+// Update full job (status + level + dates)
 export const updateJob = async (id, data) => {
-  const res = await api.put(`/api/jobs/${id}`, data);
+  const res = await api.put(`/api/jobs/update/${id}`, data);
   return res.data;
 };
 

@@ -10,6 +10,7 @@ import lombok.NoArgsConstructor;
 public class AttendanceDTO {
     private String id;
     private String userId;
+    private String managerId;
     private String empId;          // proper employee ID like EMP001
     private String name;
     private String department;

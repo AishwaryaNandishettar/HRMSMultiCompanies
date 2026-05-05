@@ -31,10 +31,14 @@ if (!token) {
   return;
 }
   stompClient = new Client({
-   webSocketFactory: () =>
-  new SockJS(`${import.meta.env.VITE_API_BASE_URL}/ws`, null, {
-    transports: ["websocket", "xhr-streaming", "xhr-polling"]
-  }),
+  webSocketFactory: () =>
+  new SockJS(
+    `${import.meta.env.VITE_API_BASE_URL}/ws?token=${token}`,
+    null,
+    {
+      transports: ["websocket", "xhr-streaming", "xhr-polling"]
+    }
+  ),
 
     connectHeaders: {
       Authorization: `Bearer ${token}`,

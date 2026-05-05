@@ -3,6 +3,7 @@ package com.omoikaneinnovation.hmrsbackend.service;
 import java.util.List;
 import java.util.stream.Collectors;
 import java.util.*;
+import java.util.Optional;
 import org.springframework.stereotype.Service;
 import com.omoikaneinnovation.hmrsbackend.model.LeaveRequest;
 import com.omoikaneinnovation.hmrsbackend.model.Attendance;
@@ -35,11 +36,11 @@ public class HomeService {
         return getHomeData(user.getId(), role);
     }
 
+
     /* =====================================================
        INTERNAL LOGIC
     ===================================================== */
     public HomeResponse getHomeData(String userId, String role) {
-        
         System.out.println("🔍 HomeService: Processing userId: " + userId + ", role: " + role);
 
         Salary salary = salaryRepository.findByUserId(userId);
@@ -49,6 +50,110 @@ public class HomeService {
             salary.setEarnings(List.of());
             salary.setDeductions(List.of());
         }
+
+
+List<LeaveRequest> leaveList;
+
+if (role.equalsIgnoreCase("ADMIN") || role.equalsIgnoreCase("HR")) {
+    // Admin/HR sees all employees on leave
+    leaveList = leaveRepository.findAll();
+} 
+else if (role.equalsIgnoreCase("MANAGER")) {
+    // Manager sees only their team members on leave
+    User manager = userRepository.findById(userId).orElse(null);
+    if (manager != null && manager.getDepartment() != null) {
+        // Get all users in the same department
+        List<User> teamMembers = userRepository.findAll().stream()
+            .filter(u -> manager.getDepartment().equals(u.getDepartment()))
+            .collect(Collectors.toList());
+        
+        List<String> teamUserIds = teamMembers.stream()
+            .map(User::getId)
+            .collect(Collectors.toList());
+        
+        // Get leaves for team members only
+        leaveList = leaveRepository.findAll().stream()
+            .filter(l -> teamUserIds.contains(l.getUserId()))
+            .collect(Collectors.toList());
+    } else {
+        leaveList = leaveRepository.findAll();
+    }
+} 
+else {
+    // Employee sees only their own leaves
+    leaveList = leaveRepository.findByUserId(userId);
+}
+
+// ✅ Filter for employees currently on leave (today's date falls between start and end date)
+java.time.LocalDate today = java.time.LocalDate.now();
+
+System.out.println("🔍 HomeService: Today's date is: " + today);
+System.out.println("🔍 HomeService: Total leaves to check: " + leaveList.size());
+
+List<Map<String, Object>> leaveUsers = leaveList.stream()
+    .filter(l -> {
+        System.out.println("🔍 Checking leave - Status: " + l.getStatus() + 
+                          ", Start: " + l.getStartDate() + 
+                          ", End: " + l.getEndDate() + 
+                          ", Type: " + l.getLeaveType());
+        
+        if (l.getStatus() == null || !l.getStatus().trim().equalsIgnoreCase("Approved")) {
+            System.out.println("   ❌ Filtered out - Status not Approved");
+            return false;
+        }
+        
+        try {
+            // Parse dates and check if today falls within leave period
+            java.time.LocalDate startDate = java.time.LocalDate.parse(l.getStartDate());
+            java.time.LocalDate endDate = java.time.LocalDate.parse(l.getEndDate());
+            
+            boolean isOnLeaveToday = !today.isBefore(startDate) && !today.isAfter(endDate);
+            
+            System.out.println("   📅 Start: " + startDate + ", End: " + endDate + 
+                             ", Today: " + today + ", On leave today: " + isOnLeaveToday);
+            
+            if (!isOnLeaveToday) {
+                System.out.println("   ❌ Filtered out - Not on leave today");
+            } else {
+                System.out.println("   ✅ INCLUDED - Employee is on leave today!");
+            }
+            
+            return isOnLeaveToday;
+        } catch (Exception e) {
+            System.err.println("   ⚠️ Date parsing error for leave: " + e.getMessage());
+            return false;
+        }
+    })
+    .map(l -> {
+        Map<String, Object> map = new HashMap<>();
+        User u = userRepository.findById(l.getUserId()).orElse(null);
+        
+        // Try multiple name sources in order of preference
+        String displayName = null;
+        if (u != null && u.getName() != null && !u.getName().isEmpty() 
+            && !u.getName().equals(u.getEmployeeId())) {
+            displayName = u.getName();
+        } else if (l.getEmployeeName() != null && !l.getEmployeeName().isEmpty()) {
+            displayName = l.getEmployeeName();
+        } else if (u != null && u.getEmail() != null) {
+            // Use email prefix as fallback
+            displayName = u.getEmail().split("@")[0];
+        } else {
+            displayName = l.getUserId();
+        }
+        
+        map.put("name", displayName);
+        map.put("startDate", l.getStartDate());
+        map.put("endDate", l.getEndDate());
+        map.put("leaveType", l.getLeaveType());
+        map.put("department", u != null ? u.getDepartment() : "N/A");
+        
+        System.out.println("   ✅ Added to leaveUsers: " + displayName);
+        return map;
+    })
+    .collect(Collectors.toList());
+
+System.out.println("🔍 HomeService: Final leaveUsers count: " + leaveUsers.size());
 
         /* ===== MAP SALARY ITEMS ===== */
         List<HomeResponse.Item> earnings =
@@ -127,7 +232,12 @@ public class HomeService {
             System.out.println("🔍 HomeService: Employee role, skipping employee counts");
         }
 
-        List<Map<String, Object>> attendanceGraph = buildAttendanceGraph(userId);
+        // Resolve the user's email for attendance lookup (attendance stores email as userId)
+        String userEmail = userRepository.findById(userId)
+            .map(User::getEmail)
+            .orElse(userId);
+
+        List<Map<String, Object>> attendanceGraph = buildAttendanceGraph(userId, userEmail, role);
         List<Map<String, Object>> leaveGraph = buildLeaveGraph(userId, role);
 
         System.out.println("🔍 HomeService: Built attendance graph with " + attendanceGraph.size() + " entries");
@@ -139,14 +249,26 @@ public class HomeService {
         response.setEvents(events);
         response.setAttendanceGraph(attendanceGraph);
         response.setLeaveGraph(leaveGraph);
+        response.setLeaveUsers(leaveUsers);
 
         System.out.println("🔍 HomeService: Response created successfully");
         return response;
     }
 
-    private List<Map<String, Object>> buildAttendanceGraph(String userId) {
+    private List<Map<String, Object>> buildAttendanceGraph(String userId, String userEmail, String role) {
 
-        List<Attendance> list = attendanceRepository.findByUserId(userId);
+        // For admin/HR/manager: show all attendance data aggregated
+        // For employee: show only their own attendance
+        List<Attendance> list;
+        if (role.equalsIgnoreCase("ADMIN") || role.equalsIgnoreCase("HR")) {
+            list = new ArrayList<>(attendanceRepository.findAll());
+        } else {
+            // Attendance records store userId as email. Try both the raw userId and email.
+            list = new ArrayList<>(attendanceRepository.findByUserId(userEmail));
+            if (list.isEmpty() && !userId.equals(userEmail)) {
+                list.addAll(attendanceRepository.findByUserId(userId));
+            }
+        }
 
         Map<String, Map<String, Integer>> monthly = new HashMap<>();
 

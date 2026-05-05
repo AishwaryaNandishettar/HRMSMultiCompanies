@@ -133,9 +133,13 @@ public CorsConfigurationSource corsConfigurationSource() {
 .requestMatchers("/api/company").permitAll()
 .requestMatchers("/api/designations/**").permitAll()
 .requestMatchers("/api/departments/**").permitAll()
+.requestMatchers("/api/events/**").permitAll()
+.requestMatchers("/api/notifications/**").permitAll()
+.requestMatchers("/api/helpdesk/**").authenticated()
 
   // ✅ CHAT APIs - Allow authenticated users
   .requestMatchers("/api/chat/**").authenticated()
+  .requestMatchers("/api/meetings/**").authenticated()
 
     // WEBSOCKET - Allow all for connection
     .requestMatchers("/socket.io/**", "/ws/**").permitAll()

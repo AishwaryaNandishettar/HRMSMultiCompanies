@@ -27,14 +27,14 @@ const totalNet = data.reduce(
           <tr>
             <th>Employee Name</th>
             <th>Employee ID</th>
-            <th> DEpartment</th>
-          
-<th>Gross Pay</th>
-<th>Deductions</th>
-<th>Net Pay</th>
-<th>Status</th>
-
-      <th>Payroll Status</th>   {/* ✅ NEW COLUMN */}     
+            <th>Department</th>
+            <th>Gross Pay</th>
+            <th>Deductions</th>
+            <th>Net Pay</th>
+            <th>Status</th>
+            <th>Payroll Month</th>
+            <th>Initiated Date</th>
+            <th>Payroll Status</th>
             <th style={{ textAlign: "right" }}>Actions</th>
            
             
@@ -65,14 +65,32 @@ const totalNet = data.reduce(
         />
       ))}
 
-      {/* ✅ GRAND TOTAL ROW (ADD HERE EXACTLY) */}
-      <tr className="grand-total-row">
-        <td colSpan="3"><strong>Grand Total</strong></td>
-        <td><strong>{totalGross.toLocaleString()}</strong></td>
-        <td><strong>{totalDeductions.toLocaleString()}</strong></td>
-        <td><strong>{totalNet.toLocaleString()}</strong></td>
-        <td colSpan="3"></td>
-      </tr>
+      {/* ✅ GRAND TOTAL ROW */}
+      {(() => {
+        const tdStyle = {
+          background: 'linear-gradient(135deg, #1e3a5f 0%, #2563eb 100%)',
+          padding: '14px 12px',
+          color: '#ffffff',
+          fontWeight: '700',
+          fontSize: '14px',
+          borderTop: '3px solid #1d4ed8',
+        };
+        return (
+          <tr>
+            <td style={{ ...tdStyle, textTransform: 'uppercase', letterSpacing: '0.5px' }}>💰 Grand Total</td>
+            <td style={tdStyle}></td>
+            <td style={tdStyle}></td>
+            <td style={{ ...tdStyle }}>₹ {totalGross.toLocaleString('en-IN')}</td>
+            <td style={{ ...tdStyle, color: '#fca5a5' }}>₹ {totalDeductions.toLocaleString('en-IN')}</td>
+            <td style={{ ...tdStyle, color: '#86efac' }}>₹ {totalNet.toLocaleString('en-IN')}</td>
+            <td style={tdStyle}></td>
+            <td style={tdStyle}></td>
+            <td style={tdStyle}></td>
+            <td style={tdStyle}></td>
+            <td style={tdStyle}></td>
+          </tr>
+        );
+      })()}
     </>
   )}
 </tbody>

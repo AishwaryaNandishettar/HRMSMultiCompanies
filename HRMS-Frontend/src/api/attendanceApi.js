@@ -2,26 +2,12 @@ import api from "./axios";
 
 /* ================= CHECK IN ================= */
 export const checkIn = async (record) => {
-  const user = JSON.parse(localStorage.getItem("user"));
-
-  return api.post("/api/attendance/checkin", {
-    userId: user.id,
-    date: record.date,
-    checkIn: record.checkIn,
-    locationIn: record.locationIn
-  });
+  return api.post("/api/attendance/checkin", record);
 };
 
 /* ================= CHECK OUT ================= */
 export const checkOut = async (record) => {
-  const user = JSON.parse(localStorage.getItem("user"));
-
-  return api.post("/api/attendance/checkout", {
-    userId: user.id,
-    date: record.date,
-    checkOut: record.checkOut,
-    locationOut: record.locationOut
-  });
+  return api.post("/api/attendance/checkout", record);
 };
 
 /* ================= GET MY ATTENDANCE ================= */

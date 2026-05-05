@@ -1,20 +1,24 @@
 import React, { useContext, useState } from "react";
 import styles from "./Navbar.module.css";
-import { FiBell, FiCopy } from "react-icons/fi";
+import { FiBell, FiCopy ,FiMenu} from "react-icons/fi";
 import logo from "../assets/Transperant Background.png";
 import { AuthContext } from "../Context/Authcontext";
 import { useNavigate } from "react-router-dom";
 
-const AvatarCircle = ({ name, photo }) => {
-  const letter =
-    photo || !name ? null : name.trim().charAt(0).toUpperCase();
+const AvatarCircle = ({ name, photo, email }) => {
+  // 👇 Extract name from email if name not available
+  const displayName =
+    name ||
+    (email ? email.split("@")[0] : "User");
+
+  const letter = displayName.charAt(0).toUpperCase();
 
   return (
     <div className={styles.userdp}>
       {photo ? (
         <img src={photo} alt="User DP" className={styles.userdpImg} />
       ) : (
-        <span>{letter || "?"}</span>
+        <span>{letter}</span>
       )}
     </div>
   );
@@ -24,7 +28,8 @@ const Navbar = ({
   notifications,
   setNotifications,
   showNotif,
-  setShowNotif
+  setShowNotif,
+   onMenuToggle   // ADD THIS
 }) => {
   const [menuOpen, setMenuOpen] = useState(false);
   const { user, logout } = useContext(AuthContext);
@@ -68,6 +73,13 @@ const handleNotificationClick = (notification) => {
     <header className={styles.navbarContainer}>
       {/* LOGO */}
       <div className={styles.navbarLeft}>
+         {/* ADD THIS */}
+  <button
+    className={styles.hamburger}
+    onClick={onMenuToggle}
+  >
+    <FiMenu />
+  </button>
         <img src={logo} alt="Logo" className={styles.logo} />
       </div>
 
@@ -135,9 +147,10 @@ const handleNotificationClick = (notification) => {
               style={{ cursor: "pointer" }}
             >
               <AvatarCircle
-                name={user?.name}
-                photo={user?.photo}
-              />
+  name={user?.name}
+  photo={user?.photo}
+  email={user?.email}
+/>
             </div>
           )}
 

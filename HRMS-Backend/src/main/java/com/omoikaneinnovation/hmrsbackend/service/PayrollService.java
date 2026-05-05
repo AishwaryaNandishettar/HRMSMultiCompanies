@@ -35,12 +35,11 @@ public class PayrollService {
 
     public Payroll processPayroll(String employeeId) {
 
-Payroll payroll = repo.findByEmployeeId(employeeId)
-    .orElseGet(() -> repo.findByEmpCode(employeeId).stream().findFirst().orElse(null));
+Payroll payroll = repo.findTopByEmployeeIdOrderByUpdatedAtDesc(employeeId);
 
-    if (payroll == null) {
-        throw new RuntimeException("Payroll not found for ID: " + employeeId);
-    }
+if (payroll == null) {
+    payroll = repo.findByEmpCode(employeeId).stream().findFirst().orElse(null);
+}
 
     payroll.setPayrollStatus("PROCESSING");
     repo.save(payroll);
@@ -59,34 +58,67 @@ Payroll payroll = repo.findByEmployeeId(employeeId)
     return repo.save(payroll);
 }
 
-    // ✅ YOUR LOGIC (UNCHANGED — just moved here)
+    // ✅ FIXED: Proper upsert — update existing records, don't reset to 0
     public List<Payroll> saveAll(List<Payroll> payrollList) {
 
-        // 1. Make old payroll INACTIVE
-        List<Payroll> existing = repo.findAll();
-       existing.forEach(p -> {
-           p.setRecordStatus("INACTIVE");
-           p.setStatus("INACTIVE"); // ✅ SYNC STATUS
-       });
-        repo.saveAll(existing);
+        List<Payroll> toSave = new java.util.ArrayList<>();
 
-        // 2. Save new payroll as ACTIVE
-        payrollList.forEach(p -> {
-            // ✅ ENSURE STATUS IS UPPERCASE
-            String statusValue = (p.getStatus() != null) ? p.getStatus().toUpperCase() : "ACTIVE";
-            p.setStatus(statusValue);
-            p.setRecordStatus(statusValue); // ✅ SYNC BOTH FIELDS
-            p.setPayrollStatus("INITIATED");
-            p.setUpdatedAt(System.currentTimeMillis());
-            
-            System.out.println("🔥 SAVING PAYROLL: empId=" + p.getEmployeeId() + ", status=" + p.getStatus());
-        });
+        for (Payroll incoming : payrollList) {
+            // Try to find existing record for this employee
+        Payroll existing = repo.findTopByEmployeeIdOrderByUpdatedAtDesc(incoming.getEmployeeId());
 
-        List<Payroll> saved = repo.saveAll(payrollList);
-        
+java.util.Optional<Payroll> existingOpt = java.util.Optional.ofNullable(existing);
+
+if (existingOpt.isPresent()) {
+    Payroll existingData = existingOpt.get();
+
+    incoming.setId(existingData.getId());
+
+    if (incoming.getPayrollStatus() == null) {
+        incoming.setPayrollStatus(existingData.getPayrollStatus());
+    }
+    if (incoming.getSalaryStatus() == null) {
+        incoming.setSalaryStatus(existingData.getSalaryStatus());
+    }
+
+    if (existingData.getInitiatedAt() != null) {
+        incoming.setInitiatedAt(existingData.getInitiatedAt());
+        incoming.setInitiatedDate(existingData.getInitiatedDate());
+    } else {
+        long now = System.currentTimeMillis();
+        incoming.setInitiatedAt(now);
+        incoming.setInitiatedDate(formatDate(now));
+    }
+} else {
+    incoming.setPayrollStatus("INITIATED");
+    long now = System.currentTimeMillis();
+    incoming.setInitiatedAt(now);
+    incoming.setInitiatedDate(formatDate(now));
+}
+            // Ensure status is uppercase
+            String statusValue = (incoming.getStatus() != null) ? incoming.getStatus().toUpperCase() : "ACTIVE";
+            incoming.setStatus(statusValue);
+            incoming.setRecordStatus(statusValue);
+            incoming.setUpdatedAt(System.currentTimeMillis());
+
+            System.out.println("🔥 UPSERTING PAYROLL: empId=" + incoming.getEmployeeId() + 
+                             ", basic=" + incoming.getBasic() + 
+                             ", net=" + incoming.getNet());
+
+            toSave.add(incoming);
+        }
+
+        List<Payroll> saved = repo.saveAll(toSave);
         System.out.println("✅ PAYROLL BATCH SAVED: " + saved.size() + " records");
-        
         return saved;
+    }
+
+    // Helper: format timestamp to readable date
+    private String formatDate(long timestamp) {
+        java.time.LocalDate date = java.time.Instant.ofEpochMilli(timestamp)
+            .atZone(java.time.ZoneId.systemDefault())
+            .toLocalDate();
+        return date.format(java.time.format.DateTimeFormatter.ofPattern("dd MMM yyyy"));
     }
 
     public List<Payroll> processAllPayroll() {

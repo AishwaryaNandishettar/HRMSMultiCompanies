@@ -78,6 +78,7 @@ private final BCryptPasswordEncoder encoder;
         res.email = user.getEmail();
         res.role = user.getRole();
         res.token = token;
+        res.companyId = user.getCompanyId(); // ✅ ADD THIS LINE
         // ✅ SET EMPLOYEE ID
         res.empId = emp != null ? emp.getEmployeeId() : null;
         res.employeeId = emp != null ? emp.getEmployeeId() : null;

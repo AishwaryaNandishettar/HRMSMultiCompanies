@@ -7,4 +7,5 @@ public class LoginResponse {
     public String token;
     public String empId;     // ✅ ADD THIS
     public String employeeId; // ✅ ADD THIS
+     public String companyId;   // ✅ THIS IS MISSING
 }

@@ -1207,25 +1207,32 @@ const getDesignation = () => {
                         <option>30 Days</option>
                         <option>60 Days</option>
                         <option>90 Days</option>
-                          <option>Custom</option> {/* ✅ ADD THIS */} 
+                           <option>45 Days</option>   {/* ✅ ADD THIS LINE */}
                          
                       </select>
 
 
- {exitData.notice === "Custom" && (
+                      <label>
   <input
-    type="number"
-    placeholder="Enter notice period in days"
-    className={styles.input}
-    onChange={(e) => {
-      const customDays = e.target.value;
-
-      setExitData({
-        ...exitData,
-        notice: customDays + " Days"
-      });
-    }}
+    type="checkbox"
+    checked={earlyRelease}
+    onChange={() => setEarlyRelease(!earlyRelease)}
   />
+  Request Early Release
+</label>
+
+{earlyRelease && (
+  <>
+    <label>Select Early Release Date</label>
+    <input
+      type="date"
+      className={styles.input}
+      value={exitData.lwd}
+      onChange={(e) =>
+        setExitData({ ...exitData, lwd: e.target.value })
+      }
+    />
+  </>
 )}
                       <label>Last Working Day</label>
                       <input
