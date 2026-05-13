@@ -70,7 +70,8 @@ export default function TaskModule() {
     if (!canManage) return;
     getAllEmployees()
       .then((res) => {
-        const list = res?.data?.content || res?.data || [];
+        // getAllEmployees() returns response.data directly — already the array
+        const list = Array.isArray(res) ? res : (Array.isArray(res?.data) ? res.data : []);
         const allEmps = Array.isArray(list) ? list : [];
 
         if (isManager) {

@@ -95,7 +95,8 @@ useEffect(() => {
   getAllEmployees()
     .then(res => {
       console.log("🔥 EMPLOYEE API RESPONSE:", res);
-      const empData = Array.isArray(res) ? res : res.data;
+      // getAllEmployees() returns response.data directly — already the array
+      const empData = Array.isArray(res) ? res : (Array.isArray(res?.data) ? res.data : []);
       setEmployees(empData);
       console.log("📊 EMPLOYEE DATA SET:", empData);
     })

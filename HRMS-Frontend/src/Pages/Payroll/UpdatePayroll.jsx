@@ -43,18 +43,18 @@ const UpdatePayroll = () => {
         console.log("📦 Raw empRes:", empRes);
         console.log("📦 Raw payrollRes:", payrollRes);
 
-        // getAllEmployees returns full response object, so extract data
+        // getAllEmployees() returns response.data directly (already the array)
         let empList = [];
         
-        if (Array.isArray(empRes?.data)) {
+        if (Array.isArray(empRes)) {
+          empList = empRes;
+          console.log("✅ empRes is already an array, length:", empRes.length);
+        } else if (Array.isArray(empRes?.data)) {
           empList = empRes.data;
           console.log("✅ Extracted from empRes.data (array)");
         } else if (Array.isArray(empRes?.data?.content)) {
           empList = empRes.data.content;
           console.log("✅ Extracted from empRes.data.content (array)");
-        } else if (Array.isArray(empRes)) {
-          empList = empRes;
-          console.log("✅ empRes is already an array");
         } else {
           console.warn("⚠️ Could not extract employee array from:", empRes);
           empList = [];
@@ -390,13 +390,13 @@ ifsc: d.ifsc || "",
         getPayrollData()
       ]);
 
-      // getAllEmployees returns full response object, so extract data
-      const empList = Array.isArray(empRes?.data) 
-        ? empRes.data 
-        : Array.isArray(empRes?.data?.content) 
-        ? empRes.data.content 
-        : Array.isArray(empRes) 
-        ? empRes 
+      // getAllEmployees() returns response.data directly (already the array)
+      const empList = Array.isArray(empRes)
+        ? empRes
+        : Array.isArray(empRes?.data)
+        ? empRes.data
+        : Array.isArray(empRes?.data?.content)
+        ? empRes.data.content
         : [];
 
       const existingPayroll = Array.isArray(payrollRes?.data) ? payrollRes.data : [];
