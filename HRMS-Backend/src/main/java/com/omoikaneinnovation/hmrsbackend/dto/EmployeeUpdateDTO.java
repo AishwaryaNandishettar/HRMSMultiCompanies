@@ -6,6 +6,13 @@ public class EmployeeUpdateDTO {
     private String department;
     private String designation;
     private String email;
+    private String location;
+    private String manager;
+    private String managerEmail;
+    private String dob;
+    private String doj;
+    private String exitDate;
+    private String status;
 
     // Statutory / bank fields
     private String bankAccountNumber;
@@ -31,6 +38,27 @@ public class EmployeeUpdateDTO {
 
     public String getEmail() { return email; }
     public void setEmail(String email) { this.email = email; }
+
+    public String getLocation() { return location; }
+    public void setLocation(String location) { this.location = location; }
+
+    public String getManager() { return manager; }
+    public void setManager(String manager) { this.manager = manager; }
+
+    public String getManagerEmail() { return managerEmail; }
+    public void setManagerEmail(String managerEmail) { this.managerEmail = managerEmail; }
+
+    public String getDob() { return dob; }
+    public void setDob(String dob) { this.dob = dob; }
+
+    public String getDoj() { return doj; }
+    public void setDoj(String doj) { this.doj = doj; }
+
+    public String getExitDate() { return exitDate; }
+    public void setExitDate(String exitDate) { this.exitDate = exitDate; }
+
+    public String getStatus() { return status; }
+    public void setStatus(String status) { this.status = status; }
 
     public String getBankAccountNumber() { return bankAccountNumber; }
     public void setBankAccountNumber(String bankAccountNumber) { this.bankAccountNumber = bankAccountNumber; }

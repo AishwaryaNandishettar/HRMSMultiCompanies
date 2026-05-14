@@ -371,17 +371,24 @@ if (!matchesColumnFilters) return false;
   const openUpdateModal = (emp) => {
     setUpdateTarget(emp);
     setUpdateForm({
-      fullName: emp.fullName || "",
-      department: emp.department || "",
-      designation: emp.designation || "",
-      email: emp.email || "",
-      bankAccountNumber: emp.bankAccountNumber || "",
-      ifsc: emp.ifsc || "",
-      uan: emp.uan || "",
-      pfMemberId: emp.pfMemberId || "",
-      pf: emp.pf || "",
-      esic: emp.esic || "",
-      designationChanged: emp.designationChanged || "",
+      fullName:             emp.fullName             || "",
+      department:           emp.department           || "",
+      designation:          emp.designation          || "",
+      email:                emp.email                || "",
+      location:             emp.location             || "",
+      manager:              emp.manager              || "",
+      managerEmail:         emp.managerEmail         || "",
+      dob:                  emp.dob                  || "",
+      doj:                  emp.doj                  || "",
+      exitDate:             emp.exitDate             || "",
+      status:               emp.status               || "",
+      bankAccountNumber:    emp.bankAccountNumber    || "",
+      ifsc:                 emp.ifsc                 || "",
+      uan:                  emp.uan                  || "",
+      pfMemberId:           emp.pfMemberId           || "",
+      pf:                   emp.pf                   || "",
+      esic:                 emp.esic                 || "",
+      designationChanged:   emp.designationChanged   || "",
       designationChangedDate: emp.designationChangedDate || "",
     });
     setShowUpdateModal(true);
@@ -469,64 +476,256 @@ const getAvatarColor = (name) => {
       {/* ── Update Employee Modal (admin only) ── */}
       {showUpdateModal && updateTarget && (
         <div style={{
-          position: "fixed", inset: 0, background: "rgba(0,0,0,0.45)",
-          zIndex: 9999, display: "flex", alignItems: "center", justifyContent: "center"
+          position: "fixed", inset: 0,
+          background: "rgba(15,23,42,0.55)",
+          backdropFilter: "blur(4px)",
+          zIndex: 9999, display: "flex", alignItems: "center", justifyContent: "center",
+          padding: "16px"
         }}>
           <div style={{
-            background: "#fff", borderRadius: 10, padding: 28,
-            width: 620, maxHeight: "85vh", overflowY: "auto",
-            boxShadow: "0 8px 32px rgba(0,0,0,0.18)"
+            background: "#fff",
+            borderRadius: 16,
+            width: "100%",
+            maxWidth: 720,
+            maxHeight: "92vh",
+            overflowY: "auto",
+            boxShadow: "0 24px 64px rgba(0,0,0,0.25)",
+            display: "flex",
+            flexDirection: "column"
           }}>
-            <h3 style={{ marginTop: 0, marginBottom: 20 }}>
-              Update Employee — {updateTarget.fullName}
-            </h3>
-
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px 16px" }}>
-              {[
-                { label: "Full Name", key: "fullName" },
-                { label: "Department", key: "department" },
-                { label: "Designation", key: "designation" },
-                { label: "Email", key: "email" },
-                { label: "Bank Account Number", key: "bankAccountNumber" },
-                { label: "IFSC Code", key: "ifsc" },
-                { label: "UAN", key: "uan" },
-                { label: "PF Member ID", key: "pfMemberId" },
-                { label: "PF Number", key: "pf" },
-                { label: "ESIC Number", key: "esic" },
-                { label: "Designation Changed (New)", key: "designationChanged" },
-              ].map(({ label, key }) => (
-                <div key={key}>
-                  <label style={{ fontSize: 12, color: "#555", display: "block", marginBottom: 4 }}>{label}</label>
-                  <input
-                    value={updateForm[key] || ""}
-                    onChange={(e) => setUpdateForm({ ...updateForm, [key]: e.target.value })}
-                    style={{
-                      width: "100%", padding: "7px 10px", borderRadius: 6,
-                      border: "1px solid #ccc", fontSize: 13, boxSizing: "border-box"
-                    }}
-                  />
+            {/* Modal Header */}
+            <div style={{
+              background: "linear-gradient(135deg, #1e3a5f 0%, #2563eb 100%)",
+              borderRadius: "16px 16px 0 0",
+              padding: "20px 28px",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "space-between",
+              flexShrink: 0
+            }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                <div style={{
+                  width: 42, height: 42, borderRadius: "50%",
+                  background: "rgba(255,255,255,0.2)",
+                  display: "flex", alignItems: "center", justifyContent: "center",
+                  fontSize: 20
+                }}>✏️</div>
+                <div>
+                  <div style={{ color: "#fff", fontWeight: 700, fontSize: 17 }}>
+                    Update Employee
+                  </div>
+                  <div style={{ color: "rgba(255,255,255,0.75)", fontSize: 13 }}>
+                    {updateTarget.fullName} &nbsp;·&nbsp; {updateTarget.employeeId}
+                  </div>
                 </div>
-              ))}
-              <div>
-                <label style={{ fontSize: 12, color: "#555", display: "block", marginBottom: 4 }}>Designation Changed Date</label>
-                <input
-                  type="date"
-                  value={updateForm.designationChangedDate || ""}
-                  onChange={(e) => setUpdateForm({ ...updateForm, designationChangedDate: e.target.value })}
-                  style={{
-                    width: "100%", padding: "7px 10px", borderRadius: 6,
-                    border: "1px solid #ccc", fontSize: 13, boxSizing: "border-box"
-                  }}
-                />
               </div>
-            </div>
-
-            <div style={{ display: "flex", gap: 10, marginTop: 22, justifyContent: "flex-end" }}>
               <button
                 onClick={() => setShowUpdateModal(false)}
                 style={{
-                  padding: "8px 20px", borderRadius: 6, border: "1px solid #ccc",
-                  background: "#f5f5f5", cursor: "pointer", fontSize: 13
+                  background: "rgba(255,255,255,0.15)", border: "none",
+                  color: "#fff", width: 32, height: 32, borderRadius: "50%",
+                  cursor: "pointer", fontSize: 18, display: "flex",
+                  alignItems: "center", justifyContent: "center", lineHeight: 1
+                }}
+              >×</button>
+            </div>
+
+            {/* Modal Body */}
+            <div style={{ padding: "24px 28px", overflowY: "auto" }}>
+
+              {/* Section: Basic Info */}
+              <div style={{ marginBottom: 20 }}>
+                <div style={{
+                  fontSize: 11, fontWeight: 700, color: "#2563eb",
+                  textTransform: "uppercase", letterSpacing: 1,
+                  borderBottom: "2px solid #e0eaff", paddingBottom: 6, marginBottom: 14
+                }}>👤 Basic Information</div>
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px 16px" }}>
+                  {[
+                    { label: "Full Name",    key: "fullName",    icon: "👤" },
+                    { label: "Department",   key: "department",  icon: "🏢" },
+                    { label: "Designation",  key: "designation", icon: "💼" },
+                    { label: "Email",        key: "email",       icon: "📧" },
+                    { label: "Location",     key: "location",    icon: "📍" },
+                    { label: "Reporting Manager", key: "manager", icon: "👔" },
+                    { label: "Manager Email", key: "managerEmail", icon: "📨" },
+                  ].map(({ label, key, icon }) => (
+                    <div key={key}>
+                      <label style={{ fontSize: 11, fontWeight: 600, color: "#64748b", display: "block", marginBottom: 5 }}>
+                        {icon} {label}
+                      </label>
+                      <input
+                        value={updateForm[key] || ""}
+                        onChange={(e) => setUpdateForm({ ...updateForm, [key]: e.target.value })}
+                        style={{
+                          width: "100%", padding: "9px 12px", borderRadius: 8,
+                          border: "1.5px solid #e2e8f0", fontSize: 13,
+                          boxSizing: "border-box", outline: "none",
+                          transition: "border-color 0.2s",
+                          background: "#f8fafc"
+                        }}
+                        onFocus={e => e.target.style.borderColor = "#2563eb"}
+                        onBlur={e => e.target.style.borderColor = "#e2e8f0"}
+                      />
+                    </div>
+                  ))}
+                  {/* Status dropdown */}
+                  <div>
+                    <label style={{ fontSize: 11, fontWeight: 600, color: "#64748b", display: "block", marginBottom: 5 }}>
+                      🔘 Status
+                    </label>
+                    <select
+                      value={updateForm.status || ""}
+                      onChange={(e) => setUpdateForm({ ...updateForm, status: e.target.value })}
+                      style={{
+                        width: "100%", padding: "9px 12px", borderRadius: 8,
+                        border: "1.5px solid #e2e8f0", fontSize: 13,
+                        boxSizing: "border-box", background: "#f8fafc",
+                        outline: "none", cursor: "pointer"
+                      }}
+                    >
+                      <option value="">Select Status</option>
+                      <option value="ACTIVE">ACTIVE</option>
+                      <option value="INVITED">INVITED</option>
+                      <option value="SERVING NOTICE">SERVING NOTICE</option>
+                      <option value="RESIGNED">RESIGNED</option>
+                      <option value="DISABLED">DISABLED</option>
+                    </select>
+                  </div>
+                </div>
+              </div>
+
+              {/* Section: Dates */}
+              <div style={{ marginBottom: 20 }}>
+                <div style={{
+                  fontSize: 11, fontWeight: 700, color: "#7c3aed",
+                  textTransform: "uppercase", letterSpacing: 1,
+                  borderBottom: "2px solid #ede9fe", paddingBottom: 6, marginBottom: 14
+                }}>📅 Dates</div>
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "12px 16px" }}>
+                  {[
+                    { label: "Date of Birth",   key: "dob" },
+                    { label: "Date of Joining", key: "doj" },
+                    { label: "Exit Date",        key: "exitDate" },
+                  ].map(({ label, key }) => (
+                    <div key={key}>
+                      <label style={{ fontSize: 11, fontWeight: 600, color: "#64748b", display: "block", marginBottom: 5 }}>
+                        {label}
+                      </label>
+                      <input
+                        type="date"
+                        value={updateForm[key] || ""}
+                        onChange={(e) => setUpdateForm({ ...updateForm, [key]: e.target.value })}
+                        style={{
+                          width: "100%", padding: "9px 12px", borderRadius: 8,
+                          border: "1.5px solid #e2e8f0", fontSize: 13,
+                          boxSizing: "border-box", background: "#f8fafc", outline: "none"
+                        }}
+                        onFocus={e => e.target.style.borderColor = "#7c3aed"}
+                        onBlur={e => e.target.style.borderColor = "#e2e8f0"}
+                      />
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Section: Bank & Statutory */}
+              <div style={{ marginBottom: 20 }}>
+                <div style={{
+                  fontSize: 11, fontWeight: 700, color: "#059669",
+                  textTransform: "uppercase", letterSpacing: 1,
+                  borderBottom: "2px solid #d1fae5", paddingBottom: 6, marginBottom: 14
+                }}>🏦 Bank & Statutory Details</div>
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px 16px" }}>
+                  {[
+                    { label: "Bank Account Number", key: "bankAccountNumber" },
+                    { label: "IFSC Code",           key: "ifsc" },
+                    { label: "UAN",                 key: "uan" },
+                    { label: "PF Member ID",        key: "pfMemberId" },
+                    { label: "PF Number",           key: "pf" },
+                    { label: "ESIC Number",         key: "esic" },
+                  ].map(({ label, key }) => (
+                    <div key={key}>
+                      <label style={{ fontSize: 11, fontWeight: 600, color: "#64748b", display: "block", marginBottom: 5 }}>
+                        {label}
+                      </label>
+                      <input
+                        value={updateForm[key] || ""}
+                        onChange={(e) => setUpdateForm({ ...updateForm, [key]: e.target.value })}
+                        style={{
+                          width: "100%", padding: "9px 12px", borderRadius: 8,
+                          border: "1.5px solid #e2e8f0", fontSize: 13,
+                          boxSizing: "border-box", background: "#f8fafc", outline: "none"
+                        }}
+                        onFocus={e => e.target.style.borderColor = "#059669"}
+                        onBlur={e => e.target.style.borderColor = "#e2e8f0"}
+                      />
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Section: Designation Change */}
+              <div style={{ marginBottom: 8 }}>
+                <div style={{
+                  fontSize: 11, fontWeight: 700, color: "#d97706",
+                  textTransform: "uppercase", letterSpacing: 1,
+                  borderBottom: "2px solid #fef3c7", paddingBottom: 6, marginBottom: 14
+                }}>🔄 Designation Change</div>
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px 16px" }}>
+                  <div>
+                    <label style={{ fontSize: 11, fontWeight: 600, color: "#64748b", display: "block", marginBottom: 5 }}>
+                      New Designation
+                    </label>
+                    <input
+                      value={updateForm.designationChanged || ""}
+                      onChange={(e) => setUpdateForm({ ...updateForm, designationChanged: e.target.value })}
+                      style={{
+                        width: "100%", padding: "9px 12px", borderRadius: 8,
+                        border: "1.5px solid #e2e8f0", fontSize: 13,
+                        boxSizing: "border-box", background: "#f8fafc", outline: "none"
+                      }}
+                      onFocus={e => e.target.style.borderColor = "#d97706"}
+                      onBlur={e => e.target.style.borderColor = "#e2e8f0"}
+                    />
+                  </div>
+                  <div>
+                    <label style={{ fontSize: 11, fontWeight: 600, color: "#64748b", display: "block", marginBottom: 5 }}>
+                      Change Effective Date
+                    </label>
+                    <input
+                      type="date"
+                      value={updateForm.designationChangedDate || ""}
+                      onChange={(e) => setUpdateForm({ ...updateForm, designationChangedDate: e.target.value })}
+                      style={{
+                        width: "100%", padding: "9px 12px", borderRadius: 8,
+                        border: "1.5px solid #e2e8f0", fontSize: 13,
+                        boxSizing: "border-box", background: "#f8fafc", outline: "none"
+                      }}
+                      onFocus={e => e.target.style.borderColor = "#d97706"}
+                      onBlur={e => e.target.style.borderColor = "#e2e8f0"}
+                    />
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Modal Footer */}
+            <div style={{
+              padding: "16px 28px",
+              borderTop: "1px solid #f1f5f9",
+              display: "flex", gap: 10, justifyContent: "flex-end",
+              flexShrink: 0, background: "#fafbfc",
+              borderRadius: "0 0 16px 16px"
+            }}>
+              <button
+                onClick={() => setShowUpdateModal(false)}
+                style={{
+                  padding: "10px 24px", borderRadius: 8,
+                  border: "1.5px solid #e2e8f0",
+                  background: "#fff", cursor: "pointer",
+                  fontSize: 13, fontWeight: 600, color: "#64748b",
+                  transition: "all 0.2s"
                 }}
               >
                 Cancel
@@ -535,12 +734,18 @@ const getAvatarColor = (name) => {
                 onClick={handleUpdateSave}
                 disabled={updateSaving}
                 style={{
-                  padding: "8px 20px", borderRadius: 6, border: "none",
-                  background: "#0d6efd", color: "#fff", cursor: "pointer",
-                  fontSize: 13, fontWeight: 600
+                  padding: "10px 28px", borderRadius: 8, border: "none",
+                  background: updateSaving
+                    ? "#93c5fd"
+                    : "linear-gradient(135deg, #1e3a5f 0%, #2563eb 100%)",
+                  color: "#fff", cursor: updateSaving ? "not-allowed" : "pointer",
+                  fontSize: 13, fontWeight: 700,
+                  boxShadow: updateSaving ? "none" : "0 4px 12px rgba(37,99,235,0.35)",
+                  transition: "all 0.2s",
+                  display: "flex", alignItems: "center", gap: 8
                 }}
               >
-                {updateSaving ? "Saving..." : "Save Changes"}
+                {updateSaving ? "⏳ Saving..." : "💾 Save Changes"}
               </button>
             </div>
           </div>
@@ -1096,18 +1301,25 @@ const getAvatarColor = (name) => {
                       <button
                         onClick={() => openUpdateModal(emp)}
                         style={{
-                          padding: "5px 12px",
-                          background: "#0d6efd",
+                          padding: "6px 14px",
+                          background: "linear-gradient(135deg, #1e3a5f 0%, #2563eb 100%)",
                           color: "#fff",
                           border: "none",
-                          borderRadius: 5,
+                          borderRadius: 6,
                           cursor: "pointer",
                           fontSize: 12,
                           fontWeight: 600,
-                          whiteSpace: "nowrap"
+                          whiteSpace: "nowrap",
+                          boxShadow: "0 2px 8px rgba(37,99,235,0.3)",
+                          display: "flex",
+                          alignItems: "center",
+                          gap: 5,
+                          transition: "all 0.2s"
                         }}
+                        onMouseEnter={e => e.currentTarget.style.boxShadow = "0 4px 14px rgba(37,99,235,0.5)"}
+                        onMouseLeave={e => e.currentTarget.style.boxShadow = "0 2px 8px rgba(37,99,235,0.3)"}
                       >
-                        ✏ Update
+                        ✏️ Update
                       </button>
                     </td>
                   )}

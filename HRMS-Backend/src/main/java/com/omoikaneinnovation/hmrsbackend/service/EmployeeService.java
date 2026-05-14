@@ -133,6 +133,15 @@
         if (dto.getDesignationChanged() != null) employee.setDesignationChanged(dto.getDesignationChanged());
         if (dto.getDesignationChangedDate() != null) employee.setDesignationChangedDate(dto.getDesignationChangedDate());
 
+        // New fields
+        if (dto.getLocation() != null) employee.setLocation(dto.getLocation());
+        if (dto.getManager() != null) employee.setManager(dto.getManager());
+        if (dto.getManagerEmail() != null) employee.setManagerEmail(dto.getManagerEmail());
+        if (dto.getDob() != null && !dto.getDob().trim().isEmpty()) employee.setDob(dto.getDob());
+        if (dto.getDoj() != null && !dto.getDoj().trim().isEmpty()) employee.setDoj(dto.getDoj());
+        if (dto.getExitDate() != null) employee.setExitDate(dto.getExitDate());
+        if (dto.getStatus() != null && !dto.getStatus().trim().isEmpty()) employee.setStatus(dto.getStatus());
+
         return employeeRepo.save(employee);
     }
     }
