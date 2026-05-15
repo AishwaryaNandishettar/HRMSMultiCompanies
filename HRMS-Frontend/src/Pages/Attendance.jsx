@@ -335,6 +335,15 @@ export default function Attendance() {
       if (from && recordDate < from) return false;
       if (to && recordDate > to) return false;
       return true;
+    })
+    // ✅ Sort by date descending — latest check-in at top, oldest at bottom
+    .sort((a, b) => {
+      const dateCompare = new Date(b.date) - new Date(a.date);
+      if (dateCompare !== 0) return dateCompare;
+      // Same date: sort by check-in time descending
+      const timeA = a.checkIn && a.checkIn !== "-" ? a.checkIn : "00:00:00";
+      const timeB = b.checkIn && b.checkIn !== "-" ? b.checkIn : "00:00:00";
+      return timeB.localeCompare(timeA);
     });
 
   const suggestions =
