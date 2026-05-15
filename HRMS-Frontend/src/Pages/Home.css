@@ -1023,3 +1023,35 @@ background: linear-gradient(135deg, #22c55e, #16a34a);}
     grid-template-columns: 1fr;
   }
 }
+
+/* ═══════════════════════════════════════════════
+   CALENDAR: Weekly Off & Holiday tile highlights
+   ═══════════════════════════════════════════════ */
+
+/* Weekly off days — light blue tint */
+.react-calendar .calendar-weekly-off abbr {
+  color: #2563eb !important;
+  font-weight: 700;
+}
+.react-calendar .calendar-weekly-off {
+  background: #eff6ff !important;
+  border-radius: 6px;
+}
+
+/* Holiday days — amber/yellow tint */
+.react-calendar .calendar-holiday abbr {
+  color: #b45309 !important;
+  font-weight: 700;
+}
+.react-calendar .calendar-holiday {
+  background: linear-gradient(135deg, #fef9c3, #fef08a) !important;
+  border-radius: 6px;
+}
+
+/* Dot indicator for events */
+.calendar-event-indicator {
+  font-size: 18px;
+  color: #2563eb;
+  line-height: 0;
+  margin-top: -4px;
+}

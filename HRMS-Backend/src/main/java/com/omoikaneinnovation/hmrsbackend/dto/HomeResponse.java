@@ -21,6 +21,8 @@ public class HomeResponse {
     private List<Map<String, Object>> attendanceGraph;
 private List<Map<String, Object>> leaveGraph;
 private List<Map<String, Object>> leaveUsers;
+// ✅ Weekly off days configured by admin (e.g. ["SATURDAY","SUNDAY"])
+private List<String> weeklyOffDays;
 
 public List<Map<String, Object>> getLeaveUsers() {
     return leaveUsers;

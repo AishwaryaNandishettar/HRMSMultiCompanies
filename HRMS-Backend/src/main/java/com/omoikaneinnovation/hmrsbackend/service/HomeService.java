@@ -18,6 +18,7 @@ import com.omoikaneinnovation.hmrsbackend.repository.EventRepository;
 import com.omoikaneinnovation.hmrsbackend.repository.SalaryRepository;
 
 import lombok.RequiredArgsConstructor;
+import com.omoikaneinnovation.hmrsbackend.repository.CompanySettingsRepository;
 
 @Service
 @RequiredArgsConstructor
@@ -28,6 +29,7 @@ public class HomeService {
     private final LeaveRepository leaveRepository;
     private final AttendanceRepository attendanceRepository;
     private final UserRepository userRepository;
+    private final CompanySettingsRepository companySettingsRepository;
 
     /* =====================================================
        ENTRY METHOD CALLED FROM CONTROLLER (FIX)
@@ -199,20 +201,35 @@ System.out.println("🔍 HomeService: Final leaveUsers count: " + leaveUsers.siz
         int year = now.getYear();
         int month = now.getMonthValue();
         
+        // ── Load company weekly off days (configurable per company) ──
+        String companyId = userRepository.findById(userId).map(User::getCompanyId).orElse(null);
+        java.util.List<String> weeklyOffDays;
+        if (companyId != null) {
+            weeklyOffDays = companySettingsRepository.findByCompanyId(companyId)
+                .map(s -> s.getWeeklyOffDays() != null ? s.getWeeklyOffDays() : java.util.Arrays.asList("SATURDAY","SUNDAY"))
+                .orElse(java.util.Arrays.asList("SATURDAY","SUNDAY"));
+        } else {
+            // Fallback: try first settings doc, else default Sat+Sun
+            weeklyOffDays = companySettingsRepository.findAll().stream().findFirst()
+                .map(s -> s.getWeeklyOffDays() != null ? s.getWeeklyOffDays() : java.util.Arrays.asList("SATURDAY","SUNDAY"))
+                .orElse(java.util.Arrays.asList("SATURDAY","SUNDAY"));
+        }
+        final java.util.List<String> finalWeeklyOffDays = weeklyOffDays;
+        System.out.println("📅 Weekly off days for company " + companyId + ": " + finalWeeklyOffDays);
+        
         // Get all holiday dates from events collection for this month
         java.util.Set<String> holidayDates = eventRepository.findAll().stream()
             .filter(e -> "Holiday".equalsIgnoreCase(e.getType()) && e.getDate() != null)
             .map(e -> e.getDate().length() >= 10 ? e.getDate().substring(0, 10) : e.getDate())
             .collect(java.util.stream.Collectors.toSet());
         
-        // Count working days in current month (exclude Sat/Sun and holidays)
+        // Count working days in current month up to today (exclude weekly offs + holidays)
         int workingDays = 0;
-        int daysInMonth = now.lengthOfMonth();
         java.time.LocalDate today2 = java.time.LocalDate.now();
         for (int d = 1; d <= today2.getDayOfMonth(); d++) {
             java.time.LocalDate date = java.time.LocalDate.of(year, month, d);
-            java.time.DayOfWeek dow = date.getDayOfWeek();
-            if (dow == java.time.DayOfWeek.SATURDAY || dow == java.time.DayOfWeek.SUNDAY) continue;
+            String dayName = date.getDayOfWeek().name(); // e.g. "SATURDAY"
+            if (finalWeeklyOffDays.contains(dayName)) continue;
             if (holidayDates.contains(date.toString())) continue;
             workingDays++;
         }
@@ -254,8 +271,8 @@ System.out.println("🔍 HomeService: Final leaveUsers count: " + leaveUsers.siz
             .filter(d -> {
                 try {
                     java.time.LocalDate ld = java.time.LocalDate.parse(d);
-                    java.time.DayOfWeek dow = ld.getDayOfWeek();
-                    if (dow == java.time.DayOfWeek.SATURDAY || dow == java.time.DayOfWeek.SUNDAY) return false;
+                    String dayName = ld.getDayOfWeek().name();
+                    if (finalWeeklyOffDays.contains(dayName)) return false;
                     if (holidayDates.contains(d)) return false;
                     return true;
                 } catch (Exception e) { return false; }
@@ -337,6 +354,7 @@ System.out.println("🔍 HomeService: Final leaveUsers count: " + leaveUsers.siz
         response.setAttendanceGraph(attendanceGraph);
         response.setLeaveGraph(leaveGraph);
         response.setLeaveUsers(leaveUsers);
+        response.setWeeklyOffDays(finalWeeklyOffDays);
 
         System.out.println("🔍 HomeService: Response created successfully");
         return response;

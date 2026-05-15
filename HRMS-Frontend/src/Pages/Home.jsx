@@ -110,6 +110,8 @@ const currentMonthBirthdays = useMemo(() => {
 
     const [notifications, setNotifications] = useState([]);
     const [payrollData, setPayrollData] = useState([]);
+    // ✅ Weekly off days from company settings (loaded via homeData)
+    const [weeklyOffDays, setWeeklyOffDays] = useState(["SATURDAY", "SUNDAY"]);
 
     // Enhanced calendar events for May 2026
     const mayEvents = {
@@ -355,6 +357,11 @@ const currentMonthBirthdays = useMemo(() => {
               "| Checked in:", data.stats.checkedInDays,
               "| Leaves:", data.stats.approvedLeaveDays,
               "| Absent:", data.stats.absentDays);
+          }
+
+          // ✅ Set weekly off days from company settings
+          if (data.weeklyOffDays && Array.isArray(data.weeklyOffDays)) {
+            setWeeklyOffDays(data.weeklyOffDays);
           }
 
           // Set attendance graph data
@@ -1047,7 +1054,100 @@ onClick={async () => {
                 }
                 return null;
               }}
+              tileClassName={({ date, view }) => {
+                if (view !== 'month') return null;
+                const dayName = date.toLocaleDateString('en-US', { weekday: 'long' }).toUpperCase();
+                const dateStr = date.toISOString().split('T')[0];
+                const isWeeklyOff = weeklyOffDays.includes(dayName);
+                const isHoliday = (homeData?.events || []).some(
+                  e => e.type === 'Holiday' && e.date === dateStr
+                );
+                if (isHoliday) return 'calendar-holiday';
+                if (isWeeklyOff) return 'calendar-weekly-off';
+                return null;
+              }}
             />
+
+            {/* ── Holiday & Weekly Off Info Panel (below calendar) ── */}
+            <div style={{
+              marginTop: 10,
+              background: "#f8fafc",
+              borderRadius: 10,
+              border: "1px solid #e2e8f0",
+              overflow: "hidden"
+            }}>
+              {/* Weekly Off Row */}
+              <div style={{
+                padding: "8px 12px",
+                borderBottom: "1px solid #e2e8f0",
+                display: "flex", alignItems: "center", gap: 8
+              }}>
+                <span style={{ fontSize: 14 }}>📅</span>
+                <span style={{ fontSize: 12, fontWeight: 700, color: "#374151" }}>Weekly Off:</span>
+                <div style={{ display: "flex", gap: 4, flexWrap: "wrap" }}>
+                  {weeklyOffDays.length > 0 ? weeklyOffDays.map(day => (
+                    <span key={day} style={{
+                      padding: "2px 8px", borderRadius: 10,
+                      background: "#dbeafe", color: "#1e40af",
+                      fontSize: 11, fontWeight: 600
+                    }}>
+                      {day.charAt(0) + day.slice(1).toLowerCase()}
+                    </span>
+                  )) : (
+                    <span style={{ fontSize: 11, color: "#6b7280" }}>None configured</span>
+                  )}
+                </div>
+              </div>
+
+              {/* Upcoming Holidays List */}
+              <div style={{ padding: "8px 12px" }}>
+                <div style={{ fontSize: 12, fontWeight: 700, color: "#374151", marginBottom: 6 }}>
+                  🎉 Upcoming Holidays
+                </div>
+                {upcomingHolidays.length === 0 ? (
+                  <div style={{ fontSize: 11, color: "#6b7280" }}>No upcoming holidays</div>
+                ) : (
+                  <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+                    {upcomingHolidays.slice(0, 4).map((h, i) => {
+                      const d = new Date(h.date + 'T00:00:00');
+                      return (
+                        <div key={i} style={{
+                          display: "flex", alignItems: "center", gap: 8,
+                          padding: "4px 8px",
+                          background: "linear-gradient(135deg, #fef9c3, #fef08a)",
+                          borderRadius: 6, border: "1px solid #fde047"
+                        }}>
+                          <div style={{
+                            minWidth: 28, height: 28,
+                            background: "#fff", borderRadius: 4,
+                            border: "1.5px solid #f59e0b",
+                            display: "flex", flexDirection: "column",
+                            alignItems: "center", justifyContent: "center",
+                            flexShrink: 0
+                          }}>
+                            <div style={{ fontSize: 11, fontWeight: 700, color: "#b45309", lineHeight: 1 }}>
+                              {d.getDate()}
+                            </div>
+                            <div style={{ fontSize: 8, color: "#92400e", textTransform: "uppercase" }}>
+                              {d.toLocaleDateString('en-US', { month: 'short' })}
+                            </div>
+                          </div>
+                          <div style={{ flex: 1, minWidth: 0 }}>
+                            <div style={{
+                              fontSize: 11, fontWeight: 600, color: "#78350f",
+                              whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis"
+                            }}>{h.title}</div>
+                            <div style={{ fontSize: 10, color: "#92400e" }}>
+                              {d.toLocaleDateString('en-US', { weekday: 'short' })}
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+            </div>
             <div className="calendar-event-box">
               <h4>Events for {selectedDate.toLocaleDateString('en-US', { 
                 weekday: 'long', 

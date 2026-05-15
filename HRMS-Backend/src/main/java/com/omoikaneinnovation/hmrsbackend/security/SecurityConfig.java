@@ -134,6 +134,8 @@ public CorsConfigurationSource corsConfigurationSource() {
 .requestMatchers("/api/offer-templates/**").permitAll()
 .requestMatchers("/api/tasks/**").permitAll()
 .requestMatchers("/api/company").permitAll()
+.requestMatchers("/api/company-settings").permitAll()
+.requestMatchers("/api/company-settings/**").permitAll()
 .requestMatchers("/api/designations/**").permitAll()
 .requestMatchers("/api/departments/**").permitAll()
 .requestMatchers("/api/events/**").permitAll()
