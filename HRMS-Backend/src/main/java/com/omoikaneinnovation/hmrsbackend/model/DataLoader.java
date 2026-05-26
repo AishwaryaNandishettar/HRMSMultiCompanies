@@ -1,5 +1,5 @@
 package com.omoikaneinnovation.hmrsbackend.config;
-
+import lombok.*;
 import com.omoikaneinnovation.hmrsbackend.model.*;
 import com.omoikaneinnovation.hmrsbackend.repository.PerformanceRepository;
 import org.springframework.boot.CommandLineRunner;

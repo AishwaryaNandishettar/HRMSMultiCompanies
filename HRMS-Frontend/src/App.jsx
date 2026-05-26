@@ -6,6 +6,7 @@ import {
   Navigate,
 } from "react-router-dom";
 import { CallProvider } from "./Context/CallContext";
+import { AuthProvider } from "./Context/Authcontext";
 import GlobalCallNotification from "./Components/GlobalCallNotification";
 
 import { AuthContext } from "./Context/Authcontext";
@@ -32,6 +33,7 @@ import EmployeeCard from "./Pages/Emplyeecard";
 import Payroll from "./Pages/Payroll";
 import Helpdesk from "./Pages/Helpdesk"; // ✅ adjust path if different
 
+import BulkUploadEmployees from "./pages/BulkUploadEmployees";
 import UpdatePayroll from "./Pages/Payroll/UpdatePayroll";
 import ReimbursementForm from "./Pages/ReimbursementForm";
 import FinancialAssessment from "./Pages/financialAssesment";
@@ -40,7 +42,7 @@ import CibilCheck from "./Pages/CibilCheck";
 import Onboarding from "./Pages/Onboarding";
 import OtpVerification from "./Pages/OtpVerification";
 import BGV from "./Pages/BGV";
-import TasksModule from "./Pages/TaskProfessional";
+import TaskManagement from "./Pages/TaskManagement";
 import InvitePage from "./Pages/InvitePage";
 import InviteAccept from "./Pages/InviteAccept";
 import PersonalInsurance from "./Pages/PersonalInsurance";
@@ -359,6 +361,8 @@ const [showNotif, setShowNotif] = useState(false);
     path="/invite-accept"
     element={<InviteAccept />}
   />
+
+  <Route path="/bulk-upload" element={<BulkUploadEmployees />} />
               <Route
                 path="/settings"
                 element={
@@ -390,7 +394,7 @@ const [showNotif, setShowNotif] = useState(false);
   path="/tasks"
   element={
     <ProtectedRoute>
-      <TasksModule />
+      <TaskManagement />
     </ProtectedRoute>
   }
 />
@@ -427,6 +431,7 @@ export default function App() {
   const isLoggedIn = !!localStorage.getItem("token");
 
   return (
+    <AuthProvider>
     <Router>
       <PayrollProvider>
         <AttendanceProvider>
@@ -453,5 +458,6 @@ export default function App() {
         </AttendanceProvider>
       </PayrollProvider>
     </Router>
+    </AuthProvider>
   );
 }

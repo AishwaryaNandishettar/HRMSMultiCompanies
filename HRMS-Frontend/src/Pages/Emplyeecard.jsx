@@ -7,6 +7,7 @@ import { useNavigate , useLocation} from "react-router-dom";
 import { getAllEmployees, updateEmployee } from "../api/employeeApi";
 import "./Employeedirectory.css";
 import InviteEmployee from "../Components/InviteEmployee";
+import api from "../api/axios";
 const sampleEmployees = [
   {
     id: "EMP001",
@@ -96,7 +97,7 @@ export default function EmployeeDirectory() {
   const [viewMode, setViewMode] = useState("all");
   const [showInvite, setShowInvite] = useState(false);
   const [inviteEmail, setInviteEmail] = useState("");
-const [otp, setOtp] = useState("");
+const [tempPassword, setTempPassword] = useState("");
 
 
 const [employees, setEmployees] = useState([]);
@@ -110,6 +111,19 @@ const [showUpdateModal, setShowUpdateModal] = useState(false);
 const [updateTarget, setUpdateTarget] = useState(null); // the employee being edited
 const [updateForm, setUpdateForm] = useState({});
 const [updateSaving, setUpdateSaving] = useState(false);
+
+// ── Bulk Invite state ──
+const [showBulkInvite, setShowBulkInvite] = useState(false);
+const [bulkInviteList, setBulkInviteList] = useState([]);
+const [bulkInviteSending, setBulkInviteSending] = useState(false);
+const [bulkInviteResult, setBulkInviteResult] = useState(null);
+
+// ── Bulk Upload state ──
+const [showBulkUpload, setShowBulkUpload] = useState(false);
+const [uploadRows, setUploadRows] = useState([]);
+const [uploadSaving, setUploadSaving] = useState(false);
+const [uploadResult, setUploadResult] = useState(null);
+const fileInputRef = useRef();
 
  // ✅ ADD HERE (IMPORTANT)
   const fieldMap = {
@@ -187,12 +201,10 @@ const styles = {
   try {
     const res = await axios.post(
       `${import.meta.env.VITE_API_BASE_URL}/api/onboarding/invite`,
-      {
-        email: inviteEmail,
-        fullName: "Test User",
-        department: "IT",
-        designation: "Developer",
-      }
+     {
+  email: inviteEmail,
+  password: otp,
+}
     );
     console.log("Invite response:", res);
     alert("Invite sent successfully");
@@ -410,7 +422,108 @@ if (!matchesColumnFilters) return false;
     }
   };
 
+  // ── Bulk Invite: load all employees into the invite list ──
+  const openBulkInvite = () => {
+   console.log("EMPLOYEES DATA:", employees);
 
+const list = employees
+  .filter(emp => emp.email && emp.email.includes("@"))
+  .map(emp => ({
+    email: emp.email,
+    fullName: emp.fullName || emp.name || "",
+    department: emp.department || "IT",
+    designation: emp.designation || "Employee",
+    password: "Temp@123",
+    selected: true,
+  }));
+
+console.log("BULK LIST:", list);
+    setBulkInviteList(list);
+    setBulkInviteResult(null);
+    setShowBulkInvite(true);
+  };
+
+  const handleBulkInviteSend = async () => {
+    const toSend = bulkInviteList.filter(e => e.selected);
+    if (toSend.length === 0) { alert("No employees selected."); return; }
+    setBulkInviteSending(true);
+    setBulkInviteResult(null);
+    try {
+      const res = await api.post("/api/onboarding/bulk-invite", toSend);
+      setBulkInviteResult(res.data);
+    } catch (err) {
+      alert("❌ Bulk invite failed: " + (err.response?.data?.message || err.message));
+    } finally {
+      setBulkInviteSending(false);
+    }
+  };
+
+  // ── Bulk Upload: parse Excel file ──
+  const handleExcelUpload = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (evt) => {
+      const wb = XLSX.read(evt.target.result, { type: "binary" });
+      const ws = wb.Sheets[wb.SheetNames[0]];
+      const json = XLSX.utils.sheet_to_json(ws, { defval: "" });
+      // Normalize column names (trim spaces, lowercase keys)
+      const normalized = json.map(row => {
+        const obj = {};
+        Object.keys(row).forEach(k => { obj[k.trim()] = row[k]; });
+        return {
+          fullName:    obj["fullName"]    || obj["Full Name"]    || obj["name"]        || "",
+          email:       obj["email"]       || obj["Email"]        || obj["Email ID"]    || "",
+          department:  obj["department"]  || obj["Department"]   || "",
+          designation: obj["designation"] || obj["Designation"]  || "",
+          location:    obj["location"]    || obj["Location"]     || "",
+          manager:     obj["manager"]     || obj["Manager"]      || obj["Reporting Manager"] || "",
+          managerEmail:obj["managerEmail"]|| obj["Manager Email"]|| "",
+          dob:         obj["dob"]         || obj["DOB"]          || obj["Date of Birth"]|| "",
+          doj:         obj["doj"]         || obj["DOJ"]          || obj["Date of Joining"]|| "",
+        };
+      });
+      setUploadRows(normalized);
+      setUploadResult(null);
+    };
+    reader.readAsBinaryString(file);
+  };
+
+  const handleBulkUploadSave = async () => {
+    if (uploadRows.length === 0) { alert("No data to upload."); return; }
+    setUploadSaving(true);
+    setUploadResult(null);
+    try {
+      const res = await api.post("/api/employee/bulk-upload", uploadRows);
+      setUploadResult(res.data);
+      if (res.data.success > 0) fetchEmployees();
+    } catch (err) {
+      alert("❌ Upload failed: " + (err.response?.data?.message || err.message));
+    } finally {
+      setUploadSaving(false);
+    }
+  };
+
+  const downloadSampleTemplate = () => {
+    const sample = [
+      {
+        fullName: "John Doe", email: "john@example.com", department: "IT",
+        designation: "Developer", location: "Bangalore",
+        manager: "Jane Smith", managerEmail: "jane@example.com",
+        dob: "1995-06-15", doj: "2024-01-10"
+      }
+    ];
+    const ws = XLSX.utils.json_to_sheet(sample);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "Employees");
+    XLSX.writeFile(wb, "Employee_Upload_Template.xlsx");
+  };
+
+const removeRow = (index) => {
+  const updated = uploadRows.filter((_, i) => i !== index);
+
+  setUploadRows(updated);
+};
  
 
 const getAvatarColor = (name) => {
@@ -432,9 +545,24 @@ const getAvatarColor = (name) => {
         <button className="add-btn-top" onClick={handleAddEmployee}>
           ➕ Add Employee
         </button>
-         <button className="invite-btn-top" onClick={() => setShowInvite(true)}>
-    📩 Invite Employee
-  </button> 
+      {/* Single Invite */}
+<button
+  className="invite-btn-top"
+  onClick={() => setShowInvite(true)}
+>
+  📩 Invite Employee
+</button>
+
+{/* Bulk Invite */}
+<button
+  className="invite-btn-top"
+  onClick={() => {
+    console.log("BULK INVITE BUTTON CLICKED");
+    openBulkInvite();
+  }}
+>
+  📨 Bulk Invite
+</button>
       </div>
 
    {showInvite && (
@@ -463,13 +591,134 @@ const getAvatarColor = (name) => {
 </div>
 
       <div className="invite-actions">
-        <button className="send-btn" onClick={sendInviteEmployee}>
+        <button
+  className="send-btn"
+  type="button"
+  onClick={(e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    console.log("SEND INVITE CLICKED");
+    sendInviteEmployee();
+  }}
+>
   Send Invite
 </button>
         <button className="cancel-btn" onClick={() => setShowInvite(false)}>
           Cancel
         </button>
       </div>
+    </div>
+  </div>
+)}
+
+{showBulkInvite && (
+  <div
+    style={{
+      position: "fixed",
+      inset: 0,
+      background: "rgba(0,0,0,0.5)",
+      zIndex: 9999,
+      display: "flex",
+      justifyContent: "center",
+      alignItems: "center",
+    }}
+  >
+    <div
+      style={{
+        background: "#fff",
+        padding: "20px",
+        borderRadius: "10px",
+        width: "600px",
+        maxHeight: "80vh",
+        overflowY: "auto",
+      }}
+    >
+      <h2>Bulk Employee Invitation</h2>
+
+      <table
+        style={{
+          width: "100%",
+          borderCollapse: "collapse",
+          marginTop: "15px",
+        }}
+      >
+        <thead>
+          <tr>
+            <th>Select</th>
+            <th>Name</th>
+            <th>Email</th>
+          </tr>
+        </thead>
+
+        <tbody>
+          {bulkInviteList.map((emp, index) => (
+            <tr key={index}>
+              <td>
+                <input
+                  type="checkbox"
+                  checked={emp.selected}
+                  onChange={(e) => {
+                    const updated = [...bulkInviteList];
+
+                    updated[index].selected = e.target.checked;
+
+                    setBulkInviteList(updated);
+                  }}
+                />
+              </td>
+
+              <td>{emp.fullName}</td>
+
+              <td>{emp.email}</td>
+
+            </tr>
+          ))}
+        </tbody>
+      </table>
+
+      <div
+        style={{
+          marginTop: "20px",
+          display: "flex",
+          gap: "10px",
+          justifyContent: "flex-end",
+        }}
+      >
+        <button
+          onClick={() => setShowBulkInvite(false)}
+          style={{
+            padding: "10px 15px",
+            border: "none",
+            background: "gray",
+            color: "white",
+            borderRadius: "5px",
+            cursor: "pointer",
+          }}
+        >
+          Cancel
+        </button>
+
+        <button
+          onClick={handleBulkInviteSend}
+          disabled={bulkInviteSending}
+          style={{
+            padding: "10px 15px",
+            border: "none",
+            background: "#2563eb",
+            color: "white",
+            borderRadius: "5px",
+            cursor: "pointer",
+          }}
+        >
+          {bulkInviteSending ? "Sending..." : "Send Bulk Invites"}
+        </button>
+      </div>
+
+      {bulkInviteResult && (
+        <div style={{ marginTop: "15px" }}>
+          ✅ Invitations Sent Successfully
+        </div>
+      )}
     </div>
   </div>
 )}
@@ -791,6 +1040,12 @@ const getAvatarColor = (name) => {
             <button className="export-btn" onClick={exportExcel}>
               ⬇ Download
             </button>
+            <button
+  className="export-btn"
+  onClick={() => navigate("/bulk-upload")}
+>
+  ⬆ Upload
+</button>
           </div>
         </div>
       </div>
@@ -1005,10 +1260,10 @@ const getAvatarColor = (name) => {
     </div>
   )}
 </th>
-             <th>
+            <th>
   <div className="th-header">
-    Employee Email
-    <span onClick={() => setActiveFilter("employeeId")}>⏷</span>
+    <span>Employee Email</span>
+    <span onClick={() => setActiveFilter("employeeemail")}>⏷</span>
   </div>
 
   {activeFilter === "employeeemail" && (
@@ -1217,7 +1472,9 @@ const getAvatarColor = (name) => {
               <th><div className="th-header">ESIC</div></th>
               <th><div className="th-header">Designation Changed</div></th>
               <th><div className="th-header">Desig. Changed Date</div></th>
+              
               {user?.role === "admin" && <th>Action</th>}
+
             </tr>
 
             {/* Filter row */}

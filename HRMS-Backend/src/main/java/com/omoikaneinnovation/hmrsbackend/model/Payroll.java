@@ -1,8 +1,12 @@
 package com.omoikaneinnovation.hmrsbackend.model;
-import lombok.Data;
 import lombok.*;
+
+import lombok.Data;
+
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
+
+
 
 @Data
 @NoArgsConstructor
@@ -46,6 +50,7 @@ public class Payroll {
     private Double gross;
     private Double net;
     
+   
     // Attendance
     private int workingDays;
     private int paidDays;
@@ -80,4 +85,28 @@ public class Payroll {
 
     public int getLopDays() { return lopDays; }
     public void setLopDays(int lopDays) { this.lopDays = lopDays; }
+
+    public Double getGross() {
+    return gross;
+}
+
+public void setGross(Double gross) {
+    this.gross = gross;
+}
+
+public Double getNet() {
+    return net;
+}
+
+public void setNet(Double net) {
+    this.net = net;
+}
+
+public Long getUpdatedAt() {
+    return updatedAt;
+}
+
+public void setUpdatedAt(Long updatedAt) {
+    this.updatedAt = updatedAt;
+}
 }

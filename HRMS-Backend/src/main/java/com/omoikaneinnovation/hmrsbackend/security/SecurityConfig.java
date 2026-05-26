@@ -109,6 +109,7 @@ public CorsConfigurationSource corsConfigurationSource() {
     // ROLE BASED APIs
       .requestMatchers("/api/employee/create").permitAll()
       .requestMatchers("/api/employee/all").permitAll()
+      .requestMatchers("/api/employee/bulk-upload").permitAll()
       .requestMatchers("/api/employee/**").hasAnyRole("ADMIN","HR","EMPLOYEE","MANAGER")
     .requestMatchers("/api/admin/**").hasRole("ADMIN")
     .requestMatchers("/api/hr/**").hasRole("HR")
@@ -142,6 +143,8 @@ public CorsConfigurationSource corsConfigurationSource() {
 .requestMatchers("/api/notifications/**").permitAll()
 .requestMatchers("/api/helpdesk/**").authenticated()
 
+// 🔥 ADD THIS HERE
+.requestMatchers("/api/livekit/**").authenticated()
   // ✅ CHAT APIs - Allow authenticated users
   .requestMatchers("/api/chat/**").authenticated()
   .requestMatchers("/api/meetings/**").authenticated()

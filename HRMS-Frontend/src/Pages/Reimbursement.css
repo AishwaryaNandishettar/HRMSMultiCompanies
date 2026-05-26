@@ -1,173 +1,372 @@
-  /* Reimbursement.css — matches InsuranceClaim style */
+/* Reimbursement.css — matches InsuranceClaim style */
 
-  /* container matches insurance-container used by Insurance CSS */
-  .insurance-container {
-    width: 95%;
-    margin: 20px auto;
-    background: white;
-    padding: 20px;
-    border-radius: 10px;
-    font-family: Arial, sans-serif;
-    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+/* container matches insurance-container used by Insurance CSS */
+.insurance-container {
+  width: 95%;
+  margin: 20px auto;
+  background: white;
+  padding: 20px;
+  border-radius: 10px;
+  font-family: Arial, sans-serif;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+}
+
+.insurance-container h2 {
+  text-align: left;
+  margin-bottom: 12px;
+  font-size: 22px;
+  font-weight: 600;
+}
+
+/* filter bar */
+.filter-section {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  background: #eefaff;
+  padding: 10px;
+  border-radius: 8px;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+/* inputs inside filter section */
+.filter-section input,
+.filter-section select {
+  padding: 8px 10px;
+  border: 1px solid #d5d5d5;
+  border-radius: 6px;
+  font-size: 14px;
+  outline: none;
+  background: white;
+}
+
+/* buttons */
+.search-btn,
+.export-btn,
+.new-claim-btn {
+  padding: 8px 12px;
+  border: none;
+  background: blueviolet;
+  color: white;
+  
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 14px;
+}
+
+.new-claim-btn { background: #28a745; }
+.export-btn { background: #009688; }
+
+/* claim form (same look as insurance) */
+.claim-form {
+  background: #f8ffff;
+  padding: 18px;
+  border-radius: 10px;
+  margin-top: 12px;
+  border: 1px solid #d7f1ff;
+}
+
+.claim-form h3 {
+  margin-bottom: 12px;
+  font-size: 18px;
+  font-weight: 600;
+}
+
+/* grid like insurance */
+.form-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(240px, 1fr));
+  gap: 16px;
+}
+
+.form-grid input,
+.form-grid select {
+  padding: 10px;
+  border: 1px solid #cccccc;
+  border-radius: 6px;
+  font-size: 14px;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+/* textarea */
+.claim-form textarea {
+  width: 100%;
+  min-height: 80px;
+  padding: 10px;
+  border-radius: 6px;
+  border: 1px solid #cccccc;
+  margin-top: 8px;
+}
+
+/* submit */
+.submit-btn {
+  margin-top: 12px;
+  padding: 10px 16px;
+  border: none;
+  background: #0066cc;
+  color: white;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 15px;
+}
+
+/* ================= TABLE WRAPPER - SCROLLABLE WITH FIXED HEADERS ================= */
+.table-wrapper {
+  width: 100%;
+  max-height: 500px;
+  overflow: auto;
+  border: 1px solid #ddd;
+  border-radius: 10px;
+  background: #fff;
+  position: relative;
+}
+
+.table-wrapper::-webkit-scrollbar {
+  height: 12px;
+  width: 12px;
+}
+
+.table-wrapper::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 6px;
+}
+
+.table-wrapper::-webkit-scrollbar-thumb {
+  background: #888;
+  border-radius: 6px;
+}
+
+.table-wrapper::-webkit-scrollbar-thumb:hover {
+  background: #555;
+}
+
+/* ================= TABLE - FIXED LAYOUT ================= */
+.claim-table {
+  width: max-content;
+  min-width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  position: relative;
+}
+
+/* ================= STICKY HEADER - STAYS FIXED WHILE SCROLLING ================= */
+.claim-table thead {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+
+.claim-table thead th {
+  position: sticky;
+  top: 0;
+  background: #1f3c88 !important;
+  color: white;
+  padding: 12px 10px;
+  text-align: center;
+  vertical-align: middle;
+  font-size: 13px;
+  font-weight: 600;
+  border: 1px solid #16306d;
+  white-space: nowrap;
+  box-sizing: border-box;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+/* ================= BODY ROWS ================= */
+.claim-table td {
+  padding: 12px 10px;
+  border: 1px solid #eee;
+  text-align: center;
+  font-size: 14px;
+  white-space: nowrap;
+  box-sizing: border-box;
+  background: white;
+}
+
+.claim-table tbody tr:hover td {
+  background: #f8fdff;
+}
+
+/* ================= COLUMN WIDTHS - CONSISTENT ACROSS HEADER AND BODY ================= */
+
+/* Employee ID - STICKY COLUMN 1 */
+.claim-table th:nth-child(1),
+.claim-table td:nth-child(1) {
+  min-width: 120px;
+  width: 120px;
+  position: sticky;
+  left: 0;
+  z-index: 10;
+}
+
+.claim-table th:nth-child(1) {
+  background: #1f3c88 !important;
+  z-index: 110 !important;
+}
+
+.claim-table td:nth-child(1) {
+  background: #fff;
+  box-shadow: 2px 0 4px -1px rgba(0, 0, 0, 0.1);
+}
+
+/* Employee Name - STICKY COLUMN 2 */
+.claim-table th:nth-child(2),
+.claim-table td:nth-child(2) {
+  min-width: 200px;
+  width: 200px;
+  text-align: left;
+  padding-left: 10px;
+  padding-right: 10px;
+  position: sticky;
+  left: 120px;
+  z-index: 10;
+}
+
+.claim-table th:nth-child(2) {
+  background: #1f3c88 !important;
+  z-index: 110 !important;
+}
+
+.claim-table td:nth-child(2) {
+  background: #fff;
+  box-shadow: 2px 0 4px -1px rgba(0, 0, 0, 0.1);
+}
+
+/* Claim Type */
+.claim-table th:nth-child(3),
+.claim-table td:nth-child(3) {
+  min-width: 150px;
+  width: 150px;
+}
+
+/* Submitted Date */
+.claim-table th:nth-child(4),
+.claim-table td:nth-child(4) {
+  min-width: 150px;
+  width: 150px;
+}
+
+/* Amount */
+.claim-table th:nth-child(5),
+.claim-table td:nth-child(5) {
+  min-width: 120px;
+  width: 120px;
+}
+
+/* From Date */
+.claim-table th:nth-child(6),
+.claim-table td:nth-child(6) {
+  min-width: 130px;
+  width: 130px;
+}
+
+/* To Date */
+.claim-table th:nth-child(7),
+.claim-table td:nth-child(7) {
+  min-width: 130px;
+  width: 130px;
+}
+
+/* From Location */
+.claim-table th:nth-child(8),
+.claim-table td:nth-child(8) {
+  min-width: 160px;
+  width: 160px;
+}
+
+/* To Location */
+.claim-table th:nth-child(9),
+.claim-table td:nth-child(9) {
+  min-width: 160px;
+  width: 160px;
+}
+
+/* Manager */
+.claim-table th:nth-child(10),
+.claim-table td:nth-child(10) {
+  min-width: 150px;
+  width: 150px;
+}
+
+/* Attachment */
+.claim-table th:nth-child(11),
+.claim-table td:nth-child(11) {
+  min-width: 140px;
+  width: 140px;
+}
+
+/* Status */
+.claim-table th:nth-child(12),
+.claim-table td:nth-child(12) {
+  min-width: 150px;
+  width: 150px;
+}
+
+/* Action column (if exists) */
+.claim-table th:nth-child(13),
+.claim-table td:nth-child(13) {
+  min-width: 120px;
+  width: 120px;
+}
+
+/* Maintain background on hover for sticky columns */
+.claim-table tbody tr:hover td:nth-child(1),
+.claim-table tbody tr:hover td:nth-child(2) {
+  background: #f8fdff;
+}
+
+
+/* status classes */
+.status {
+  font-weight: 600;
+}
+
+.status.pending { color: #d88c00; }
+.status.approved { color: #1e8f32; }
+.status.rejected { color: #c62828; }
+
+/* dropdown style for actions */
+.status-dropdown {
+  padding: 6px 10px;
+  border: 1px solid #cccccc;
+  border-radius: 6px;
+}
+
+/* responsive */
+@media (max-width: 768px) {
+  .form-grid { 
+    grid-template-columns: 1fr; 
   }
-
-  .insurance-container h2 {
-    text-align: left;
-    margin-bottom: 12px;
-    font-size: 22px;
-    font-weight: 600;
+  .filter-section { 
+    flex-direction: column; 
+    align-items: stretch; 
   }
+ 
+}
 
-  /* filter bar */
-  .filter-section {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 10px;
-    background: #eefaff;
-    padding: 10px;
-    border-radius: 8px;
-    align-items: center;
-  }
-
-  /* inputs inside filter section */
-  .filter-section input,
-  .filter-section select {
-    padding: 8px 10px;
-    border: 1px solid #d5d5d5;
-    border-radius: 6px;
-    font-size: 14px;
-    outline: none;
-    background: white;
-  }
-
-  /* buttons */
-  .search-btn,
-  .export-btn,
-  .new-claim-btn {
-    padding: 8px 12px;
-    border: none;
-    background: #007bff;
-    color: white;
-    border-radius: 6px;
-    cursor: pointer;
-    font-size: 14px;
-  }
-
-  .new-claim-btn { background: #28a745; }
-  .export-btn { background: #009688; }
-
-  /* claim form (same look as insurance) */
-  .claim-form {
-    background: #f8ffff;
-    padding: 18px;
-    border-radius: 10px;
-    margin-top: 12px;
-    border: 1px solid #d7f1ff;
-  }
-
-  .claim-form h3 {
-    margin-bottom: 12px;
-    font-size: 18px;
-    font-weight: 600;
-  }
-
-  /* grid like insurance */
-  .form-grid {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 12px;
-  }
-
-  .form-grid input,
-  .form-grid select {
-    padding: 10px;
-    border: 1px solid #cccccc;
-    border-radius: 6px;
-    font-size: 14px;
-  }
-
-  /* textarea */
-  .claim-form textarea {
-    width: 100%;
-    min-height: 80px;
-    padding: 10px;
-    border-radius: 6px;
-    border: 1px solid #cccccc;
-    margin-top: 8px;
-  }
-
-  /* submit */
-  .submit-btn {
-    margin-top: 12px;
-    padding: 10px 16px;
-    border: none;
-    background: #0066cc;
-    color: white;
-    border-radius: 6px;
-    cursor: pointer;
-    font-size: 15px;
-  }
-
-  /* table uses same claim-table classes */
-  .claim-table {
-    width: 100%;
-    border-collapse: collapse;
-    margin-top: 16px;
-    min-width: 900px;
-  }
-
-  .claim-table thead {
-    background: #e2f3ff;
-  }
-
-  .claim-table th,
-  .claim-table td {
-    padding: 12px;
-    text-align: center;
-    border-bottom: 1px solid #dddddd;
-    font-size: 14px;
-  }
-
-  .claim-table tr:hover { background: #f8fdff; }
-
-  /* status classes */
-  .status {
-    font-weight: 600;
-  }
-
-  .status.pending { color: #d88c00; }
-  .status.approved { color: #1e8f32; }
-  .status.rejected { color: #c62828; }
-
-  /* dropdown style for actions */
-  .status-dropdown {
-    padding: 6px 10px;
-    border: 1px solid #cccccc;
-    border-radius: 6px;
-  }
-
-  /* responsive */
-  @media (max-width: 768px) {
-    .form-grid { grid-template-columns: 1fr; }
-    .filter-section { flex-direction: column; align-items: stretch; }
-    .claim-table { min-width: 100%; font-size: 13px; }
-  }
-  .form-grid label {
+.form-grid label {
   font-size: 13px;
   font-weight: 600;
   margin-bottom: 4px;
   display: block;
 }
+
 .date-range {
-  display: flex;
-  align-items: center;
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: end;
   gap: 10px;
 }
 
 .date-separator {
+  align-self: end;
+  padding-bottom: 10px;
   font-weight: bold;
   color: #555;
 }
+
 .date-field {
   display: flex;
   flex-direction: column;
@@ -180,36 +379,17 @@
   margin-bottom: 4px;
   color: #333;
 }
-.date-field {
-  display: flex;
-  flex-direction: column;
-  flex: 1;
-}
 
-.date-field label {
-  font-size: 12px;
-  font-weight: 600;
-  margin-bottom: 4px;
-  color: #333;
-}
-.form-grid input,
-.form-grid select {
-  width: 100%;
-}
-
-/* 👇 Prevent unwanted stretching */
+/* Prevent unwanted stretching */
 .form-grid > *:not(.date-range) {
   grid-column: span 1;
 }
+
 .form-grid select,
 .form-grid input {
   max-width: 100%;
 }
 
-/* Optional tighter control */
-.form-grid select {
-  width: 100%;
-}
 /* role buttons */
 .role-btn {
   padding: 8px 14px;
@@ -225,16 +405,11 @@
 
 /* active (selected) */
 .role-btn.active {
-  background: #003366;   /* dark blue */
+  background: #003366;
   color: white;
   border-color: #003366;
 }
 
-/* hover effect */
-.role-btn:hover {
-  background: #0056b3;
-  color: white;
-}
 .form-row {
   display: flex;
   gap: 16px;
@@ -270,8 +445,8 @@
 
 .form-grid.top-compact {
   display: grid;
-  grid-template-columns: repeat(3, minmax(220px, 1fr)); /* 👈 uses full space */
-  gap: 18px;  /* 👈 more spacing between fields */
+  grid-template-columns: repeat(3, minmax(220px, 1fr));
+  gap: 18px;
   margin-bottom: 15px;
 }
 
@@ -293,40 +468,501 @@
 .form-grid.top-compact input,
 .form-grid.top-compact select {
   width: 100%;
-  height: 42px;           /* 👈 bigger height */
-  font-size: 15px;        /* 👈 bigger text */
+  height: 42px;
+  font-size: 15px;
   padding: 8px 12px;
   border-radius: 6px;
 }
-.claim-table td {
-  white-space: nowrap;
-}
 
-.claim-table th {
-  background: #0d3b66;
-  color: white;
-}
 .filter-popup {
   position: absolute;
   top: 100%;
   left: 0;
+  width: 220px;
+  max-height: 250px;
+  overflow-y: auto;
   background: white;
-  border: 1px solid #ccc;
+  color: black;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+  z-index: 9999;
   padding: 8px;
-  z-index: 10;
-  width: 150px;
+}
+
+.filter-popup input {
+  width: 90%;
+  padding: 6px;
+  margin: 6px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
 }
 
 .filter-list {
-  max-height: 120px;
+  max-height: 180px;
   overflow-y: auto;
 }
 
 .filter-list div {
-  padding: 5px;
+  padding: 8px 12px;
   cursor: pointer;
+  transition: background 0.2s;
 }
 
 .filter-list div:hover {
-  background: #eee;
+  background: #f0f0f0;
 }
+
+/* Dashboard cards */
+.claim-dashboard {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+.card {
+  padding: 15px;
+  border-radius: 10px;
+  color: white;
+  text-align: center;
+}
+
+.card.total { background: #007bff; }
+.card.approved { background: #28a745; }
+.card.pending { background: #ff9800; }
+.card.rejected { background: #dc3545; }
+.card.amount { background: #6f42c1; }
+
+/* Form actions */
+.form-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 15px;
+}
+
+.cancel-btn {
+  padding: 10px 16px;
+  border: none;
+  background: #dc3545;
+  color: white;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 15px;
+}
+/* ✅ FORCE HEADER + BODY ALIGNMENT */
+
+.claim-table th,
+.claim-table td {
+  min-width: 140px;
+}
+
+/* employee name wider */
+.claim-table th:nth-child(2),
+.claim-table td:nth-child(2) {
+  min-width: 180px;
+}
+
+/* ================= HEADER CONTENT - PROPER ALIGNMENT ================= */
+.table-header-cell {
+  position: relative;
+  cursor: pointer;
+}
+
+.header-label {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  width: 100%;
+  padding: 0;
+}
+
+/* Left align for Employee Name header */
+.claim-table th:nth-child(2) .header-label {
+  justify-content: flex-start;
+  padding-left: 0;
+}
+
+/* ================= FILTER POPUP ================= */
+.filter-popup {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  width: 220px;
+  max-height: 250px;
+  overflow-y: auto;
+  background: white;
+  color: black;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+  z-index: 9999;
+  padding: 8px;
+}
+
+.filter-popup input {
+  width: 90%;
+  padding: 6px;
+  margin: 6px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+}
+
+.filter-list {
+  max-height: 180px;
+  overflow-y: auto;
+}
+
+.filter-list div {
+  padding: 8px 12px;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.filter-list div:hover {
+  background: #f0f0f0;
+}
+
+/* =========================================================
+   REIMBURSEMENT TABLE FINAL FIX
+   (Protect from Attendance/Grid CSS)
+========================================================= */
+
+.insurance-container .table-wrapper {
+  width: 100%;
+  height: calc(100vh - 280px);
+  overflow: auto;
+  position: relative;
+  border: 1px solid #ddd;
+  border-radius: 10px;
+  background: #fff;
+  overscroll-behavior: contain;
+}
+
+/* FORCE REAL TABLE */
+.insurance-container .claim-table {
+  display: table !important;
+  width: max-content;
+  min-width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  table-layout: fixed;
+  position: relative;
+}
+
+/* REMOVE GRID/FLEX DAMAGE FROM ATTENDANCE CSS */
+.insurance-container .claim-table thead {
+  display: table-header-group !important;
+}
+
+.insurance-container .claim-table tbody {
+  display: table-row-group !important;
+}
+
+.insurance-container .claim-table tr {
+  display: table-row !important;
+}
+
+.insurance-container .claim-table th,
+.insurance-container .claim-table td {
+  display: table-cell !important;
+  vertical-align: middle;
+  box-sizing: border-box;
+}
+
+/* =========================================================
+   HEADER
+========================================================= */
+
+.insurance-container .claim-table thead th {
+  position: sticky;
+  top: 0;
+  background: #1f3c88 !important;
+  color: white;
+  z-index: 100;
+  padding: 12px 10px;
+  text-align: center;
+  white-space: nowrap;
+  border: 1px solid #16306d;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+/* =========================================================
+   BODY
+========================================================= */
+
+.insurance-container .claim-table tbody td {
+  background: #fff;
+  padding: 12px 10px;
+  border: 1px solid #eee;
+  text-align: center;
+  white-space: nowrap;
+  font-size: 14px;
+}
+
+.insurance-container .claim-table tbody tr:hover td {
+  background: #f8fdff;
+}
+
+/* =========================================================
+   STICKY COLUMN 1
+========================================================= */
+
+.insurance-container .claim-table th:nth-child(1),
+.insurance-container .claim-table td:nth-child(1) {
+  min-width: 120px;
+  width: 120px;
+  max-width: 120px;
+
+  position: sticky;
+  left: 0;
+}
+
+.insurance-container .claim-table th:nth-child(1) {
+  background: #1f3c88 !important;
+  z-index: 120;
+}
+
+.insurance-container .claim-table td:nth-child(1) {
+  background: #fff;
+  z-index: 20;
+}
+
+/* =========================================================
+   STICKY COLUMN 2
+========================================================= */
+
+.insurance-container .claim-table th:nth-child(2),
+.insurance-container .claim-table td:nth-child(2) {
+  min-width: 200px;
+  width: 200px;
+  max-width: 200px;
+
+  position: sticky;
+  left: 120px;
+}
+
+.insurance-container .claim-table th:nth-child(2) {
+  background: #1f3c88 !important;
+  z-index: 120;
+  text-align: left;
+  padding-left: 12px;
+}
+
+.insurance-container .claim-table td:nth-child(2) {
+  background: #fff;
+  z-index: 20;
+  text-align: left;
+  padding-left: 12px;
+}
+
+/* =========================================================
+   NORMAL COLUMNS
+========================================================= */
+
+.insurance-container .claim-table th:nth-child(3),
+.insurance-container .claim-table td:nth-child(3) {
+  width: 150px;
+  min-width: 150px;
+}
+
+.insurance-container .claim-table th:nth-child(4),
+.insurance-container .claim-table td:nth-child(4) {
+  width: 150px;
+  min-width: 150px;
+}
+
+.insurance-container .claim-table th:nth-child(5),
+.insurance-container .claim-table td:nth-child(5) {
+  width: 120px;
+  min-width: 120px;
+}
+
+.insurance-container .claim-table th:nth-child(6),
+.insurance-container .claim-table td:nth-child(6) {
+  width: 130px;
+  min-width: 130px;
+}
+
+.insurance-container .claim-table th:nth-child(7),
+.insurance-container .claim-table td:nth-child(7) {
+  width: 130px;
+  min-width: 130px;
+}
+
+.insurance-container .claim-table th:nth-child(8),
+.insurance-container .claim-table td:nth-child(8) {
+  width: 160px;
+  min-width: 160px;
+}
+
+.insurance-container .claim-table th:nth-child(9),
+.insurance-container .claim-table td:nth-child(9) {
+  width: 160px;
+  min-width: 160px;
+}
+
+.insurance-container .claim-table th:nth-child(10),
+.insurance-container .claim-table td:nth-child(10) {
+  width: 150px;
+  min-width: 150px;
+}
+
+.insurance-container .claim-table th:nth-child(11),
+.insurance-container .claim-table td:nth-child(11) {
+  width: 140px;
+  min-width: 140px;
+}
+
+.insurance-container .claim-table th:nth-child(12),
+.insurance-container .claim-table td:nth-child(12) {
+  width: 150px;
+  min-width: 150px;
+}
+
+.insurance-container .claim-table th:nth-child(13),
+.insurance-container .claim-table td:nth-child(13) {
+  width: 120px;
+  min-width: 120px;
+}
+
+/* =========================================================
+   KEEP STICKY BG ON HOVER
+========================================================= */
+
+.insurance-container .claim-table tbody tr:hover td:nth-child(1),
+.insurance-container .claim-table tbody tr:hover td:nth-child(2) {
+  background: #f8fdff;
+}
+
+
+/* =========================================================
+   FINAL FREEZE + GRID LINE FIX
+   ADD THIS AT VERY END OF FILE
+========================================================= */
+
+/* FORCE PROPER TABLE STRUCTURE */
+.insurance-container .claim-table {
+  width: max-content;
+  min-width: 100%;
+  border-collapse: separate !important;
+  border-spacing: 0 !important;
+  table-layout: fixed;
+}
+
+/* ALL CELLS */
+.insurance-container .claim-table th,
+.insurance-container .claim-table td {
+  border-right: 1px solid #dcdcdc !important;
+  border-bottom: 1px solid #dcdcdc !important;
+  padding: 12px 10px;
+  white-space: nowrap;
+  box-sizing: border-box;
+}
+
+/* LEFT BORDER */
+.insurance-container .claim-table th:first-child,
+.insurance-container .claim-table td:first-child {
+  border-left: 1px solid #dcdcdc !important;
+}
+
+/* TOP BORDER */
+.insurance-container .claim-table thead th {
+  border-top: 1px solid #16306d !important;
+}
+
+/* HEADER FIX */
+.insurance-container .claim-table thead th {
+  position: sticky;
+  top: 0;
+  background: #1f3c88 !important;
+  color: white;
+  z-index: 100;
+  text-align: center;
+}
+
+/* =========================================================
+   FREEZE COLUMN 1 (EMPLOYEE ID)
+========================================================= */
+
+.insurance-container .claim-table th:nth-child(1),
+.insurance-container .claim-table td:nth-child(1) {
+  position: sticky;
+  left: 0;
+  min-width: 170px;
+  width: 170px;
+  max-width: 170px;
+  z-index: 120;
+}
+
+.insurance-container .claim-table th:nth-child(1) {
+  background: #1f3c88 !important;
+  z-index: 200;
+}
+
+.insurance-container .claim-table td:nth-child(1) {
+  background: #fff !important;
+}
+
+/* =========================================================
+   FREEZE COLUMN 2 (EMPLOYEE NAME)
+========================================================= */
+
+.insurance-container .claim-table th:nth-child(2),
+.insurance-container .claim-table td:nth-child(2) {
+  position: sticky;
+  left: 170px;
+  min-width: 200px;
+  width: 200px;
+  max-width: 200px;
+  z-index: 120;
+}
+
+.insurance-container .claim-table th:nth-child(2) {
+  background: #1f3c88 !important;
+  z-index: 200;
+}
+
+.insurance-container .claim-table td:nth-child(2) {
+  background: #fff !important;
+}
+
+/* =========================================================
+   REMAINING COLUMNS SCROLLABLE
+========================================================= */
+
+.insurance-container .claim-table th:nth-child(n+3),
+.insurance-container .claim-table td:nth-child(n+3) {
+  min-width: 150px;
+  width: 150px;
+}
+
+/* =========================================================
+   HOVER FIX
+========================================================= */
+
+.insurance-container .claim-table tbody tr:hover td {
+  background: #f8fdff;
+}
+
+.insurance-container .claim-table tbody tr:hover td:nth-child(1),
+.insurance-container .claim-table tbody tr:hover td:nth-child(2) {
+  background: #f8fdff !important;
+}
+
+/* =========================================================
+   STICKY COLUMN SHADOW
+========================================================= */
+
+.insurance-container .claim-table td:nth-child(1),
+.insurance-container .claim-table td:nth-child(2) {
+  box-shadow: 2px 0 4px -1px rgba(0,0,0,0.08);
+}
+
+.insurance-container .claim-table thead th {
+  background: #1f3c88 !important;
+  color: #fff !important;
+}
+

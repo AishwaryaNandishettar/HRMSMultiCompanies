@@ -93,12 +93,6 @@ export const getWebRTCConfig = () => {
   const username = import.meta.env.VITE_TURN_USERNAME;
   const credential = import.meta.env.VITE_TURN_CREDENTIAL;
 
-  // ✅ Debug - remove after fixing
-  console.log('TURN credentials loaded:', { 
-    username: username ? '✅ present' : '❌ undefined', 
-    credential: credential ? '✅ present' : '❌ undefined' 
-  });
-
   if (!username || !credential) {
     console.warn('⚠️ TURN credentials missing - using STUN only');
     return {

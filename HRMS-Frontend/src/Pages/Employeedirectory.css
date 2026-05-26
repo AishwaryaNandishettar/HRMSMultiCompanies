@@ -91,11 +91,73 @@
 
 /* Table wrapper */
 .table-wrapper {
-  width: 100%;
-  overflow-x: auto;
-  border-radius: 10px;
-  border: 1px solid #e0e0e0;
+ width: 100%;
+  height: calc(100vh - 280px);
+  max-height: 500px;
+  overflow: auto;
+  position: relative;
   background: #fff;
+  border: 1px solid #ddd;
+  border-radius: 10px;
+
+  overscroll-behavior: contain;
+  isolation: isolate;
+}
+
+
+/* Scrollbar styling */
+.tableWrap::-webkit-scrollbar {
+  height: 12px;
+  width: 12px;
+}
+
+.tableWrap::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 6px;
+}
+
+.tableWrap::-webkit-scrollbar-thumb {
+  background: #888;
+  border-radius: 6px;
+}
+
+.tableWrap::-webkit-scrollbar-thumb:hover {
+  background: #555;
+}
+
+/* =========================================
+   FIX STICKY BLEEDING DURING SCROLL
+========================================= */
+.employee-table {
+  overflow: visible;
+}
+
+.employee-table th,
+.employee-table td {
+  background-clip: padding-box;
+}
+
+.employee-table tbody tr:hover td:nth-child(1),
+.employee-table tbody tr:hover td:nth-child(2) {
+  background: #f8fdff;
+}
+
+.employee-table thead {
+  display: table-header-group !important;
+}
+
+.employee-table tbody {
+  display: table-row-group !important;
+}
+
+.employee-table tr {
+  display: table-row !important;
+}
+
+.employee-table th,
+.employee-table td {
+  display: table-cell !important;
+  box-sizing: border-box;
 }
 
 /* Employee table */
@@ -105,6 +167,95 @@
   font-size: 14px;
 }
 
+/* =========================================================
+   HEADER CELLS - STICKY AT TOP
+========================================================= */
+.employee-table thead th {
+  position: sticky;
+  top: 0;
+  z-index: 200;
+  background: #0d3b66;
+  color: white;
+  padding: 12px 10px;
+  text-align: center;
+  font-size: 14px;
+  font-weight: 600;
+  white-space: nowrap;
+  border-right: 1px solid rgba(255,255,255,0.2);
+  border-bottom: 2px solid #16306d;
+  border-top: 1px solid rgba(255,255,255,0.2);
+}
+
+.employee-table thead th:first-child {
+  border-left: 1px solid rgba(255,255,255,0.2);
+}
+
+
+/* =========================================================
+   FROZEN COLUMN 1 - EMP ID (STICKY LEFT)
+========================================================= */
+.employee-table th:nth-child(1),
+.employee-table td:nth-child(1) {
+  position: sticky;
+  left: 0;
+  width: 140px;
+  min-width: 140px;
+  max-width: 140px;
+  z-index: 300;
+  background: white;
+}
+
+.employee-table thead th:nth-child(1) {
+  z-index: 500;
+  background: #0d3b66 !important;
+  box-shadow: 2px 0 5px rgba(0,0,0,0.15);
+}
+.employee-table tbody td:nth-child(1) {
+  background: #fff;
+  box-shadow: 2px 0 4px -1px rgba(0,0,0,0.1);
+}
+
+/* =========================================================
+   FROZEN COLUMN 2 - EMP NAME (STICKY LEFT)
+========================================================= */
+.employee-table th:nth-child(2),
+.employee-table td:nth-child(2) {
+  position: sticky;
+  left: 140px;
+  width: 220px;
+  min-width: 220px;
+  max-width: 220px;
+  z-index: 300;
+  background: white;
+}
+
+.employee-table thead th:nth-child(2) {
+  z-index: 500;
+  background: #0d3b66 !important;
+  box-shadow: 2px 0 5px rgba(0,0,0,0.15);
+}
+.employee-table tbody td:nth-child(2) {
+  background: #fff;
+  box-shadow: 2px 0 4px -1px rgba(0,0,0,0.1);
+}
+
+/* =========================================================
+   SCROLLABLE COLUMNS (3 onwards) - DEPARTMENT, etc.
+========================================================= */
+.employee-table th:nth-child(n+3),
+.employee-table td:nth-child(n+3) {
+  min-width: 160px;
+  width: 160px;
+}
+
+/* =========================================================
+   MAINTAIN BACKGROUND ON HOVER FOR FROZEN COLUMNS
+========================================================= */
+.employee-table tbody tr:hover td:nth-child(1),
+.employee-table tbody tr:hover td:nth-child(2) {
+  background: #f8fdff;
+  box-shadow: 2px 0 4px -1px rgba(0, 0, 0, 0.1);
+}
 .employee-table th,
 .employee-table td {
   padding: 12px;
@@ -308,24 +459,9 @@
   border-radius: 6px;
   cursor: pointer;
 }
-.employee-table th {
-  background: linear-gradient(to right, #1e3c72, #2a5298);
-  color: #fff;
-  font-weight: 600;
-  text-transform: uppercase;
-  font-size: 13px;
-  border-bottom: none;
-}
-.employee-table thead tr.table-head th {
-  background: linear-gradient(to right, #1e3c72, #2a5298) !important;
-  color: #ffffff !important;
-  font-weight: 600;
-  text-transform: uppercase;
-  font-size: 13px;
-  border-bottom: none;
-}
+
 .employee-table thead tr.filter-row th {
-  background: #f4f6fb !important;
+  background: #f8fbff !important;
   color: #333 !important;
 }
 .employee-table thead tr.table-head th:first-child {
@@ -339,6 +475,11 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
+  gap: 6px;
+  white-space: nowrap;
+}
+.employee-table td {
+  white-space: nowrap;
 }
 
 .th-header span {
@@ -371,6 +512,282 @@
 .employee-table thead th {
   position: sticky;
   top: 0;
-  background: #fff;
   z-index: 10;
+  background: #0d3b66;   /* reimbursement-style header */
+  color: white;
+}
+/* FINAL HEADER STYLE (REIMBURSEMENT MATCH) */
+.employee-table thead {
+  background: #e2f3ff;
+}
+
+.employee-table thead th {
+  background: #0d3b66 !important;
+  color: white !important;
+  font-weight: 600;
+  text-transform: uppercase;
+  font-size: 13px;
+  border-bottom: none;
+}
+/* =========================================
+   TABLE GRID LINES
+========================================= */
+
+.employee-table th,
+.employee-table td {
+  border-right: 1px solid #e5e7eb;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+/* left border */
+
+.employee-table th:first-child,
+.employee-table td:first-child {
+  border-left: 1px solid #e5e7eb;
+}
+
+/* top border */
+
+.employee-table thead th {
+  border-top: 1px solid #1e4f85;
+}
+
+/* prevent double dark borders on sticky columns */
+
+.employee-table th:nth-child(1),
+.employee-table td:nth-child(1),
+.employee-table th:nth-child(2),
+.employee-table td:nth-child(2) {
+  background-clip: padding-box;
+}
+/* =========================================================
+   FILTER POPUP FIX FOR EMPLOYEE DIRECTORY
+========================================================= */
+
+/* allow popup outside sticky header */
+.employee-table thead th {
+  overflow: visible !important;
+}
+
+/* popup */
+.popup {
+  position: absolute;
+  top: 38px;
+  left: 0;
+
+  width: 220px;
+
+  background: #fff !important;
+  color: #111 !important;
+
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+
+  padding: 10px;
+
+  z-index: 99999 !important;
+
+  box-shadow: 0 4px 18px rgba(0,0,0,0.15);
+}
+
+/* search input */
+.popup input {
+  width: 100%;
+
+  padding: 8px;
+
+  border: 1px solid #cbd5e1;
+  border-radius: 6px;
+
+  background: #fff !important;
+  color: #111 !important;
+}
+
+.popup input::placeholder {
+  color: #666 !important;
+}
+
+/* suggestion list */
+.list {
+  max-height: 180px;
+  overflow-y: auto;
+  margin-top: 8px;
+}
+
+/* suggestion item */
+.list div {
+  padding: 8px;
+  border-radius: 6px;
+
+  color: #111 !important;
+  background: #fff !important;
+
+  cursor: pointer;
+}
+
+/* hover */
+.list div:hover {
+  background: #f1f5f9 !important;
+  color: #111 !important;
+}
+
+/* IMPORTANT FIX FOR STICKY COLUMN OVERLAP */
+.employee-table th:nth-child(2),
+.employee-table td:nth-child(2) {
+  z-index: 20 !important;
+}
+
+.employee-table thead th:nth-child(2) {
+  z-index: 30 !important;
+}
+/* =========================================================
+   FILTER POPUP FIX FOR EMPLOYEE DIRECTORY
+========================================================= */
+
+/* allow popup outside sticky header */
+.employee-table thead th {
+  overflow: visible !important;
+}
+
+/* popup */
+.popup {
+  position: absolute;
+  top: 38px;
+  left: 0;
+
+  width: 220px;
+
+  background: #fff !important;
+  color: #111 !important;
+
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+
+  padding: 10px;
+
+  z-index: 999999 !important;
+
+  box-shadow: 0 4px 18px rgba(0,0,0,0.15);
+}
+
+/* search input */
+.popup input {
+  width: 100%;
+  padding: 8px;
+
+  border: 1px solid #cbd5e1;
+  border-radius: 6px;
+
+  background: #fff !important;
+  color: #111 !important;
+}
+
+.popup input::placeholder {
+  color: #666 !important;
+}
+
+/* suggestion list */
+.list {
+  max-height: 180px;
+  overflow-y: auto;
+  margin-top: 8px;
+
+  background: #fff !important;
+}
+
+/* suggestion item */
+.list div {
+  padding: 8px;
+  border-radius: 6px;
+
+  background: #fff !important;
+  color: #111 !important;
+
+  cursor: pointer;
+
+  position: relative;
+  z-index: 999999 !important;
+}
+
+/* hover */
+.list div:hover {
+  background: #f1f5f9 !important;
+}
+
+/* =========================================================
+   FIX STICKY COLUMN OVERLAP
+========================================================= */
+
+/* reduce sticky column z-index */
+.employee-table th:nth-child(1),
+.employee-table td:nth-child(1),
+.employee-table th:nth-child(2),
+.employee-table td:nth-child(2) {
+  z-index: 5 !important;
+}
+
+/* keep header above rows but below popup */
+.employee-table thead th {
+  z-index: 10 !important;
+}
+
+/* popup always top */
+.employee-table .popup {
+  z-index: 999999 !important;
+}
+/* =========================================================
+   FINAL FIX FOR PROFILE HEADER STICKY
+========================================================= */
+
+/* PROFILE COLUMN HEADER */
+.employee-table thead th:nth-child(1) {
+  position: sticky !important;
+  left: 0 !important;
+  top: 0 !important;
+
+  z-index: 1000 !important;
+
+  background: #0d3b66 !important;
+}
+
+/* PROFILE COLUMN BODY */
+.employee-table tbody td:nth-child(1) {
+  position: sticky !important;
+  left: 0 !important;
+
+  z-index: 100 !important;
+
+  background: #fff !important;
+}
+
+/* EMPLOYEE NAME HEADER */
+.employee-table thead th:nth-child(2) {
+  position: sticky !important;
+  left: 140px !important;
+  top: 0 !important;
+
+  z-index: 999 !important;
+
+  background: #0d3b66 !important;
+}
+
+/* EMPLOYEE NAME BODY */
+.employee-table tbody td:nth-child(2) {
+  position: sticky !important;
+  left: 140px !important;
+
+  z-index: 99 !important;
+
+  background: #fff !important;
+}
+
+/* NORMAL HEADERS */
+.employee-table thead th {
+  top: 0;
+  z-index: 50;
+}
+
+/* POPUP ALWAYS ABOVE EVERYTHING */
+.popup {
+  z-index: 999999 !important;
 }

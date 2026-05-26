@@ -1,0 +1,585 @@
+.attendanceContainer table thead th {
+  background:blue;   /* white background */
+  color: white !important;       /* blue text */
+  font-size: 13px;
+  text-transform: uppercase;
+  padding: 12px;
+  border: 1px solid #ddd;
+  position: relative;
+   text-align: center;        /* horizontal center */
+  vertical-align: middle;    /* vertical center */
+}
+
+h2 {
+  margin-bottom: 20px;
+  color: #1e3c72;
+}
+
+.topPanel {
+  display: flex;
+  justify-content: space-between;
+  background: #f4f6fb;
+  padding: 20px;
+  border-radius: 8px;
+  margin-bottom: 20px;
+}
+
+.buttonGroup {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+button {
+  padding: 8px 16px;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.checkin {
+  background: #0d6efd;
+  color: white;
+}
+
+.checkout {
+  background: #dc3545;
+  color: white;
+}
+
+.export {
+  background: #198754;
+  color: white;
+}
+
+.approve {
+  background: orange;
+  color: white;
+}
+/* =========================================================
+   TABLE WRAPPER
+========================================================= */
+
+.attendanceContainer .tableWrapper {
+  width: 100%;
+  height: calc(100vh - 280px);
+  max-height: 500px;
+  overflow: auto;
+  position: relative;
+  background: #fff;
+  border: 1px solid #ddd;
+  border-radius: 10px;
+
+  overscroll-behavior: contain;
+  isolation: isolate;
+}
+
+
+/* Scrollbar styling */
+.tableWrapper::-webkit-scrollbar {
+  height: 12px;
+  width: 12px;
+}
+
+.tableWrapper::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 6px;
+}
+
+.tableWrapper::-webkit-scrollbar-thumb {
+  background: #888;
+  border-radius: 6px;
+}
+
+.tableWrapper::-webkit-scrollbar-thumb:hover {
+  background: #555;
+}
+
+
+/* =========================================
+   FIX STICKY BLEEDING DURING SCROLL
+========================================= */
+.table {
+  overflow: visible;
+}
+
+.table th,
+.table td {
+  background-clip: padding-box;
+}
+
+.table tbody tr:hover td:nth-child(1),
+.table tbody tr:hover td:nth-child(2) {
+   background: #0d3b66;
+}
+
+.table thead {
+  display: table-header-group !important;
+}
+
+.table tbody {
+  display: table-row-group !important;
+}
+
+.table tr {
+  display: table-row !important;
+}
+
+.table th,
+.table td {
+  display: table-cell !important;
+  box-sizing: border-box;
+}
+
+
+/* =========================================================
+   TABLE
+========================================================= */
+
+.attendanceContainer table {
+  border-collapse: separate;
+  border-spacing: 0;
+
+  min-width: 1800px;
+  width: max-content;
+
+  table-layout: fixed;
+
+  background: #fff;
+}
+
+/* =========================================================
+   HEADER
+========================================================= */
+
+.attendanceContainer table thead th {
+  position: sticky;
+  top: 0;
+
+  background: #0d3b66;
+  color: white !important;
+
+  z-index: 300;
+
+  padding: 12px;
+
+  white-space: nowrap;
+
+  border-right: 1px solid #d1d5db;
+  border-bottom: 2px solid #16306d;
+
+  text-align: center;
+  vertical-align: middle;
+}
+
+/* =========================================================
+   BODY CELLS
+========================================================= */
+
+.attendanceContainer table tbody td {
+  padding: 10px;
+
+  white-space: nowrap;
+
+  background: white;
+
+  border-right: 1px solid #e5e7eb;
+  border-bottom: 1px solid #e5e7eb;
+
+  text-align: center;
+}
+
+/* =========================================================
+   COLUMN WIDTHS
+========================================================= */
+
+/* COLUMN 1 */
+
+.attendanceContainer table th:nth-child(1),
+.attendanceContainer table td:nth-child(1) {
+  width: 140px;
+  min-width: 140px;
+  max-width: 140px;
+  
+}
+
+/* COLUMN 2 */
+
+.attendanceContainer table th:nth-child(2),
+.attendanceContainer table td:nth-child(2) {
+  width: 220px;
+  min-width: 220px;
+  max-width: 220px;
+}
+
+/* OTHER COLUMNS */
+
+.attendanceContainer table th:nth-child(n+3),
+.attendanceContainer table td:nth-child(n+3) {
+  min-width: 160px;
+}
+
+/* =========================================================
+   FREEZE COLUMN 1
+========================================================= */
+
+.attendanceContainer table thead th:nth-child(1),
+.attendanceContainer table tbody td:nth-child(1) {
+  position: sticky;
+  left: 0;
+}
+
+/* HEADER */
+
+.attendanceContainer table thead th:nth-child(1) {
+  z-index: 500;
+  background: #1e3a8a !important;
+}
+
+/* BODY */
+
+.attendanceContainer table tbody td:nth-child(1) {
+  z-index: 200;
+  background: #fff;
+}
+
+/* =========================================================
+   FREEZE COLUMN 2
+========================================================= */
+
+.attendanceContainer table thead th:nth-child(2),
+.attendanceContainer table tbody td:nth-child(2) {
+  position: sticky;
+  left: 140px;
+}
+
+/* HEADER */
+
+.attendanceContainer table thead th:nth-child(2) {
+  z-index: 499;
+  background: #1e3a8a !important;
+}
+
+/* BODY */
+
+.attendanceContainer table tbody td:nth-child(2) {
+  z-index: 199;
+  background: #fff;
+}
+
+/* =========================================================
+   SHADOW FOR FROZEN COLUMNS
+========================================================= */
+
+.attendanceContainer table th:nth-child(1),
+.attendanceContainer table td:nth-child(1),
+.attendanceContainer table th:nth-child(2),
+.attendanceContainer table td:nth-child(2) {
+  box-shadow: 2px 0 5px rgba(0,0,0,0.08);
+}
+
+/* =========================================================
+   ROW HOVER
+========================================================= */
+
+.attendanceContainer table tbody tr:hover td {
+  background: #eef4ff;
+}
+
+/* KEEP HOVER ON FROZEN COLUMNS */
+
+.attendanceContainer table tbody tr:hover td:nth-child(1),
+.attendanceContainer table tbody tr:hover td:nth-child(2) {
+  background: #dbeafe;
+}
+
+/* =========================================================
+   HEADER SECTION
+========================================================= */
+
+.attendanceContainer .header {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+
+  position: relative;
+}
+
+.attendanceContainer .header span {
+  cursor: pointer;
+}
+
+/* =========================================================
+   FILTER POPUP
+========================================================= */
+
+.attendanceContainer .popup {
+  position: absolute;
+
+  top: 100%;
+  left: 0;
+
+  width: 180px;
+  max-height: 220px;
+
+  overflow-y: auto;
+
+  background: white;
+
+  border: 1px solid #ccc;
+  border-radius: 8px;
+
+  padding: 10px;
+
+  z-index: 9999;
+
+  box-shadow: 0 8px 20px rgba(0,0,0,0.15);
+}
+
+/* =========================================================
+   MOBILE
+========================================================= */
+
+@media (max-width: 768px) {
+
+  .attendanceContainer .tableWrapper {
+    max-height: 350px;
+  }
+
+  .attendanceContainer table th,
+  .attendanceContainer table td {
+    padding: 8px;
+    font-size: 12px;
+  }
+
+}
+/* =========================================================
+   TABLE WRAPPER
+========================================================= */
+
+.tableWrapper {
+  width: 100%;
+  height: 420px;
+
+  overflow: auto;
+
+  position: relative;
+
+  border: 1px solid #ddd;
+  border-radius: 10px;
+
+  background: #fff;
+}
+
+/* =========================================================
+   TABLE
+========================================================= */
+
+.table {
+  border-collapse: separate;
+  border-spacing: 0;
+
+  min-width: 1800px;
+  width: max-content;
+
+  table-layout: fixed;
+}
+
+/* =========================================================
+   HEADER
+========================================================= */
+
+.table thead th {
+  position: sticky;
+  top: 0;
+
+  background: #1e3a8a;
+  color: white;
+
+  z-index: 50;
+
+  padding: 12px;
+
+  white-space: nowrap;
+
+  border: 1px solid #ddd;
+
+  text-align: center;
+}
+
+/* =========================================================
+   BODY
+========================================================= */
+
+.table tbody td {
+  padding: 10px;
+
+  white-space: nowrap;
+
+  background: white;
+
+  border: 1px solid #e5e7eb;
+
+  text-align: center;
+}
+
+/* =========================================================
+   COLUMN WIDTHS
+========================================================= */
+
+.table th:nth-child(1),
+.table td:nth-child(1) {
+  min-width: 140px;
+  width: 140px;
+}
+
+.table th:nth-child(2),
+.table td:nth-child(2) {
+  min-width: 220px;
+  width: 220px;
+}
+
+.table th:nth-child(n+3),
+.table td:nth-child(n+3) {
+  min-width: 160px;
+}
+
+/* =========================================================
+   FREEZE COLUMN 1
+========================================================= */
+
+.table th:nth-child(1),
+.table td:nth-child(1) {
+  position: sticky;
+  left: 0;
+}
+
+/* HEADER */
+
+.table thead th:nth-child(1) {
+  z-index: 100;
+  background: #1e3a8a;
+}
+
+/* BODY */
+
+.table tbody td:nth-child(1) {
+  z-index: 40;
+  background: white;
+}
+
+/* =========================================================
+   FREEZE COLUMN 2
+========================================================= */
+
+.table th:nth-child(2),
+.table td:nth-child(2) {
+  position: sticky;
+  left: 140px;
+}
+
+/* HEADER */
+
+.table thead th:nth-child(2) {
+  z-index: 99;
+  background: #1e3a8a;
+}
+
+/* BODY */
+
+.table tbody td:nth-child(2) {
+  z-index: 39;
+  background: white;
+}
+
+/* =========================================================
+   SHADOW
+========================================================= */
+
+.table th:nth-child(1),
+.table td:nth-child(1),
+.table th:nth-child(2),
+.table td:nth-child(2) {
+  box-shadow: 2px 0 5px rgba(0,0,0,0.08);
+}
+
+/* =========================================================
+   HOVER
+========================================================= */
+
+.table tbody tr:hover td {
+  background: #eef4ff;
+}
+
+.table tbody tr:hover td:nth-child(1),
+.table tbody tr:hover td:nth-child(2) {
+  background: #dbeafe;
+}
+/* =========================================
+   FIX FILTER POPUP VISIBILITY
+========================================= */
+
+.attendanceContainer table thead th {
+  overflow: visible !important;
+}
+
+.attendanceContainer .header {
+  position: relative;
+  overflow: visible !important;
+}
+
+.attendanceContainer .popup {
+  position: absolute;
+  top: 100%;
+  left: 0;
+
+  background: #ffffff !important;
+  color: #111827 !important;
+
+  z-index: 999999 !important;
+
+  min-width: 220px;
+  max-height: 260px;
+
+  overflow-y: auto;
+  overflow-x: hidden;
+
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+
+  box-shadow: 0 10px 25px rgba(0,0,0,0.18);
+}
+
+/* SEARCH INPUT */
+
+.attendanceContainer .popup input {
+  width: 100%;
+  padding: 8px;
+  border: 1px solid #cbd5e1;
+  border-radius: 6px;
+
+  color: #111827;
+  background: white;
+
+  margin-bottom: 8px;
+}
+
+/* FILTER OPTIONS */
+
+.attendanceContainer .popup div,
+.attendanceContainer .popup label,
+.attendanceContainer .popup span,
+.attendanceContainer .popup li {
+  color: #111827 !important;
+  font-size: 13px;
+  background: white;
+}
+
+/* OPTION HOVER */
+
+.attendanceContainer .popup div:hover,
+.attendanceContainer .popup li:hover {
+  background: #eff6ff;
+}

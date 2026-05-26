@@ -20,4 +20,8 @@ public interface MeetingRepository
     // Find all meetings for a user (created by them OR they're a participant)
     @Query("{ $or: [ { 'createdByEmail': ?0 }, { 'participantEmails': { $in: [?0] } } ] }")
     List<Meeting> findAllMeetingsForUser(String email);
+
+    // Find conflicting meetings (same organizer, overlapping time)
+    @Query("{ 'createdByEmail': ?0, 'startTime': { $lt: ?2 }, 'endTime': { $gt: ?1 } }")
+    List<Meeting> findConflictingMeetings(String organizer, java.time.Instant startTime, java.time.Instant endTime);
 }

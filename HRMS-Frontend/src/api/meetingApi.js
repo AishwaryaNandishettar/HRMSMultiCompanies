@@ -60,3 +60,14 @@ export const deleteMeeting = async (id, token) => {
   );
   return res.data;
 };
+
+/* ✅ CHECK PARTICIPANT CONFLICT */
+export const checkParticipantConflict = async (email, start, end, token, excludeId = "") => {
+  const params = new URLSearchParams({ email, start, end });
+  if (excludeId) params.append("excludeId", excludeId);
+
+  const res = await axios.get(`${BASE_URL}/check-conflict?${params.toString()}`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  return res.data; // { hasConflict: bool, conflictingMeetingTitle, conflictingMeetingStart, conflictingMeetingEnd }
+};

@@ -1,6 +1,8 @@
 package com.omoikaneinnovation.hmrsbackend.dto;
 import lombok.Data;
-
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.NoArgsConstructor;
 @Data
 public class ProfileResponse {
 

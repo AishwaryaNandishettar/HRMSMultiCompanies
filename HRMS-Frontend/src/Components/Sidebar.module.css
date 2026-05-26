@@ -64,11 +64,30 @@
 .sidebarMenu a:hover {
   background-color: rgba(255, 255, 255, 0.15);
 }
+.activeLink {
+  background: linear-gradient(90deg, #2563eb, #1d4ed8);
+  color: #ffffff !important;
+  font-weight: 600;
 
-.sidebarMenu a.active {
-  background-color: #00c8ff;
-  color: white;
-  font-weight: bold;
+  border-left: 5px solid #ffffff;
+
+  box-shadow: 0 4px 12px rgba(0, 200, 255, 0.35);
+
+  transform: translateX(2px);
+}
+
+.activeLink svg {
+  color: #ffffff;
+}
+
+/* Active icon color */
+.sidebarMenu a.active svg {
+  color: #ffffff;
+}
+
+/* Smooth hover + active */
+.sidebarMenu a {
+  transition: all 0.25s ease;
 }
 
 /* TOGGLE BUTTON */

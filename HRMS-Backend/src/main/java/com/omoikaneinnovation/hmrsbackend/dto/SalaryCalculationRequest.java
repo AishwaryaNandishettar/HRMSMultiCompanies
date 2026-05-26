@@ -1,11 +1,10 @@
 package com.omoikaneinnovation.hmrsbackend.dto;
-import lombok.*;
+
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-@Getter
-@Setter
+
 @Data
 @Builder
 @NoArgsConstructor

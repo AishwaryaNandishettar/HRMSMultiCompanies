@@ -1,8 +1,10 @@
 package com.omoikaneinnovation.hmrsbackend.dto;
-
-import java.util.List;
-import lombok.Data;
 import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+import java.util.List;
+
+
     import com.omoikaneinnovation.hmrsbackend.dto.HomeResponse;
 import com.omoikaneinnovation.hmrsbackend.dto.HomeResponse.Salary;
 import com.omoikaneinnovation.hmrsbackend.dto.HomeResponse.Stats;

@@ -172,11 +172,188 @@ body {
 }
 
 .table-wrapper {
-  max-height: 340px;
-  overflow-x: auto;   
-  overflow-y: auto;   
+  width: 100%;
+  height: calc(100vh - 280px);
+  max-height: 500px;
+  overflow: auto;
   position: relative;
-  border-radius: 12px;
+  background: #fff;
+  border: 1px solid #ddd;
+  border-radius: 10px;
+
+  overscroll-behavior: contain;
+  isolation: isolate;
+}
+
+/* Scrollbar styling */
+.tableWrapper::-webkit-scrollbar {
+  height: 12px;
+  width: 12px;
+}
+
+.tableWrapper::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 6px;
+}
+
+.tableWrapper::-webkit-scrollbar-thumb {
+  background: #888;
+  border-radius: 6px;
+}
+
+.tableWrapper::-webkit-scrollbar-thumb:hover {
+  background: #555;
+}
+
+
+/* =========================================
+   FIX STICKY BLEEDING DURING SCROLL
+========================================= */
+.job-table {
+  overflow: visible;
+}
+
+.job-table th,
+.job-table td {
+  background-clip: padding-box;
+}
+
+.job-table tbody tr:hover td:nth-child(1),
+.job-table tbody tr:hover td:nth-child(2) {
+  background: #f8fdff;
+}
+
+.job-table thead {
+  display: table-header-group !important;
+}
+
+.job-table tbody {
+  display: table-row-group !important;
+}
+
+.job-table tr {
+  display: table-row !important;
+}
+
+.job-table th,
+.job-table td {
+  display: table-cell !important;
+  box-sizing: border-box;
+}
+
+/* =========================================================
+   HEADER CELLS - STICKY AT TOP
+========================================================= */
+.job-table thead th {
+  position: sticky;
+  top: 0;
+  z-index: 200;
+  background: #0d3b66;
+  color: white;
+  padding: 12px 10px;
+  text-align: center;
+  font-size: 14px;
+  font-weight: 600;
+  white-space: nowrap;
+  border-right: 1px solid rgba(255,255,255,0.2);
+  border-bottom: 2px solid #16306d;
+  border-top: 1px solid rgba(255,255,255,0.2);
+}
+
+.job-table thead th:first-child {
+  border-left: 1px solid rgba(255,255,255,0.2);
+}
+
+
+/* =========================================================
+   FROZEN COLUMN 1 - EMP ID (STICKY LEFT)
+========================================================= */
+.job-table th:nth-child(1),
+.job-table td:nth-child(1) {
+  position: sticky;
+  left: 0;
+  width: 140px;
+  min-width: 140px;
+  max-width: 140px;
+  z-index: 300;
+  background: white;
+}
+
+.job-table thead th:nth-child(1) {
+  z-index: 500;
+  background: #0d3b66 !important;
+  box-shadow: 2px 0 5px rgba(0,0,0,0.15);
+}
+.job-table tbody td:nth-child(1) {
+  background: #fff;
+  box-shadow: 2px 0 4px -1px rgba(0,0,0,0.1);
+}
+
+/* =========================================================
+   FROZEN COLUMN 2 - EMP NAME (STICKY LEFT)
+========================================================= */
+.job-table th:nth-child(2),
+.job-table td:nth-child(2) {
+  position: sticky;
+  left: 140px;
+  width: 220px;
+  min-width: 220px;
+  max-width: 220px;
+  z-index: 300;
+  background: white;
+}
+
+.job-table thead th:nth-child(2) {
+  z-index: 500;
+  background: #0d3b66 !important;
+  box-shadow: 2px 0 5px rgba(0,0,0,0.15);
+}
+.job-table tbody td:nth-child(2) {
+  background: #fff;
+  box-shadow: 2px 0 4px -1px rgba(0,0,0,0.1);
+}
+
+/* =========================================================
+   SCROLLABLE COLUMNS (3 onwards) - DEPARTMENT, etc.
+========================================================= */
+.job-table th:nth-child(n+3),
+.job-table td:nth-child(n+3) {
+  min-width: 160px;
+  width: 160px;
+}
+
+/* =========================================================
+   MAINTAIN BACKGROUND ON HOVER FOR FROZEN COLUMNS
+========================================================= */
+.job-table tbody tr:hover td:nth-child(1),
+.job-table tbody tr:hover td:nth-child(2) {
+  background: #f8fdff;
+  box-shadow: 2px 0 4px -1px rgba(0, 0, 0, 0.1);
+}
+
+
+table th:nth-child(1),
+table td:nth-child(1) {
+  min-width: 180px;   /* Domain / Name */
+}
+
+table th:nth-child(2),
+table td:nth-child(2) {
+  min-width: 140px;   /* Dept */
+}
+
+table th:nth-child(3),
+table td:nth-child(3) {
+  min-width: 140px;   /* HR */
+}
+
+table th:last-child,
+table td:last-child {
+  min-width: 120px;   /* Action */
+}
+table td:last-child {
+  text-align: center;
+  white-space: nowrap;
 }
 
 /* Sticky table header */
@@ -194,7 +371,7 @@ color: #ffffff;
 
    text-align: center;    /* ✅ force center */
   vertical-align: middle; /* ✅ fix vertical alignment */
-  padding: 14px 18px;
+ padding: 14px 12px;
   border-bottom: 1px solid #e5e7eb;
 }
 
@@ -203,15 +380,7 @@ table thead th {
   vertical-align: middle !important;
 }
 
-/* Nice scrollbar */
-.table-wrapper::-webkit-scrollbar {
-  width: 6px;
-}
 
-.table-wrapper::-webkit-scrollbar-thumb {
-  background: #cbd5e1;
-  border-radius: 10px;
-}
 
 /* ===== Table Toolbar ===== */
 
@@ -421,15 +590,13 @@ table thead th {
 table {
   width: 100%;
   border-collapse: collapse;
+  table-layout: auto;   /* ✅ ADD THIS LINE */
 }
 
 thead th {
   text-align: center;
   padding: 14px 12px;
-  /* font-size: 13px;
-  font-weight: 600;
-  color: #6b7280;
-  padding-bottom: 12px; */
+  white-space: nowrap;   /* ✅ ADD THIS */
 }
 
 tbody td {
@@ -438,7 +605,10 @@ tbody td {
   font-size: 14px;
   border-top: 1px solid #e5e7eb;
 }
-
+tbody td {
+  white-space: normal;     /* ✅ ADD */
+  word-break: break-word;  /* ✅ ADD */
+}
 .badge {
   padding: 6px 12px;
   border-radius: 999px;

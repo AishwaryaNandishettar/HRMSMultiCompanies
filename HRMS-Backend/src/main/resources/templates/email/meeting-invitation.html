@@ -5,135 +5,280 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Meeting Invitation</title>
     <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
         body {
-            font-family: Arial, sans-serif;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
             line-height: 1.6;
             color: #333;
-            background-color: #f4f4f4;
+            background-color: #f5f5f5;
         }
         .container {
-            max-width: 600px;
+            max-width: 650px;
             margin: 0 auto;
             background-color: #fff;
             border-radius: 8px;
-            padding: 20px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            overflow: hidden;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
         }
-        .header {
-            border-bottom: 4px solid #4f46e5;
+        .header-banner {
+            background: linear-gradient(135deg, #5b4fd9 0%, #4f46e5 100%);
+            color: white;
+            padding: 40px 30px;
+            text-align: center;
+        }
+        .header-banner h1 {
+            font-size: 28px;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+        .header-banner p {
+            font-size: 16px;
+            opacity: 0.95;
+        }
+        .content {
+            padding: 30px;
+        }
+        .greeting {
+            font-size: 16px;
             margin-bottom: 20px;
-            padding-bottom: 10px;
-        }
-        .header h1 {
-            color: #4f46e5;
-            margin: 0;
-            font-size: 24px;
+            color: #333;
         }
         .meeting-info {
-            background-color: #f9fafb;
-            border-left: 4px solid #4f46e5;
-            padding: 15px;
-            margin: 20px 0;
+            background-color: #648fb9;
+            border-left: 4px solid #f7f7f8;
+            padding: 20px;
+            margin: 25px 0;
             border-radius: 4px;
         }
-        .meeting-info p {
-            margin: 10px 0;
+        .meeting-info-item {
+            margin: 12px 0;
+            display: flex;
+            align-items: flex-start;
         }
         .label {
-            font-weight: bold;
-            color: #4f46e5;
-            min-width: 120px;
-            display: inline-block;
+            font-weight: 600;
+            color: #ebeaf6;
+            min-width: 140px;
+            flex-shrink: 0;
         }
         .value {
             color: #333;
+            flex: 1;
+        }
+        .value a {
+            color: #5b4fd9;
+            text-decoration: none;
+        }
+        .value a:hover {
+            text-decoration: underline;
+        }
+        .participants-section {
+            margin: 25px 0;
+        }
+        .participants-title {
+            font-weight: 600;
+            color: #5b4fd9;
+            font-size: 14px;
+            margin-bottom: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .participants-list {
+            list-style: none;
+            padding-left: 0;
+        }
+        .participants-list li {
+            padding: 8px 0;
+            color: #555;
+            font-size: 14px;
+            border-bottom: 1px solid #e5e7eb;
+        }
+        .participants-list li:last-child {
+            border-bottom: none;
+        }
+        .participants-list li:before {
+            content: "• ";
+            color: #5b4fd9;
+            font-weight: bold;
+            margin-right: 8px;
+        }
+        .action-buttons {
+            display: flex;
+            gap: 12px;
+            margin: 30px 0;
+            justify-content: center;
         }
         .action-button {
-            display: inline-block;
-            background-color: #4f46e5;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            background-color: #a6a2d6;
             color: white;
-            padding: 12px 30px;
-            border-radius: 4px;
+            padding: 14px 28px;
+            border-radius: 6px;
             text-decoration: none;
-            margin-top: 20px;
-            font-weight: bold;
+            font-weight: 600;
+            font-size: 14px;
+            border: none;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+            flex: 1;
+            max-width: 200px;
         }
         .action-button:hover {
-            background-color: #4338ca;
+            background-color: #efeff3;
+        }
+        .action-button.secondary {
+            background-color: #e5e7eb;
+            color: #333;
+        }
+        .action-button.secondary:hover {
+            background-color: #d1d5db;
+        }
+        .action-button svg {
+            width: 18px;
+            height: 18px;
+            margin-right: 8px;
+        }
+        .important-note {
+            background-color: #fef3c7;
+            border: 1px solid #fcd34d;
+            border-radius: 6px;
+            padding: 12px 16px;
+            margin: 20px 0;
+            color: #92400e;
+            font-size: 14px;
+        }
+        .important-note strong {
+            display: block;
+            margin-bottom: 4px;
+        }
+        .description-section {
+            background-color: #f0f4ff;
+            border-radius: 6px;
+            padding: 16px;
+            margin: 20px 0;
+            font-size: 14px;
+            color: #333;
+            line-height: 1.5;
         }
         .footer {
-            margin-top: 30px;
-            padding-top: 20px;
+            background-color: #f9fafb;
+            padding: 20px 30px;
             border-top: 1px solid #e5e7eb;
             color: #6b7280;
             font-size: 12px;
             text-align: center;
         }
+        .footer p {
+            margin: 4px 0;
+        }
         .update-flag {
             background-color: #fef3c7;
             border: 1px solid #fcd34d;
-            padding: 10px;
-            border-radius: 4px;
+            padding: 12px 16px;
+            border-radius: 6px;
             margin: 20px 0;
             color: #92400e;
+            font-size: 14px;
+        }
+        .update-flag strong {
+            display: block;
+            margin-bottom: 4px;
         }
     </style>
 </head>
 <body>
 <div class="container">
-    <div class="header">
-        <h1 th:if="${isUpdate == null or !isUpdate}">📅 Meeting Invitation</h1>
-        <h1 th:if="${isUpdate}">📝 Meeting Updated</h1>
+    <!-- Header Banner -->
+    <div class="header-banner">
+        <h1>📅 Meeting Invitation</h1>
+        <p th:if="${isUpdate == null or !isUpdate}">You're invited to join a meeting</p>
+        <p th:if="${isUpdate}">Meeting Details Updated</p>
     </div>
 
-    <p th:text="'Hello,' + ${recipientName != null ? recipientName : 'Participant'}"></p>
+    <!-- Main Content -->
+    <div class="content">
+        <p class="greeting">Hello!</p>
 
-    <div th:if="${isUpdate}">
-        <div class="update-flag">
-            <strong>Meeting Details Updated</strong><br>
-            <span th:text="${updateReason != null ? updateReason : 'The meeting details have been updated. Please review the new information below.'}"></span>
+        <!-- Update Flag -->
+        <div th:if="${isUpdate}">
+            <div class="update-flag">
+                <strong>Meeting Details Updated</strong>
+                <span th:text="${updateReason != null ? updateReason : 'The meeting details have been updated. Please review the new information below.'}"></span>
+            </div>
+        </div>
+
+        <p style="margin-bottom: 20px; color: #555;">You have been invited to attend the following meeting:</p>
+
+        <!-- Meeting Info -->
+        <div class="meeting-info">
+            <div class="meeting-info-item">
+                <span class="label">Meeting Title:</span>
+                <span class="value" th:text="${meetingTitle != null ? meetingTitle : 'N/A'}"></span>
+            </div>
+            <div class="meeting-info-item">
+                <span class="label">Date & Time:</span>
+                <span class="value" th:text="${startTime != null ? startTime : 'N/A'}"></span>
+            </div>
+            <div class="meeting-info-item">
+                <span class="label">Duration:</span>
+                <span class="value" th:text="${duration != null ? duration : 'N/A'}"></span>
+            </div>
+            <div class="meeting-info-item">
+                <span class="label">Organized by:</span>
+                <span class="value">
+                    <span th:text="${organizerName != null ? organizerName : 'N/A'}"></span>
+                    <span th:if="${organizerEmail != null}"> (<a th:href="'mailto:' + ${organizerEmail}" th:text="${organizerEmail}"></a>)</span>
+                </span>
+            </div>
+        </div>
+
+        <!-- Description -->
+        <div th:if="${description != null and description != ''}" class="description-section">
+            <strong style="display: block; margin-bottom: 8px; color: #5b4fd9;">Description:</strong>
+            <span th:text="${description}"></span>
+        </div>
+
+        <!-- Participants -->
+        <div th:if="${participants != null and participants.size() > 0}" class="participants-section">
+            <div class="participants-title">Other Participants:</div>
+            <ul class="participants-list">
+                <li th:each="participant : ${participants}" th:text="${participant}"></li>
+            </ul>
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="action-buttons">
+            <a th:href="${calendarUrl}" class="action-button">
+                <span>📅 Add to Calendar</span>
+            </a>
+            <a th:href="${meetingLink}" class="action-button secondary" target="_blank">
+                <span>🔗 Join Meeting</span>
+            </a>
+        </div>
+
+        <!-- Important Note -->
+        <div class="important-note">
+            <strong>Important:</strong> Please confirm your attendance by replying to this email.
+        </div>
+
+        <!-- Remarks if available -->
+        <div th:if="${remarks != null and remarks != ''}" style="margin: 20px 0; padding: 12px; background-color: #f3f4f6; border-radius: 6px; font-size: 14px; color: #555;">
+            <strong style="color: #5b4fd9;">Additional Notes:</strong><br>
+            <span th:text="${remarks}"></span>
         </div>
     </div>
 
-    <p th:if="${isInvitation == null or !isInvitation}">You have been invited to the following meeting:</p>
-    <p th:if="${isInvitation}">You have been invited to the following meeting:</p>
-
-    <div class="meeting-info">
-        <p>
-            <span class="label">Title:</span>
-            <span class="value" th:text="${title != null ? title : 'N/A'}"></span>
-        </p>
-        <p>
-            <span class="label">Date & Time:</span>
-            <span class="value" th:text="${formattedStartTime != null ? formattedStartTime : 'N/A'}"></span>
-        </p>
-        <p>
-            <span class="label">Duration:</span>
-            <span class="value" th:text="${duration != null ? duration : 'N/A'}"></span>
-        </p>
-        <p>
-            <span class="label">Location:</span>
-            <span class="value" th:text="${location != null ? location : 'Virtual / To be confirmed'}"></span>
-        </p>
-        <p th:if="${description != null}">
-            <span class="label">Description:</span><br>
-            <span class="value" th:text="${description}"></span>
-        </p>
-        <p>
-            <span class="label">Organizer:</span>
-            <span class="value" th:text="${organizerName != null ? organizerName : 'N/A'}"></span>
-        </p>
-    </div>
-
-    <p>Please mark your calendar and prepare for this meeting. If you have any questions, feel free to contact the organizer.</p>
-
-    <p>
-        <a href="#" class="action-button">View Meeting Details</a>
-    </p>
-
+    <!-- Footer -->
     <div class="footer">
-        <p>This is an automated email from HRMS Meeting System. Please do not reply to this email.</p>
-        <p>&copy; 2026 Omoika Innovations. All rights reserved.</p>
+        <p>This invitation was sent by HRMS Meeting System</p>
+        <p>If you have any questions, please contact the meeting organizer.</p>
+        <p style="margin-top: 12px; border-top: 1px solid #e5e7eb; padding-top: 12px;">&copy; 2026 Omoika Innovations. All rights reserved.</p>
     </div>
 </div>
 </body>

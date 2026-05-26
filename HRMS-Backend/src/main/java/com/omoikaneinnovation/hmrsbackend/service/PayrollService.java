@@ -5,7 +5,8 @@ import com.omoikaneinnovation.hmrsbackend.model.Employee;
 import com.omoikaneinnovation.hmrsbackend.repository.PayrollRepository;
 import com.omoikaneinnovation.hmrsbackend.repository.EmployeeRepository;
 import org.springframework.stereotype.Service;
-
+import java.util.Map;
+import java.util.stream.Collectors;
 import java.util.List;
 import java.util.Optional;
 
@@ -25,50 +26,76 @@ public class PayrollService {
         return repo.save(p);
     }
 
-    public List<Payroll> getAll(){
-        List<Payroll> payrolls = repo.findAll();
-        
-        // ✅ Enhance payroll data with Employee bank details if missing
-        for (Payroll payroll : payrolls) {
-            // Skip records with null employeeId (old/invalid data)
-            if (payroll.getEmployeeId() == null || payroll.getEmployeeId().isEmpty()) {
-                continue;
+   public List<Payroll> getAll() {
+
+    List<Payroll> payrolls = repo.findAll();
+
+    // ✅ Load all employees once (FAST)
+    Map<String, Employee> employeeMap =
+        employeeRepo.findAll()
+            .stream()
+            .collect(Collectors.toMap(
+                Employee::getEmployeeId,
+                e -> e,
+                (a, b) -> a
+            ));
+
+    // ✅ Enhance payroll data
+    for (Payroll payroll : payrolls) {
+
+        if (payroll.getEmployeeId() == null ||
+            payroll.getEmployeeId().isEmpty()) {
+            continue;
+        }
+
+        Employee employee =
+            employeeMap.get(payroll.getEmployeeId());
+
+        if (employee != null) {
+
+            // ✅ Fill missing bank details only
+            if (payroll.getBankAccountNumber() == null ||
+                payroll.getBankAccountNumber().isEmpty()) {
+
+                payroll.setBankAccountNumber(
+                    employee.getBankAccountNumber()
+                );
             }
-            
-            // If bank details are missing in payroll, get them from Employee
-            if ((payroll.getBankAccountNumber() == null || payroll.getBankAccountNumber().isEmpty()) ||
-                (payroll.getPfMemberId() == null || payroll.getPfMemberId().isEmpty()) ||
-                (payroll.getUan() == null || payroll.getUan().isEmpty()) ||
-                (payroll.getIfsc() == null || payroll.getIfsc().isEmpty())) {
-                
-                // Find employee by employeeId
-                Optional<Employee> employeeOpt = employeeRepo.findByEmployeeId(payroll.getEmployeeId());
-                if (employeeOpt.isPresent()) {
-                    Employee employee = employeeOpt.get();
-                    
-                    // Fill missing bank details from Employee
-                    if (payroll.getBankAccountNumber() == null || payroll.getBankAccountNumber().isEmpty()) {
-                        payroll.setBankAccountNumber(employee.getBankAccountNumber());
-                    }
-                    if (payroll.getPfMemberId() == null || payroll.getPfMemberId().isEmpty()) {
-                        payroll.setPfMemberId(employee.getPfMemberId());
-                    }
-                    if (payroll.getUan() == null || payroll.getUan().isEmpty()) {
-                        payroll.setUan(employee.getUan());
-                    }
-                    if (payroll.getIfsc() == null || payroll.getIfsc().isEmpty()) {
-                        payroll.setIfsc(employee.getIfsc());
-                    }
-                }
+
+            if (payroll.getPfMemberId() == null ||
+                payroll.getPfMemberId().isEmpty()) {
+
+                payroll.setPfMemberId(
+                    employee.getPfMemberId()
+                );
+            }
+
+            if (payroll.getUan() == null ||
+                payroll.getUan().isEmpty()) {
+
+                payroll.setUan(
+                    employee.getUan()
+                );
+            }
+
+            if (payroll.getIfsc() == null ||
+                payroll.getIfsc().isEmpty()) {
+
+                payroll.setIfsc(
+                    employee.getIfsc()
+                );
             }
         }
-        
-        // Return only records with valid employeeId
-        return payrolls.stream()
-            .filter(p -> p.getEmployeeId() != null && !p.getEmployeeId().isEmpty())
-            .collect(java.util.stream.Collectors.toList());
     }
 
+    // ✅ Return valid payrolls only
+    return payrolls.stream()
+        .filter(p ->
+            p.getEmployeeId() != null &&
+            !p.getEmployeeId().isEmpty()
+        )
+        .collect(Collectors.toList());
+}
     public List<Payroll> getEmployeePayroll(String empCode){
         return repo.findByEmpCode(empCode);
     }

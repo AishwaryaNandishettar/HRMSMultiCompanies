@@ -87,31 +87,39 @@
     <p th:text="'Hello,' + ${recipientName != null ? recipientName : 'Participant'}"></p>
 
     <div class="reminder-alert">
-        <strong th:text="${reminderText != null ? 'Your meeting starts in ' + reminderText : (timeUntilMeeting != null ? 'Your meeting starts in ' + timeUntilMeeting : 'Your meeting starts shortly')}" />
+        <strong th:text="${reminderText != null ? reminderText : (timeUntilMeeting != null ? 'Your meeting starts in ' + timeUntilMeeting : 'Your meeting starts shortly')}" />
         <p>Please ensure you are prepared to join the meeting.</p>
     </div>
 
     <div class="meeting-info">
         <p>
             <span class="label">Title:</span>
-            <span class="value" th:text="${title != null ? title : 'N/A'}"></span>
+            <span class="value" th:text="${meetingTitle != null ? meetingTitle : (title != null ? title : 'N/A')}"></span>
         </p>
         <p>
             <span class="label">Start Time:</span>
-            <span class="value" th:text="${formattedStartTime != null ? formattedStartTime : 'N/A'}"></span>
+            <span class="value" th:text="${startTime != null ? startTime : (formattedStartTime != null ? formattedStartTime : 'N/A')}"></span>
+        </p>
+        <p>
+            <span class="label">End Time:</span>
+            <span class="value" th:text="${endTime != null ? endTime : 'N/A'}"></span>
+        </p>
+        <p>
+            <span class="label">Organizer:</span>
+            <span class="value" th:text="${organizerName != null ? organizerName : 'N/A'}"></span>
         </p>
         <p>
             <span class="label">Location:</span>
-            <span class="value" th:text="${location != null ? location : 'Virtual / To be confirmed'}"></span>
+            <span class="value">Virtual Meeting</span>
         </p>
-        <p th:if="${description != null}">
+        <p th:if="${description != null and description != ''}">
             <span class="label">Description:</span><br>
             <span class="value" th:text="${description}"></span>
         </p>
     </div>
 
     <p>
-        <a href="#" class="action-button">Join Meeting</a>
+        <a th:href="${meetingLink}" class="action-button">Join Meeting</a>
     </p>
 
     <div class="footer">

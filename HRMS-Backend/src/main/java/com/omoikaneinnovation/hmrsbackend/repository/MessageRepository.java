@@ -22,4 +22,18 @@ public interface MessageRepository extends MongoRepository<ChatMessage, String> 
         value = "{ receiverEmail:?0, senderEmail:?1, seen:false }"
     )
     List<ChatMessage> findUnseen(String receiver, String sender);
+
+    // 🔹 all unseen messages for a receiver
+    @Query(
+        value = "{ receiverEmail:?0, seen:false }",
+        sort = "{ timestamp: -1 }"
+    )
+    List<ChatMessage> findAllUnseenForReceiver(String receiver);
+
+    // 🔹 last message between two users (returns list, take first element)
+    @Query(
+        value = "{ $or: [ { senderEmail:?0, receiverEmail:?1 }, { senderEmail:?1, receiverEmail:?0 } ] }",
+        sort = "{ timestamp: -1 }"
+    )
+    List<ChatMessage> findLastMessageBetween(String user1, String user2);
 }

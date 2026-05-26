@@ -13,132 +13,157 @@ const Login = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
+
   const [isForgot, setIsForgot] = useState(false);
   const [otpSent, setOtpSent] = useState(false);
+
+  // kept from team file
+  const [otp, setOtp] = useState("");
+
   const [enteredOtp, setEnteredOtp] = useState("");
   const [newPassword, setNewPassword] = useState("");
 
   const { login } = useContext(AuthContext);
   const navigate = useNavigate();
 
-  
-
   /* ================= LOGIN USING BACKEND ================= */
   const handleLogin = async (e) => {
     e.preventDefault();
     setError("");
 
-    // Debug logging
-    console.log('🔍 Environment check:');
-    console.log('  VITE_API_BASE_URL:', import.meta.env.VITE_API_BASE_URL);
-    console.log('  Full URL will be:', `${import.meta.env.VITE_API_BASE_URL}/api/auth/login`);
+    console.log("🔍 Environment check:");
+    console.log("VITE_API_BASE_URL:", import.meta.env.VITE_API_BASE_URL);
 
     try {
       const apiUrl = import.meta.env.VITE_API_BASE_URL;
-      
+
       if (!apiUrl) {
-        console.error('❌ VITE_API_BASE_URL is not defined!');
-        setError("Configuration error: API URL not set. Please contact administrator.");
+        setError("Configuration error: API URL not set.");
         return;
       }
 
-      console.log('📤 Sending login request to:', `${apiUrl}/api/auth/login`);
-
       const res = await fetch(`${apiUrl}/api/auth/login`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, password }),
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          email,
+          password,
+        }),
       });
 
-      console.log('📥 Response status:', res.status);
+      console.log("📥 Response status:", res.status);
 
       if (!res.ok) {
         throw new Error("Invalid credentials");
       }
-const data = await res.json();  
 
-console.log("🔥 LOGIN RESPONSE:", data); // Debug
+      const data = await res.json();
 
-// if using context - PASS ALL DATA TO LOGIN
-login({
-  id: data.id,  // ✅ ADD MongoDB _id
-  _id: data.id, // ✅ ADD as _id fallback
-  name: data.name,
-  email: data.email,
-  role: data.role,
-  token: data.token,
-  empId: data.empId || data.employeeId, // ✅ PASS empId
-  employeeId: data.employeeId || data.empId, // ✅ PASS employeeId
-  department: data.department || data.dept,
-  reportingManager: data.reportingManager || data.manager,
-  managerEmail: data.managerEmail,
-  companyId: data.companyId
-});
+      console.log("🔥 LOGIN RESPONSE:", data);
 
-console.log("✅ LOGIN SUCCESSFUL - Redirecting to Home");
+      // KEEPING YOUR FULL LOGIN DATA
+      login({
+        id: data.id,
+        _id: data.id,
+        name: data.name,
+        email: data.email,
+        role: data.role,
+        token: data.token,
+        empId: data.empId || data.employeeId,
+        employeeId: data.employeeId || data.empId,
+        department: data.department || data.dept,
+        reportingManager: data.reportingManager || data.manager,
+        managerEmail: data.managerEmail,
+        companyId: data.companyId,
+      });
 
-navigate("/Home");
+      console.log("✅ LOGIN SUCCESSFUL");
+
+      // KEEPING TEAM REDIRECT LOGIC
+      const postLoginRedirect =
+        sessionStorage.getItem("postLoginRedirect");
+
+      if (postLoginRedirect) {
+        sessionStorage.removeItem("postLoginRedirect");
+        navigate(postLoginRedirect);
+      } else {
+        navigate("/Home");
+      }
+
     } catch (err) {
+      console.error("❌ Login Error:", err);
       setError("Invalid email or password.");
     }
   };
- 
-  
-  /* ================= FORGOT PASSWORD - BACKEND INTEGRATED ================= */
+
+  /* ================= FORGOT PASSWORD ================= */
   const handleForgotPassword = () => {
     setIsForgot(true);
     setError("");
   };
 
+  /* ================= SEND OTP ================= */
   const sendOtp = async (e) => {
     e.preventDefault();
     setError("");
 
     try {
-      const apiUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8082';
-      
-      console.log('🔍 Sending OTP request to:', `${apiUrl}/api/auth/forgot-password`);
-      console.log('🔍 Email:', email);
-      
-      const res = await fetch(`${apiUrl}/api/auth/forgot-password`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email }),
-      });
+      const apiUrl =
+        import.meta.env.VITE_API_BASE_URL ||
+        "http://localhost:8082";
 
-      console.log('📥 Response status:', res.status);
+      console.log(
+        "🔍 Sending OTP request:",
+        `${apiUrl}/api/auth/forgot-password`
+      );
+
+      const res = await fetch(
+        `${apiUrl}/api/auth/forgot-password`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ email }),
+        }
+      );
 
       if (!res.ok) {
         const errorText = await res.text();
-        console.error('❌ Error response:', errorText);
         throw new Error(errorText || "Failed to send OTP");
       }
 
       const data = await res.json();
-      console.log('✅ OTP Response:', data);
-      // ✅ Don't store OTP on frontend for security
+
+      console.log("✅ OTP Response:", data);
+
+      // kept from team logic
+      setOtp(data.otp || "");
+
       setOtpSent(true);
+
       alert(`✅ OTP sent to ${email}. Please check your email inbox.`);
-      
+
     } catch (err) {
-      console.error('❌ Send OTP error:', err);
-      setError(err.message || "Failed to send OTP. Please try again.");
+      console.error("❌ Send OTP Error:", err);
+      setError(err.message || "Failed to send OTP.");
     }
   };
 
+  /* ================= VERIFY OTP ================= */
   const verifyOtp = (e) => {
     e.preventDefault();
-    
-    // ✅ Just validate OTP format and show password field
+
     if (enteredOtp && enteredOtp.trim().length === 4) {
-      // OTP format is valid, user can now enter password
-      // Backend verification will happen when password is submitted
-      setError(""); // Clear any previous errors
+      setError("");
     } else {
-      setError("Please enter a valid 4-digit OTP");
+      setError("Please enter valid 4-digit OTP");
     }
   };
 
+  /* ================= RESET PASSWORD ================= */
   const handleResetPassword = async (e) => {
     e.preventDefault();
     setError("");
@@ -149,41 +174,48 @@ navigate("/Home");
     }
 
     try {
-      const apiUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8082';
-      
-      console.log('🔍 Resetting password for:', email);
-      
-      const res = await fetch(`${apiUrl}/api/auth/reset-password`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ 
-          email, 
-          otp: enteredOtp, 
-          newPassword 
-        }),
-      });
+      const apiUrl =
+        import.meta.env.VITE_API_BASE_URL ||
+        "http://localhost:8082";
 
-      console.log('📥 Response status:', res.status);
+      const res = await fetch(
+        `${apiUrl}/api/auth/reset-password`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            email,
+            otp: enteredOtp,
+            newPassword,
+          }),
+        }
+      );
 
       if (!res.ok) {
         const errorText = await res.text();
-        console.error('❌ Error response:', errorText);
         throw new Error(errorText || "Failed to reset password");
       }
 
-      alert(`✅ Password reset successful! You can now login with your new password.`);
-      
-      // Reset all states and go back to login
+      alert(
+        `✅ Password reset successful! You can now login with your new password.`
+      );
+
+      // RESET STATES
       setIsForgot(false);
+      setOtp("");
       setOtpSent(false);
       setEnteredOtp("");
       setNewPassword("");
       setEmail("");
       setPassword("");
-      
+
     } catch (err) {
-      console.error('❌ Reset password error:', err);
-      setError(err.message || "Failed to reset password. Please try again.");
+      console.error("❌ Reset Password Error:", err);
+      setError(
+        err.message || "Failed to reset password."
+      );
     }
   };
 
@@ -192,91 +224,156 @@ navigate("/Home");
       <div className="login-overlay">
         <form
           className="login-form"
-          onSubmit={isForgot ? (otpSent ? verifyOtp : sendOtp) : handleLogin}
+          onSubmit={
+            isForgot
+              ? otpSent
+                ? verifyOtp
+                : sendOtp
+              : handleLogin
+          }
         >
           <div className="header-section">
             <div className="logo-wrapper">
-              <img src={logo} alt="Company Logo" className="logo-logo" />
+              <img
+                src={logo}
+                alt="Company Logo"
+                className="logo-logo"
+              />
             </div>
-            <h1 className="app-title">Omoi HR Works</h1>
+
+            <h1 className="app-title">
+              Omoi HR Works
+            </h1>
           </div>
 
-          {error && <div className="error-message">{error}</div>}
+          {error && (
+            <div className="error-message">
+              {error}
+            </div>
+          )}
 
-          {/* ---------- NORMAL LOGIN FORM ---------- */}
+          {/* ---------- LOGIN ---------- */}
           {!isForgot && (
             <>
               <input
                 type="email"
                 placeholder="Email"
                 value={email}
-                onChange={(e) => setEmail(e.target.value)}
+                onChange={(e) =>
+                  setEmail(e.target.value)
+                }
                 required
               />
+
               <input
                 type="password"
                 placeholder="Password"
                 value={password}
-                onChange={(e) => setPassword(e.target.value)}
+                onChange={(e) =>
+                  setPassword(e.target.value)
+                }
                 required
               />
-              <button type="submit">Login</button>
 
-              <p className="forgot-link" onClick={handleForgotPassword}>
+              <button type="submit">
+                Login
+              </button>
+
+              <p
+                className="forgot-link"
+                onClick={handleForgotPassword}
+              >
                 Forgot Password?
               </p>
             </>
           )}
 
-          {/* ---------- FORGOT PASSWORD FORM ---------- */}
+          {/* ---------- SEND OTP ---------- */}
           {isForgot && !otpSent && (
             <>
-              <h3 className="reset-title">Forgot Password</h3>
+              <h3 className="reset-title">
+                Forgot Password
+              </h3>
+
               <input
                 type="email"
                 placeholder="Enter your registered email"
                 value={email}
-                onChange={(e) => setEmail(e.target.value)}
+                onChange={(e) =>
+                  setEmail(e.target.value)
+                }
                 required
               />
-              <button type="submit">Send OTP</button>
-              <p className="back-link" onClick={() => setIsForgot(false)}>
+
+              <button type="submit">
+                Send OTP
+              </button>
+
+              <p
+                className="back-link"
+                onClick={() =>
+                  setIsForgot(false)
+                }
+              >
                 ← Back to Login
               </p>
             </>
           )}
 
-          {/* ---------- OTP VERIFICATION ---------- */}
+          {/* ---------- VERIFY OTP ---------- */}
           {isForgot && otpSent && (
             <>
-              <h3 className="reset-title">Enter OTP</h3>
+              <h3 className="reset-title">
+                Enter OTP
+              </h3>
+
               <input
                 type="text"
                 placeholder="Enter 4-digit OTP"
                 value={enteredOtp}
-                onChange={(e) => setEnteredOtp(e.target.value)}
+                onChange={(e) =>
+                  setEnteredOtp(e.target.value)
+                }
                 required
               />
-              <button type="submit">Verify OTP</button>
-              <p className="back-link" onClick={() => setIsForgot(false)}>
+
+              <button type="submit">
+                Verify OTP
+              </button>
+
+              <p
+                className="back-link"
+                onClick={() =>
+                  setIsForgot(false)
+                }
+              >
                 ← Cancel
               </p>
 
-              {/* ✅ Show password field when OTP is entered (4 digits) */}
-              {enteredOtp && enteredOtp.trim().length === 4 && (
-                <>
-                  <input
-                    type="password"
-                    placeholder="Enter new password"
-                    value={newPassword}
-                    onChange={(e) => setNewPassword(e.target.value)}
-                    required
-                  />
-                  <button onClick={handleResetPassword}>
-                    Reset Password
-                  </button>
-                </>
-              )}
+              {enteredOtp &&
+                enteredOtp.trim().length === 4 && (
+                  <>
+                    <input
+                      type="password"
+                      placeholder="Enter new password"
+                      value={newPassword}
+                      onChange={(e) =>
+                        setNewPassword(
+                          e.target.value
+                        )
+                      }
+                      required
+                    />
+
+                    <button
+                      onClick={
+                        handleResetPassword
+                      }
+                    >
+                      Reset Password
+                    </button>
+                  </>
+                )}
             </>
           )}
         </form>

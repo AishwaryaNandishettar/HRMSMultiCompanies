@@ -1,5 +1,6 @@
 package com.omoikaneinnovation.hmrsbackend.model;
 
+
 import lombok.*;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
@@ -36,6 +37,7 @@ public class Task {
 
     private Date dueDate;
 
+    @Builder.Default
     private List<String> history = new ArrayList<>();
 
     private Date createdAt;

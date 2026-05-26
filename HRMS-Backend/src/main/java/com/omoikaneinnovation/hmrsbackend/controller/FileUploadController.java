@@ -23,56 +23,79 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class FileUploadController {
 
-    private final MessageRepository messageRepository;
-    private final SimpMessagingTemplate messagingTemplate;
+        private final MessageRepository messageRepository;
+        private final SimpMessagingTemplate messagingTemplate;
 
-    private final String UPLOAD_DIR = "uploads/";
+        private final String UPLOAD_DIR = "uploads/";
 
-    @PostMapping("/upload")
-    public ChatMessage uploadFile(
-            @RequestParam("files") List<MultipartFile> files,
-            @RequestParam String senderEmail,
-            @RequestParam String receiverEmail,
-            @RequestParam(required = false) String text) throws Exception {
+        @PostMapping("/upload")
+        public ChatMessage uploadFile(
+                        @RequestParam("files") List<MultipartFile> files,
+                        @RequestParam String senderEmail,
+                        @RequestParam String receiverEmail,
+                        @RequestParam(required = false) String text,
+                        @RequestParam(required = false) String replyTo) throws Exception {
 
-        ChatMessage lastMessage = null;
+                ChatMessage lastMessage = null;
 
-        for (MultipartFile file : files) {
+                for (MultipartFile file : files) {
 
-            String fileName = System.currentTimeMillis() + "_" + file.getOriginalFilename();
-            Path path = Paths.get(UPLOAD_DIR + fileName);
+                        String fileName = System.currentTimeMillis() + "_" + file.getOriginalFilename();
+                        Path path = Paths.get(UPLOAD_DIR + fileName);
 
-            Files.createDirectories(path.getParent());
-            Files.write(path, file.getBytes());
+                        Files.createDirectories(path.getParent());
+                        Files.write(path, file.getBytes());
 
-            ChatMessage message = ChatMessage.builder()
-                    .senderEmail(senderEmail)
-                    .receiverEmail(receiverEmail)
-                    .content(text)
-                    .fileUrl("/uploads/" + fileName)
-                    .fileName(file.getOriginalFilename())
-                    .fileType(file.getContentType())
-                    .timestamp(Instant.now())
-                    .seen(false)
-                    .delivered(true)
-                    .build();
+                        ChatMessage message = ChatMessage.builder()
+                                       .senderEmail(senderEmail.trim().toLowerCase())
+.receiverEmail(receiverEmail.trim().toLowerCase())
+                                        .content(text)
+                                        .fileUrl("/uploads/" + fileName)
+                                        .fileName(file.getOriginalFilename())
+                                        .fileType(file.getContentType())
+                                        .timestamp(Instant.now())
+                                        .seen(false)
+                                        .delivered(true)
+                                        .build();
 
-            ChatMessage saved = messageRepository.save(message);
+                        // Handle reply to message
+                        if (replyTo != null && !replyTo.isEmpty()) {
+                                try {
+                                        // Parse replyTo JSON
+                                        com.fasterxml.jackson.databind.ObjectMapper mapper = new com.fasterxml.jackson.databind.ObjectMapper();
+                                        java.util.Map<String, Object> replyMap = mapper.readValue(replyTo,
+                                                        java.util.Map.class);
 
-            // 🔥 SEND REALTIME
-            messagingTemplate.convertAndSendToUser(
-                    receiverEmail,
-                    "/queue/messages",
-                    saved);
+                                        if (replyMap.containsKey("id")) {
+                                                message.setReplyToMessageId((String) replyMap.get("id"));
+                                        }
 
-            messagingTemplate.convertAndSendToUser(
-                    senderEmail,
-                    "/queue/messages",
-                    saved);
+                                        if (replyMap.containsKey("content")) {
+                                                String replyContent = (String) replyMap.get("content");
+                                                message.setReplyPreview(replyContent != null ? replyContent : "");
+                                        }
+                                } catch (Exception e) {
+                                        // Silently ignore if parsing fails
+                                        e.printStackTrace();
+                                }
+                        }
 
-            lastMessage = saved;
+                        ChatMessage saved = messageRepository.save(message);
+
+                        // SEND REALTIME — normalize emails to match WebSocket principal (lowercase)
+                        messagingTemplate.convertAndSendToUser(
+                                        receiverEmail.trim().toLowerCase(),
+                                        "/queue/messages",
+                                        saved);
+
+                        messagingTemplate.convertAndSendToUser(
+                                        senderEmail.trim().toLowerCase(),
+                                        "/queue/messages",
+                                        saved);
+
+                        lastMessage = saved;
+                }
+
+                return lastMessage;
         }
-
-        return lastMessage;
-    }
 }

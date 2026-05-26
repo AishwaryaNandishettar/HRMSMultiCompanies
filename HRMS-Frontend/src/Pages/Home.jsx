@@ -85,11 +85,29 @@ useEffect(() => {
     const [events, setEvents] = useState(0);
     const [upcomingHolidays, setUpcomingHolidays] = useState([]);
      const currentMonth = new Date().getMonth();
-     const currentMonthEvents = useMemo(() => {
-  return (homeData?.events || []).filter(e => {
-    if (!e.date) return false;
-    return new Date(e.date).getMonth() === currentMonth;
-  });
+    const currentMonthEvents = useMemo(() => {
+
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  return (homeData?.events || [])
+    .filter((e) => {
+
+      // only holidays
+      if (e.type !== "Holiday") return false;
+
+      // date check
+      if (!e.date) return false;
+
+      const eventDate = new Date(e.date);
+      eventDate.setHours(0, 0, 0, 0);
+
+      // only current/future holidays
+      return eventDate >= today;
+    })
+    .sort((a, b) => new Date(a.date) - new Date(b.date))
+    .slice(0, 6); // show only next 6 holidays
+
 }, [homeData]);
 
     const eventDates = useMemo(() => {
@@ -395,20 +413,38 @@ const currentMonthBirthdays = useMemo(() => {
           }
 
           // Extract upcoming holidays from events
-          if (data.events && Array.isArray(data.events)) {
-            const todayStr = new Date().toISOString().split('T')[0];
-           
+        // Extract ONLY FUTURE upcoming holidays
+if (data.events && Array.isArray(data.events)) {
+
+  const today = new Date();
+
+  // remove time for proper comparison
+  today.setHours(0, 0, 0, 0);
+
+  const currentMonth = today.getMonth();
+const currentYear = today.getFullYear();
 
 const holidays = data.events
-  .filter(event => {
+  .filter((event) => {
+
     if (event.type !== "Holiday") return false;
-    const d = new Date(event.date);
-    return d.getMonth() === currentMonth;
+    if (!event.date) return false;
+
+    const holidayDate = new Date(event.date);
+    holidayDate.setHours(0, 0, 0, 0);
+
+    // ✅ only current month + future dates
+    return (
+      holidayDate >= today &&
+      holidayDate.getMonth() === currentMonth &&
+      holidayDate.getFullYear() === currentYear
+    );
   })
   .sort((a, b) => new Date(a.date) - new Date(b.date))
   .slice(0, 5);
-            setUpcomingHolidays(holidays);
-          }
+
+setUpcomingHolidays(holidays);
+}
 
           // Fallback: if no holidays found in homeData, fetch directly from /api/events
           // This ensures employees and managers also see holidays
@@ -416,11 +452,26 @@ const holidays = data.events
             try {
               const eventsRes = await axios.get(`${import.meta.env.VITE_API_BASE_URL}/api/events`);
               if (Array.isArray(eventsRes.data)) {
-                const todayStr = new Date().toISOString().split('T')[0];
-                const holidays = eventsRes.data
-                  .filter(event => event.type === "Holiday" && event.date >= todayStr)
-                  .sort((a, b) => a.date.localeCompare(b.date))
-                  .slice(0, 5);
+               const today = new Date();
+today.setHours(0, 0, 0, 0);
+
+const holidays = eventsRes.data
+  .filter((event) => {
+
+    if (event.type !== "Holiday") return false;
+    if (!event.date) return false;
+
+    const holidayDate = new Date(event.date);
+    holidayDate.setHours(0, 0, 0, 0);
+
+    return (
+      holidayDate >= today &&
+      holidayDate.getMonth() === currentMonth &&
+      holidayDate.getFullYear() === currentYear
+    );
+  })
+  .sort((a, b) => new Date(a.date) - new Date(b.date))
+  .slice(0, 5);
                 setUpcomingHolidays(holidays);
               }
             } catch (e) {
@@ -459,8 +510,11 @@ const holidays = data.events
     // Fetch notifications
     useEffect(() => {
       const fetchNotifications = async () => {
-        try {
-         
+         try {
+
+      const res = await axios.get(
+        `${import.meta.env.VITE_API_BASE_URL}/api/notifications`
+      );
           
           // Transform notifications to include proper structure
           const notifs = Array.isArray(res.data) 
@@ -651,11 +705,20 @@ const holidays = data.events
       <h2>📅 Events & Birthdays</h2>
 
       {/* 🎉 HOLIDAYS */}
-      <h3>Upcoming Holidays</h3>
+      <h3>
+  Upcoming Holidays ({new Date().toLocaleString("default", { month: "long" })})
+</h3>
      {currentMonthEvents.length > 0 ? (
   currentMonthEvents.map((event, i) => (
     <div key={i} className="popup-item">
-      📅 <strong>{event.title}</strong> - {event.date}
+     📅 <strong>{event.title}</strong> — {
+  new Date(event.date + "T00:00:00").toLocaleDateString("en-US", {
+    day: "numeric",
+    month: "short",
+    year: "numeric",
+    weekday: "short",
+  })
+}
     </div>
   ))
 ) : (

@@ -1,5 +1,5 @@
 import { useEffect, useState, useContext, useRef } from "react";
-import "./Attendance.css";
+import styles from "./Attendance.module.css";
 import { AttendanceContext } from "../Context/AttendanceContext";
 import {
   getMyAttendance,
@@ -439,12 +439,13 @@ export default function Attendance() {
   /* ================= TABLE COLUMNS ================= */
   const columns = [
     { key: "empId", label: "EMP ID" },
-    { key: "date", label: "Login Date" },
+  
     { key: "name", label: "Emp Name" },
     { key: "department", label: "DEPT" },
     ...(role === "admin" || role === "manager"
       ? [{ key: "reportingManager", label: "REPORTING MANAGER" }]
       : []),
+      { key: "date", label: "Login Date" },
     { key: "checkIn", label: "CHECK IN" },
     { key: "checkOut", label: "CHECK OUT" },
     { key: "total", label: "TOTAL HOURS" },
@@ -459,10 +460,10 @@ export default function Attendance() {
 
   /* ================= RENDER ================= */
   return (
-    <div className="attendance-container">
+   <div className={styles.attendanceContainer}>
       <h2>Attendance Management</h2>
 
-      <div className="top-panel">
+     <div className={styles.topPanel}>
         <div className="date-section">
           <label>Select Date:</label>
           <input
@@ -475,7 +476,7 @@ export default function Attendance() {
           </p>
         </div>
 
-        <div className="button-group">
+       <div className={styles.buttonGroup}>
           {role === "admin" && (
             <div style={{ position: "relative" }} ref={exportRef}>
               <button
@@ -533,13 +534,13 @@ export default function Attendance() {
           )}
 
           <>
-            <button className="checkin" onClick={handleCheckIn}>
+            <button className={styles.checkin} onClick={handleCheckIn}>
               Check In
             </button>
-            <button className="checkout" onClick={handleCheckOut}>
+            <button className={styles.checkout} onClick={handleCheckOut}>
               Check Out
             </button>
-            <button className="wfh" onClick={handleWorkFromHome}>
+            <button className={styles.wfh} onClick={handleWorkFromHome}>
               Work From Home
             </button>
           </>
@@ -609,13 +610,13 @@ export default function Attendance() {
         </div>
       )}
 
-      <div className="table-wrapper">
-        <table>
+      <div className={styles.tableWrapper} >
+      <table className={styles.table}>
           <thead>
             <tr>
               {columns.map((col) => (
                 <th key={col.key}>
-                  <div className="header">
+                  <div className={styles.header}>
                     {col.label}
                     {col.key !== "total" && (
                       <span onClick={() => setActiveFilter(col.key)}>⏷</span>
@@ -623,13 +624,13 @@ export default function Attendance() {
                   </div>
 
                   {activeFilter === col.key && (
-                    <div ref={popupRef} className="popup">
+                    <div ref={popupRef} className={styles.popup}>
                       <input
                         placeholder="Search..."
                         value={filterText}
                         onChange={(e) => setFilterText(e.target.value)}
                       />
-                      <div className="list">
+                      <div className={styles.link}>
                         {(suggestions || []).map((s) => (
                           <div
                             key={s}
@@ -655,14 +656,14 @@ export default function Attendance() {
               filteredRecordsFinal.map((r, index) => (
                 <tr key={index}>
                   <td>{r.empId || "-"}</td>
-                  <td>{r.date}</td>
+                
                   <td>{r.name}</td>
                   <td>{r.department}</td>
 
                   {(role === "admin" || role === "manager") && (
                     <td>{r.reportingManager || "-"}</td>
                   )}
-
+                    <td>{r.date}</td>
                   <td>{r.checkIn}</td>
                   <td>{r.checkOut && r.checkOut !== "-" ? r.checkOut : "-"}</td>
                   <td>{calculateHours(r.checkIn, r.checkOut)}</td>

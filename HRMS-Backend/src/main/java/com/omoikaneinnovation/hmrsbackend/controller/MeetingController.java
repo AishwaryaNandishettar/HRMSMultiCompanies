@@ -8,7 +8,10 @@ import org.springframework.web.bind.annotation.*;
 import java.security.Principal;
 import com.omoikaneinnovation.hmrsbackend.service.MeetingEmailService;
 import java.time.Instant;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/meetings")
@@ -24,11 +27,76 @@ public class MeetingController {
         this.meetingEmailService = meetingEmailService;
     }
 
+    /**
+     * Check if a participant has a conflicting meeting at the given time.
+     * GET /api/meetings/check-conflict?email=...&start=...&end=...&excludeId=...
+     */
+    @GetMapping("/check-conflict")
+    public ResponseEntity<Map<String, Object>> checkConflict(
+            @RequestParam String email,
+            @RequestParam String start,
+            @RequestParam String end,
+            @RequestParam(required = false) String excludeId,
+            Principal principal) {
+
+        if (principal == null) return ResponseEntity.status(401).build();
+
+        Instant startTime = Instant.parse(start);
+        Instant endTime   = Instant.parse(end);
+
+        List<Meeting> conflicts = meetingRepository.findConflictingMeetings(email, startTime, endTime);
+
+        // Exclude the meeting being edited (if any)
+        if (excludeId != null && !excludeId.isBlank()) {
+            conflicts = conflicts.stream()
+                    .filter(m -> !m.getId().equals(excludeId))
+                    .toList();
+        }
+
+        Map<String, Object> result = new HashMap<>();
+        result.put("hasConflict", !conflicts.isEmpty());
+        if (!conflicts.isEmpty()) {
+            Meeting c = conflicts.get(0);
+            result.put("conflictingMeetingTitle", c.getTitle());
+            result.put("conflictingMeetingStart", c.getStartTime().toString());
+            result.put("conflictingMeetingEnd",   c.getEndTime().toString());
+        }
+        return ResponseEntity.ok(result);
+    }
+
+    /**
+     * Helper: collect all participants with conflicts and return a descriptive message.
+     * Returns null if no conflicts found.
+     */
+    private String findConflictsForParticipants(List<String> emails, Instant start, Instant end, String excludeId) {
+        List<String> conflicted = new ArrayList<>();
+        for (String email : emails) {
+            List<Meeting> conflicts = meetingRepository.findConflictingMeetings(email, start, end);
+            if (excludeId != null) {
+                conflicts = conflicts.stream().filter(m -> !m.getId().equals(excludeId)).toList();
+            }
+            if (!conflicts.isEmpty()) {
+                conflicted.add(email + " (conflicts with: \"" + conflicts.get(0).getTitle() + "\")");
+            }
+        }
+        if (conflicted.isEmpty()) return null;
+        return "The following participant(s) already have a meeting at this time: " + String.join(", ", conflicted);
+    }
+
     @PostMapping
-    public ResponseEntity<Meeting> createMeeting(@RequestBody Meeting meeting, Principal principal) {
+    public ResponseEntity<?> createMeeting(@RequestBody Meeting meeting, Principal principal) {
         String email = principal != null ? principal.getName() : null;
         if (email == null) {
             return ResponseEntity.status(401).build();
+        }
+
+        // Check for participant conflicts
+        if (meeting.getParticipantEmails() != null && meeting.getStartTime() != null && meeting.getEndTime() != null) {
+            String conflictMsg = findConflictsForParticipants(
+                    meeting.getParticipantEmails(), meeting.getStartTime(), meeting.getEndTime(), null);
+            if (conflictMsg != null) {
+                return ResponseEntity.status(409).body(Map.of("message", conflictMsg));
+            }
         }
 
         meeting.setCreatedByEmail(email);
@@ -75,7 +143,7 @@ public class MeetingController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<Meeting> updateMeeting(@PathVariable String id,
+    public ResponseEntity<?> updateMeeting(@PathVariable String id,
             @RequestBody Meeting meeting,
             Principal principal) {
         String email = principal != null ? principal.getName() : null;
@@ -89,6 +157,18 @@ public class MeetingController {
         if (!existing.getCreatedByEmail().equals(email)
                 && (existing.getParticipantEmails() == null || !existing.getParticipantEmails().contains(email))) {
             return ResponseEntity.status(403).build();
+        }
+
+        // Check for participant conflicts (skip if cancelling)
+        if (!"Cancelled".equalsIgnoreCase(meeting.getStatus())
+                && meeting.getParticipantEmails() != null
+                && meeting.getStartTime() != null
+                && meeting.getEndTime() != null) {
+            String conflictMsg = findConflictsForParticipants(
+                    meeting.getParticipantEmails(), meeting.getStartTime(), meeting.getEndTime(), id);
+            if (conflictMsg != null) {
+                return ResponseEntity.status(409).body(Map.of("message", conflictMsg));
+            }
         }
 
         existing.setTitle(meeting.getTitle());

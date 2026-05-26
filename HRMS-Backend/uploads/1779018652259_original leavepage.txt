@@ -1,0 +1,286 @@
+import React, { useState, useContext , useEffect} from 'react';
+import './Leave.css';
+import { AuthContext } from '../Context/Authcontext';
+import { applyLeave } from "../api/leaveApi";
+
+const gmailOptions = [
+  'mahesh.panchal@gmail.com',
+  'priya.sharma@gmail.com',
+  'anita.verma@gmail.com',
+  'rohit.jain@gmail.com',
+  'meena.kapoor@gmail.com',
+  'rahul.patel@gmail.com'
+];
+const getLeaveDays = (from, to) => {
+  const start = new Date(from);
+  const end = new Date(to);
+  const diff = (end - start) / (1000 * 60 * 60 * 24);
+  return diff + 1;
+};
+const defaultMonthlyLeaves = {
+  'Earned Leave': 6,
+  'Sick Leave': 2,
+  'Loss of Pay': 0,
+  
+  'Half Day': 2,
+  'Compensatory off': 1
+};
+
+const LeavePage = () => {
+  const { user } = useContext(AuthContext);
+
+  //const [role, setRole] = useState(user.role); // 'employee', 'manager', 'hr'
+  const role = user?.role?.toLowerCase();
+  const normalizedRole = role === 'admin' ? 'hr' : role;
+  const roleOptionsMap = {
+  employee: ['employee'],
+  manager: ['manager'],
+  hr: ['hr']
+};
+
+  const isEmployee = normalizedRole === 'employee';
+const isManager = normalizedRole === 'manager';
+const isHR = normalizedRole === 'hr';
+
+  const [showForm, setShowForm] = useState(false);
+  const [formData, setFormData] = useState({
+    employeeName: '',  // Enterable now
+    leaveType: '',
+    fromDate: '',
+    toDate: '',
+    manager: '',
+    cc: '',
+    comments: '',
+    file: null
+  });
+
+  const [suggestions, setSuggestions] = useState([]);
+  const [ccSuggestions, setCcSuggestions] = useState([]);
+  const [leaves, setLeaves] = useState([]);
+  const [filters, setFilters] = useState({ employee: '', leaveType: '', status: '' });
+  const [balances, setBalances] = useState(defaultMonthlyLeaves);
+
+  useEffect(() => {
+  resetMonthlyLeaves();
+}, []);
+
+  const handleChange = (e) => {
+    const { name, value, files } = e.target;
+    setFormData(prev => ({ ...prev, [name]: files ? files[0] : value }));
+
+    if (name === 'manager') {
+      setSuggestions(gmailOptions.filter(e => e.toLowerCase().includes(value.toLowerCase())));
+    }
+    if (name === 'cc') {
+      setCcSuggestions(gmailOptions.filter(e => e.toLowerCase().includes(value.toLowerCase())));
+    }
+  };
+
+  const handleSelect = (field, value) => {
+    setFormData(prev => ({ ...prev, [field]: value }));
+    if (field === 'manager') setSuggestions([]);
+    if (field === 'cc') setCcSuggestions([]);
+  };
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    
+    const newLeave = {
+      id: Date.now(),
+      ...formData,
+      status: 'Pending'
+    };
+    setLeaves(prev => [newLeave, ...prev]);
+
+    // Reduce leave balance
+    const days = getLeaveDays(formData.fromDate, formData.toDate);
+
+if (balances[formData.leaveType] >= days) {
+  setBalances(prev => ({
+    ...prev,
+    [formData.leaveType]: prev[formData.leaveType] - days
+  }));
+}
+
+    setFormData({ employeeName:'', leaveType: '', fromDate: '', toDate: '', manager: '', cc: '', comments: '', file: null });
+    setShowForm(false);
+  };
+
+  const handleCancel = () => {
+    setFormData({ employeeName:'', leaveType: '', fromDate: '', toDate: '', manager: '', cc: '', comments: '', file: null });
+    setSuggestions([]);
+    setCcSuggestions([]);
+    setShowForm(false);
+  };
+
+  const updateStatus = (id, status) => {
+    setLeaves(prev => prev.map(l => l.id === id ? { ...l, status } : l));
+    if (status === 'Rejected') {
+      const leave = leaves.find(l => l.id === id);
+      if (leave) {
+        const days = getLeaveDays(leave.fromDate, leave.toDate);
+        setBalances(prev => ({ ...prev, [leave.leaveType]: prev[leave.leaveType] + 1 }));
+      }
+    }
+  };
+
+  const resetMonthlyLeaves = () => {
+  const currentMonth = new Date().getMonth();
+  const storedMonth = localStorage.getItem('leaveMonth');
+
+  if (storedMonth !== String(currentMonth)) {
+    setBalances(defaultMonthlyLeaves);
+    localStorage.setItem('leaveMonth', currentMonth);
+  }
+};
+  // Filter leaves based on role & filters
+  const filteredLeaves = leaves.filter(l => {
+    let roleFilter = true;
+    if (isEmployee) roleFilter = l.employeeName.toLowerCase() === user.name.toLowerCase();
+    if (filters.employee) roleFilter = l.employeeName.toLowerCase().includes(filters.employee.toLowerCase());
+    return roleFilter &&
+      (filters.leaveType === '' || l.leaveType === filters.leaveType) &&
+      (filters.status === '' || l.status === filters.status);
+  });
+
+  return (
+    <div className="leave-page">
+      <h2>Leave Management</h2>
+
+      {/* Role Switcher */}
+      <div style={{ marginBottom: '15px' }}>
+        <label>Simulate Role: </label>
+       <select value={normalizedRole} disabled>
+          <option value="employee">Employee</option>
+          <option value="manager">Manager</option>
+          <option value="hr">HR/Admin</option>
+        </select>
+      </div>
+
+      {/* Leave Balances */}
+      <div className="status-bar">
+        {Object.keys(balances).map((type, idx) => (
+          <div key={idx} className="status-box">
+            <h4>{type}</h4>
+            <strong>{balances[type]}</strong>
+          </div>
+        ))}
+      </div>
+
+      {/* Apply Leave Button */}
+      {!showForm && (isEmployee || isHR) && (
+        <button className="apply-btn fixed-btn" onClick={() => setShowForm(true)}>Apply Leave</button>
+      )}
+
+      {/* Modal Form */}
+      {showForm && (
+        <div className="modal-overlay">
+          <div className="modal-content">
+            <h3>Apply Leave</h3>
+            <form onSubmit={handleSubmit}>
+              <div className="form-row">
+                <label>Employee Name</label>
+                <input type="text" name="employeeName" value={formData.employeeName} onChange={handleChange} placeholder="Enter your name" required />
+              </div>
+
+              <div className="form-row">
+                <label>Leave Type</label>
+                <select name="leaveType" value={formData.leaveType} onChange={handleChange} required>
+                  <option value="">--Select--</option>
+                  {Object.keys(defaultMonthlyLeaves).map(type => <option key={type} value={type}>{type}</option>)}
+                </select>
+              </div>
+
+              <div className="form-row">
+                <label>From Date</label>
+                <input type="date" name="fromDate" value={formData.fromDate} onChange={handleChange} required />
+              </div>
+
+              <div className="form-row">
+                <label>To Date</label>
+                <input type="date" name="toDate" value={formData.toDate} onChange={handleChange} required />
+              </div>
+
+              <div className="form-row autocomplete">
+                <label>Manager</label>
+                <input type="email" name="manager" value={formData.manager} onChange={handleChange} placeholder="Type manager email..." autoComplete="off" />
+                {suggestions.length > 0 && <ul className="suggestions">{suggestions.map((e,i)=><li key={i} onClick={()=>handleSelect('manager',e)}>{e}</li>)}</ul>}
+              </div>
+
+              <div className="form-row autocomplete">
+                <label>CC</label>
+                <input type="email" name="cc" value={formData.cc} onChange={handleChange} placeholder="Type CC email..." autoComplete="off" />
+                {ccSuggestions.length > 0 && <ul className="suggestions">{ccSuggestions.map((e,i)=><li key={i} onClick={()=>handleSelect('cc',e)}>{e}</li>)}</ul>}
+              </div>
+
+              <div className="form-row">
+                <label>Comments</label>
+                <textarea name="comments" value={formData.comments} onChange={handleChange}></textarea>
+              </div>
+
+              <div className="form-row">
+                <label>Attach Document</label>
+                <input type="file" name="file" onChange={handleChange} />
+              </div>
+
+              <div className="form-actions">
+                <button type="submit">Submit</button>
+                <button type="button" onClick={handleCancel}>Cancel</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Filters */}
+      <div className="filter-bar">
+        {(isManager || isHR) && <input placeholder="Employee" value={filters.employee} onChange={e => setFilters(prev => ({ ...prev, employee: e.target.value }))} />}
+        <select value={filters.leaveType} onChange={e => setFilters(prev => ({ ...prev, leaveType: e.target.value }))}>
+          <option value="">All Types</option>
+          {Object.keys(defaultMonthlyLeaves).map(type => <option key={type} value={type}>{type}</option>)}
+        </select>
+        <select value={filters.status} onChange={e => setFilters(prev => ({ ...prev, status: e.target.value }))}>
+          <option value="">All Status</option>
+          <option value="Pending">Pending</option>
+          <option value="Approved">Approved</option>
+          <option value="Rejected">Rejected</option>
+        </select>
+      </div>
+
+      {/* Leave Table */}
+      <table className="leave-table">
+        <thead>
+          <tr>
+            <th>Employee</th>
+            <th>Leave Type</th>
+            <th>From</th>
+            <th>To</th>
+            <th>Status</th>
+            {(isManager || isHR) && <th>Action</th>}
+          </tr>
+        </thead>
+        <tbody>
+          {filteredLeaves.length === 0 ? (
+            <tr><td colSpan={isManager||isHR?6:5} style={{ textAlign:'center' }}>No leaves found</td></tr>
+          ) : filteredLeaves.map(l => (
+            <tr key={l.id}>
+              <td>{l.employeeName}</td>
+              <td>{l.leaveType}</td>
+              <td>{l.fromDate}</td>
+              <td>{l.toDate}</td>
+              <td><span className={`status-badge ${l.status.toLowerCase()}`}>{l.status}</span></td>
+              {(isManager || isHR) && l.status==='Pending' && (
+                <td>
+                  <button onClick={()=>updateStatus(l.id,'Approved')}>Approve</button>
+                  <button onClick={()=>updateStatus(l.id,'Rejected')}>Reject</button>
+                </td>
+              )}
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
+};
+
+export default LeavePage;

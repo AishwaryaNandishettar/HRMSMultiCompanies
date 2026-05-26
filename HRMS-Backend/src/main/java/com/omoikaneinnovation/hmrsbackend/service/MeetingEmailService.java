@@ -36,6 +36,15 @@ public class MeetingEmailService {
     private static final DateTimeFormatter DATE_TIME_FORMATTER = DateTimeFormatter
             .ofPattern("EEEE, MMMM d, yyyy 'at' h:mm a");
 
+    private String resolveMeetingBaseUrl() {
+        if (meetingBaseUrl == null || meetingBaseUrl.isBlank()) {
+            String fallbackUrl = "http://localhost:5176";
+            log.warn("Meeting base URL is not configured, falling back to {}", fallbackUrl);
+            return fallbackUrl;
+        }
+        return meetingBaseUrl.endsWith("/") ? meetingBaseUrl.substring(0, meetingBaseUrl.length() - 1) : meetingBaseUrl;
+    }
+
     /**
      * Send meeting invitation emails
      */
@@ -134,13 +143,7 @@ public class MeetingEmailService {
         try {
             log.info("Scheduling reminders for meeting: {}", meeting.getTitle());
 
-            // Schedule 24-hour reminder
-            scheduleReminder(meeting, 24 * 60, "24 hours", EmailRequest.EmailType.MEETING_REMINDER_24H);
-
-            // Schedule 1-hour reminder
-            scheduleReminder(meeting, 60, "1 hour", EmailRequest.EmailType.MEETING_REMINDER_1H);
-
-            // Schedule 15-minute reminder
+            // Schedule 15-minute reminder only
             scheduleReminder(meeting, 15, "15 minutes", EmailRequest.EmailType.MEETING_REMINDER_15M);
 
         } catch (Exception e) {
@@ -269,6 +272,8 @@ public class MeetingEmailService {
     private String generateMeetingLink(Meeting meeting) {
         // This is a placeholder - replace with your actual meeting link generation
         // logic. The app should route /join-meeting/{id} for now.
-        return meetingBaseUrl + "/join-meeting/" + meeting.getId();
+        return resolveMeetingBaseUrl() + "/join-meeting/" + meeting.getId();
     }
 }
+
+

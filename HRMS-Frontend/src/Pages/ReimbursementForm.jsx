@@ -221,7 +221,7 @@ const filteredData = requests.filter((r) => {
       {/* ================= KPI CARDS ================= */}
       <div className="claim-dashboard">
         <div className="card total"><h4>Total</h4><p>{total}</p></div>
-        <div className="card approved"><h4>Approved</h4><p>{approved}</p></div>
+        <div className="card approved"  style={{ color: "white" }}><h4>Approved</h4><p>{approved}</p></div>
         <div className="card pending"><h4>Pending</h4><p>{pending}</p></div>
         <div className="card rejected"><h4>Rejected</h4><p>{rejected}</p></div>
         <div className="card amount"><h4>Total Amount</h4><p>₹{totalAmount}</p></div>
@@ -564,7 +564,8 @@ const filteredData = requests.filter((r) => {
 
 
       {/* ================= TABLE ================= */}
-      <table className="claim-table">
+      <div className="table-wrapper">
+        <table className="claim-table">
        <thead>
   <tr>
     {[
@@ -581,16 +582,17 @@ const filteredData = requests.filter((r) => {
       { label: "Attachment", key: "file" },
       { label: "Status", key: "status" }
     ].map(col => (
-      <th key={col.key} style={{ position: "relative" }}>
-        <div
-          onClick={() => {
-            setActiveFilter(col.key);
-            setFilterText("");
-          }}
-          style={{ cursor: "pointer" }}
-        >
-          {col.label} ⏷
-        </div>
+     <th
+  key={col.key}
+  className="table-header-cell"
+  onClick={() => {
+    setActiveFilter(col.key);
+    setFilterText("");
+  }}
+>
+  <span className="header-label">
+    {col.label} ⏷
+  </span>
 
         {activeFilter === col.key && (
           <div className="filter-popup" ref={popupRef}>
@@ -630,13 +632,15 @@ const filteredData = requests.filter((r) => {
           {filteredData.map(r => (
             <tr key={r.id}>
               <td>{r.id}</td>
-              
-              <td>{r.empName}</td>
+               <td>{r.empName ?? ""}</td>
                  <td>{r.claimType}</td>
                 {/* ✅ NEW FIELD */}
-<td>{r.claimsettleDate || "-"}</td>
-
-              <td>₹{r.amount}</td>
+<td>
+  {r.submittedDate
+    ? new Date(r.submittedDate).toLocaleDateString()
+    : "-"}
+</td>
+<td>₹{r.amount}</td>
                 {/* ✅ FROM DATE */}
       <td>
         {r.claimType === "TRAVEL"
@@ -702,6 +706,7 @@ const filteredData = requests.filter((r) => {
           ))}
         </tbody>
       </table>
+      </div>
     </div>
   );
 };

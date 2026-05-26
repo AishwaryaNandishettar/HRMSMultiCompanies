@@ -303,4 +303,42 @@ public void acceptInvite(String email, String password) {
 
         employeeRepo.save(emp);
     }
+public void sendInvitationEmail(
+        String email,
+        String employeeName,
+        String tempPassword
+) {
+
+    try {
+
+        long expiry = 24 * 60 * 60 * 1000;
+
+        String token = jwtUtil.generateToken(
+                email,
+                "EMPLOYEE",
+                expiry
+        );
+
+        String onboardingLink =
+                "http://localhost:5176/onboarding?token=" + token;
+
+        String otp = otpService.generateOtp(email);
+
+        emailService.sendInviteEmail(
+                email,
+                onboardingLink,
+                otp,
+                tempPassword
+        );
+
+        log.info("📩 Bulk invite sent to: {}", email);
+
+    } catch (Exception e) {
+
+        log.error("❌ Failed sending bulk invite: {}", e.getMessage());
+
+        throw new RuntimeException(e.getMessage());
+    }
+}
+    
     }

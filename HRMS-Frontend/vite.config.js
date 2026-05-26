@@ -2,40 +2,33 @@ import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
 
 export default defineConfig({
-  base: "/",
   plugins: [react()],
+
   define: {
-    global: "window",
+    global: "window", // fix for sockjs-client
   },
-  resolve: {
-    alias: {
-      'react-is': 'react-is'
-    }
-  },
+
+  // Tell Vite's pre-bundler (esbuild) to include these packages explicitly.
+  // FullCalendar uses ESM subpath exports that esbuild can't auto-discover,
+  // and recharts needs react-is as a peer dep.
   optimizeDeps: {
-    include: ['react-is'],
-    exclude: ['pdfjs-dist']
+    include: [
+      "@fullcalendar/core",
+      "@fullcalendar/core/internal",
+      "@fullcalendar/core/preact",
+      "@fullcalendar/daygrid",
+      "@fullcalendar/timegrid",
+      "@fullcalendar/interaction",
+      "@fullcalendar/react",
+      "react-is",
+    ],
   },
-  build: {
-    commonjsOptions: {
-      include: [/react-is/, /node_modules/]
-    },
-    rollupOptions: {
-      onwarn(warning, defaultHandler) {
-        // Suppress specific warnings
-        if (warning.code === 'UNUSED_EXTERNAL_IMPORT') return;
-        if (warning.code === 'UNRESOLVED_IMPORT') return;
-        // Use default handler for other warnings
-        defaultHandler(warning);
-      }
-    },
-    chunkSizeWarningLimit: 1500,
-  },
+
   server: {
     port: 5176,
     proxy: {
       "/api": {
-        target: "http://localhost:8082",
+        target: process.env.VITE_API_BASE_URL || "http://localhost:8082",
         changeOrigin: true,
         secure: false,
       },

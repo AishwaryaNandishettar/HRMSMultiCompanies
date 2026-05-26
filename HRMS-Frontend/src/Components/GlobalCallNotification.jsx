@@ -18,8 +18,10 @@ const GlobalCallNotification = () => {
 
   const handleAccept = () => {
     acceptCall();
-    // Navigate to WorkChat to show the call screen
-    navigate('/workchat');
+    // Navigate to WorkChat only if not already there
+    if (!window.location.pathname.includes('workchat')) {
+      navigate('/workchat');
+    }
   };
 
   const handleReject = () => {

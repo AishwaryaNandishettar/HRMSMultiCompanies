@@ -27,4 +27,3 @@ export const approveTaskApi = (id) =>
 
 export const rejectSubmissionApi = (id, reason) =>
   api.put(`${BASE_URL}/${id}/reject-submission`, { rejectReason: reason });
-

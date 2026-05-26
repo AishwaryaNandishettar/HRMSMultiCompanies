@@ -27,8 +27,10 @@ const UpdatePayroll = () => {
   const [bulkCalculating, setBulkCalculating] = useState(false);
   const [showBulkModal, setShowBulkModal] = useState(false);
   const [bulkResults, setBulkResults] = useState([]);
-
-  // ✅ FIX: Load BOTH employees AND existing payroll, then merge
+// ✅ ADD HERE
+const getEmpId = (emp) =>
+  emp.employeeId || emp.empId || emp.id || emp._id;
+  // ✅ FIX: Load BOTH employees AND existing payroll immediately on mount
   useEffect(() => {
     const loadData = async () => {
       try {
@@ -62,36 +64,49 @@ const UpdatePayroll = () => {
           empList = [];
         }
 
-        const existingPayroll = Array.isArray(payrollRes?.data) ? payrollRes.data : [];
+        const existingPayroll = Array.isArray(payrollRes)
+  ? payrollRes
+  : Array.isArray(payrollRes?.data)
+  ? payrollRes.data
+  : [];
 
         console.log("✅ Loaded employees:", empList.length);
         console.log("✅ Loaded payroll records:", existingPayroll.length);
         console.log("📋 Employee list:", empList);
+        console.log("📋 Existing Payroll:", existingPayroll);
 
         setEmployees(empList);
 
         // Build a map of existing payroll by employeeId for quick lookup
-        const payrollMap = {};
-        existingPayroll.forEach(p => {
-          const id = p.employeeId || p.empId;
-          if (id) payrollMap[id] = p;
-        });
+       const payrollMap = {};
+
+existingPayroll.forEach((p) => {
+
+  const id = String(getEmpId(p));
+
+  if (id && id !== "undefined") {
+    payrollMap[id] = p;
+  }
+});
+
 
         const initial = {};
         empList.forEach((emp) => {
-          // ✅ Use existing payroll values if available, otherwise default to 0
-          const existing = payrollMap[emp.employeeId] || {};
-
-          // ✅ FALLBACK: use MongoDB _id if employeeId is not set
-          const empId = emp.employeeId || emp.id || emp._id || emp.empId;
-          if (!empId) {
-            console.warn("⚠️ Employee has no ID at all, skipping:", emp);
-            return;
-          }
           
-          console.log(`✅ Processing employee: ${emp.fullName || emp.name} (${empId})`);
+          // ✅ Use existing payroll values if available, otherwise default to 0
+         // ✅ FALLBACK: use MongoDB _id if employeeId is not set
+const employeeKey = String(getEmpId(emp));
 
-          initial[empId] = {
+if (!employeeKey) {
+  console.warn("⚠️ Employee has no ID at all, skipping:", emp);
+  return;
+}
+const existing = payrollMap[employeeKey] || {};
+console.log(
+  `✅ Processing employee: ${emp.fullName || emp.name} (${employeeKey})`
+);
+
+initial[employeeKey] = {
             companyName: existing.companyName || "OMOIKANE INNOVATIONS PVT LTD",
             empName: emp.fullName || emp.name || existing.empName,
             department: emp.department || existing.department,
@@ -136,7 +151,7 @@ const UpdatePayroll = () => {
     };
 
     loadData();
-  }, []);
+  }, []); // ✅ Empty dependency array - runs once on mount
 
   // If navigated from PayrollTable with a specific employee, pre-fill that employee
   useEffect(() => {
@@ -404,7 +419,11 @@ ifsc: d.ifsc || "",
         ? empRes.data.content
         : [];
 
-      const existingPayroll = Array.isArray(payrollRes?.data) ? payrollRes.data : [];
+     const existingPayroll = Array.isArray(payrollRes)
+  ? payrollRes
+  : Array.isArray(payrollRes?.data)
+  ? payrollRes.data
+  : [];
 
       console.log("✅ Reloaded employees:", empList.length);
       console.log("✅ Reloaded payroll records:", existingPayroll.length);
@@ -419,6 +438,13 @@ ifsc: d.ifsc || "",
 
       const initial = {};
       empList.forEach((emp) => {
+         // ✅ GET EMPLOYEE ID
+  const employeeKey = String(getEmpId(emp));
+    if (!employeeKey) {
+    console.warn("⚠️ Employee has no ID:", emp);
+    return;
+  }
+        
         const existing = payrollMap[emp.employeeId] || {};
 
         const empId = emp.employeeId || emp.id || emp.empId;

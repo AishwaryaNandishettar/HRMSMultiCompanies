@@ -101,7 +101,9 @@
             if (key === "employeeName") return l.employeeName || l.name || l.userName;
             if (key === "from") return l.startDate || l.fromDate;
             if (key === "to") return l.endDate || l.toDate;
-            if (key === "comments") return l.comments || l.reason;
+           if (key === "comments") return l.comments || l.reason;
+if (key === "manager") return l.reportingManager || l.manager;
+if (key === "empId") return l.empId || l.userId;
             return l?.[key] ?? l?.[key?.toLowerCase?.()];
           })
         )];
@@ -354,23 +356,21 @@ setBalances(prev => ({
       const cleanStatus = (status) => (status || "").trim().toLowerCase();
         // Filter leaves based on role & filters
       const filteredLeaves = leaves.filter(l => {
-        const empName = l?.employeeName || "";
+  const empName = l?.employeeName || "";
+  const status = cleanStatus(l.status);
 
-        // role restriction
-      let roleFilter = true;
+  let roleFilter = true;
 
-if (isEmployee) {
-  roleFilter = String(l.userId) === String(user?.empId);
-}
+  if (isEmployee) {
+    roleFilter = String(l.userId) === String(user?.empId);
+  }
 
-if (isManager) {
-  roleFilter =
-    l.managerEmail &&
-    l.managerEmail.toLowerCase() === user?.email?.toLowerCase();
-}
-         
-         const status = cleanStatus(l.status);
-          // ✅ ADD TAB FILTER
+  if (isManager) {
+    roleFilter =
+      l.managerEmail &&
+      l.managerEmail.toLowerCase() === user?.email?.toLowerCase();
+  }
+
   const tabFilter =
     activeTab === "all" ||
     (activeTab === "pending" && status === "pending") ||
@@ -380,56 +380,32 @@ if (isManager) {
   return (
     roleFilter &&
     tabFilter &&
+    (filters.employee === "" ||
+      empName.toLowerCase().includes(filters.employee.toLowerCase())) &&
     (filters.leaveType === "" || l?.leaveType === filters.leaveType) &&
     (filters.status === "" || status === cleanStatus(filters.status)) &&
-    (!filters.fromDate || new Date(l.startDate || l.fromDate) >= new Date(filters.fromDate)) &&
-    (!filters.toDate || new Date(l.endDate || l.toDate) <= new Date(filters.toDate))
+    (!filters.fromDate ||
+      new Date(l.startDate || l.fromDate) >= new Date(filters.fromDate)) &&
+    (!filters.toDate ||
+      new Date(l.endDate || l.toDate) <= new Date(filters.toDate)) &&
+    (filters.empId === "" ||
+      String(l.empId || l.userId || "")
+        .toLowerCase()
+        .includes(filters.empId.toLowerCase())) &&
+    (filters.department === "" ||
+      String(l.department || l.dept || "")
+        .toLowerCase()
+        .includes(filters.department.toLowerCase())) &&
+    (filters.manager === "" ||
+      String(l.manager || l.reportingManager || "")
+        .toLowerCase()
+        .includes(filters.manager.toLowerCase())) &&
+    (filters.comments === "" ||
+      (l.comments || l.reason || "")
+        .toLowerCase()
+        .includes(filters.comments.toLowerCase()))
   );
-        // employee name filter (ONLY extra filter, don't override roleFilter)
-        if (filters.employee) {
-          roleFilter =
-            roleFilter &&
-            empName.toLowerCase().includes(filters.employee.toLowerCase());
-        }
-
-        
-      return (
-        roleFilter &&
-
-        (filters.leaveType === "" || l?.leaveType === filters.leaveType) &&
-
-        (filters.status === "" ||
-          cleanStatus(l?.status) === cleanStatus(filters.status)) &&
-
-        (!filters.fromDate ||
-          new Date(l.startDate || l.fromDate) >= new Date(filters.fromDate)) &&
-
-        (!filters.toDate ||
-          new Date(l.endDate || l.toDate) <= new Date(filters.toDate)) &&
-
-
-          // 🔥 ADD HERE 👇
-      (filters.empId === "" ||
-        String(l.empId || l.userId || "")
-          .toLowerCase()
-          .includes(filters.empId.toLowerCase())) &&
-
-      (filters.department === "" ||
-        String(l.department || l.dept || "")
-          .toLowerCase()
-          .includes(filters.department.toLowerCase())) &&
-
-      (filters.manager === "" ||
-        String(l.manager || l.reportingManager || "")
-          .toLowerCase()
-          .includes(filters.manager.toLowerCase())) &&
-        // ✅ ADD THIS HERE
-        (filters.comments === "" ||
-          (l.comments || l.reason || "")
-            .toLowerCase()
-            .includes(filters.comments.toLowerCase()))
-      );
-      });
+});
 
         return (
           <div className="leave-page">
@@ -437,16 +413,7 @@ if (isManager) {
         <h2>Leave Management</h2>
 
 
-  
-      
-        {isHR && (
-          <button
-            className="policy-btn"
-            onClick={() => setShowPolicy(true)}
-          >
-            Auto Generate Policy
-          </button>
-        )}
+
 
       
   {(isManager || isHR) && (
@@ -467,12 +434,18 @@ if (isManager) {
     </button>
   )}
       </div>
-        {isHR && (
-              <button onClick={() => setShowPolicy(true)}>Auto Generate Policy</button>
-            )}
+        
+              
+          
 
             {/* Role Switcher */}
             <div style={{ marginBottom: '15px' }}>
+                {isHR && (
+    <button className="policy-btn" onClick={() => setShowPolicy(true)}>
+      Auto Generate Policy
+    </button>
+  )}
+  
               <label>Simulate Role: </label>
             <select value={normalizedRole} disabled>
                 <option value="employee">Employee</option>
@@ -630,16 +603,6 @@ if (isManager) {
         />
             </div>
 
-            {/* Leave Table */}
-            <div
-    className="table-container"
-    style={{
-      maxHeight: "400px",
-      overflowY: "auto",
-      overflowX: "auto",
-      position: "relative"   // ✅ ADD THIS
-    }}
-  >
              <div className="tabs">
   <button
     className={activeTab === "all" ? "tab active" : "tab"}
@@ -669,6 +632,12 @@ if (isManager) {
     Rejected
   </button>
 </div>
+            {/* Leave Table */}
+            <div
+    className="table-container"
+   
+  >
+
               <table className="leave-table">
               <thead>
         <tr>
@@ -684,8 +653,7 @@ if (isManager) {
             </div>
 
             {activeFilter === "employeeName" && (
-              <div className="header-filter-popup fa-header-filter">
-                    <div className="fa-dropdown-inner"></div>
+              <div className="header-filter-popup">
               <input
         placeholder="Search..."
         value={filterText}
@@ -883,36 +851,40 @@ if (isManager) {
             </div>
 
     {activeFilter === "from" && (
-      <div className="header-filter-popup">
-        <input
-          value={filterText}
-          onChange={(e) => setFilterText(e.target.value)}
-          onKeyDown={(e) => {
-            if (e.key === "Enter") {
-              setFilters(prev => ({ ...prev, fromDate: filterText }));
-              setActiveFilter(null);
-              setFilterText("");
-            }
-          }}
-        />
+  <div className="header-filter-popup">
+    <input
+      type="date"
+      value={filterText}
+      onChange={(e) => {
+        setFilterText(e.target.value);
+        setFilters(prev => ({
+          ...prev,
+          fromDate: e.target.value
+        }));
+      }}
+    />
 
-        <div className="filter-list">
-          {headersuggestions?.map((s, i) => (
-            <div
-              key={i}
-              className="filter-item"
-              onClick={() => {
-                setFilters(prev => ({ ...prev, fromDate: s }));
-                setActiveFilter(null);
-                setFilterText("");
-              }}
-            >
-              {s}
-            </div>
-          ))}
+    <div className="filter-list">
+      {headersuggestions?.map((s, i) => (
+        <div
+          key={i}
+          className="filter-item"
+          onClick={() => {
+            setFilters(prev => ({
+              ...prev,
+              fromDate: s
+            }));
+
+            setActiveFilter(null);
+            setFilterText("");
+          }}
+        >
+          {s}
         </div>
-      </div>
-    )}
+      ))}
+    </div>
+  </div>
+)}
           </th>
 
           {/* TO */}
@@ -923,36 +895,40 @@ if (isManager) {
             </div>
 
     {activeFilter === "to" && (
-      <div className="header-filter-popup">
-        <input
-          value={filterText}
-          onChange={(e) => setFilterText(e.target.value)}
-          onKeyDown={(e) => {
-            if (e.key === "Enter") {
-              setFilters(prev => ({ ...prev, toDate: filterText }));
-              setActiveFilter(null);
-              setFilterText("");
-            }
-          }}
-        />
+  <div className="header-filter-popup">
+    <input
+      type="date"
+      value={filterText}
+      onChange={(e) => {
+        setFilterText(e.target.value);
+        setFilters(prev => ({
+          ...prev,
+          toDate: e.target.value
+        }));
+      }}
+    />
 
-        <div className="filter-list">
-          {headersuggestions?.map((s, i) => (
-            <div
-              key={i}
-              className="filter-item"
-              onClick={() => {
-                setFilters(prev => ({ ...prev, toDate: s }));
-                setActiveFilter(null);
-                setFilterText("");
-              }}
-            >
-              {s}
-            </div>
-          ))}
+    <div className="filter-list">
+      {headersuggestions?.map((s, i) => (
+        <div
+          key={i}
+          className="filter-item"
+          onClick={() => {
+            setFilters(prev => ({
+              ...prev,
+              toDate: s
+            }));
+
+            setActiveFilter(null);
+            setFilterText("");
+          }}
+        >
+          {s}
         </div>
-      </div>
-    )}
+      ))}
+    </div>
+  </div>
+)}
           </th>
 
           {/* STATUS */}

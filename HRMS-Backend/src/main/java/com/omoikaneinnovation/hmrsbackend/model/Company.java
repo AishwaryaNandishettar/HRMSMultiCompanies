@@ -1,5 +1,5 @@
 package com.omoikaneinnovation.hmrsbackend.model;
-
+import lombok.*;
 import jakarta.persistence.*;
 
 @Entity

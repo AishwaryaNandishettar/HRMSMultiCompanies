@@ -313,7 +313,7 @@ export default function TimesheetManager() {
   return (
     <div className={styles.container}>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "12px" }}>
-        <h2 style={{ margin: 0 }}>Monthly Attendance Dashboard (Timesheet)</h2>
+        <h2 style={{ margin: 0 }}>Timesheet Management</h2>
 
         {/* Export button — admin & manager only */}
         {(role === ROLE_ADMIN || role === ROLE_MGR) && (

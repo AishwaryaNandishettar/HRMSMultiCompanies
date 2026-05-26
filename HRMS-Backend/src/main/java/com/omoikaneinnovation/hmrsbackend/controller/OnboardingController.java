@@ -158,4 +158,35 @@ public ResponseEntity<?> activateEmployee(@RequestBody Map<String,String> reques
 
     return ResponseEntity.ok("Employee Account Activated");
 }
+
+    /**
+     * ✅ BULK INVITE — send invitations to a list of employees at once
+     * POST /api/onboarding/bulk-invite
+     * Body: [ { "email": "...", "fullName": "...", "department": "...", "designation": "..." }, ... ]
+     */
+    @PostMapping("/bulk-invite")
+    public ResponseEntity<?> bulkInvite(@RequestBody List<Map<String, Object>> employees) {
+        int success = 0;
+        int failed = 0;
+        List<String> failedEmails = new java.util.ArrayList<>();
+
+        for (Map<String, Object> emp : employees) {
+            try {
+                // Use Temp@123 as default password for bulk invite
+                emp.put("password", "Temp@123");
+                onboardingService.onboard(emp);
+                success++;
+            } catch (Exception e) {
+                failed++;
+                failedEmails.add((String) emp.get("email") + ": " + e.getMessage());
+            }
+        }
+
+        return ResponseEntity.ok(Map.of(
+            "total", employees.size(),
+            "success", success,
+            "failed", failed,
+            "failedEmails", failedEmails
+        ));
+    }
 }

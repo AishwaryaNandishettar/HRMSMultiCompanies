@@ -79,6 +79,7 @@ export default function Performance() {
 
   /* ── state ── */
   const [employees, setEmployees]       = useState([]);
+  
   const [selectedEmpId, setSelectedEmpId] = useState("");
   const [perfData, setPerfData]         = useState(null);
   const [loading, setLoading]           = useState(false);
@@ -328,12 +329,25 @@ export default function Performance() {
       <div className={styles.kpiRow}>
 
         {/* Overall Rating */}
-        <div className={`${styles.kpiCard} ${styles.blue}`}>
+       <div
+  className={`${styles.kpiCard} ${styles.blue}`}
+  
+>
           <div>
             <p className={styles.kpiTitle}>Overall Rating</p>
-            <div className={styles.kpiValue}>
-              {loading ? "—" : `${overallScore.toFixed(1)} / 5`}
-            </div>
+          <div
+  className={styles.kpiValue}
+  style={{
+    fontSize: "22px",
+    fontWeight: 700,
+    lineHeight: 1.2,
+    whiteSpace: "nowrap",
+    overflow: "hidden",
+    textOverflow: "ellipsis"
+  }}
+>
+  {loading ? "—" : `${overallScore.toFixed(1)} / 5`}
+</div>
           </div>
           <FaStar className={styles.kpiIcon} />
         </div>
@@ -361,7 +375,7 @@ export default function Performance() {
         </div>
 
         {/* Employee Selector */}
-        <div className={`${styles.kpiCard} ${styles.blueLight}`}>
+        <div className={`${styles.kpiCard} ${styles.blue}`}>
           <div style={{ flex: 1 }}>
             <p className={styles.kpiTitle}>
               {isEmployee ? "My Performance" : isManager ? "Select Team Member" : "Select Employee"}

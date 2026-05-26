@@ -1,227 +1,404 @@
-# ⚡ Quick Testing Checklist - Do This Now
+# Receiver Call Reception - Testing Checklist
 
-## 🔴 STEP 1: Rebuild Backend (REQUIRED)
+## Pre-Testing Setup
 
-```bash
-cd e:\HRMSProject\HRMS-Backend
-mvn clean compile
-mvn package -DskipTests
+- [ ] Backend is running on port 8082
+- [ ] Frontend is running on port 5173
+- [ ] Two browser windows/tabs open
+- [ ] Both users logged in
+- [ ] WebSocket connection is working
+
+---
+
+## Test 1: Basic Call Reception ✅
+
+### Setup
+- [ ] User A logged in on Window 1
+- [ ] User B logged in on Window 2
+- [ ] Both on WorkChat page
+
+### Execution
+- [ ] User A: Open WorkChat
+- [ ] User A: Select User B from chat list
+- [ ] User A: Click "Voice Call" button
+- [ ] Wait 2 seconds
+
+### Verification
+- [ ] User B: See `GlobalCallNotification` overlay
+- [ ] User B: Hear ringtone sound
+- [ ] User B: See caller's name (User A)
+- [ ] User B: See "Incoming Voice Call" text
+- [ ] User B: See Accept button (green)
+- [ ] User B: See Reject button (red)
+- [ ] User A: See "Calling..." screen
+- [ ] User A: See User B's name
+
+### Result
+- [ ] PASS / [ ] FAIL
+
+---
+
+## Test 2: Call Acceptance ✅
+
+### Setup
+- [ ] From Test 1, User B sees notification
+
+### Execution
+- [ ] User B: Click "Accept" button
+- [ ] Wait 3 seconds
+
+### Verification
+- [ ] User B: Notification disappears
+- [ ] User B: Navigated to WorkChat (if not already there)
+- [ ] User B: See AdvancedCallScreen
+- [ ] User A: See AdvancedCallScreen
+- [ ] Both: See video/audio controls
+- [ ] Both: See participant list
+- [ ] Both: See call duration timer
+
+### Result
+- [ ] PASS / [ ] FAIL
+
+---
+
+## Test 3: Call Rejection ✅
+
+### Setup
+- [ ] User A: Initiate new call to User B
+- [ ] User B: See notification
+
+### Execution
+- [ ] User B: Click "Reject" button
+- [ ] Wait 2 seconds
+
+### Verification
+- [ ] User B: Notification disappears
+- [ ] User A: See "Call rejected" or timeout
+- [ ] User A: Call screen closes
+- [ ] User A: Back to chat screen
+- [ ] User B: Back to chat screen
+
+### Result
+- [ ] PASS / [ ] FAIL
+
+---
+
+## Test 4: Call Timeout ✅
+
+### Setup
+- [ ] User A: Initiate call to User B
+- [ ] User B: See notification
+
+### Execution
+- [ ] User B: Don't respond
+- [ ] Wait 30 seconds
+
+### Verification
+- [ ] User A: Call times out after ~30 seconds
+- [ ] User A: See "Call ended" or similar
+- [ ] User A: Call screen closes
+- [ ] User B: Notification disappears
+- [ ] User B: Back to chat screen
+
+### Result
+- [ ] PASS / [ ] FAIL
+
+---
+
+## Test 5: Multiple Pages ✅
+
+### Setup
+- [ ] User B logged in
+- [ ] User B on Home page (not WorkChat)
+
+### Execution
+- [ ] User A: Initiate call to User B
+- [ ] Wait 2 seconds
+
+### Verification
+- [ ] User B: See `GlobalCallNotification` overlay on Home page
+- [ ] User B: Hear ringtone sound
+- [ ] User B: See caller's name
+- [ ] User B: Click "Accept"
+- [ ] User B: Navigated to WorkChat
+- [ ] Both: Call connects
+
+### Result
+- [ ] PASS / [ ] FAIL
+
+---
+
+## Test 6: Video Call ✅
+
+### Setup
+- [ ] User A: Open WorkChat
+- [ ] User A: Select User B
+
+### Execution
+- [ ] User A: Click "Video Call" button
+- [ ] Wait 2 seconds
+
+### Verification
+- [ ] User B: See notification
+- [ ] User B: See "Incoming Video Call" text
+- [ ] User B: Hear ringtone
+- [ ] User B: Click "Accept"
+- [ ] Both: See video streams
+
+### Result
+- [ ] PASS / [ ] FAIL
+
+---
+
+## Test 7: Ringtone Sound ✅
+
+### Setup
+- [ ] User B: Volume is ON
+- [ ] User B: Not muted
+
+### Execution
+- [ ] User A: Initiate call
+- [ ] Wait for notification
+
+### Verification
+- [ ] User B: Hear ringtone sound
+- [ ] Sound continues until Accept/Reject
+- [ ] Sound stops after Accept/Reject
+
+### Result
+- [ ] PASS / [ ] FAIL
+
+---
+
+## Test 8: Browser Notification ✅
+
+### Setup
+- [ ] Browser notifications enabled
+- [ ] User B: Notification permission granted
+
+### Execution
+- [ ] User A: Initiate call
+- [ ] Wait for notification
+
+### Verification
+- [ ] User B: See browser notification (if enabled)
+- [ ] Notification shows caller's name
+- [ ] Notification shows call type (Voice/Video)
+
+### Result
+- [ ] PASS / [ ] FAIL
+
+---
+
+## Test 9: Call Controls ✅
+
+### Setup
+- [ ] Call is connected between User A and User B
+
+### Execution
+- [ ] User A: Click mute button
+- [ ] User B: See mute indicator
+- [ ] User A: Click camera off button
+- [ ] User B: See video off indicator
+- [ ] User A: Click end call button
+
+### Verification
+- [ ] Mute/unmute works
+- [ ] Camera on/off works
+- [ ] End call works
+- [ ] Both: Call disconnects
+- [ ] Both: Back to chat screen
+
+### Result
+- [ ] PASS / [ ] FAIL
+
+---
+
+## Test 10: Concurrent Calls ✅
+
+### Setup
+- [ ] User A, User B, User C all logged in
+
+### Execution
+- [ ] User A: Call User B
+- [ ] User B: Accept
+- [ ] User A: Call User C (while on call with B)
+- [ ] User C: See notification
+
+### Verification
+- [ ] User C: See notification
+- [ ] User C: Can accept/reject
+- [ ] User A: Can manage both calls
+- [ ] No errors in console
+
+### Result
+- [ ] PASS / [ ] FAIL
+
+---
+
+## Test 11: WebSocket Connection ✅
+
+### Setup
+- [ ] User B: Open browser console
+
+### Execution
+- [ ] Type: `window.stompClient.connected`
+- [ ] Type: `Object.keys(window.stompClient.subscriptions)`
+
+### Verification
+- [ ] `window.stompClient.connected` returns `true`
+- [ ] Subscriptions include `/user/queue/call`
+- [ ] Subscriptions include `/user/queue/call-chat`
+
+### Result
+- [ ] PASS / [ ] FAIL
+
+---
+
+## Test 12: No Console Errors ✅
+
+### Setup
+- [ ] User B: Open browser console (F12)
+
+### Execution
+- [ ] User A: Initiate call
+- [ ] User B: Accept call
+- [ ] User A: End call
+
+### Verification
+- [ ] No red errors in console
+- [ ] No warnings about subscriptions
+- [ ] No WebSocket errors
+- [ ] No undefined errors
+
+### Result
+- [ ] PASS / [ ] FAIL
+
+---
+
+## Test 13: Performance ✅
+
+### Setup
+- [ ] Monitor browser performance (F12 → Performance)
+
+### Execution
+- [ ] User A: Initiate call
+- [ ] User B: Accept call
+- [ ] Monitor for 10 seconds
+
+### Verification
+- [ ] No memory leaks
+- [ ] CPU usage normal
+- [ ] No lag or stuttering
+- [ ] Smooth animations
+
+### Result
+- [ ] PASS / [ ] FAIL
+
+---
+
+## Test 14: Mobile Responsiveness ✅
+
+### Setup
+- [ ] Open browser on mobile device
+- [ ] User B logged in
+
+### Execution
+- [ ] User A (desktop): Initiate call
+- [ ] User B (mobile): See notification
+
+### Verification
+- [ ] Notification displays correctly on mobile
+- [ ] Buttons are clickable on mobile
+- [ ] Ringtone plays on mobile
+- [ ] Accept/Reject works on mobile
+
+### Result
+- [ ] PASS / [ ] FAIL
+
+---
+
+## Test 15: Network Interruption ✅
+
+### Setup
+- [ ] Call is connected
+
+### Execution
+- [ ] Disconnect network (turn off WiFi)
+- [ ] Wait 5 seconds
+- [ ] Reconnect network
+
+### Verification
+- [ ] Call handles disconnection gracefully
+- [ ] No crashes
+- [ ] Can reconnect
+- [ ] Or see appropriate error message
+
+### Result
+- [ ] PASS / [ ] FAIL
+
+---
+
+## Summary
+
+### Total Tests: 15
+- [ ] Passed: ___
+- [ ] Failed: ___
+- [ ] Skipped: ___
+
+### Overall Result
+- [ ] ALL PASS - Ready for deployment
+- [ ] SOME FAIL - Fix issues and retest
+- [ ] CRITICAL FAIL - Do not deploy
+
+### Issues Found
+```
+1. _______________________________________________
+2. _______________________________________________
+3. _______________________________________________
 ```
 
-**Wait for:** "BUILD SUCCESS"
-
----
-
-## 🔴 STEP 2: Stop Old Backend
-
-- Kill any running Java processes
-- Or press Ctrl+C in terminal if running
-
----
-
-## 🔴 STEP 3: Start Fresh Backend
-
-```bash
-cd e:\HRMSProject\HRMS-Backend
-mvn spring-boot:run
+### Notes
+```
+_______________________________________________
+_______________________________________________
+_______________________________________________
 ```
 
-**Wait for:** "Started HmrsBackendApplication in X seconds"
+---
+
+## Sign-Off
+
+**Tested By**: ___________________
+**Date**: ___________________
+**Time**: ___________________
+**Environment**: Development / Staging / Production
+
+**Approval**: ___________________
 
 ---
 
-## 🔴 STEP 4: Clear Browser Cache
+## Deployment Decision
 
-1. Press **Ctrl+Shift+Delete**
-2. Select **"All time"**
-3. Check:
-   - ✅ Cookies and other site data
-   - ✅ Cached images and files
-4. Click **"Clear data"**
-5. Refresh page: **Ctrl+R**
+- [ ] APPROVED - Ready for production
+- [ ] CONDITIONAL - Fix issues first
+- [ ] REJECTED - Do not deploy
+
+**Reason**: _______________________________________________
 
 ---
 
-## 🟢 STEP 5: Test Manager - Attendance Page
+## Post-Deployment Monitoring
 
-### Login
-```
-Email: Aishmanager@omoi.com
-Password: [your password]
-URL: http://localhost:5176/attendance
-```
-
-### Verify
-- [ ] See your record (MGR001 - Aishmanager)
-- [ ] See team member record (OMOI123 - Adhviti)
-- [ ] Your reporting manager shows: **-** (dash)
-- [ ] Team member reporting manager shows: **Aishmanager**
-
-### Test Check-In
-1. Click "Check In"
-2. Allow location
-3. Should see: "Check-in successful"
-4. Refresh page (F5)
-5. Should see your check-in time
-
-### Test Check-Out
-1. Click "Check Out"
-2. Allow location
-3. Should see: "Check-out successful"
-4. Refresh page (F5)
-5. Should see your check-out time
+- [ ] Monitor error logs
+- [ ] Monitor user feedback
+- [ ] Monitor performance metrics
+- [ ] Check for WebSocket issues
+- [ ] Verify ringtone plays
+- [ ] Verify notifications appear
 
 ---
 
-## 🟢 STEP 6: Test Manager - Timesheet Page
-
-### Login
-```
-URL: http://localhost:5176/timesheet
-```
-
-### Verify
-- [ ] See your record (MGR001 - Aishmanager)
-- [ ] Your reporting manager shows: **-** (dash)
-- [ ] See team member record (OMOI123 - Adhviti)
-- [ ] Team member reporting manager shows: **Aishmanager**
-
-### Test Approval
-1. Find team member's row (Adhviti)
-2. Click Status dropdown
-3. Select "Approve"
-4. Should see: "Approved"
-5. Refresh page (F5)
-6. Status should still show: "Approved"
-
----
-
-## 🟢 STEP 7: Test Employee View
-
-### Login as Employee
-```
-Email: adhviti@omoi.com
-Password: [your password]
-```
-
-### Attendance Page
-- [ ] See ONLY your records
-- [ ] Do NOT see manager's records
-- [ ] Reporting manager shows: **Aishmanager**
-
-### Timesheet Page
-- [ ] See ONLY your timesheet
-- [ ] Do NOT see manager's timesheet
-- [ ] Reporting manager shows: **Aishmanager**
-
----
-
-## 🟢 STEP 8: Test Admin View
-
-### Login as Admin
-```
-Email: admin@omoi.com
-Password: [your password]
-```
-
-### Attendance Page
-- [ ] See ALL records (manager + all employees)
-- [ ] See export buttons (CSV, Excel)
-
-### Timesheet Page
-- [ ] See ALL timesheets
-- [ ] See all employees' data
-
----
-
-## ✅ Final Verification
-
-### All Tests Passed?
-- [ ] Manager sees own + team attendance ✅
-- [ ] Manager sees own + team timesheet ✅
-- [ ] Employee sees only own data ✅
-- [ ] Admin sees all data ✅
-- [ ] No console errors ✅
-- [ ] No backend errors ✅
-
-### If YES → Ready for Production! 🎉
-
-### If NO → Troubleshoot:
-
-**Manager sees no records:**
-1. Check backend is running
-2. Check backend logs for errors
-3. Verify users exist in database
-4. Clear browser cache again
-5. Refresh page
-
-**Manager's name shows "-":**
-1. Check User document has `name` field
-2. Restart backend
-3. Refresh page
-
-**Team members not showing:**
-1. Check Employee collection has `managerEmail` field
-2. Verify `managerEmail = Aishmanager@omoi.com`
-3. Restart backend
-
----
-
-## 📊 Test Results
-
-| Test | Status | Notes |
-|------|--------|-------|
-| Backend compiles | ✅ | mvn clean compile |
-| Backend starts | ✅ | mvn spring-boot:run |
-| Manager sees own attendance | ✅ | MGR001 visible |
-| Manager sees team attendance | ✅ | OMOI123 visible |
-| Manager's name correct | ✅ | Shows "Aishmanager" |
-| Manager's reporting manager | ✅ | Shows "-" |
-| Team member reporting manager | ✅ | Shows "Aishmanager" |
-| Manager sees own timesheet | ✅ | MGR001 visible |
-| Manager sees team timesheet | ✅ | OMOI123 visible |
-| Manager can approve timesheet | ✅ | Approval works |
-| Employee sees only own data | ✅ | No manager data visible |
-| Admin sees all data | ✅ | All records visible |
-| No console errors | ✅ | F12 → Console clean |
-| No backend errors | ✅ | Logs clean |
-
----
-
-## 🎯 Success Criteria
-
-**PASS if ALL are true:**
-- ✅ Manager sees own attendance
-- ✅ Manager sees team attendance
-- ✅ Manager sees own timesheet
-- ✅ Manager sees team timesheet
-- ✅ Employee sees only own data
-- ✅ Admin sees all data
-- ✅ No errors
-
----
-
-## 📝 Notes
-
-- **Backend restart is REQUIRED** - Code changes need to be compiled
-- **Browser cache clear is REQUIRED** - Old code might be cached
-- **Use fresh check-in/check-out** - For clean test data
-- **Test all roles** - Manager, Employee, Admin
-
----
-
-## 🚀 Ready?
-
-1. ✅ Rebuild backend
-2. ✅ Clear browser cache
-3. ✅ Test manager
-4. ✅ Test employee
-5. ✅ Test admin
-6. ✅ Done!
-
-**Time needed:** ~15 minutes
-
----
-
-**Last Updated:** 2026-05-07
-**Status:** Ready to Test
+**Testing Checklist Version**: 1.0
+**Last Updated**: May 16, 2026
+**Status**: Ready for Testing

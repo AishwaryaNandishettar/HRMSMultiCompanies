@@ -10,25 +10,44 @@ const PayrollFooter = ({ currentPage, setCurrentPage, totalPages }) => {
         <span className="dot rejected" /> Rejected
       </div>
 
-      <div className="pagination">
-  <button 
+     <div className="pagination">
+  <button
     disabled={currentPage === 1}
     onClick={() => setCurrentPage(currentPage - 1)}
   >
-    Previous
+    Prev
   </button>
 
-  {[...Array(totalPages)].map((_, i) => (
-    <button
-      key={i}
-      className={currentPage === i + 1 ? "active" : ""}
-      onClick={() => setCurrentPage(i + 1)}
-    >
-      {i + 1}
-    </button>
-  ))}
+  {Array.from(
+    {
+      length: Math.min(3, totalPages),
+    },
+    (_, i) => {
+      let pageNumber;
 
-  <button 
+      if (currentPage <= 2) {
+        pageNumber = i + 1;
+      } else if (currentPage >= totalPages - 1) {
+        pageNumber = totalPages - 2 + i;
+      } else {
+        pageNumber = currentPage - 1 + i;
+      }
+
+      return (
+        <button
+          key={pageNumber}
+          className={
+            currentPage === pageNumber ? "active" : ""
+          }
+          onClick={() => setCurrentPage(pageNumber)}
+        >
+          {pageNumber}
+        </button>
+      );
+    }
+  )}
+
+  <button
     disabled={currentPage === totalPages}
     onClick={() => setCurrentPage(currentPage + 1)}
   >

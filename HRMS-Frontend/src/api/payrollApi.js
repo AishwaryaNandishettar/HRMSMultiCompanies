@@ -8,8 +8,18 @@ export const getEmployeePayroll = (empCode) =>
 export const createPayroll = (data) =>
   api.post("/api/payroll/create", data);
 
-export const getPayrollData = () => {
-  return api.get("/api/payroll");
+export const getPayrollData = async () => {
+  try {
+    const res = await api.get("/api/payroll");
+
+    console.log("✅ PAYROLL API FULL RESPONSE:", res);
+    console.log("✅ PAYROLL API DATA:", res.data);
+
+    return res;
+  } catch (err) {
+    console.error("❌ PAYROLL API ERROR:", err);
+    throw err;
+  }
 };
 // ✅ CREATE PAYROLL BATCH (MUST BE HERE)
 

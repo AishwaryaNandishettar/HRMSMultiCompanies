@@ -3,7 +3,7 @@ import dayGridPlugin from "@fullcalendar/daygrid";
 import timeGridPlugin from "@fullcalendar/timegrid";
 import interactionPlugin from "@fullcalendar/interaction";
 
-function MeetingCalendar({ meetings, onSelect, onEdit }) {
+function MeetingCalendar({ meetings, onSelect, onEdit, onJoin }) {
   const now = new Date();
 
   // ✅ Generate recurring event instances (FIXED)
@@ -188,14 +188,30 @@ const generateRecurringInstances = (meeting) => {
           }
 
           const now = new Date();
+          const meetingStartTime = new Date(originalMeeting.startTime);
           const meetingEndTime = new Date(originalMeeting.endTime);
+          const canJoinTime = new Date(meetingStartTime.getTime() - 15 * 60 * 1000);
 
-          if (meetingEndTime < now) {
-            alert("This meeting has already ended and cannot be edited.");
-            return;
+          // Show options: Join or Edit
+          const canJoin = now >= canJoinTime && now <= meetingEndTime;
+          const canEdit = now < meetingEndTime;
+
+          if (canJoin && canEdit) {
+            const action = window.confirm(
+              `Meeting: ${originalMeeting.title}\n\nClick OK to JOIN the meeting\nClick Cancel to EDIT the meeting`
+            );
+            if (action) {
+              onJoin && onJoin(originalMeeting);
+            } else {
+              onEdit && onEdit(originalMeeting);
+            }
+          } else if (canJoin) {
+            onJoin && onJoin(originalMeeting);
+          } else if (canEdit) {
+            onEdit && onEdit(originalMeeting);
+          } else {
+            alert("This meeting has already ended.");
           }
-
-          onEdit && onEdit(originalMeeting);
         }}
 
         eventDidMount={(info) => {
@@ -207,4 +223,5 @@ const generateRecurringInstances = (meeting) => {
     </div>
   );
 }
+
 export default MeetingCalendar;

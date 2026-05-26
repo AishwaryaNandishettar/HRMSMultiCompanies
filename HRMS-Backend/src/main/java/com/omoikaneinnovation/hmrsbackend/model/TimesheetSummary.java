@@ -1,4 +1,5 @@
 package com.omoikaneinnovation.hmrsbackend.model;
+
 import lombok.*;
 import lombok.Data;
 @Data

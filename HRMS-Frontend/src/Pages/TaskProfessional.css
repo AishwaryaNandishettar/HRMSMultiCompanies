@@ -113,8 +113,23 @@
   background: #fff;
   border-radius: 14px;
   box-shadow: 0 4px 16px rgba(0,0,0,0.06);
+
   overflow-x: auto;
+  overflow-y: auto;
+
+  max-height: 500px;   /* table body scroll height */
+  position: relative;
 }
+
+.tp-table th {
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  background: #1e40af;
+}
+
+
+
 
 .tp-table {
   width: 100%;
@@ -465,4 +480,85 @@
 
 .tp-table thead th:hover span[style*="cursor: pointer"] {
   color: #fff;
+}
+.tp-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+
+/* =========================================================
+   STICKY HEADER
+========================================================= */
+
+.tp-table thead th {
+  position: sticky;
+  top: 0;
+  z-index: 30;
+  background: linear-gradient(135deg, #1e3a5f 0%, #1e40af 100%);
+}
+
+/* =========================================================
+   COLUMN WIDTHS
+========================================================= */
+
+.tp-table th:nth-child(1),
+.tp-table td:nth-child(1) {
+  min-width: 120px;
+  width: 120px;
+}
+
+.tp-table th:nth-child(2),
+.tp-table td:nth-child(2) {
+  min-width: 180px;
+  width: 180px;
+}
+
+.tp-table th:nth-child(3),
+.tp-table td:nth-child(3) {
+  min-width: 160px;
+  width: 160px;
+}
+
+/* =========================================================
+   FREEZE FIRST 3 COLUMNS
+========================================================= */
+
+/* EMP ID */
+.tp-table th:nth-child(1),
+.tp-table td:nth-child(1) {
+  position: sticky;
+  left: 0;
+  z-index: 25;
+  background: #fff;
+}
+
+/* EMP NAME */
+.tp-table th:nth-child(2),
+.tp-table td:nth-child(2) {
+  position: sticky;
+  left: 120px;
+  z-index: 25;
+  background: #fff;
+}
+
+/* DEPARTMENT */
+.tp-table th:nth-child(3),
+.tp-table td:nth-child(3) {
+  position: sticky;
+  left: 300px;
+  z-index: 25;
+  background: #fff;
+}
+
+/* =========================================================
+   HEADER COLOR FOR STICKY COLUMNS
+========================================================= */
+
+.tp-table thead th:nth-child(1),
+.tp-table thead th:nth-child(2),
+.tp-table thead th:nth-child(3) {
+  background: linear-gradient(135deg, #1e3a5f 0%, #1e40af 100%);
+  color: #fff;
+  z-index: 40;
 }

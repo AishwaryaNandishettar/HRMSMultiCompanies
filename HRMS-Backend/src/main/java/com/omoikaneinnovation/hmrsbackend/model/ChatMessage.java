@@ -1,5 +1,5 @@
 package com.omoikaneinnovation.hmrsbackend.model;
-
+import lombok.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -32,4 +32,14 @@ public class ChatMessage {
     private String fileUrl;
     private String fileName;
     private String fileType; // image, pdf, doc
+
+    private boolean deleted;
+    private boolean edited;
+    private boolean deletedForMe; // for soft delete (only for receiver)
+
+    private String replyToMessageId;
+    private String replyPreview;
+    private String replyToSenderEmail;  // sender of the replied-to message
+
+    private Instant editedAt;
 }

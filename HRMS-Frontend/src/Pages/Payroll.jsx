@@ -53,9 +53,15 @@ const fetchPayroll = async () => {
   try {
     const res = await getPayrollData();
 
-    // ✅ run only after first load
+    const payrollData = Array.isArray(res?.data)
+      ? res.data
+      : [];
+
+    console.log("🔥 PAYROLL:", payrollData);
+
+    // salary credited toast
     if (prevData) {
-      res.data.forEach((item) => {
+      payrollData.forEach((item) => {
         const old = prevData.find(
           (p) => p.employeeId === item.employeeId
         );
@@ -71,11 +77,29 @@ const fetchPayroll = async () => {
       });
     }
 
-    setPrevData(res.data);
-    setData(res.data);
+    setPrevData(payrollData);
+
+    // ✅ IMPORTANT
+    setData(payrollData);
+
+    // ✅ restore selected employee
+    const saved = localStorage.getItem("selectedEmployee");
+
+    if (saved) {
+      const parsed = JSON.parse(saved);
+
+      const updated = payrollData.find(
+        p => String(p.employeeId) === String(parsed.employeeId)
+      );
+
+      if (updated) {
+        setActiveEmployee(updated);
+      }
+    }
 
   } catch (err) {
-    console.error(err);
+    console.error("Payroll fetch error:", err);
+    setData([]);
   }
 };
 useEffect(() => {
@@ -103,32 +127,7 @@ useEffect(() => {
     .catch(err => console.error("Employee fetch error", err));
 }, [location.state?.refresh]); // ✅ Re-fetch employees on refresh
 
-useEffect(() => {
-  getPayrollData()
-    .then(res => {
-      const payroll = res.data;
-      setData(payroll);
 
-      const saved = localStorage.getItem("selectedEmployee");
-
-      if (saved) {
-        const parsed = JSON.parse(saved);
-
-        const updated = payroll.find(
-          p => String(p.employeeId) === String(parsed.employeeId)
-        );
-
-        if (updated) {
-          setActiveEmployee(updated); // latest DB version
-        } else {
-          setActiveEmployee(null); // ✅ FIX HERE
-        }
-      } else {
-        setActiveEmployee(null); // ✅ FIX HERE
-      }
-    })
-    .catch(err => console.error(err));
-}, [location.state?.refresh]);
 
 
 
@@ -167,148 +166,167 @@ useEffect(() => {
 useEffect(() => {
   setCurrentPage(1);
 }, [search, fromMonth, toMonth, sortType]);
-const enrichedData = data
-  .filter(p => {
-    // ✅ STATUS SHOULD BE ACTIVE (case-insensitive) - ONLY filter if status is explicitly INACTIVE
-    const payStatus = (p.status || p.recordStatus || "").toUpperCase();
-    
-    const isInactive = payStatus === "INACTIVE";
-    
-    if (isInactive) {
-      console.log(`❌ FILTERED OUT: ${p.empName || "unknown"} - Status: ${payStatus}`);
-      return false;
-    }
-    
-    return true;
-  })
-  .map(pay => {
-    const emp = employees?.length
-  ? employees.find(e =>
-     String(e.employeeId || e.empId || e.code) === String(pay.employeeId || pay.empId)
-    )
-  : null;
+// ✅ ENRICH PAYROLL DATA
+const enrichedData = data.map((pay) => {
 
-    console.log(`✅ ENRICHING: ${pay.empName} (${pay.employeeId}) - Employee found: ${emp ? emp.fullName : 'NOT FOUND'}`);
+  const emp = employees?.find(
+    (e) =>
+      String(e.employeeId || e.empId || e.code) ===
+      String(pay.employeeId || pay.empId)
+  );
 
-    return {
-      ...pay,
-      // 🔥 FILL MISSING DATA FROM EMPLOYEE MASTER
-     empName: pay.empName || emp?.fullName || emp?.name,
-      department: pay.department || emp?.department,
-      employee: emp
-    };
-  });
+  return {
+    ...pay,
+
+    empName:
+      pay.empName ||
+      pay.fullName ||
+      emp?.fullName ||
+      emp?.name ||
+      "Unknown",
+
+    department:
+      pay.department ||
+      emp?.department ||
+      "N/A",
+
+    employee: emp
+  };
+});
+
 
 // ✅ ROLE BASED FILTER
-let roleBasedData = enrichedData;
+let roleBasedData = [...enrichedData];
 
-// 🔥 FILTER BY ROLE FIRST - check for employee role
-console.log("🔥 CHECKING USER:");
-console.log("  user object:", user);
-console.log("  user?.role:", user?.role);
-console.log("  user?.empId:", user?.empId);
-console.log("  user?.employeeId:", user?.employeeId);
-console.log("  user?.email:", user?.email);
+if (user?.role === "employee") {
 
-// Only filter for EMPLOYEE role
-if (user && user.role === "employee") { // ✅ Strict check only for "employee"
-  console.log("🔥 EMPLOYEE LOGIN DETECTED - Filtering payroll");
+  roleBasedData = enrichedData.filter((emp) => {
 
-  roleBasedData = enrichedData.filter(emp => {
-    const empId = emp.employeeId || emp.empId || emp.empCode;
-    const userId = user?.empId || user?.employeeId;
-    
-    const match = String(empId) === String(userId);
-    
-    console.log(`  Comparing: "${emp.empName}" (${empId}) vs User (${userId}) = ${match}`);
-    
-    return match;
+    const empId =
+      emp.employeeId ||
+      emp.empId ||
+      emp.empCode;
+
+    const userId =
+      user?.empId ||
+      user?.employeeId;
+
+    return String(empId) === String(userId);
   });
-  
-  console.log(`✅ FILTERED DATA FOR EMPLOYEE: ${roleBasedData.length} records`);
-} else if (user && user.role === "manager") { // ✅ NEW: Filter for MANAGER role
-  console.log("🔥 MANAGER LOGIN DETECTED - Filtering payroll for team members only");
-  
+
+} else if (user?.role === "manager") {
+
   const managerEmail = user?.email;
-  console.log(`  Manager email: ${managerEmail}`);
-  
-  roleBasedData = enrichedData.filter(emp => {
-    const empManagerEmail = emp.employee?.managerEmail;
-    
-    const isTeamMember = empManagerEmail && String(empManagerEmail).toLowerCase() === String(managerEmail).toLowerCase();
-    
-    console.log(`  Checking: "${emp.empName}" - Manager: ${empManagerEmail} vs Current: ${managerEmail} = ${isTeamMember}`);
-    
-    return isTeamMember;
+
+  roleBasedData = enrichedData.filter((emp) => {
+
+    const empManagerEmail =
+      emp.employee?.managerEmail;
+
+    return (
+      empManagerEmail &&
+      String(empManagerEmail).toLowerCase() ===
+      String(managerEmail).toLowerCase()
+    );
   });
-  
-  console.log(`✅ FILTERED DATA FOR MANAGER: ${roleBasedData.length} team members`);
-} else {
-  console.log("👤 ADMIN/OTHER LOGIN (role=" + user?.role + ") - showing ALL payroll records");
-  console.log("   Total enriched records:", enrichedData.length);
 }
 
+
+// ✅ SEARCH FILTER
 const filteredData = roleBasedData.filter((emp) => {
-  // ✅ Allow records even if employeeId is null — use empName as fallback identifier
+
   const searchText = search?.toLowerCase() || "";
 
-  const matchesSearch =
+  return (
     (
       emp.empName ||
       emp.fullName ||
       emp.employee?.fullName ||
       ""
-    ).toLowerCase().includes(searchText) ||
-    (emp.department || "").toLowerCase().includes(searchText);
+    )
+      .toLowerCase()
+      .includes(searchText) ||
 
-  return matchesSearch;
+    (emp.department || "")
+      .toLowerCase()
+      .includes(searchText)
+  );
 });
 
+
+// ✅ SORT DATA
 let sortedData = [...filteredData];
 
+if (sortType === "high") {
 
-// ✅ KPI CALCULATIONS (NO LOGIC CHANGE)
+  sortedData.sort(
+    (a, b) =>
+      (b.salary || b.grossPay || b.gross || 0) -
+      (a.salary || a.grossPay || a.gross || 0)
+  );
 
+} else if (sortType === "low") {
+
+  sortedData.sort(
+    (a, b) =>
+      (a.salary || a.grossPay || a.gross || 0) -
+      (b.salary || b.grossPay || b.gross || 0)
+  );
+
+} else {
+
+  // latest updated first
+  sortedData.sort(
+    (a, b) =>
+      (b.updatedAt || 0) -
+      (a.updatedAt || 0)
+  );
+}
+
+
+// ✅ KPI CALCULATIONS
 const totalEmployees = roleBasedData.length;
 
 const totalPayroll = roleBasedData.reduce(
-  (sum, emp) => sum + (emp.gross || emp.grossPay || emp.salary || 0),
+  (sum, emp) =>
+    sum + (emp.gross || emp.grossPay || emp.salary || 0),
   0
 );
 
 const totalDeductions = roleBasedData.reduce(
   (sum, emp) =>
     sum +
-    ((emp.tax || 0) + (emp.pf || 0) + (emp.insurance || 0)),
+    ((emp.tax || 0) +
+      (emp.pf || 0) +
+      (emp.insurance || 0)),
   0
 );
 
 const totalNetPay = roleBasedData.reduce(
-  (sum, emp) => sum + (emp.net || emp.netPay || 0),
+  (sum, emp) =>
+    sum + (emp.net || emp.netPay || 0),
   0
 );
 
+
+// ✅ PAGINATION
 const indexOfLast = currentPage * rowsPerPage;
-const indexOfFirst = indexOfLast - rowsPerPage;
 
-const paginatedData = sortedData.slice(indexOfFirst, indexOfLast);
-const totalPages = Math.ceil(roleBasedData.length / rowsPerPage);
+const indexOfFirst =
+  indexOfLast - rowsPerPage;
 
-if (sortType === "high") {
-  sortedData.sort(
-    (a, b) => (b.salary || b.grossPay || 0) - (a.salary || a.grossPay || 0)
-  );
-}
+const paginatedData = sortedData.slice(
+  indexOfFirst,
+  indexOfLast
+);
 
-if (sortType === "low") {
-  sortedData.sort(
-    (a, b) => (a.salary || a.grossPay || 0) - (b.salary || b.grossPay || 0)
-  );
-}
 
-sortedData.sort((a, b) => {
-  return (b.updatedAt || 0) - (a.updatedAt || 0);
-});
+// ✅ TOTAL PAGES
+const totalPages = Math.ceil(
+  sortedData.length / rowsPerPage
+);
+    
+   
 
   const handleViewPayslip = (record) => {
     setSelectedPayslip(record);
