@@ -65,6 +65,7 @@
       const [filterText, setFilterText] = useState("");
         const [showForm, setShowForm] = useState(false);
         const [showEmpFilter, setShowEmpFilter] = useState(false);
+        const [selectedFilterValues, setSelectedFilterValues] = useState({});
         const [formData, setFormData] = useState({
           employeeName: '',  // Enterable now
           leaveType: '',
@@ -396,10 +397,14 @@ setBalances(prev => ({
       String(l.department || l.dept || "")
         .toLowerCase()
         .includes(filters.department.toLowerCase())) &&
-    (filters.manager === "" ||
+   (filters.manager === "" ||
+  filters.manager
+    .split(",")
+    .some(v =>
       String(l.manager || l.reportingManager || "")
         .toLowerCase()
-        .includes(filters.manager.toLowerCase())) &&
+        .includes(v.toLowerCase())
+    ))&&
     (filters.comments === "" ||
       (l.comments || l.reason || "")
         .toLowerCase()
@@ -407,6 +412,125 @@ setBalances(prev => ({
   );
 });
 
+const renderFilterHeader = (label, key) => (
+  <th className="leave-filter-th">
+    <div className="th-header">
+      <span>{label}</span>
+
+      <span
+        className="filter-icon"
+        onClick={() => {
+          setActiveFilter(key);
+
+          setTempSelected(
+            columnFilters[key]
+              ? columnFilters[key].split(",")
+              : []
+          );
+
+          setFilterText("");
+        }}
+      >
+        ⏷
+      </span>
+    </div>
+
+    {renderCheckboxFilter(key)}
+  </th>
+);
+
+const renderCheckboxFilter = (key) => {
+  if (activeFilter !== key) return null;
+
+  return (
+    <div className="header-filter-popup">
+      <input
+        placeholder="Search..."
+        value={filterText}
+        onChange={(e) => setFilterText(e.target.value)}
+      />
+
+      <div className="filter-list">
+
+        {/* SELECT ALL */}
+        <label className="filter-checkbox">
+          <input
+            type="checkbox"
+            checked={
+              (selectedFilterValues[key] || []).length === headersuggestions?.length
+            }
+            onChange={(e) => {
+              if (e.target.checked) {
+                setSelectedFilterValues(prev => ({
+                  ...prev,
+                  [key]: headersuggestions
+                }));
+              } else {
+                setSelectedFilterValues(prev => ({
+                  ...prev,
+                  [key]: []
+                }));
+              }
+            }}
+          />
+          (Select All)
+        </label>
+
+        {/* OPTIONS */}
+        {headersuggestions?.map((s, i) => (
+          <label key={i} className="filter-checkbox">
+            <input
+              type="checkbox"
+              checked={
+                selectedFilterValues[key]?.includes(s) || false
+              }
+              onChange={(e) => {
+                let updated = selectedFilterValues[key] || [];
+
+                if (e.target.checked) {
+                  updated = [...updated, s];
+                } else {
+                  updated = updated.filter(v => v !== s);
+                }
+
+                setSelectedFilterValues(prev => ({
+                  ...prev,
+                  [key]: updated
+                }));
+              }}
+            />
+
+            {s}
+          </label>
+        ))}
+      </div>
+
+      <div className="filter-actions">
+        <button
+          onClick={() => {
+            setFilters(prev => ({
+              ...prev,
+              [key]:
+                (selectedFilterValues[key] || []).join(",")
+            }));
+
+            setActiveFilter(null);
+          }}
+        >
+          OK
+        </button>
+
+        <button
+          onClick={() => {
+            setActiveFilter(null);
+          }}
+        >
+          Cancel
+        </button>
+      </div>
+    </div>
+  );
+};
         return (
           <div className="leave-page">
           <div className="leave-header">
@@ -465,9 +589,15 @@ setBalances(prev => ({
             </div>
 
             {/* Apply Leave Button */}
-            {!showForm && (isEmployee || isHR) && (
-              <button className="apply-btn fixed-btn" onClick={() => setShowForm(true)}>Apply Leave</button>
-            )}
+           {/* Apply Leave Button */}
+{!showForm && (isEmployee || isManager || isHR) && (
+  <button
+    className="apply-btn fixed-btn"
+    onClick={() => setShowForm(true)}
+  >
+    Apply Leave
+  </button>
+)}
 
       {/* POLICY POPUP */}
             {showPolicy && (
@@ -643,374 +773,19 @@ setBalances(prev => ({
         <tr>
 
           {/* EMPLOYEE */}
-          <th>
-          <div className="th-with-filter fa-filter-wrapper">
-              Employee Name
-              <button
-                className="filter-icon-btn"
-                onClick={() => setActiveFilter("employeeName")}
-              >⏷</button>
-            </div>
+          {renderFilterHeader("Employee Name", "employeeName")}
+{renderFilterHeader("Emp ID", "empId")}
+      {renderFilterHeader("Department", "department")}
+{renderFilterHeader("Reporting Manager", "manager")}
 
-            {activeFilter === "employeeName" && (
-              <div className="header-filter-popup">
-              <input
-        placeholder="Search..."
-        value={filterText}
-        onChange={(e) => setFilterText(e.target.value)}
-        onKeyDown={(e) => {
-          if (e.key === "Enter") {
-            setFilters(prev => ({ ...prev, employee: filterText }));
-            setActiveFilter(null);
-            setFilterText("");
-          }
-        }}
-      />
-              <div className="filter-list">
-      {headersuggestions?.map((s, i) => (
-        <div
-          key={i}
-          className="filter-item"
-          onClick={() => {
-            setFilters(prev => ({ ...prev, employee: s }));
-            setActiveFilter(null);
-            setFilterText("");
-          }}
-        >
-          {s}
-        </div>
-      ))}
-    </div>
-              </div>
-            )}  
-          </th>
+        {renderFilterHeader("Leave Type", "leaveType")}
+        {renderFilterHeader("From", "from")}
 
-          <th>
-        <div className="th-with-filter">
-          Emp ID
-          <button
-            className="filter-icon-btn"
-            onClick={() => setActiveFilter("empId")}
-          >⏷</button>
-        </div>
+         {renderFilterHeader("To", "to")}
 
-      {activeFilter === "empId" && (
-      <div className="header-filter-popup">
-        <input
-          placeholder="Search..."
-          value={filterText}
-          onChange={(e) => setFilterText(e.target.value)}
-          onKeyDown={(e) => {
-            if (e.key === "Enter") {
-              setFilters(prev => ({ ...prev, empId: filterText }));
-              setActiveFilter(null);
-              setFilterText("");
-            }
-          }}
-        />
-
-        <div className="filter-list">
-          {headersuggestions?.map((s, i) => (
-            <div
-              key={i}
-              className="filter-item"
-              onClick={() => {
-                setFilters(prev => ({ ...prev, empId: s }));
-                setActiveFilter(null);
-                setFilterText("");
-              }}
-            >
-              {s}
-            </div>
-          ))}
-        </div>
-      </div>
-    )}
-      </th>
-      <th>
-        <div className="th-with-filter">
-          Department
-          <button
-            className="filter-icon-btn"
-            onClick={() => setActiveFilter("department")}
-          >⏷</button>
-        </div>
-
-      {activeFilter === "department" && (
-      <div className="header-filter-popup">
-        <input
-          placeholder="Search..."
-          value={filterText}
-          onChange={(e) => setFilterText(e.target.value)}
-          onKeyDown={(e) => {
-            if (e.key === "Enter") {
-              setFilters(prev => ({ ...prev, department: filterText }));
-              setActiveFilter(null);
-              setFilterText("");
-            }
-          }}
-        />
-
-        {/* ✅ ADD THIS EXACTLY HERE */}
-        <div className="filter-list">
-          {headersuggestions?.map((s, i) => (
-            <div
-              key={i}
-              className="filter-item"
-              onClick={() => {
-                setFilters(prev => ({ ...prev, department: s }));
-                setActiveFilter(null);
-                setFilterText("");
-              }}
-            >
-              {s}
-            </div>
-          ))}
-        </div>
-
-      </div>
-    )}
-      </th>
-      <th>
-        <div className="th-with-filter">
-          Reporting Manager
-          <button
-            className="filter-icon-btn"
-            onClick={() => setActiveFilter("manager")}
-          >⏷</button>
-        </div>
-
-        {activeFilter === "manager" && (
-          <div className="header-filter-popup">
-            <input
-              placeholder="Search..."
-              value={filterText}
-              onChange={(e) => setFilterText(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === "Enter") {
-                  setFilters(prev => ({ ...prev, manager: filterText }));
-                  setActiveFilter(null);
-                  setFilterText("");
-                }
-              }}
-            />
-            
-          </div>
-        )}
-      </th>
-
-          {/* LEAVE TYPE */}
-          <th>
-            <div className="th-with-filter">
-              Leave Type
-              <button
-                className="filter-icon-btn"
-                onClick={() => setActiveFilter("leaveType")}
-              >⏷</button>
-            </div>
-
-          {activeFilter === "leaveType" && (
-      <div className="header-filter-popup">
-        <input
-          placeholder="Search..."
-          value={filterText}
-          onChange={(e) => setFilterText(e.target.value)}
-          onKeyDown={(e) => {
-            if (e.key === "Enter") {
-              setFilters(prev => ({ ...prev, leaveType: filterText }));
-              setActiveFilter(null);
-              setFilterText("");
-            }
-          }}
-        />
-
-        <div className="filter-list">
-          {headersuggestions?.map((s, i) => (
-            <div
-              key={i}
-              className="filter-item"
-              onClick={() => {
-                setFilters(prev => ({ ...prev, leaveType: s }));
-                setActiveFilter(null);
-                setFilterText("");
-              }}
-            >
-              {s}
-            </div>
-          ))}
-        </div>
-      </div>
-    )}
-          </th>
-
-          {/* FROM */}
-          <th>
-            <div className="th-with-filter">
-              From
-              <button onClick={() => setActiveFilter("from")} className="filter-icon-btn">⏷</button>
-            </div>
-
-    {activeFilter === "from" && (
-  <div className="header-filter-popup">
-    <input
-      type="date"
-      value={filterText}
-      onChange={(e) => {
-        setFilterText(e.target.value);
-        setFilters(prev => ({
-          ...prev,
-          fromDate: e.target.value
-        }));
-      }}
-    />
-
-    <div className="filter-list">
-      {headersuggestions?.map((s, i) => (
-        <div
-          key={i}
-          className="filter-item"
-          onClick={() => {
-            setFilters(prev => ({
-              ...prev,
-              fromDate: s
-            }));
-
-            setActiveFilter(null);
-            setFilterText("");
-          }}
-        >
-          {s}
-        </div>
-      ))}
-    </div>
-  </div>
-)}
-          </th>
-
-          {/* TO */}
-          <th>
-            <div className="th-with-filter">
-              To
-              <button onClick={() => setActiveFilter("to")} className="filter-icon-btn">⏷</button>
-            </div>
-
-    {activeFilter === "to" && (
-  <div className="header-filter-popup">
-    <input
-      type="date"
-      value={filterText}
-      onChange={(e) => {
-        setFilterText(e.target.value);
-        setFilters(prev => ({
-          ...prev,
-          toDate: e.target.value
-        }));
-      }}
-    />
-
-    <div className="filter-list">
-      {headersuggestions?.map((s, i) => (
-        <div
-          key={i}
-          className="filter-item"
-          onClick={() => {
-            setFilters(prev => ({
-              ...prev,
-              toDate: s
-            }));
-
-            setActiveFilter(null);
-            setFilterText("");
-          }}
-        >
-          {s}
-        </div>
-      ))}
-    </div>
-  </div>
-)}
-          </th>
-
-          {/* STATUS */}
-          <th>
-            <div className="th-with-filter">
-              Status
-              <button onClick={() => setActiveFilter("status")} className="filter-icon-btn">⏷</button>
-            </div>
-
-    {activeFilter === "status" && (
-      <div className="header-filter-popup">
-        <input
-          value={filterText}
-          onChange={(e) => setFilterText(e.target.value)}
-          onKeyDown={(e) => {
-            if (e.key === "Enter") {
-              setFilters(prev => ({ ...prev, status: filterText }));
-              setActiveFilter(null);
-              setFilterText("");
-            }
-          }}
-        />
-
-        <div className="filter-list">
-          {headersuggestions?.map((s, i) => (
-            <div
-              key={i}
-              className="filter-item"
-              onClick={() => {
-                setFilters(prev => ({ ...prev, status: s }));
-                setActiveFilter(null);
-                setFilterText("");
-              }}
-            >
-              {s}
-            </div>
-          ))}
-        </div>
-      </div>
-    )}
-          </th>
-
+          {renderFilterHeader("Status", "status")}
           {/* COMMENTS */}
-          <th>
-            <div className="th-with-filter">
-              Comments
-              <button onClick={() => setActiveFilter("comments")} className="filter-icon-btn">⏷</button>
-            </div>
-
-            {activeFilter === "comments" && (
-      <div className="header-filter-popup">
-        <input
-          value={filterText}
-          onChange={(e) => setFilterText(e.target.value)}
-          onKeyDown={(e) => {
-            if (e.key === "Enter") {
-              setFilters(prev => ({ ...prev, comments: filterText }));
-              setActiveFilter(null);
-              setFilterText("");
-            }
-          }}
-        />
-
-        <div className="filter-list">
-          {headersuggestions?.map((s, i) => (
-            <div
-              key={i}
-              className="filter-item"
-              onClick={() => {
-                setFilters(prev => ({ ...prev, comments: s }));
-                setActiveFilter(null);
-                setFilterText("");
-              }}
-            >
-              {s}
-            </div>
-          ))}
-        </div>
-      </div>
-    )}
-          </th>
-
+{renderFilterHeader("Comments", "comments")}
         {isHR && <th>Actions</th>}
 
         </tr>

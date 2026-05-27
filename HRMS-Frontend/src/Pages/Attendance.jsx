@@ -34,6 +34,7 @@ export default function Attendance() {
   const [activeFilter, setActiveFilter] = useState(null);
   const [filterText, setFilterText] = useState("");
   const [filters, setFilters] = useState({});
+  const [tempSelected, setTempSelected] = useState([]);
   const popupRef = useRef();
 
   const [records, setRecords] = useState([]);
@@ -321,12 +322,19 @@ export default function Attendance() {
         )
       : records;
 
-  const getUnique = (key) => [...new Set(searchFiltered.map((r) => r[key]))];
+  const getUnique = (key) => [
+  ...new Set(searchFiltered.map((r) => r[key])),
+];
 
   const filteredRecordsFinal = searchFiltered
-    .filter((r) =>
-      Object.keys(filters).every((key) => r[key] === filters[key])
-    )
+   .filter((r) =>
+  Object.keys(filters).every((key) => {
+    if (Array.isArray(filters[key])) {
+      return filters[key].includes(r[key]);
+    }
+    return r[key] === filters[key];
+  })
+)
     .filter((r) => {
       if (!fromDate && !toDate) return true;
       const recordDate = new Date(r.date);
@@ -619,33 +627,98 @@ export default function Attendance() {
                   <div className={styles.header}>
                     {col.label}
                     {col.key !== "total" && (
-                      <span onClick={() => setActiveFilter(col.key)}>⏷</span>
+                     <span
+  onClick={() => {
+    setActiveFilter(col.key);
+
+    setTempSelected(
+      Array.isArray(filters[col.key])
+        ? filters[col.key]
+        : filters[col.key]
+        ? [filters[col.key]]
+        : []
+    );
+  }}
+>
+  ⏷
+</span>
                     )}
                   </div>
 
-                  {activeFilter === col.key && (
-                    <div ref={popupRef} className={styles.popup}>
-                      <input
-                        placeholder="Search..."
-                        value={filterText}
-                        onChange={(e) => setFilterText(e.target.value)}
-                      />
-                      <div className={styles.link}>
-                        {(suggestions || []).map((s) => (
-                          <div
-                            key={s}
-                            onClick={() => {
-                              setFilters({ ...filters, [col.key]: s });
-                              setActiveFilter(null);
-                              setFilterText("");
-                            }}
-                          >
-                            {s}
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  )}
+                 {activeFilter === col.key && (
+  <div ref={popupRef} className={styles.popup}>
+    <input
+      placeholder="Search..."
+      value={filterText}
+      onChange={(e) => setFilterText(e.target.value)}
+    />
+
+    <div className={styles.link}>
+      <label className={styles.filterOption}>
+        <input
+          type="checkbox"
+          checked={
+            tempSelected.length === getUnique(col.key).length
+          }
+          onChange={(e) => {
+            if (e.target.checked) {
+              setTempSelected(getUnique(col.key));
+            } else {
+              setTempSelected([]);
+            }
+          }}
+        />
+        (Select All)
+      </label>
+
+      {(suggestions || []).map((s) => (
+        <label key={s} className={styles.filterOption}>
+          <input
+            type="checkbox"
+            checked={tempSelected.includes(s)}
+            onChange={(e) => {
+              if (e.target.checked) {
+                setTempSelected([...tempSelected, s]);
+              } else {
+                setTempSelected(
+                  tempSelected.filter((item) => item !== s)
+                );
+              }
+            }}
+          />
+          {s}
+        </label>
+      ))}
+    </div>
+
+    <div className={styles.filterActions}>
+      <button
+        className={styles.okBtn}
+        onClick={() => {
+          setFilters({
+            ...filters,
+            [col.key]: tempSelected,
+          });
+
+          setActiveFilter(null);
+          setFilterText("");
+        }}
+      >
+        OK
+      </button>
+
+      <button
+        className={styles.cancelBtn}
+        onClick={() => {
+          setActiveFilter(null);
+          setFilterText("");
+        }}
+      >
+        Cancel
+      </button>
+    </div>
+  </div>
+)}
                 </th>
               ))}
             </tr>

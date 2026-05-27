@@ -193,9 +193,16 @@ export default function TimesheetManager() {
   const getUnique = (col) => [...new Set(records.map((r) => r[col]))];
 
   const filtered = records.filter((r) => {
-    const matchesFilter = Object.keys(filters).every(
-      (key) => !filters[key] || r[key] === filters[key]
-    );
+   const matchesFilter = Object.keys(filters).every((key) => {
+  if (!filters[key]) return true;
+
+  // checkbox multi select filter
+  if (Array.isArray(filters[key])) {
+    return filters[key].includes(r[key]);
+  }
+
+  return r[key] === filters[key];
+});
 
     if (filters.fromMonth && r.month < filters.fromMonth) return false;
     if (filters.toMonth && r.month > filters.toMonth) return false;
@@ -509,11 +516,21 @@ export default function TimesheetManager() {
           <thead>
             <tr>
               {cols.map((c) => (
-                <th key={c.key}>
+                <th
+  key={c.key}
+  className={activeFilter === c.key ? styles.activeTh : ""}
+>
                   <div className={styles.header}>
                     {c.label}
                     {c.key !== "status" && (
-                      <span onClick={() => setActiveFilter(c.key)}>⏷</span>
+                     <span
+  className={styles.filterIcon}
+  onClick={() =>
+    setActiveFilter(activeFilter === c.key ? null : c.key)
+  }
+>
+  ▼
+</span>
                     )}
                   </div>
 
@@ -555,27 +572,85 @@ export default function TimesheetManager() {
                         </div>
                       ) : (
                         <>
-                          <input
-                            placeholder="Search..."
-                            value={filterText}
-                            onChange={(e) => setFilterText(e.target.value)}
-                          />
+  <input
+    className={styles.excelSearch}
+    placeholder="Search"
+    value={filterText}
+    onChange={(e) => setFilterText(e.target.value)}
+  />
 
-                          <div className={styles.list}>
-                            {suggestions.map((s) => (
-                              <div
-                                key={s}
-                                onClick={() => {
-                                  setFilters({ ...filters, [c.key]: s });
-                                  setActiveFilter(null);
-                                  setFilterText("");
-                                }}
-                              >
-                                {s}
-                              </div>
-                            ))}
-                          </div>
-                        </>
+  <div className={styles.excelList}>
+    {/* SELECT ALL */}
+    <label className={styles.excelItem}>
+      <input
+        type="checkbox"
+        checked={!filters[c.key] || filters[c.key]?.length === suggestions.length}
+        onChange={(e) => {
+          if (e.target.checked) {
+            setFilters({
+              ...filters,
+              [c.key]: suggestions,
+            });
+          } else {
+            setFilters({
+              ...filters,
+              [c.key]: [],
+            });
+          }
+        }}
+      />
+      <span>(Select All)</span>
+    </label>
+
+    {/* OPTIONS */}
+    {suggestions.map((s) => {
+      const selectedValues = filters[c.key] || suggestions;
+
+      return (
+        <label key={s} className={styles.excelItem}>
+          <input
+            type="checkbox"
+            checked={selectedValues.includes(s)}
+            onChange={(e) => {
+              let updated = [...selectedValues];
+
+              if (e.target.checked) {
+                updated.push(s);
+              } else {
+                updated = updated.filter((v) => v !== s);
+              }
+
+              setFilters({
+                ...filters,
+                [c.key]: updated,
+              });
+            }}
+          />
+          <span>{s}</span>
+        </label>
+      );
+    })}
+  </div>
+
+  <div className={styles.excelActions}>
+    <button onClick={() => setActiveFilter(null)}>
+      OK
+    </button>
+
+    <button
+      onClick={() => {
+        const newFilters = { ...filters };
+        delete newFilters[c.key];
+
+        setFilters(newFilters);
+        setActiveFilter(null);
+      }}
+    >
+      Cancel
+    </button>
+  </div>
+</>
+                          
                       )}
                     </div>
                   )}

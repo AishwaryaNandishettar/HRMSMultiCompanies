@@ -726,3 +726,128 @@
 .taskPage-thHeader span {
   color: #fff !important;
 }
+.taskPage-filterSearch {
+  width: 100%;
+  padding: 7px 10px;
+  border: 1px solid #dcdfe4;
+  border-radius: 6px;
+  margin-bottom: 10px;
+  font-size: 13px;
+  outline: none;
+}
+
+.taskPage-filterCheckboxList {
+  max-height: 220px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.taskPage-filterItem {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 5px 4px;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.taskPage-filterItem input[type="checkbox"] {
+  cursor: pointer;
+}
+
+.taskPage-filterActions {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  margin-top: 12px;
+}
+
+.taskPage-filterActions button {
+  flex: 1;
+  border: none;
+  padding: 7px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 600;
+}
+.taskPage-filterPopup {
+  position: absolute;
+  top: 42px;
+  left: 0;
+  z-index: 99999;
+  background: #fff;
+  border: 1px solid #dcdfe4;
+  border-radius: 8px;
+  width: 240px;
+  box-shadow: 0 6px 18px rgba(0,0,0,0.15);
+  padding: 10px;
+}
+
+.taskPage-filterList {
+  max-height: 220px;
+  overflow-y: auto;
+  margin-top: 8px;
+}
+
+.taskPage-filterItem {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 4px;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+.taskPage-filterItem input {
+  cursor: pointer;
+}
+
+.taskPage-filterActions {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 10px;
+}
+
+.taskPage-filterActions button {
+  padding: 5px 12px;
+  border: 1px solid #d0d7de;
+  background: #fff;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+.taskPage-table th {
+  position: relative;
+  overflow: visible !important;
+}
+
+.taskPage-tableContainer {
+  overflow: auto;
+}
+
+.taskPage-tableWrapper {
+  overflow: visible !important;
+}
+.taskPage-table th {
+  position: relative;
+  overflow: visible !important;
+}
+
+.taskPage-table td {
+  overflow: visible !important;
+}
+
+.taskPage-tableContainer {
+  overflow: auto;
+}
+
+.taskPage-filterPopup {
+  position: absolute;
+  top: 42px;
+  left: 0;
+  z-index: 99999;
+  background: #fff !important;
+}

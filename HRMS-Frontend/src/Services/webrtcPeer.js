@@ -77,7 +77,7 @@ class WebRTCPeer {
     
     // Add local stream tracks to this peer connection
     if (this.localStream) {
-      this.localStream.getTracks().forEach(track => {
+      (this.localStream?.getTracks() || []).forEach(track => {
         console.log(`➕ Adding ${track.kind} track to peer connection for ${participantEmail}`);
         peerConnection.addTrack(track, this.localStream);
       });
@@ -305,13 +305,13 @@ class WebRTCPeer {
         }
       }
       
-      // Add tracks to peer connection
-      if (this.peerConnection) {
-        this.localStream.getTracks().forEach(track => {
-          console.log(`➕ Adding ${track.kind} track to peer connection`);
-          this.peerConnection.addTrack(track, this.localStream);
-        });
-      }
+    // Add tracks to ALL existing peer connections
+this.peerConnections.forEach((peerConnection, participantEmail) => {
+  this.localStream.getTracks().forEach(track => {
+    console.log(`➕ Adding ${track.kind} track to peer connection for ${participantEmail}`);
+    peerConnection.addTrack(track, this.localStream);
+  });
+});
       
       console.log('✅ Local media started successfully');
       console.log('📊 Stream info:', {
@@ -393,7 +393,11 @@ class WebRTCPeer {
   async handleOffer(participantEmail, offerSdp) {
     try {
       console.log(`📞 Handling incoming offer from ${participantEmail}...`);
-      
+      // Ensure receiver has local media before answering
+if (!this.localStream) {
+  console.log('🎥 Receiver local media not found. Starting media...');
+  await this.startLocalMedia('video');
+}
       let peerConnection = this.peerConnections.get(participantEmail);
       if (!peerConnection) {
         peerConnection = this.createPeerConnection(participantEmail);

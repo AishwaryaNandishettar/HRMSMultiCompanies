@@ -180,7 +180,7 @@ export const uploadGroupFile = async (groupId, formData, token) => {
 };
 export const fetchUnreadUsersCount = async (email, token) => {
   const res = await axios.get(
-    `${import.meta.env.VITE_API_BASE_URL}/api/chat/unread-users-count?email=${email}`,
+    `${import.meta.env.VITE_API_BASE_URL}/api/chat/unread-users-count?userEmail=${email}`,
     {
       headers: { Authorization: `Bearer ${token}` },
     }
@@ -190,7 +190,7 @@ export const fetchUnreadUsersCount = async (email, token) => {
 
 export const fetchUnreadMessagesPerUser = async (email, token) => {
   const res = await axios.get(
-    `${import.meta.env.VITE_API_BASE_URL}/api/chat/unread-per-user?email=${email}`,
+    `${import.meta.env.VITE_API_BASE_URL}/api/chat/unread-per-user?userEmail=${email}`,
     {
       headers: { Authorization: `Bearer ${token}` },
     }

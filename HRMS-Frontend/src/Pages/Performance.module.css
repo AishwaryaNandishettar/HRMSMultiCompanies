@@ -162,3 +162,63 @@ background: linear-gradient(135deg, #93c5fd, #60a5fa);}
 .table tbody tr:hover {
   background: #f9fafb;
 }
+/* =========================================================
+   MOBILE FIX - STOP WHOLE PAGE HORIZONTAL SCROLL
+========================================================= */
+
+@media (max-width: 768px) {
+
+  html,
+  body {
+    width: 100%;
+    overflow-x: hidden !important;
+  }
+
+  .container {
+    width: 100%;
+    max-width: 100%;
+    overflow-x: hidden !important;
+
+    padding: 12px !important;
+
+    box-sizing: border-box;
+  }
+
+  /* KPI CARDS */
+  .kpiRow {
+    grid-template-columns: 1fr !important;
+    gap: 12px;
+  }
+
+  .kpiCard {
+    width: 100%;
+    min-width: 0;
+  }
+
+  /* CARD FIX */
+  .card {
+    width: 100%;
+    max-width: 100%;
+
+    overflow-x: auto !important;
+
+    box-sizing: border-box;
+  }
+
+  /* TABLE SCROLL INSIDE CARD ONLY */
+  .table {
+    min-width: 700px;
+    width: max-content;
+  }
+
+  /* PREVENT PAGE STRETCH */
+  .table th,
+  .table td {
+    white-space: nowrap;
+  }
+
+  /* BUTTON */
+  .viewBtn {
+    width: 100%;
+  }
+}

@@ -131,6 +131,10 @@ const [showNotif, setShowNotif] = useState(false);
                 }
               />
 
+<Route
+  path="/personal-insurance"
+  element={<PersonalInsurance />}
+/>
   {/* 👇 ADD EMPLOYEE ROUTE HERE */}
   <Route
     path="/employees"
@@ -366,7 +370,7 @@ const [showNotif, setShowNotif] = useState(false);
               <Route
                 path="/settings"
                 element={
-                  <ProtectedRoute roles={["admin"]}>
+                   <ProtectedRoute roles={["employee", "manager", "admin"]}>
                     <Settings />
                   </ProtectedRoute>
                 }
@@ -375,7 +379,7 @@ const [showNotif, setShowNotif] = useState(false);
               <Route
                 path="/cibil-check"
                 element={
-                  <ProtectedRoute roles={["admin"]}>
+                  <ProtectedRoute roles={["employee", "manager", "admin"]}>
                     <CibilCheck />
                   </ProtectedRoute>
                 }
@@ -384,7 +388,7 @@ const [showNotif, setShowNotif] = useState(false);
               <Route
                 path="/loan-application"
                 element={
-                  <ProtectedRoute roles={["admin"]}>
+                  <ProtectedRoute roles={["employee", "manager", "admin"]}>
                     <LoanApplication />
                   </ProtectedRoute>
                 }

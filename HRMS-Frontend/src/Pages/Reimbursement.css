@@ -966,3 +966,181 @@
   color: #fff !important;
 }
 
+/* =========================================================
+   EXCEL STYLE FILTER POPUP
+========================================================= */
+
+.insurance-container .excel-filter-popup {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  width: 260px;
+  background: #f3f3f3;
+  border: 1px solid #bfbfbf;
+  z-index: 99999;
+  box-shadow: 0 3px 10px rgba(0,0,0,0.2);
+  padding: 0;
+  border-radius: 2px;
+  color: #222;
+}
+
+.insurance-container .excel-filter-search {
+  width: calc(100% - 20px);
+  margin: 10px;
+  padding: 6px 8px;
+  border: 1px solid #bcbcbc;
+  font-size: 13px;
+  outline: none;
+  background: white;
+  box-sizing: border-box;
+}
+
+.insurance-container .excel-checkbox-list {
+  max-height: 220px;
+  overflow-y: auto;
+  padding: 0 10px 10px;
+  background: white;
+  border-top: 1px solid #ddd;
+  border-bottom: 1px solid #ddd;
+}
+
+.insurance-container .excel-checkbox-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 5px 2px;
+  font-size: 13px;
+  cursor: pointer;
+  color: #111;
+}
+
+.insurance-container .excel-checkbox-item input {
+  cursor: pointer;
+}
+
+.insurance-container .excel-filter-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  padding: 10px;
+  background: #f3f3f3;
+}
+
+.insurance-container .excel-ok-btn,
+.insurance-container .excel-cancel-btn {
+  min-width: 70px;
+  padding: 6px 12px;
+  border: 1px solid #a9a9a9;
+  background: white;
+  cursor: pointer;
+  font-size: 13px;
+  border-radius: 2px;
+}
+
+.insurance-container .excel-ok-btn:hover,
+.insurance-container .excel-cancel-btn:hover {
+  background: #e6f0ff;
+}
+/* =========================================================
+   FILTER POPUP ABOVE STICKY COLUMNS FIX
+========================================================= */
+
+/* header cell should allow popup overflow */
+.insurance-container .table-header-cell {
+  position: relative;
+  overflow: visible !important;
+}
+
+/* popup must stay above frozen columns */
+.insurance-container .excel-filter-popup {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  z-index: 999999 !important;
+  overflow: visible !important;
+}
+
+/* reduce sticky column z-index slightly */
+.insurance-container .claim-table th:nth-child(1),
+.insurance-container .claim-table td:nth-child(1),
+.insurance-container .claim-table th:nth-child(2),
+.insurance-container .claim-table td:nth-child(2) {
+  z-index: 50 !important;
+}
+
+/* keep header still above body */
+.insurance-container .claim-table thead th {
+  z-index: 60 !important;
+}
+/* =========================================================
+   MOBILE STICKY COLUMN WIDTH FIX
+========================================================= */
+
+@media (max-width: 768px) {
+
+  /* prevent full page horizontal scroll */
+  html,
+  body {
+    overflow-x: hidden !important;
+  }
+
+  .insurance-container {
+    overflow-x: hidden;
+    width: 100%;
+    padding: 8px;
+    box-sizing: border-box;
+  }
+
+  /* ONLY table scrolls */
+  .insurance-container .table-wrapper {
+    overflow-x: auto !important;
+    overflow-y: auto !important;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  /* ===============================
+     STICKY COLUMN 1 SMALLER
+  =============================== */
+
+  .insurance-container .claim-table th:nth-child(1),
+  .insurance-container .claim-table td:nth-child(1) {
+    min-width: 95px !important;
+    width: 95px !important;
+    max-width: 95px !important;
+    left: 0 !important;
+    font-size: 11px;
+    padding: 8px 6px !important;
+  }
+
+  /* ===============================
+     STICKY COLUMN 2 SMALLER
+  =============================== */
+
+  .insurance-container .claim-table th:nth-child(2),
+  .insurance-container .claim-table td:nth-child(2) {
+    min-width: 110px !important;
+    width: 110px !important;
+    max-width: 110px !important;
+    left: 95px !important;
+    font-size: 11px;
+    padding: 8px 6px !important;
+  }
+
+  /* ===============================
+     3RD COLUMN ONWARDS
+  =============================== */
+
+  .insurance-container .claim-table th:nth-child(n+3),
+  .insurance-container .claim-table td:nth-child(n+3) {
+    min-width: 120px !important;
+    width: 120px !important;
+    font-size: 11px;
+  }
+
+  /* keep sticky headers */
+  .insurance-container .claim-table thead th {
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+}

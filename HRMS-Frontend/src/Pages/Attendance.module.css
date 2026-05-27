@@ -583,3 +583,150 @@ button {
 .attendanceContainer .popup li:hover {
   background: #eff6ff;
 }
+.filterOption {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 6px;
+  font-size: 13px;
+  cursor: pointer;
+}
+.link {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.filterActions {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  padding: 10px 0 4px;
+}
+
+.okBtn,
+.cancelBtn {
+  border: none;
+  padding: 6px 14px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.okBtn {
+  background: #1f3b82;
+  color: white;
+}
+
+.cancelBtn {
+  background: #e5e7eb;
+}
+
+/* =========================================
+   TIMESHEET HEADER FILTER ALIGNMENT FIX
+========================================= */
+
+/* filter popup row */
+.timesheetPage-table .p-multiselect-item {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: flex-start !important;
+  gap: 8px !important;
+
+  padding: 6px 10px !important;
+  min-height: 32px !important;
+
+  white-space: nowrap !important;
+}
+
+/* checkbox wrapper */
+.timesheetPage-table .p-checkbox {
+  flex: 0 0 16px !important;
+
+  width: 16px !important;
+  height: 16px !important;
+
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+
+  margin: 0 !important;
+  padding: 0 !important;
+}
+
+/* actual checkbox box */
+.timesheetPage-table .p-checkbox-box {
+  width: 16px !important;
+  height: 16px !important;
+
+  margin: 0 !important;
+}
+
+/* label text */
+.timesheetPage-table .p-multiselect-item-label {
+  flex: 1 !important;
+
+  text-align: left !important;
+
+  font-size: 12px !important;
+  line-height: 16px !important;
+
+  margin: 0 !important;
+  padding: 0 !important;
+}
+
+/* remove extra spacing causing zig-zag */
+.timesheetPage-table .p-checkbox-input {
+  margin: 0 !important;
+  padding: 0 !important;
+}
+
+/* search box spacing */
+.timesheetPage-table .p-multiselect-header {
+  padding: 8px !important;
+}
+@media (max-width: 768px) {
+
+  /* reduce frozen column widths in mobile */
+
+  .attendanceContainer table th:nth-child(1),
+  .attendanceContainer table td:nth-child(1) {
+    width: 90px !important;
+    min-width: 90px !important;
+    max-width: 90px !important;
+  }
+
+  .attendanceContainer table th:nth-child(2),
+  .attendanceContainer table td:nth-child(2) {
+    width: 120px !important;
+    min-width: 120px !important;
+    max-width: 120px !important;
+
+    left: 90px !important;
+  }
+
+  /* smaller remaining columns */
+
+  .attendanceContainer table th:nth-child(n+3),
+  .attendanceContainer table td:nth-child(n+3) {
+    min-width: 110px !important;
+  }
+
+  /* compact text */
+
+  .attendanceContainer table th,
+  .attendanceContainer table td {
+    font-size: 10px !important;
+    padding: 6px !important;
+  }
+
+  /* wrapper fix */
+
+  .attendanceContainer .tableWrapper {
+    overflow-x: auto !important;
+    overflow-y: auto !important;
+
+    -webkit-overflow-scrolling: touch;
+  }
+}

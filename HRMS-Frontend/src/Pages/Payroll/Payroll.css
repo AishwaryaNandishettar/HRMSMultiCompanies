@@ -1319,12 +1319,6 @@ body {
   overflow-x: hidden;
 }
 
-/* Main page */
-.payroll-page,
-.page-wrapper {
-  height: 100vh;
-  overflow: hidden;   /* IMPORTANT */
-}
 
 /* Layout */
 .payroll-content {
@@ -1768,4 +1762,260 @@ body {
   text-align: center;
   color: #888;
   font-size: 13px;
+}
+/* =========================================================
+   MOBILE FIX - SHOW 3RD COLUMN WITH HORIZONTAL SCROLL
+========================================================= */
+
+@media (max-width: 768px) {
+
+  /* Page should not create full-page horizontal scroll */
+  html,
+  body,
+  .payroll-page,
+  .page-wrapper {
+    overflow-x: hidden !important;
+    width: 100%;
+  }
+
+  /* Stack layout properly */
+  .payroll-content {
+    flex-direction: column;
+    gap: 14px;
+  }
+
+  .payroll-right {
+    width: 100%;
+  }
+
+  /* IMPORTANT:
+     Only table area should scroll horizontally */
+  .payroll-table-container,
+  .payroll-table-wrapper {
+    width: 100%;
+    overflow-x: auto !important;
+    overflow-y: hidden !important;
+
+    -webkit-overflow-scrolling: touch;
+
+    border-radius: 12px;
+  }
+
+  /* Keep table wider than mobile screen */
+  .payroll-table {
+    min-width: 950px !important;
+    width: max-content;
+  }
+
+  /* Reduce frozen column widths for mobile */
+  .payroll-table th:nth-child(1),
+  .payroll-table td:nth-child(1) {
+    min-width: 85px;
+    width: 85px;
+  }
+
+  .payroll-table th:nth-child(2),
+  .payroll-table td:nth-child(2) {
+    left: 85px;
+    min-width: 150px;
+    width: 150px;
+  }
+
+  /* 3rd column onwards */
+  .payroll-table th:nth-child(n+3),
+  .payroll-table td:nth-child(n+3) {
+    min-width: 130px;
+  }
+
+  /* Toolbar responsive */
+  .payroll-toolbar {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+  }
+
+  .payroll-toolbar input,
+  .payroll-toolbar select,
+  .payroll-toolbar button {
+    flex-shrink: 0;
+  }
+
+  /* KPI cards */
+  .kpi-row,
+  .payroll-stats {
+    grid-template-columns: 1fr;
+  }
+
+  /* Footer */
+  .payroll-footer {
+    flex-direction: column;
+    gap: 10px;
+    align-items: flex-start;
+  }
+}
+/* =========================================================
+   MOBILE TABLE SCROLL FIX
+========================================================= */
+@media (max-width: 768px) {
+
+  /* allow mobile horizontal gesture */
+  html,
+  body {
+    overflow-x: hidden;
+    overflow-y: auto;
+    touch-action: pan-y;
+  }
+
+  /* DO NOT block table scroll */
+  .page-wrapper {
+    overflow: visible !important;
+    max-height: unset !important;
+    height: auto !important;
+  }
+
+  /* payroll section */
+  .payroll-content {
+    flex-direction: column;
+    width: 100%;
+    min-width: 0;
+  }
+
+  .payroll-left {
+    width: 100%;
+    min-width: 0;
+    overflow: hidden;
+  }
+
+  /* ONLY THIS AREA SHOULD SCROLL */
+  .payroll-table-container,
+  .payroll-table-wrapper {
+    width: 100%;
+    max-width: 100%;
+
+    overflow-x: auto !important;
+    overflow-y: auto !important;
+
+    -webkit-overflow-scrolling: touch;
+    touch-action: pan-x pan-y;
+
+    position: relative;
+  }
+
+  /* important for mobile horizontal scroll */
+  .payroll-table {
+    min-width: 1200px !important;
+    width: max-content !important;
+  }
+
+  /* stop parent from stealing touch */
+  .payroll-page,
+  .payroll-left,
+  .payroll-content {
+    overscroll-behavior: contain;
+  }
+}
+/* =========================================================
+   MOBILE TABLE COLUMN WIDTH FIX
+========================================================= */
+@media (max-width: 768px) {
+
+  /* smaller sticky columns */
+  .payroll-table th:nth-child(1),
+  .payroll-table td:nth-child(1) {
+    min-width: 80px !important;
+    width: 80px !important;
+    max-width: 80px !important;
+
+    font-size: 11px;
+    padding: 10px 6px;
+  }
+
+  .payroll-table th:nth-child(2),
+  .payroll-table td:nth-child(2) {
+    left: 80px !important;
+
+    min-width: 120px !important;
+    width: 120px !important;
+    max-width: 120px !important;
+
+    font-size: 11px;
+    padding: 10px 6px;
+  }
+
+  /* proper width for remaining columns */
+  .payroll-table th:nth-child(n+3),
+  .payroll-table td:nth-child(n+3) {
+    min-width: 110px !important;
+    width: 110px !important;
+
+    font-size: 11px;
+    padding: 10px 8px;
+  }
+
+  /* compact employee cell */
+  .emp-cell {
+    gap: 4px;
+  }
+
+  .emp-cell img {
+    width: 22px;
+    height: 22px;
+  }
+
+  /* prevent text breaking badly */
+  .payroll-table td,
+  .payroll-table th {
+    white-space: nowrap;
+  }
+
+  /* smoother scroll */
+  .payroll-table-container,
+  .payroll-table-wrapper {
+    scroll-behavior: smooth;
+  }
+}
+/* =========================================================
+   MOBILE VERTICAL SCROLL FIX
+========================================================= */
+@media (max-width: 768px) {
+
+  /* allow full mobile page scroll */
+  html,
+  body {
+    height: auto !important;
+    overflow-y: auto !important;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  /* remove fixed scroll area */
+  .page-wrapper {
+    max-height: none !important;
+    height: auto !important;
+    overflow: visible !important;
+  }
+
+  /* page should scroll naturally */
+  .payroll-page {
+    height: auto !important;
+    overflow: visible !important;
+  }
+
+  .payroll-content {
+    height: auto !important;
+    overflow: visible !important;
+  }
+
+  .payroll-left,
+  .payroll-right {
+    overflow: visible !important;
+    height: auto !important;
+  }
+
+  /* ONLY table gets horizontal scroll */
+  .payroll-table-container,
+  .payroll-table-wrapper {
+    overflow-x: auto !important;
+    overflow-y: visible !important;
+
+    -webkit-overflow-scrolling: touch;
+  }
 }

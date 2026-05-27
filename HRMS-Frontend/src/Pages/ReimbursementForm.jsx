@@ -595,32 +595,86 @@ const filteredData = requests.filter((r) => {
   </span>
 
         {activeFilter === col.key && (
-          <div className="filter-popup" ref={popupRef}>
-            <input
-              type="text"
-              placeholder="Search..."
-              value={filterText}
-              onChange={(e) => setFilterText(e.target.value)}
-            />
+  <div className="excel-filter-popup" ref={popupRef}>
 
-            <div className="filter-list">
-              {suggestions.map((val, i) => (
-                <div
-                  key={i}
-                  onClick={() => {
-                    setFilters({
-                      ...filters,
-                      [col.key]: val
-                    });
-                    setActiveFilter(null);
-                  }}
-                >
-                  {val || "Empty"}
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
+    {/* SEARCH */}
+    <input
+      type="text"
+      className="excel-filter-search"
+      placeholder="Search"
+      value={filterText}
+      onChange={(e) => setFilterText(e.target.value)}
+      onClick={(e) => e.stopPropagation()}
+    />
+
+    {/* CHECKBOX LIST */}
+    <div className="excel-checkbox-list">
+
+      {/* SELECT ALL */}
+      <label className="excel-checkbox-item">
+        <input
+          type="checkbox"
+          checked={!filters[col.key]}
+          onChange={() => {
+            setFilters({
+              ...filters,
+              [col.key]: ""
+            });
+          }}
+        />
+        (Select All)
+      </label>
+
+      {/* VALUES */}
+      {suggestions.map((val, i) => (
+        <label
+          key={i}
+          className="excel-checkbox-item"
+        >
+          <input
+            type="checkbox"
+            checked={filters[col.key] === val}
+            onChange={() => {
+              setFilters({
+                ...filters,
+                [col.key]:
+                  filters[col.key] === val
+                    ? ""
+                    : val
+              });
+            }}
+          />
+
+          {val || "Empty"}
+        </label>
+      ))}
+    </div>
+
+    {/* FOOTER */}
+    <div className="excel-filter-footer">
+      <button
+        className="excel-ok-btn"
+        onClick={() => setActiveFilter(null)}
+      >
+        OK
+      </button>
+
+      <button
+        className="excel-cancel-btn"
+        onClick={() => {
+          setFilters({
+            ...filters,
+            [col.key]: ""
+          });
+
+          setActiveFilter(null);
+        }}
+      >
+        Cancel
+      </button>
+    </div>
+  </div>
+)}
       </th>
     ))}
 

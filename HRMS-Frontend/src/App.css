@@ -4,14 +4,9 @@
   padding: 0;
   box-sizing: border-box;
 }
-/* ADD THIS HERE ↓↓↓ */
-body {
-  overflow-x: hidden;
-}
 
-input, button {
-  max-width: 100%;
-}
+
+
 /* ================= APP LAYOUT ================= */
 
 .app-container {
@@ -186,7 +181,119 @@ html, body {
     -webkit-overflow-scrolling: touch;
   }
 
+
+}
+/* =========================================
+   FINAL UNIVERSAL MOBILE SIDEBAR FIX
+   WORKS FOR ALL MOBILE DEVICES
+========================================= */
+
+@media screen and (max-width: 768px) {
+
+  /* SIDEBAR WIDTH */
+  .sidebar {
+    position: fixed !important;
+
+    top: 0 !important;
+    left: -320px !important;
+
+    width: 320px !important;
+    min-width: 320px !important;
+    max-width: 320px !important;
+
+    height: 100dvh !important;
+
+    overflow-y: auto !important;
+    overflow-x: visible !important;
+
+    z-index: 9999 !important;
+  }
+
+  .sidebar.open {
+    left: 0 !important;
+  }
+
+  /* LOGO + TITLE AREA */
+  .sidebar-header,
+  .sidebarTop,
+  .sidebar-top {
+    width: 100% !important;
+
+    display: flex !important;
+    align-items: center !important;
+
+    padding-left: 18px !important;
+    padding-right: 55px !important;
+
+    overflow: visible !important;
+  }
+
+  /* EMPLOYEE PORTAL TITLE */
+  .sidebarTitle,
+  .sidebar .sidebarTitle,
+  .sidebar h1,
+  .sidebar h2 {
+
+    display: block !important;
+
+    font-size: 28px !important;
+    font-weight: 700 !important;
+
+    line-height: 1.2 !important;
+
+    white-space: nowrap !important;
+
+    overflow: visible !important;
+    text-overflow: unset !important;
+
+    max-width: none !important;
+    width: auto !important;
+
+    color: #00d9ff !important;
+
+    margin-left: 0 !important;
+    padding-left: 0 !important;
+
+    position: relative !important;
+    z-index: 10000 !important;
+  }
+
+  /* TOGGLE BUTTON */
+  .toggleBtn,
+  .sidebar-toggle {
+    position: absolute !important;
+
+    top: 16px !important;
+    right: 14px !important;
+
+    z-index: 11000 !important;
+  }
+
+  /* MENU */
+  .sidebarMenu,
+  .sidebar-menu {
+    margin-top: 14px !important;
+  }
+
+  /* CONTENT AREA */
+  .content-area {
+    width: 100% !important;
+    min-width: 0 !important;
+  }
+
+  /* PAGE CONTENT */
+  .page-content {
+    overflow-x: auto !important;
+    -webkit-overflow-scrolling: touch !important;
+  }
+
+  /* TABLE FIX */
   table {
-    min-width: 700px; /* prevents table crushing */
+    min-width: 700px !important;
+  }
+
+  .table-wrapper {
+    overflow-x: auto !important;
+    -webkit-overflow-scrolling: touch !important;
   }
 }

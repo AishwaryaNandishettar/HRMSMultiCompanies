@@ -40,7 +40,11 @@ useEffect(() => {
   const [filterText, setFilterText] = useState("");
   const popupRef = useRef();
   const [claims, setClaims] = useState([]);
-
+const [selectedFilterValues, setSelectedFilterValues] = useState({});
+const [sortConfig, setSortConfig] = useState({
+  key: "",
+  direction: ""
+});
  const getUnique = (key) => {
   return [
     ...new Set(
@@ -54,6 +58,70 @@ useEffect(() => {
   ];
 };
 
+const handleCheckboxChange = (column, value) => {
+  setSelectedFilterValues((prev) => {
+    const current = prev[column] || [];
+
+    if (current.includes(value)) {
+      return {
+        ...prev,
+        [column]: current.filter((v) => v !== value)
+      };
+    }
+
+    return {
+      ...prev,
+      [column]: [...current, value]
+    };
+  });
+};
+
+const handleSelectAll = (column, values) => {
+  setSelectedFilterValues((prev) => ({
+    ...prev,
+    [column]: [...values]
+  }));
+};
+
+const applyExcelFilter = (column) => {
+  const values = selectedFilterValues[column] || [];
+
+  setFilters({
+    ...filters,
+    [column]: values
+  });
+
+  setActiveFilter(null);
+};
+
+const clearExcelFilter = (column) => {
+  setFilters({
+    ...filters,
+    [column]: []
+  });
+
+  setSelectedFilterValues({
+    ...selectedFilterValues,
+    [column]: []
+  });
+};
+
+const sortColumn = (key, direction) => {
+  setSortConfig({ key, direction });
+
+  const sorted = [...claims].sort((a, b) => {
+    const valA = String(a[key] || "").toLowerCase();
+    const valB = String(b[key] || "").toLowerCase();
+
+    if (direction === "asc") {
+      return valA.localeCompare(valB);
+    }
+
+    return valB.localeCompare(valA);
+  });
+
+  setClaims(sorted);
+};
   const [role, setRole] = useState("");
 
   useEffect(() => {
@@ -256,13 +324,22 @@ useEffect(() => {
 
   // COLUMN FILTERS (HEADER DROPDOWN FILTERS)
   return Object.keys(filters).every((key) => {
-    if (!filters[key]) return true;
+    if (
+  !filters[key] ||
+  (Array.isArray(filters[key]) && filters[key].length === 0)
+) {
+  return true;
+}
 
-    const value = claim?.[key] ?? claim?.[normalizeKey(key)];
+const value = claim?.[key] ?? claim?.[normalizeKey(key)];
 
-    return String(value ?? "")
-      .toLowerCase()
-      .includes(filters[key].toLowerCase());
+if (Array.isArray(filters[key])) {
+  return filters[key].includes(value);
+}
+
+return String(value ?? "")
+  .toLowerCase()
+  .includes(String(filters[key]).toLowerCase());
   });
 });
   return (
@@ -488,34 +565,169 @@ useEffect(() => {
   <div className="grid-header">
     <div className="cell sticky col-1 table-header-cell" onClick={() => { setActiveFilter("id"); setFilterText(""); }}>
       <span className="header-label">Employee ID ⏷</span>
-      {activeFilter === "id" && (
-        <div className="filter-popup" ref={popupRef}>
-          <input type="text" placeholder="Search..." value={filterText} onChange={(e) => setFilterText(e.target.value)} />
-          <div className="filter-list">
-            {getUnique("id").filter((v) => String(v).toLowerCase().includes(filterText.toLowerCase())).map((val, i) => (
-              <div key={i} onClick={() => { setFilters({ ...filters, id: val }); setActiveFilter(null); setFilterText(""); }}>
-                {val || "Empty"}
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
+   {activeFilter === "id" && (
+  <div className="excel-filter-popup" ref={popupRef}>
+
+  
+
+    <div className="excel-filter-divider"></div>
+
+    <input
+      type="text"
+      placeholder="Search"
+      value={filterText}
+      onChange={(e) => setFilterText(e.target.value)}
+      className="excel-filter-search"
+    />
+
+    <div className="excel-checkbox-list">
+
+      <label className="excel-checkbox-item">
+        <input
+          type="checkbox"
+          checked={
+            (selectedFilterValues["id"] || []).length ===
+            getUnique("id").length
+          }
+          onChange={() =>
+            handleSelectAll("id", getUnique("id"))
+          }
+        />
+        (Select All)
+      </label>
+
+      {getUnique("id")
+        .filter((v) =>
+          String(v)
+            .toLowerCase()
+            .includes(filterText.toLowerCase())
+        )
+        .map((val, i) => (
+          <label
+            key={i}
+            className="excel-checkbox-item"
+          >
+            <input
+              type="checkbox"
+              checked={
+                selectedFilterValues["id"]?.includes(val) ||
+                false
+              }
+              onChange={() =>
+                handleCheckboxChange("id", val)
+              }
+            />
+            {val || "Empty"}
+          </label>
+        ))}
+    </div>
+
+    <div className="excel-filter-footer">
+      <button
+        className="excel-ok-btn"
+        onClick={() => applyExcelFilter("id")}
+      >
+        OK
+      </button>
+
+      <button
+        className="excel-cancel-btn"
+        onClick={() => {
+          clearExcelFilter("id");
+          setActiveFilter(null);
+        }}
+      >
+        Cancel
+      </button>
+    </div>
+
+  </div>
+)}
     </div>
     
     <div className="cell sticky col-2 table-header-cell" onClick={() => { setActiveFilter("employeeName"); setFilterText(""); }}>
       <span className="header-label">Employee Name ⏷</span>
-      {activeFilter === "employeeName" && (
-        <div className="filter-popup" ref={popupRef}>
-          <input type="text" placeholder="Search..." value={filterText} onChange={(e) => setFilterText(e.target.value)} />
-          <div className="filter-list">
-            {getUnique("employeeName").filter((v) => String(v).toLowerCase().includes(filterText.toLowerCase())).map((val, i) => (
-              <div key={i} onClick={() => { setFilters({ ...filters, employeeName: val }); setActiveFilter(null); setFilterText(""); }}>
-                {val || "Empty"}
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
+    {activeFilter === "employeeName" && (
+  <div className="excel-filter-popup" ref={popupRef}>
+
+   
+
+    <div className="excel-filter-divider"></div>
+
+    <input
+      type="text"
+      placeholder="Search"
+      value={filterText}
+      onChange={(e) => setFilterText(e.target.value)}
+      className="excel-filter-search"
+    />
+
+    <div className="excel-checkbox-list">
+
+      <label className="excel-checkbox-item">
+        <input
+          type="checkbox"
+          checked={
+            (selectedFilterValues["employeeName"] || []).length ===
+            getUnique("employeeName").length
+          }
+          onChange={() =>
+            handleSelectAll(
+              "employeeName",
+              getUnique("employeeName")
+            )
+          }
+        />
+        (Select All)
+      </label>
+
+      {getUnique("employeeName")
+        .filter((v) =>
+          String(v)
+            .toLowerCase()
+            .includes(filterText.toLowerCase())
+        )
+        .map((val, i) => (
+          <label
+            key={i}
+            className="excel-checkbox-item"
+          >
+            <input
+              type="checkbox"
+              checked={
+                selectedFilterValues["employeeName"]?.includes(val) ||
+                false
+              }
+              onChange={() =>
+                handleCheckboxChange("employeeName", val)
+              }
+            />
+            {val || "Empty"}
+          </label>
+        ))}
+    </div>
+
+    <div className="excel-filter-footer">
+      <button
+        className="excel-ok-btn"
+        onClick={() => applyExcelFilter("employeeName")}
+      >
+        OK
+      </button>
+
+      <button
+        className="excel-cancel-btn"
+        onClick={() => {
+          clearExcelFilter("employeeName");
+          setActiveFilter(null);
+        }}
+      >
+        Cancel
+      </button>
+    </div>
+
+  </div>
+)}
     </div>
     
     <div className="cell table-header-cell department-header" onClick={() => { setActiveFilter("department"); setFilterText(""); }}>
@@ -557,34 +769,86 @@ useEffect(() => {
           {col.label} ⏷
         </span>
 
-        {activeFilter === col.key && (
-          <div className="filter-popup" ref={popupRef}>
-            <input
-              type="text"
-              placeholder="Search..."
-              value={filterText}
-              onChange={(e) => setFilterText(e.target.value)}
-            />
+{activeFilter === col.key && (
+  <div className="excel-filter-popup" ref={popupRef}>
 
-            <div className="filter-list">
-              {getUnique(col.key).filter((v) => String(v).toLowerCase().includes(filterText.toLowerCase())).map((val, i) => (
-                <div
-                  key={i}
-                  onClick={() => {
-                    setFilters({
-                      ...filters,
-                      [col.key]: val
-                    });
-                    setActiveFilter(null);
-                    setFilterText("");
-                  }}
-                >
-                  {val || "Empty"}
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
+    
+
+    
+
+    <div className="excel-filter-divider"></div>
+
+    <input
+      type="text"
+      placeholder="Search"
+      value={filterText}
+      onChange={(e) => setFilterText(e.target.value)}
+      className="excel-filter-search"
+    />
+
+    <div className="excel-checkbox-list">
+
+      <label className="excel-checkbox-item">
+        <input
+          type="checkbox"
+          checked={
+            (selectedFilterValues[col.key] || []).length ===
+            getUnique(col.key).length
+          }
+          onChange={() =>
+            handleSelectAll(col.key, getUnique(col.key))
+          }
+        />
+        (Select All)
+      </label>
+
+      {getUnique(col.key)
+        .filter((v) =>
+          String(v)
+            .toLowerCase()
+            .includes(filterText.toLowerCase())
+        )
+        .map((val, i) => (
+          <label
+            key={i}
+            className="excel-checkbox-item"
+          >
+            <input
+              type="checkbox"
+              checked={
+                selectedFilterValues[col.key]?.includes(val) ||
+                false
+              }
+              onChange={() =>
+                handleCheckboxChange(col.key, val)
+              }
+            />
+            {val || "Empty"}
+          </label>
+        ))}
+    </div>
+
+    <div className="excel-filter-footer">
+      <button
+        className="excel-ok-btn"
+        onClick={() => applyExcelFilter(col.key)}
+      >
+        OK
+      </button>
+
+      <button
+        className="excel-cancel-btn"
+        onClick={() => {
+          clearExcelFilter(col.key);
+          setActiveFilter(null);
+        }}
+      >
+        Cancel
+      </button>
+    </div>
+
+  </div>
+)}
       </div>
     ))}
   </div>
