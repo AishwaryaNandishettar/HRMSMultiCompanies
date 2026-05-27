@@ -1,5 +1,5 @@
 import React, { useState , useEffect} from "react";
-import "./financialAssesment.css";
+import "./financialAssessment.css";
 import { useNavigate } from "react-router-dom";
 import { getTrendData, addFinancialData } from "../api/financialApi.js";
 import {
