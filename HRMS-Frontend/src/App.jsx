@@ -33,7 +33,7 @@ import EmployeeCard from "./Pages/Emplyeecard";
 import Payroll from "./Pages/Payroll";
 import Helpdesk from "./Pages/Helpdesk"; // ✅ adjust path if different
 
-import BulkUploadEmployees from "./pages/BulkUploadEmployees";
+import BulkUploadEmployees from "./Pages/BulkUploadEmployees";
 import UpdatePayroll from "./Pages/Payroll/UpdatePayroll";
 import ReimbursementForm from "./Pages/ReimbursementForm";
 import FinancialAssessment from "./Pages/financialAssesment";
