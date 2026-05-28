@@ -1067,3 +1067,229 @@ background: linear-gradient(135deg, #22c55e, #16a34a);}
   line-height: 0;
   margin-top: -4px;
 }
+/* =========================================================
+   NEW DESKTOP DASHBOARD LAYOUT
+   ========================================================= */
+
+@media (min-width: 1024px) {
+
+  /* MAIN WRAPPER */
+  .dashboard-layout {
+    display: grid;
+    grid-template-columns: 2fr 1fr;
+    gap: 16px;
+    align-items: start;
+  }
+
+  /* LEFT SIDE */
+  .dashboard-left {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  /* RIGHT SIDE */
+  .dashboard-right {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  /* =====================================================
+     EMPLOYEE DIRECTORY
+     ===================================================== */
+
+  .emp-panel {
+    height: 430px;
+    overflow: hidden;
+  }
+
+  .emp-scroll {
+    max-height: 300px;
+    overflow-y: auto;
+  }
+
+  /* =====================================================
+     CHECK IN / OUT CARD
+     ===================================================== */
+
+  .check-card {
+    width: 100%;
+    min-height: 220px;
+  }
+
+  .check-buttons {
+    display: flex;
+    gap: 14px;
+  }
+
+  .check-buttons div {
+    min-height: 130px;
+    justify-content: center;
+  }
+
+  /* =====================================================
+     CHART SECTION
+     ===================================================== */
+
+  .chart-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    margin-top: 0;
+  }
+
+  .chart-box {
+    min-height: 320px;
+  }
+
+  /* =====================================================
+     CALENDAR
+     ===================================================== */
+
+  .calendar-panel {
+    width: 100%;
+  }
+
+  .styled-calendar {
+    width: 100% !important;
+    border-radius: 12px;
+    overflow: hidden;
+  }
+
+  /* =====================================================
+     BOTTOM SECTION
+     ===================================================== */
+
+  .bottom-section {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    margin-top: 16px;
+    align-items: start;
+  }
+
+  /* =====================================================
+     PAYROLL TABLE
+     ===================================================== */
+
+  .payroll-panel {
+    min-height: 320px;
+  }
+
+  .payroll-scroll {
+    max-height: 240px;
+    overflow-y: auto;
+  }
+
+  /* =====================================================
+     NOTIFICATION PANEL
+     ===================================================== */
+
+  .notification-panel {
+    min-height: 320px;
+  }
+
+  .notif-scroll {
+    max-height: 240px;
+    overflow-y: auto;
+  }
+
+  /* =====================================================
+     PANEL COMMON
+     ===================================================== */
+
+  .panel {
+    background: #ffffff;
+    border-radius: 14px;
+    padding: 16px;
+    box-shadow: 0 4px 14px rgba(0,0,0,0.08);
+  }
+
+}
+/* =====================================================
+   MOBILE: LEAVE + HOLIDAY SINGLE ROW
+   ===================================================== */
+
+@media only screen and (max-width: 768px) {
+
+  .mobile-top-panels {
+    display: grid !important;
+    grid-template-columns: 1fr 1fr !important;
+    gap: 8px !important;
+    align-items: stretch;
+  }
+
+  .leave-today-panel,
+  .holidays-panel {
+    margin-bottom: 0 !important;
+    min-height: 120px !important;
+    padding: 10px !important;
+  }
+
+  .leave-today-panel h3,
+  .holidays-panel h3 {
+    font-size: 11px !important;
+    margin-bottom: 6px !important;
+  }
+
+  .empty-state {
+    padding: 8px 2px !important;
+  }
+
+  .empty-icon {
+    font-size: 18px !important;
+    margin-bottom: 4px !important;
+  }
+
+  .empty-message {
+    font-size: 11px !important;
+    line-height: 1.2 !important;
+  }
+
+  .empty-submessage {
+    font-size: 9px !important;
+    line-height: 1.2 !important;
+  }
+
+}
+/* =========================================
+   MOBILE ONLY FIX
+   ========================================= */
+
+@media only screen and (max-width: 768px) {
+
+  .mobile-top-panels {
+    display: grid !important;
+    grid-template-columns: 1fr 1fr !important;
+    gap: 8px !important;
+  }
+
+  .mobile-top-panels .panel {
+    min-width: 0 !important;
+    padding: 8px !important;
+    margin-bottom: 0 !important;
+  }
+
+  .mobile-top-panels h3 {
+    font-size: 11px !important;
+  }
+
+  .mobile-top-panels p {
+    font-size: 10px !important;
+  }
+
+}
+/* =========================================
+   MOBILE ONLY CHECK CARD POSITION FIX
+   ========================================= */
+
+@media only screen and (max-width: 768px) {
+
+  .check-card {
+    order: 3 !important;
+    width: 100% !important;
+    margin-top: 8px !important;
+  }
+
+}

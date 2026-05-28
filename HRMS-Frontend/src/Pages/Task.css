@@ -148,17 +148,19 @@
 ========================================================= */
 
 .taskPage-tableWrapper {
-   width: 100%;
+  width: 100%;
   height: calc(100vh - 280px);
 
   overflow: auto;
   position: relative;
+
   background: #fff;
   border: 1px solid #ddd;
   border-radius: 10px;
 
   overscroll-behavior: contain;
-  isolation: hidden;
+
+  isolation: isolate;
 }
 
 /* Scrollbar styling */
@@ -273,7 +275,7 @@
   border-top: 1px solid rgba(255,255,255,0.2);
 }
 
-.table thead th:first-child {
+.taskPage-table thead th:first-child {
   border-left: 1px solid rgba(255,255,255,0.2);
 }
 
@@ -828,16 +830,36 @@
   overflow: auto;
 }
 
-.taskPage-tableWrapper {
-  overflow: visible !important;
-}
+
 .taskPage-table th {
   position: relative;
   overflow: visible !important;
 }
 
-.taskPage-table td {
+.taskPage-table thead th {
   overflow: visible !important;
+}
+
+.taskPage-filterPopup {
+  position: absolute;
+  top: 42px;
+  left: 0;
+
+  z-index: 99999;
+
+  background: #fff;
+  border: 1px solid #dcdfe4;
+  border-radius: 8px;
+
+  width: 240px;
+
+  box-shadow: 0 6px 18px rgba(0,0,0,0.15);
+
+  padding: 10px;
+
+  color: #111;
+
+  display: block;
 }
 
 .taskPage-tableContainer {
@@ -850,4 +872,330 @@
   left: 0;
   z-index: 99999;
   background: #fff !important;
+}
+/* =========================================
+   MOBILE KPI CARDS FIX - 2 PER ROW
+========================================= */
+
+@media only screen and (max-width: 768px) {
+
+  .taskPage-topCards {
+    display: grid !important;
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 12px !important;
+  }
+
+  .taskPage-card {
+    padding: 14px !important;
+    border-radius: 12px !important;
+    min-height: 90px;
+  }
+
+  .taskPage-card h3 {
+    font-size: 12px !important;
+    margin-bottom: 8px !important;
+  }
+
+  .taskPage-card h1 {
+    font-size: 28px !important;
+  }
+
+}
+/* =========================================
+   MOBILE TABLE SIZE REDUCTION FIX
+   ========================================= */
+
+@media only screen and (max-width: 768px) {
+
+  /* PAGE */
+  .taskPage-container {
+    padding: 8px !important;
+    overflow: auto !important;
+  }
+
+  /* TABLE WRAPPER */
+  .taskPage-tableWrapper {
+    height: calc(100vh - 240px) !important;
+    overflow: auto !important;
+  }
+
+  .taskPage-tableContainer {
+    overflow: auto !important;
+    border-radius: 10px !important;
+  }
+
+  /* TABLE */
+  .taskPage-table {
+    min-width: 1200px !important;
+    width: max-content !important;
+  }
+
+  /* HEADER */
+  .taskPage-table thead th {
+    padding: 6px 8px !important;
+    font-size: 10px !important;
+    min-width: 90px !important;
+    height: 38px !important;
+    white-space: nowrap !important;
+  }
+
+  /* BODY CELLS */
+  .taskPage-table tbody td {
+    padding: 6px 8px !important;
+    font-size: 10px !important;
+    line-height: 1.2 !important;
+    min-width: 90px !important;
+    word-break: break-word !important;
+  }
+
+  /* STICKY COLUMN 1 */
+  .taskPage-table th:nth-child(1),
+  .taskPage-table td:nth-child(1) {
+    width: 80px !important;
+    min-width: 80px !important;
+    max-width: 80px !important;
+    left: 0 !important;
+  }
+
+  /* STICKY COLUMN 2 */
+  .taskPage-table th:nth-child(2),
+  .taskPage-table td:nth-child(2) {
+    width: 120px !important;
+    min-width: 120px !important;
+    max-width: 120px !important;
+    left: 80px !important;
+  }
+
+  /* OTHER COLUMNS */
+  .taskPage-table th:nth-child(n+3),
+  .taskPage-table td:nth-child(n+3) {
+    min-width: 100px !important;
+    width: 100px !important;
+  }
+
+  /* PROGRESS BAR */
+  .taskPage-progressBox {
+    width: 70px !important;
+    height: 6px !important;
+  }
+
+  /* STATUS + PRIORITY */
+  .taskPage-status,
+  .taskPage-priority {
+    padding: 4px 8px !important;
+    font-size: 9px !important;
+  }
+
+  /* BUTTONS */
+  .taskPage-uploadBtn,
+  .taskPage-actionBtn {
+    padding: 5px 8px !important;
+    font-size: 10px !important;
+  }
+
+  /* ROW HEIGHT */
+  .taskPage-table tbody tr {
+    height: 42px !important;
+  }
+
+}
+/* =========================================
+   MOBILE TABLE ONLY SCROLL FIX
+========================================= */
+
+@media only screen and (max-width: 768px) {
+
+  /* STOP PAGE SCROLL */
+  html,
+  body {
+    overflow: hidden !important;
+    height: 100% !important;
+  }
+
+  .taskPage-container {
+    height: 100vh !important;
+    overflow: hidden !important;
+    padding: 8px !important;
+  }
+
+  /* ONLY TABLE AREA SCROLLS */
+  .taskPage-tableWrapper {
+    height: calc(100vh - 320px) !important;
+    overflow: auto !important;
+
+    -webkit-overflow-scrolling: touch !important;
+
+    overscroll-behavior: contain !important;
+  }
+
+  .taskPage-tableContainer {
+    width: 100% !important;
+    height: 100% !important;
+
+    overflow: auto !important;
+
+    -webkit-overflow-scrolling: touch !important;
+  }
+
+  /* KEEP TABLE INSIDE */
+  .taskPage-table {
+    width: max-content !important;
+    min-width: 1200px !important;
+  }
+
+}
+/* =========================================
+   MOBILE PAGE + TABLE SCROLL SEPARATION
+========================================= */
+
+@media only screen and (max-width: 768px) {
+
+  html,
+  body {
+    height: 100%;
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+  }
+
+  .taskPage-container {
+    height: 100vh !important;
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+
+    -webkit-overflow-scrolling: touch;
+  }
+
+  /* TABLE AREA */
+  .taskPage-tableWrapper {
+    height: 320px !important;
+
+    overflow: auto !important;
+
+    -webkit-overflow-scrolling: touch !important;
+
+    overscroll-behavior: contain !important;
+
+    touch-action: pan-x pan-y !important;
+  }
+
+  .taskPage-tableContainer {
+    height: 100% !important;
+    overflow: auto !important;
+
+    -webkit-overflow-scrolling: touch !important;
+  }
+
+  /* TABLE WIDTH */
+  .taskPage-table {
+    min-width: 1200px !important;
+    width: max-content !important;
+  }
+
+}
+/* =========================================
+   FILTER POPUP
+========================================= */
+
+.taskPage-thHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+  position: relative;
+}
+
+.taskPage-thHeader span {
+  cursor: pointer;
+  font-size: 13px;
+  user-select: none;
+}
+
+/* POPUP */
+
+.taskPage-filterPopup {
+  position: absolute;
+  top: 42px;
+  left: 0;
+  width: 240px;
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 4px 18px rgba(0,0,0,0.15);
+  padding: 12px;
+  z-index: 9999;
+  border: 1px solid #e5e7eb;
+}
+
+/* SEARCH */
+
+.taskPage-filterPopup input[type="text"] {
+  width: 100%;
+  height: 36px;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  padding: 0 10px;
+  outline: none;
+  margin-bottom: 10px;
+  font-size: 13px;
+}
+
+/* LIST */
+
+.taskPage-filterList {
+  max-height: 220px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+/* ITEM */
+
+.taskPage-filterItem {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  cursor: pointer;
+  padding: 4px 2px;
+}
+
+.taskPage-filterItem input {
+  cursor: pointer;
+}
+
+/* BUTTONS */
+
+.taskPage-filterActions {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 12px;
+  gap: 10px;
+}
+
+.taskPage-filterActions button {
+  flex: 1;
+  height: 34px;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.taskPage-filterActions button:first-child {
+  background: #e5e7eb;
+}
+
+.taskPage-filterActions button:last-child {
+  background: #2563eb;
+  color: white;
+}
+
+/* EMPTY */
+
+.taskPage-noData {
+  text-align: center;
+  font-size: 13px;
+  color: #6b7280;
+  padding: 10px 0;
 }

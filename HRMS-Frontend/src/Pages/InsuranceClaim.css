@@ -862,3 +862,149 @@
     font-size: 11px;
   }
 }
+/* =========================================================
+   MOBILE FROM-TO DATE PERFECT INLINE FIX
+========================================================= */
+@media (max-width: 768px) {
+
+  /* date row */
+  .insurance-container .date-range {
+    display: flex !important;
+    align-items: center !important;
+    gap: 4px !important;
+    width: 100% !important;
+  }
+
+  /* FROM text */
+  .insurance-container .date-range label,
+  .insurance-container .date-range span,
+  .insurance-container .date-separator {
+    flex-shrink: 0 !important;
+    font-size: 10px !important;
+    white-space: nowrap;
+  }
+
+  /* BOTH DATE INPUTS */
+  .insurance-container .date-range input[type="date"] {
+    width: 78px !important;
+    min-width: 78px !important;
+    max-width: 78px !important;
+
+    padding: 4px 2px !important;
+    font-size: 10px !important;
+
+    box-sizing: border-box !important;
+  }
+
+  /* reduce calendar icon spacing */
+  .insurance-container .date-range input::-webkit-calendar-picker-indicator {
+    margin-left: 0 !important;
+    padding: 0 !important;
+  }
+}
+/* =========================================================
+   MOBILE EXPORT BUTTON SMALL RIGHT ALIGN FIX
+========================================================= */
+@media (max-width: 768px) {
+
+  .insurance-container .export-btn {
+    width: auto !important;
+    min-width: 110px !important;
+    max-width: 140px !important;
+
+    padding: 7px 12px !important;
+    font-size: 12px !important;
+
+    display: inline-flex !important;
+    justify-content: center;
+    align-items: center;
+
+    margin-left: auto !important;
+  }
+}
+/* =========================================================
+   FORCE FROM/TO INSIDE DATE INPUT - MOBILE ONLY
+========================================================= */
+@media (max-width: 768px) {
+
+  /* hide original labels */
+  .insurance-container .date-range label,
+  .insurance-container .date-separator {
+    display: none !important;
+  }
+
+  .insurance-container .date-range {
+    display: flex !important;
+    align-items: center !important;
+    gap: 4px !important;
+    width: 100% !important;
+  }
+
+  /* wrapper relative */
+  .insurance-container .date-range > div,
+  .insurance-container .date-range {
+    position: relative;
+  }
+
+  /* common date input */
+  .insurance-container .date-range input[type="date"] {
+    width: 82px !important;
+    min-width: 82px !important;
+    max-width: 82px !important;
+
+    padding-left: 24px !important;
+    padding-right: 4px !important;
+    padding-top: 4px !important;
+    padding-bottom: 4px !important;
+
+    font-size: 10px !important;
+    box-sizing: border-box !important;
+  }
+
+  /* FROM text */
+  .insurance-container .date-range input[type="date"]:first-of-type {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg'/%3E");
+  }
+
+  .insurance-container .date-range input[type="date"]:first-of-type::before {
+    content: "From";
+  }
+
+  /* fake inline labels */
+  .insurance-container .date-range input[type="date"]:first-of-type {
+    position: relative;
+  }
+
+  .insurance-container .date-range input[type="date"]:last-of-type {
+    position: relative;
+  }
+
+  /* insert text visually */
+  .insurance-container .date-range {
+    --label-color: #666;
+  }
+
+  .insurance-container .date-range::before {
+    content: "From";
+    position: absolute;
+    left: 8px;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 9px;
+    color: var(--label-color);
+    z-index: 2;
+    pointer-events: none;
+  }
+
+  .insurance-container .date-range::after {
+    content: "To";
+    position: absolute;
+    left: 96px;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 9px;
+    color: var(--label-color);
+    z-index: 2;
+    pointer-events: none;
+  }
+}

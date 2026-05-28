@@ -63,6 +63,7 @@
     const [last3MonthsPayroll, setLast3MonthsPayroll] = useState([]);
     const [systemNotifications, setSystemNotifications] = useState([]);
     
+    
     // 🔄 LIVE ATTENDANCE AUTO REFRESH (30 sec)
 useEffect(() => {
   const interval = setInterval(() => {
@@ -759,7 +760,7 @@ const holidays = eventsRes.data
           const todayLeaves = homeData?.leaveUsers || [];
 
           return (
-            <div style={{display:'flex', gap:'12px', marginBottom:'12px', flexWrap:'wrap'}}>
+          <div className="mobile-top-panels" style={{display:'flex', gap:'12px', marginBottom:'12px', flexWrap:'wrap'}}>
               
               {/* WHO'S ON LEAVE TODAY */}
               <div className="panel" style={{flex:'1', minWidth:'260px', borderLeft:'4px solid #3b82f6', padding:'10px 14px'}}>
@@ -889,9 +890,24 @@ const holidays = eventsRes.data
   </tr>
 ) : (
   employees
-    .filter(emp => (emp.status || "").toUpperCase() === "ACTIVE")
-    .slice(0, 5)
-    .map((emp, index) => (
+  .filter((emp) => {
+    const active =
+      (emp.status || "").toUpperCase() === "ACTIVE";
+
+    const matchesSearch =
+      (emp.fullName || "")
+        .toLowerCase()
+       .includes(search.toLowerCase())||
+
+      (emp.employeeId || "")
+        .toString()
+        .toLowerCase()
+        .includes(search.toLowerCase())
+
+    return active && matchesSearch;
+  })
+  .slice(0, 5)
+  .map((emp, index) => (
       <tr key={emp.employeeId || index}>
         <td className="emp-cell">
           <img

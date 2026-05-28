@@ -1936,3 +1936,247 @@
   flex-shrink: 0;
   width: 14px;
 }
+/* =========================================================
+   MOBILE FIX — CALL / VIDEO / MEETING BUTTONS
+   ADD THIS AT END OF CSS
+   ========================================================= */
+
+@media only screen and (max-width: 768px) {
+
+  /* HEADER */
+  .wc-header {
+    padding: 10px 12px;
+    gap: 10px;
+    flex-wrap: nowrap;
+    min-width: 0;
+  }
+
+  .wc-header-left {
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+  }
+
+  .wc-header-title {
+    font-size: 13px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .wc-header-sub {
+    font-size: 11px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  /* RIGHT ACTIONS */
+  .wc-header-right {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    flex-shrink: 0;
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+
+  .wc-header-right::-webkit-scrollbar {
+    display: none;
+  }
+
+  /* ICON BUTTONS */
+  .wc-header-right button,
+  .wc-icon-btn,
+  .call-btn {
+    width: 36px;
+    height: 36px;
+    min-width: 36px;
+    min-height: 36px;
+    padding: 0;
+    margin-left: 0 !important;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    border-radius: 10px;
+    font-size: 15px;
+  }
+
+  /* MESSAGE SEARCH */
+  .wc-msg-search {
+    margin-right: 4px;
+    padding: 5px 8px;
+    min-width: 0;
+    flex-shrink: 1;
+  }
+
+  .wc-msg-search input {
+    width: 72px;
+    font-size: 12px;
+  }
+
+  /* AVATAR */
+  .wc-avatar {
+    width: 34px;
+    height: 34px;
+    font-size: 13px;
+  }
+
+  /* FIX ACTIONS VISIBILITY */
+  .wc-header-right > * {
+    flex-shrink: 0;
+  }
+}
+
+/* EXTRA SMALL DEVICES */
+@media only screen and (max-width: 480px) {
+
+  .wc-header {
+    padding: 8px 10px;
+  }
+
+  .wc-header-right {
+    gap: 2px;
+  }
+
+  .wc-header-right button,
+  .wc-icon-btn,
+  .call-btn {
+    width: 32px;
+    height: 32px;
+    min-width: 32px;
+    min-height: 32px;
+    font-size: 14px;
+    border-radius: 8px;
+  }
+
+  .wc-msg-search {
+    padding: 4px 6px;
+  }
+
+  .wc-msg-search input {
+    width: 58px;
+    font-size: 11px;
+  }
+
+  .wc-header-title {
+    font-size: 12px;
+  }
+
+  .wc-header-sub {
+    font-size: 10px;
+  }
+}
+/* =========================================================
+   MOBILE FIX — SCHEDULE MEETING / CALL ACTIONS
+   DO NOT CHANGE ANY LOGIC
+   ========================================================= */
+
+@media only screen and (max-width: 768px) {
+
+  /* Header spacing fix */
+  .wc-header {
+    padding: 10px 8px !important;
+    gap: 6px;
+    overflow: hidden;
+  }
+
+  .wc-header-left {
+    min-width: 0;
+    flex: 1;
+  }
+
+  /* Right actions container */
+  .wc-header-right {
+    display: flex !important;
+    align-items: center !important;
+    gap: 4px !important;
+    flex-shrink: 0 !important;
+    overflow-x: auto !important;
+    overflow-y: hidden !important;
+    max-width: 48% !important;
+    scrollbar-width: none;
+  }
+
+  .wc-header-right::-webkit-scrollbar {
+    display: none;
+  }
+
+  /* Call / video / meeting buttons */
+  .wc-header-right button,
+  .call-btn {
+    min-width: 34px !important;
+    width: 34px !important;
+    height: 34px !important;
+    padding: 0 !important;
+    margin-left: 0 !important;
+
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+
+    border-radius: 8px !important;
+    flex-shrink: 0 !important;
+
+    font-size: 14px !important;
+  }
+
+  /* Meeting popup mobile fix */
+  .wc-meetings {
+    position: fixed !important;
+    top: 50% !important;
+    left: 50% !important;
+    transform: translate(-50%, -50%) !important;
+
+    width: 96vw !important;
+    max-width: 96vw !important;
+    height: 88vh !important;
+
+    border-radius: 12px !important;
+    overflow: hidden !important;
+  }
+
+  .wc-meetings-header {
+    padding: 12px !important;
+    flex-wrap: wrap !important;
+    gap: 8px !important;
+  }
+
+  .wc-meetings-header h3 {
+    font-size: 16px !important;
+    line-height: 1.3 !important;
+  }
+
+  .wc-meetings-header button {
+    padding: 7px 10px !important;
+    font-size: 12px !important;
+    white-space: nowrap !important;
+  }
+
+  /* Calendar/content inside meeting modal */
+  .wc-meetings-body,
+  .wc-meetings-content,
+  .rbc-calendar {
+    min-width: 0 !important;
+    overflow: auto !important;
+  }
+
+  /* Prevent cutoff */
+  .rbc-toolbar {
+    flex-wrap: wrap !important;
+    gap: 6px !important;
+  }
+
+  .rbc-toolbar button {
+    font-size: 11px !important;
+    padding: 4px 6px !important;
+  }
+
+  .rbc-toolbar-label {
+    font-size: 16px !important;
+    text-align: center !important;
+    width: 100% !important;
+  }
+}

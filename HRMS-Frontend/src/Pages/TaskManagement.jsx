@@ -30,7 +30,18 @@ const role =
 const [taskData, setTaskData] = useState([]);
 const [activeFilter, setActiveFilter] = useState(null);
 const [filterText, setFilterText] = useState("");
-const [columnFilters, setColumnFilters] = useState({});
+const [columnFilters, setColumnFilters] = useState({
+  empid: [],
+  employeename: [],
+  task: [],
+  assignedby: [],
+  priority: [],
+  assignDate: [],
+  dueDate: [],
+  department: [],
+  status: [],
+  approval: [],
+});
 const [popupFilterText, setPopupFilterText] =
   useState("");
 
@@ -97,14 +108,16 @@ const fieldMap = {
 
 
 const suggestions =
-  activeFilter &&
-  getUniqueValues(activeFilter).filter((v) =>
-    String(v)
-      .toLowerCase()
-      .includes(
-        popupFilterText.toLowerCase()
+  activeFilter
+    ? getUniqueValues(activeFilter).filter(
+        (v) =>
+          String(v)
+            .toLowerCase()
+            .includes(
+              popupFilterText.toLowerCase()
+            )
       )
-  );
+    : [];
 
   const getUnique = (key) => {
   return [
@@ -114,6 +127,114 @@ const suggestions =
         .filter(Boolean)
     ),
   ];
+};
+
+const renderFilterPopup = (key) => {
+  if (activeFilter !== key) return null;
+
+  return (
+    <div className="taskPage-filterPopup">
+
+      <input
+        type="text"
+        placeholder="Search..."
+        value={popupFilterText}
+        onChange={(e) =>
+          setPopupFilterText(e.target.value)
+        }
+      />
+
+      <div className="taskPage-filterList">
+
+        {suggestions.length > 0 ? (
+
+          suggestions.map((s) => (
+
+            <label
+              key={s}
+              className="taskPage-filterItem"
+            >
+
+              <input
+                type="checkbox"
+                checked={
+                  Array.isArray(columnFilters[key])
+                    ? columnFilters[key].includes(s)
+                    : false
+                }
+                onChange={(e) => {
+
+                const prev =
+  columnFilters[key] || [];
+
+                  let updated = [];
+
+                  if (e.target.checked) {
+
+                    updated = [...prev, s];
+
+                  } else {
+
+                    updated = prev.filter(
+                      (item) => item !== s
+                    );
+
+                  }
+
+                  setColumnFilters({
+                    ...columnFilters,
+                    [key]: updated,
+                  });
+
+                }}
+              />
+
+              <span>{s}</span>
+
+            </label>
+
+          ))
+
+        ) : (
+
+          <div className="taskPage-noData">
+            No Data
+          </div>
+
+        )}
+
+      </div>
+
+      <div className="taskPage-filterActions">
+
+        <button
+          onClick={() => {
+
+            setActiveFilter(null);
+            setPopupFilterText("");
+
+          }}
+        >
+          Close
+        </button>
+
+        <button
+          onClick={() => {
+
+            setColumnFilters({
+              ...columnFilters,
+              [key]: [],
+            });
+
+          }}
+        >
+          Clear
+        </button>
+
+      </div>
+
+    </div>
+  );
 };
       const exportData = (type) => {
 
@@ -444,81 +565,8 @@ const suggestions =
     </span>
   </div>
 
-{activeFilter === "empid" && (
-  <div className="taskPage-filterPopup">
+  {renderFilterPopup("empid")}
 
-    <input
-      placeholder="Search..."
-      value={popupFilterText}
-      onChange={(e) =>
-        setPopupFilterText(e.target.value)
-      }
-    />
-
-    <div className="taskPage-filterList">
-
-      {suggestions.map((s) => (
-
-        <label
-          key={s}
-          className="taskPage-filterItem"
-        >
-
-          <input
-            type="checkbox"
-            checked={
-              columnFilters.empid === s
-            }
-            onChange={() => {
-
-              setColumnFilters({
-                ...columnFilters,
-                empid: s,
-              });
-
-            }}
-          />
-
-          <span>{s}</span>
-
-        </label>
-
-      ))}
-
-    </div>
-
-    <div className="taskPage-filterActions">
-
-      <button
-        onClick={() =>
-          setActiveFilter(null)
-        }
-      >
-        OK
-      </button>
-
-      <button
-        onClick={() => {
-
-          const updated = {
-            ...columnFilters,
-          };
-
-          delete updated.empid;
-
-          setColumnFilters(updated);
-
-          setActiveFilter(null);
-
-        }}
-      >
-        Cancel
-      </button>
-
-    </div>
-
-  </div>
-)}
 </th>
 
         <th className="taskPage-sticky-col taskPage-col-2">
@@ -534,81 +582,8 @@ const suggestions =
     </span>
   </div>
 
-{activeFilter === "employeename" && (
-  <div className="taskPage-filterPopup">
+{renderFilterPopup("employeename")}
 
-    <input
-      placeholder="Search..."
-      value={popupFilterText}
-      onChange={(e) =>
-        setPopupFilterText(e.target.value)
-      }
-    />
-
-    <div className="taskPage-filterList">
-
-      {suggestions.map((s) => (
-
-        <label
-          key={s}
-          className="taskPage-filterItem"
-        >
-
-          <input
-            type="checkbox"
-            checked={
-              columnFilters.employeename === s
-            }
-            onChange={() => {
-
-              setColumnFilters({
-                ...columnFilters,
-                employeename: s,
-              });
-
-            }}
-          />
-
-          <span>{s}</span>
-
-        </label>
-
-      ))}
-
-    </div>
-
-    <div className="taskPage-filterActions">
-
-      <button
-        onClick={() =>
-          setActiveFilter(null)
-        }
-      >
-        OK
-      </button>
-
-      <button
-        onClick={() => {
-
-          const updated = {
-            ...columnFilters,
-          };
-
-          delete updated.employeename;
-
-          setColumnFilters(updated);
-
-          setActiveFilter(null);
-
-        }}
-      >
-        Cancel
-      </button>
-
-    </div>
-
-  </div>
-)}
 </th>
 
         <th className="taskPage-sticky-col taskPage-col-3">
@@ -620,81 +595,8 @@ const suggestions =
     </span>
   </div>
 
-{activeFilter === "task" && (
-  <div className="taskPage-filterPopup">
+{renderFilterPopup("task")}
 
-    <input
-      placeholder="Search..."
-      value={popupFilterText}
-      onChange={(e) =>
-        setPopupFilterText(e.target.value)
-      }
-    />
-
-    <div className="taskPage-filterList">
-
-      {suggestions.map((s) => (
-
-        <label
-          key={s}
-          className="taskPage-filterItem"
-        >
-
-          <input
-            type="checkbox"
-            checked={
-              columnFilters.task === s
-            }
-            onChange={() => {
-
-              setColumnFilters({
-                ...columnFilters,
-                task: s,
-              });
-
-            }}
-          />
-
-          <span>{s}</span>
-
-        </label>
-
-      ))}
-
-    </div>
-
-    <div className="taskPage-filterActions">
-
-      <button
-        onClick={() =>
-          setActiveFilter(null)
-        }
-      >
-        OK
-      </button>
-
-      <button
-        onClick={() => {
-
-          const updated = {
-            ...columnFilters,
-          };
-
-          delete updated.task;
-
-          setColumnFilters(updated);
-
-          setActiveFilter(null);
-
-        }}
-      >
-        Cancel
-      </button>
-
-    </div>
-
-  </div>
-)}
 </th>
 
         <th>
@@ -711,81 +613,7 @@ const suggestions =
     </span>
   </div>
 
-{activeFilter === "assignedby" && (
-  <div className="taskPage-filterPopup">
-
-    <input
-      placeholder="Search..."
-      value={popupFilterText}
-      onChange={(e) =>
-        setPopupFilterText(e.target.value)
-      }
-    />
-
-    <div className="taskPage-filterList">
-
-      {suggestions.map((s) => (
-
-        <label
-          key={s}
-          className="taskPage-filterItem"
-        >
-
-          <input
-            type="checkbox"
-            checked={
-              columnFilters.assignedby === s
-            }
-            onChange={() => {
-
-              setColumnFilters({
-                ...columnFilters,
-                assignedby: s,
-              });
-
-            }}
-          />
-
-          <span>{s}</span>
-
-        </label>
-
-      ))}
-
-    </div>
-
-    <div className="taskPage-filterActions">
-
-      <button
-        onClick={() =>
-          setActiveFilter(null)
-        }
-      >
-        OK
-      </button>
-
-      <button
-        onClick={() => {
-
-          const updated = {
-            ...columnFilters,
-          };
-
-          delete updated.assignedby;
-
-          setColumnFilters(updated);
-
-          setActiveFilter(null);
-
-        }}
-      >
-        Cancel
-      </button>
-
-    </div>
-
-  </div>
-)}
+{renderFilterPopup("assignedby")}
 
 </th>
           <th>
@@ -802,81 +630,8 @@ const suggestions =
     </span>
   </div>
 
-  {activeFilter === "priority" && (
-  <div className="taskPage-filterPopup">
+ {renderFilterPopup("priority")}
 
-    <input
-      placeholder="Search..."
-      value={popupFilterText}
-      onChange={(e) =>
-        setPopupFilterText(e.target.value)
-      }
-    />
-
-    <div className="taskPage-filterList">
-
-      {suggestions.map((s) => (
-
-        <label
-          key={s}
-          className="taskPage-filterItem"
-        >
-
-          <input
-            type="checkbox"
-            checked={
-              columnFilters.priority === s
-            }
-            onChange={() => {
-
-              setColumnFilters({
-                ...columnFilters,
-                priority: s,
-              });
-
-            }}
-          />
-
-          <span>{s}</span>
-
-        </label>
-
-      ))}
-
-    </div>
-
-    <div className="taskPage-filterActions">
-
-      <button
-        onClick={() =>
-          setActiveFilter(null)
-        }
-      >
-        OK
-      </button>
-
-      <button
-        onClick={() => {
-
-          const updated = {
-            ...columnFilters,
-          };
-
-          delete updated.priority;
-
-          setColumnFilters(updated);
-
-          setActiveFilter(null);
-
-        }}
-      >
-        Cancel
-      </button>
-
-    </div>
-
-  </div>
-)}
 </th>
          <th>
 
@@ -892,81 +647,8 @@ const suggestions =
     </span>
   </div>
 
-{activeFilter === "assignDate" && (
-  <div className="taskPage-filterPopup">
+{renderFilterPopup("assignDate")}
 
-    <input
-      placeholder="Search..."
-      value={popupFilterText}
-      onChange={(e) =>
-        setPopupFilterText(e.target.value)
-      }
-    />
-
-    <div className="taskPage-filterList">
-
-      {suggestions.map((s) => (
-
-        <label
-          key={s}
-          className="taskPage-filterItem"
-        >
-
-          <input
-            type="checkbox"
-            checked={
-              columnFilters.assignDate === s
-            }
-            onChange={() => {
-
-              setColumnFilters({
-                ...columnFilters,
-                assignDate: s,
-              });
-
-            }}
-          />
-
-          <span>{s}</span>
-
-        </label>
-
-      ))}
-
-    </div>
-
-    <div className="taskPage-filterActions">
-
-      <button
-        onClick={() =>
-          setActiveFilter(null)
-        }
-      >
-        OK
-      </button>
-
-      <button
-        onClick={() => {
-
-          const updated = {
-            ...columnFilters,
-          };
-
-          delete updated.assignDate;
-
-          setColumnFilters(updated);
-
-          setActiveFilter(null);
-
-        }}
-      >
-        Cancel
-      </button>
-
-    </div>
-
-  </div>
-)}
 </th>
          <th>
 
@@ -982,82 +664,7 @@ const suggestions =
     </span>
   </div>
 
-{activeFilter === "dueDate" && (
-  <div className="taskPage-filterPopup">
-
-    <input
-      placeholder="Search..."
-      value={popupFilterText}
-      onChange={(e) =>
-        setPopupFilterText(e.target.value)
-      }
-    />
-
-    <div className="taskPage-filterList">
-
-      {suggestions.map((s) => (
-
-        <label
-          key={s}
-          className="taskPage-filterItem"
-        >
-
-          <input
-            type="checkbox"
-            checked={
-              columnFilters.dueDate === s
-            }
-            onChange={() => {
-
-              setColumnFilters({
-                ...columnFilters,
-                dueDate: s,
-              });
-
-            }}
-          />
-
-          <span>{s}</span>
-
-        </label>
-
-      ))}
-
-    </div>
-
-    <div className="taskPage-filterActions">
-
-      <button
-        onClick={() =>
-          setActiveFilter(null)
-        }
-      >
-        OK
-      </button>
-
-      <button
-        onClick={() => {
-
-          const updated = {
-            ...columnFilters,
-          };
-
-          delete updated.dueDate;
-
-          setColumnFilters(updated);
-
-          setActiveFilter(null);
-
-        }}
-      >
-        Cancel
-      </button>
-
-    </div>
-
-  </div>
-)}
-
+  {renderFilterPopup("dueDate")}
 </th>
           <th>
 
@@ -1073,82 +680,7 @@ const suggestions =
     </span>
   </div>
 
-{activeFilter === "department" && (
-  <div className="taskPage-filterPopup">
-
-    <input
-      placeholder="Search..."
-      value={popupFilterText}
-      onChange={(e) =>
-        setPopupFilterText(e.target.value)
-      }
-    />
-
-    <div className="taskPage-filterList">
-
-      {suggestions.map((s) => (
-
-        <label
-          key={s}
-          className="taskPage-filterItem"
-        >
-
-          <input
-            type="checkbox"
-            checked={
-              columnFilters.department === s
-            }
-            onChange={() => {
-
-              setColumnFilters({
-                ...columnFilters,
-                department: s,
-              });
-
-            }}
-          />
-
-          <span>{s}</span>
-
-        </label>
-
-      ))}
-
-    </div>
-
-    <div className="taskPage-filterActions">
-
-      <button
-        onClick={() =>
-          setActiveFilter(null)
-        }
-      >
-        OK
-      </button>
-
-      <button
-        onClick={() => {
-
-          const updated = {
-            ...columnFilters,
-          };
-
-          delete updated.department;
-
-          setColumnFilters(updated);
-
-          setActiveFilter(null);
-
-        }}
-      >
-        Cancel
-      </button>
-
-    </div>
-
-  </div>
-)}
-
+{renderFilterPopup("department")}
 </th>
           <th>Progress</th>
           <th>
@@ -1165,81 +697,7 @@ const suggestions =
     </span>
   </div>
 
-{activeFilter === "status" && (
-  <div className="taskPage-filterPopup">
-
-    <input
-      placeholder="Search..."
-      value={popupFilterText}
-      onChange={(e) =>
-        setPopupFilterText(e.target.value)
-      }
-    />
-
-    <div className="taskPage-filterList">
-
-      {suggestions.map((s) => (
-
-        <label
-          key={s}
-          className="taskPage-filterItem"
-        >
-
-          <input
-            type="checkbox"
-            checked={
-              columnFilters.status === s
-            }
-            onChange={() => {
-
-              setColumnFilters({
-                ...columnFilters,
-                status: s,
-              });
-
-            }}
-          />
-
-          <span>{s}</span>
-
-        </label>
-
-      ))}
-
-    </div>
-
-    <div className="taskPage-filterActions">
-
-      <button
-        onClick={() =>
-          setActiveFilter(null)
-        }
-      >
-        OK
-      </button>
-
-      <button
-        onClick={() => {
-
-          const updated = {
-            ...columnFilters,
-          };
-
-          delete updated.status;
-
-          setColumnFilters(updated);
-
-          setActiveFilter(null);
-
-        }}
-      >
-        Cancel
-      </button>
-
-    </div>
-
-  </div>
-)}
+{renderFilterPopup("status")}
 </th>
          <th>
 
@@ -1255,82 +713,7 @@ const suggestions =
     </span>
   </div>
 
-{activeFilter === "approval" && (
-  <div className="taskPage-filterPopup">
-
-    <input
-      placeholder="Search..."
-      value={popupFilterText}
-      onChange={(e) =>
-        setPopupFilterText(e.target.value)
-      }
-    />
-
-    <div className="taskPage-filterList">
-
-      {suggestions.map((s) => (
-
-        <label
-          key={s}
-          className="taskPage-filterItem"
-        >
-
-          <input
-            type="checkbox"
-            checked={
-              columnFilters.approval === s
-            }
-            onChange={() => {
-
-              setColumnFilters({
-                ...columnFilters,
-                approval: s,
-              });
-
-            }}
-          />
-
-          <span>{s}</span>
-
-        </label>
-
-      ))}
-
-    </div>
-
-    <div className="taskPage-filterActions">
-
-      <button
-        onClick={() =>
-          setActiveFilter(null)
-        }
-      >
-        OK
-      </button>
-
-      <button
-        onClick={() => {
-
-          const updated = {
-            ...columnFilters,
-          };
-
-          delete updated.approval;
-
-          setColumnFilters(updated);
-
-          setActiveFilter(null);
-
-        }}
-      >
-        Cancel
-      </button>
-
-    </div>
-
-  </div>
-)}
-
+  {renderFilterPopup("approval")}
 </th>
           <th>Attachment</th>
           <th>Remarks</th>
@@ -1344,38 +727,33 @@ const suggestions =
 {taskData
   .filter((t) => {
 
-    return Object.keys(columnFilters).every((key) => {
+  return Object.keys(columnFilters).every((key) => {
 
-      if (!columnFilters[key]) return true;
+    const selected =
+      columnFilters[key];
 
-      const actualField = fieldMap[key];
+    if (
+      !selected ||
+      selected.length === 0
+    ) {
+      return true;
+    }
 
-      const value =
-        t[actualField] ||
-        t[key] ||
-        "";
+    const actualField =
+      fieldMap[key];
 
-      if (
-        Array.isArray(
-          columnFilters[key]
-        )
-      ) {
+    const value =
+      t[actualField] ||
+      t[key] ||
+      "";
 
-        return columnFilters[key]
-          .includes(value);
+    return selected.includes(
+      String(value)
+    );
 
-      }
+  });
 
-      return String(value)
-        .toLowerCase()
-        .includes(
-          String(columnFilters[key])
-            .toLowerCase()
-        );
-
-    });
-
-  })   // ← THIS WAS MISSING
+})
 
   .map((t, index) => (
 

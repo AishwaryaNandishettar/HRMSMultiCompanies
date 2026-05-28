@@ -254,3 +254,164 @@
 .bgv-table tr:hover {
   background: #f5fbff;
 } 
+/* =========================================================
+   BGV MOBILE PERFECT VIEW FIX
+========================================================= */
+@media (max-width: 768px) {
+
+  .bgv-root {
+    padding: 10px !important;
+    overflow-x: hidden !important;
+  }
+
+  /* HEADER */
+  .bgv-header {
+    flex-direction: row !important;
+    align-items: flex-start !important;
+    gap: 10px !important;
+  }
+
+  .bgv-header h2 {
+    font-size: 16px !important;
+    line-height: 1.3;
+    flex: 1;
+  }
+
+  /* TOOLS SECTION */
+  .bgv-tools {
+    width: 100% !important;
+
+    display: grid !important;
+    grid-template-columns: 1fr 1fr !important;
+    gap: 6px !important;
+
+    align-items: center !important;
+  }
+
+  .bgv-tools input,
+  .bgv-tools select {
+    width: 100% !important;
+    min-width: 0 !important;
+
+    padding: 7px 8px !important;
+    font-size: 11px !important;
+
+    box-sizing: border-box !important;
+  }
+
+  /* EXPORT BUTTON */
+  .export-btn {
+    width: auto !important;
+    min-width: 90px !important;
+
+    padding: 7px 10px !important;
+    font-size: 11px !important;
+
+    justify-self: end !important;
+  }
+
+  /* CARD */
+  .bgv-card {
+    border-radius: 10px !important;
+  }
+
+  .card-main {
+    flex-direction: column !important;
+    align-items: flex-start !important;
+
+    gap: 10px !important;
+    padding: 12px !important;
+  }
+
+  /* LEFT SECTION */
+  .card-left {
+    width: 100% !important;
+    align-items: flex-start !important;
+  }
+
+  /* PHOTO */
+  .photo {
+    width: 52px !important;
+    height: 52px !important;
+    min-width: 52px !important;
+  }
+
+  /* TEXT */
+  .info .name {
+    font-size: 14px !important;
+    line-height: 1.3;
+  }
+
+  .info .meta,
+  .info .submeta {
+    font-size: 11px !important;
+    line-height: 1.4;
+  }
+
+  /* MIDDLE */
+  .card-middle {
+    width: 100% !important;
+    font-size: 11px !important;
+  }
+
+  /* RIGHT */
+  .card-right {
+    width: 100% !important;
+
+    flex-direction: row !important;
+    justify-content: space-between !important;
+    align-items: center !important;
+
+    min-width: 0 !important;
+  }
+
+  .status-pill {
+    font-size: 10px !important;
+    padding: 5px 10px !important;
+  }
+
+  .submitted {
+    font-size: 10px !important;
+  }
+
+  .view-btn {
+    padding: 5px 8px !important;
+    font-size: 10px !important;
+  }
+
+  /* DETAILS */
+  .card-details {
+    grid-template-columns: 1fr !important;
+    padding: 10px !important;
+    gap: 10px !important;
+  }
+
+  .card-details section h4 {
+    font-size: 13px !important;
+  }
+
+  .exp-row {
+    font-size: 11px !important;
+  }
+
+  /* TABLE */
+  .bgv-table {
+    display: block !important;
+    overflow-x: auto !important;
+    white-space: nowrap !important;
+
+    border-radius: 10px !important;
+  }
+
+  .bgv-table th,
+  .bgv-table td {
+    padding: 8px !important;
+    font-size: 11px !important;
+  }
+
+  /* EMPTY STATE */
+  .empty {
+    padding: 20px 10px !important;
+    font-size: 12px !important;
+  }
+}

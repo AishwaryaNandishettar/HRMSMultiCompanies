@@ -36,7 +36,7 @@ import Helpdesk from "./Pages/Helpdesk"; // ✅ adjust path if different
 import BulkUploadEmployees from "./Pages/BulkUploadEmployees";
 import UpdatePayroll from "./Pages/Payroll/UpdatePayroll";
 import ReimbursementForm from "./Pages/ReimbursementForm";
-import FinancialAssessment from "./Pages/FinancialAssessment";
+import FinancialAssessment from "./Pages/financialAssessment";
 import ProtectedRoute from "./Pages/ProtectedRoute";
 import CibilCheck from "./Pages/CibilCheck";
 import Onboarding from "./Pages/Onboarding";

@@ -183,28 +183,61 @@ background: linear-gradient(135deg, #93c5fd, #60a5fa);}
 
     box-sizing: border-box;
   }
+/* =========================================
+   MOBILE KPI 2 CARDS PER ROW
+========================================= */
 
-  /* KPI CARDS */
-  .kpiRow {
-    grid-template-columns: 1fr !important;
-    gap: 12px;
-  }
+.kpiRow {
+  display: grid !important;
 
-  .kpiCard {
-    width: 100%;
-    min-width: 0;
-  }
+  grid-template-columns: repeat(2, 1fr) !important;
 
-  /* CARD FIX */
-  .card {
-    width: 100%;
-    max-width: 100%;
+  gap: 10px !important;
 
-    overflow-x: auto !important;
+  width: 100% !important;
+}
 
-    box-sizing: border-box;
-  }
+/* KPI CARD */
 
+.kpiCard {
+  width: 100% !important;
+
+  min-width: 0 !important;
+
+  height: 68px !important;
+
+  padding: 10px 12px !important;
+
+  border-radius: 10px !important;
+}
+
+/* TEXT */
+
+.kpiTitle {
+  font-size: 10px !important;
+}
+
+.kpiValue {
+  font-size: 18px !important;
+
+  margin-top: 3px !important;
+}
+
+/* ICON */
+
+.kpiIcon {
+  font-size: 18px !important;
+}
+
+/* DROPDOWN */
+
+.empFilter {
+  width: 100% !important;
+
+  font-size: 11px !important;
+
+  padding: 4px 6px !important;
+}
   /* TABLE SCROLL INSIDE CARD ONLY */
   .table {
     min-width: 700px;
@@ -220,5 +253,169 @@ background: linear-gradient(135deg, #93c5fd, #60a5fa);}
   /* BUTTON */
   .viewBtn {
     width: 100%;
+  }
+}
+/* =========================================
+   MOBILE TABLE HORIZONTAL SCROLL FIX
+========================================= */
+
+/* TABLE WRAPPER */
+.card {
+  width: 100% !important;
+
+  overflow-x: auto !important;
+  overflow-y: hidden !important;
+
+  -webkit-overflow-scrolling: touch !important;
+
+  touch-action: pan-x pan-y !important;
+}
+
+/* TABLE */
+.table {
+  min-width: 950px !important;
+
+  width: max-content !important;
+
+  border-collapse: collapse !important;
+}
+
+/* KEEP CELLS IN SINGLE LINE */
+.table th,
+.table td {
+  white-space: nowrap !important;
+
+  min-width: 140px !important;
+}
+
+/* OPTIONAL SMALLER FIRST COLUMN */
+.table th:first-child,
+.table td:first-child {
+  min-width: 120px !important;
+}
+/* =========================================================
+   FINAL MOBILE RESPONSIVE FIX
+   ONLY MOBILE
+========================================================= */
+
+@media (max-width: 768px) {
+
+  html,
+  body {
+    width: 100% !important;
+    overflow-x: hidden !important;
+  }
+
+  /* PAGE */
+  .container {
+    padding: 10px !important;
+
+    width: 100% !important;
+    max-width: 100% !important;
+
+    overflow-x: hidden !important;
+
+    box-sizing: border-box !important;
+  }
+
+  /* =====================================
+     KPI SECTION
+  ===================================== */
+
+  .kpiRow {
+    display: grid !important;
+
+    grid-template-columns: repeat(2, 1fr) !important;
+
+    gap: 10px !important;
+
+    width: 100% !important;
+  }
+
+  .kpiCard {
+    height: 68px !important;
+
+    padding: 10px !important;
+
+    border-radius: 10px !important;
+
+    width: 100% !important;
+
+    min-width: 0 !important;
+  }
+
+  .kpiTitle {
+    font-size: 10px !important;
+  }
+
+  .kpiValue {
+    font-size: 17px !important;
+
+    margin-top: 2px !important;
+  }
+
+  .kpiIcon {
+    font-size: 17px !important;
+  }
+
+  .empFilter {
+    width: 100% !important;
+
+    font-size: 11px !important;
+
+    padding: 4px 6px !important;
+  }
+
+  /* =====================================
+     CARD
+  ===================================== */
+
+  .card {
+    width: 100% !important;
+
+    max-width: 100% !important;
+
+    padding: 12px !important;
+
+    overflow-x: auto !important;
+    overflow-y: hidden !important;
+
+    -webkit-overflow-scrolling: touch !important;
+
+    touch-action: pan-x pan-y !important;
+
+    box-sizing: border-box !important;
+  }
+
+  /* =====================================
+     TABLE
+  ===================================== */
+
+  .table {
+    min-width: 950px !important;
+
+    width: max-content !important;
+
+    border-collapse: collapse !important;
+  }
+
+  .table th,
+  .table td {
+    white-space: nowrap !important;
+
+    min-width: 140px !important;
+
+    font-size: 12px !important;
+  }
+
+  .table th:first-child,
+  .table td:first-child {
+    min-width: 120px !important;
+  }
+
+  /* BUTTON */
+
+  .viewBtn {
+    width: 100% !important;
   }
 }

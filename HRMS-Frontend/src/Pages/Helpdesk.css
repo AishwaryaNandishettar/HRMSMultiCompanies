@@ -136,3 +136,126 @@
   padding: 15px;
   color: #888;
 }
+
+/* =========================================
+   HELPDESK MOBILE PERFECT FIX
+========================================= */
+
+@media only screen and (max-width: 768px) {
+
+  /* PAGE */
+  .hd-container {
+    padding: 10px !important;
+    overflow-x: hidden !important;
+  }
+
+  /* KPI */
+  .hd-kpi-row {
+    display: grid !important;
+    grid-template-columns: repeat(3, 1fr) !important;
+    gap: 8px !important;
+  }
+
+  .hd-kpi {
+    padding: 10px 6px !important;
+    border-radius: 8px !important;
+  }
+
+  .hd-kpi h3 {
+    font-size: 16px !important;
+  }
+
+  .hd-kpi span {
+    font-size: 10px !important;
+  }
+
+  /* HEADER */
+  .hd-header {
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    gap: 10px !important;
+  }
+
+  /* FILTERS */
+  .hd-filters {
+    width: 100% !important;
+    display: grid !important;
+    grid-template-columns: 1fr 1fr !important;
+    gap: 6px !important;
+  }
+
+  .hd-filters input,
+  .hd-filters select,
+  .hd-clear {
+    width: 100% !important;
+    font-size: 11px !important;
+    padding: 7px !important;
+  }
+
+  /* CARD */
+  .hd-card {
+    padding: 10px !important;
+    border-radius: 10px !important;
+  }
+
+  /* FORM */
+  .hd-form input,
+  .hd-form select,
+  .hd-form textarea {
+    font-size: 12px !important;
+    padding: 8px !important;
+  }
+
+  .hd-btn {
+    padding: 9px !important;
+    font-size: 12px !important;
+  }
+
+  /* TABLE WRAP */
+  .hd-table-wrap {
+    width: 100% !important;
+    overflow-x: auto !important;
+    overflow-y: auto !important;
+
+    -webkit-overflow-scrolling: touch !important;
+
+    max-height: 320px !important;
+
+    border-radius: 8px !important;
+  }
+
+  /* TABLE */
+  .hd-table {
+    min-width: 900px !important;
+    width: max-content !important;
+  }
+
+  /* TABLE HEADER */
+  .hd-table th {
+    padding: 8px 10px !important;
+    font-size: 11px !important;
+    white-space: nowrap !important;
+    min-width: 110px !important;
+  }
+
+  /* ISSUE TYPE HEADER FIX */
+  .hd-table th:nth-child(4) {
+    min-width: 140px !important;
+  }
+
+  /* TABLE BODY */
+  .hd-table td {
+    padding: 8px 10px !important;
+    font-size: 11px !important;
+    white-space: normal !important;
+    word-break: break-word !important;
+    min-width: 110px !important;
+  }
+
+  /* BADGES */
+  .hd-badge {
+    font-size: 10px !important;
+    padding: 3px 7px !important;
+  }
+
+}
