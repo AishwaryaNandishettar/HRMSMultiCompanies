@@ -1011,3 +1011,15 @@
   border-top: 1px solid #e5e7eb;
   margin-top: 14px;
 }
+.modal-overlay,
+.release-offer-modal-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 99999 !important;
+}
+
+.modal-content,
+.release-offer-modal {
+  position: relative;
+  z-index: 100000 !important;
+}

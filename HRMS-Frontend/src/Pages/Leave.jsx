@@ -811,6 +811,37 @@ const renderCheckboxFilter = (key) => {
             setFilters(prev => ({ ...prev, toDate: e.target.value }))
           }
         />
+
+        {/* Clear Filters Button */}
+        {(filters.employee || filters.leaveType || filters.status || filters.fromDate || filters.toDate || 
+          filters.employeeName || filters.empId || filters.department || filters.manager || filters.comments) && (
+          <button
+            onClick={() => {
+              setFilters({
+                employeeName: "",
+                employee: '',
+                empId: '',
+                department: '',
+                manager: '',
+                leaveType: '',
+                status: '',
+                fromDate: '',
+                toDate: '',
+                comments: ''
+              });
+            }}
+            style={{
+              padding: "6px 12px",
+              borderRadius: "6px",
+              border: "1px solid #ccc",
+              cursor: "pointer",
+              background: "#f5f5f5",
+              marginLeft: "10px"
+            }}
+          >
+            Clear Filters
+          </button>
+        )}
             </div>
 
              <div className="tabs">

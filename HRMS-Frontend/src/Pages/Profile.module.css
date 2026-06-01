@@ -1109,3 +1109,491 @@
   }
 
 }
+/* =========================================================
+   COMPENSATION TABLE - MATCHING TIMESHEET STYLE
+   First 3 columns frozen: EMP ID, EMP NAME, DOB
+   From 4th column onwards: horizontally scrollable
+   ========================================================= */
+
+/* TABLE WRAPPER - SCROLLABLE WITH FROZEN COLUMNS */
+.compensationTableWrapper {
+  width: 100%;
+  height: calc(100vh - 280px);
+  max-height: 500px;
+  overflow: auto;
+  position: relative;
+  background: #fff;
+  border: 1px solid #ddd;
+  border-radius: 10px;
+  overscroll-behavior: contain;
+  isolation: isolate;
+}
+
+/* Scrollbar styling */
+.compensationTableWrapper::-webkit-scrollbar {
+  height: 12px;
+  width: 12px;
+}
+
+.compensationTableWrapper::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 6px;
+}
+
+.compensationTableWrapper::-webkit-scrollbar-thumb {
+  background: #888;
+  border-radius: 6px;
+}
+
+.compensationTableWrapper::-webkit-scrollbar-thumb:hover {
+  background: #555;
+}
+
+/* FIX STICKY BLEEDING DURING SCROLL */
+.compensationTableWrapper .table {
+  overflow: visible;
+  border-collapse: separate;
+  border-spacing: 0;
+  min-width: 1800px;
+  width: max-content;
+  table-layout: fixed;
+  background: #fff;
+}
+
+.compensationTableWrapper .table th,
+.compensationTableWrapper .table td {
+  background-clip: padding-box;
+  box-sizing: border-box;
+}
+
+.compensationTableWrapper .table tbody tr:hover td:nth-child(1),
+.compensationTableWrapper .table tbody tr:hover td:nth-child(2),
+.compensationTableWrapper .table tbody tr:hover td:nth-child(3) {
+  background: #f8fdff;
+}
+
+.compensationTableWrapper .table thead {
+  display: table-header-group !important;
+}
+
+.compensationTableWrapper .table tbody {
+  display: table-row-group !important;
+}
+
+.compensationTableWrapper .table tr {
+  display: table-row !important;
+}
+
+.compensationTableWrapper .table th,
+.compensationTableWrapper .table td {
+  display: table-cell !important;
+}
+
+/* HEADER CELLS - STICKY AT TOP */
+.compensationTableWrapper .table thead th {
+  position: sticky;
+  top: 0;
+  z-index: 200;
+  background: #0d3b66;
+  color: white;
+  padding: 12px 10px;
+  text-align: center;
+  font-size: 14px;
+  font-weight: 600;
+  white-space: nowrap;
+  border-right: 1px solid rgba(255,255,255,0.2);
+  border-bottom: 2px solid #16306d;
+  border-top: 1px solid rgba(255,255,255,0.2);
+  overflow: visible !important;
+}
+
+.compensationTableWrapper .table thead th:first-child {
+  border-left: 1px solid rgba(255,255,255,0.2);
+}
+
+/* BODY CELLS */
+.compensationTableWrapper .table td {
+  padding: 12px 10px;
+  text-align: center;
+  font-size: 14px;
+  white-space: nowrap;
+  background: #fff;
+  border-right: 1px solid #e0e0e0;
+  border-bottom: 1px solid #e0e0e0;
+}
+
+.compensationTableWrapper .table tbody tr:first-child td {
+  border-top: 1px solid #e0e0e0;
+}
+
+.compensationTableWrapper .table tbody tr td:first-child {
+  border-left: 1px solid #e0e0e0;
+}
+
+.compensationTableWrapper .table tbody tr:hover td {
+  background: #f8fdff;
+}
+
+/* FROZEN COLUMN 1 - EMP ID (STICKY LEFT) */
+.compensationTableWrapper .table th:nth-child(1),
+.compensationTableWrapper .table td:nth-child(1) {
+  position: sticky;
+  left: 0;
+  width: 140px;
+  min-width: 140px;
+  max-width: 140px;
+  z-index: 300;
+  background: white;
+}
+
+.compensationTableWrapper .table thead th:nth-child(1) {
+  z-index: 500;
+  background: #0d3b66 !important;
+  box-shadow: 2px 0 5px rgba(0,0,0,0.15);
+}
+
+.compensationTableWrapper .table tbody td:nth-child(1) {
+  background: #fff;
+  box-shadow: 2px 0 4px -1px rgba(0,0,0,0.1);
+}
+
+/* FROZEN COLUMN 2 - EMP NAME (STICKY LEFT) */
+.compensationTableWrapper .table th:nth-child(2),
+.compensationTableWrapper .table td:nth-child(2) {
+  position: sticky;
+  left: 140px;
+  width: 220px;
+  min-width: 220px;
+  max-width: 220px;
+  z-index: 300;
+  background: white;
+}
+
+.compensationTableWrapper .table thead th:nth-child(2) {
+  z-index: 500;
+  background: #0d3b66 !important;
+  box-shadow: 2px 0 5px rgba(0,0,0,0.15);
+}
+
+.compensationTableWrapper .table tbody td:nth-child(2) {
+  background: #fff;
+  box-shadow: 2px 0 4px -1px rgba(0,0,0,0.1);
+}
+
+/* FROZEN COLUMN 3 - DOB (STICKY LEFT) */
+.compensationTableWrapper .table th:nth-child(3),
+.compensationTableWrapper .table td:nth-child(3) {
+  position: sticky;
+  left: 360px;
+  width: 160px;
+  min-width: 160px;
+  max-width: 160px;
+  z-index: 300;
+  background: white;
+}
+
+.compensationTableWrapper .table thead th:nth-child(3) {
+  z-index: 500;
+  background: #0d3b66 !important;
+  box-shadow: 2px 0 5px rgba(0,0,0,0.15);
+}
+
+.compensationTableWrapper .table tbody td:nth-child(3) {
+  background: #fff;
+  box-shadow: 2px 0 4px -1px rgba(0,0,0,0.1);
+}
+
+/* SCROLLABLE COLUMNS (4 onwards) - DOJ, etc. */
+.compensationTableWrapper .table th:nth-child(n+4),
+.compensationTableWrapper .table td:nth-child(n+4) {
+  min-width: 160px;
+  width: 160px;
+}
+
+/* MAINTAIN BACKGROUND ON HOVER FOR FROZEN COLUMNS */
+.compensationTableWrapper .table tbody tr:hover td:nth-child(1),
+.compensationTableWrapper .table tbody tr:hover td:nth-child(2),
+.compensationTableWrapper .table tbody tr:hover td:nth-child(3) {
+  background: #f8fdff;
+  box-shadow: 2px 0 4px -1px rgba(0, 0, 0, 0.1);
+}
+
+.profileRight {
+  flex: 1;
+  min-width: 0;
+}
+
+.profilePage,
+.profileContainer {
+  overflow-x: hidden;
+}
+
+/* Filter Header */
+.filterHeader {
+  position: relative;
+  cursor: pointer;
+}
+
+.filterIcon {
+  margin-left: 6px;
+  cursor: pointer;
+  font-size: 11px;
+}
+
+/* Filter Popup - FIX FOR Z-INDEX */
+.popup {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  width: 220px;
+  background: white;
+  border: 1px solid #ddd;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
+  z-index: 99999 !important;
+  padding: 8px;
+  margin-top: 4px;
+  color: #111827 !important;
+}
+
+.popup label,
+.popup span,
+.popup div,
+.popup input {
+  color: #111827 !important;
+}
+
+.excelSearch {
+  width: 100%;
+  padding: 6px;
+  border: 1px solid #bbb;
+  margin-bottom: 6px;
+  border-radius: 4px;
+}
+
+.excelList {
+  max-height: 150px;
+  overflow-y: auto;
+  margin-top: 8px;
+  border: 1px solid #ddd;
+  padding: 6px;
+  background: #fff;
+}
+
+.excelItem {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 4px;
+  font-size: 13px;
+  white-space: nowrap;
+  color: #111827 !important;
+}
+
+.excelItem input[type="checkbox"] {
+  flex-shrink: 0;
+}
+
+.excelActions {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 8px;
+  gap: 8px;
+}
+
+.excelActions button {
+  flex: 1;
+  padding: 6px 12px;
+  cursor: pointer;
+  border: 1px solid #ddd;
+  background: #f8f9fa;
+  border-radius: 4px;
+}
+
+.excelActions button:hover {
+  background: #e9ecef;
+}
+
+
+/* =========================================================
+   RESIGNATION TABLE WRAPPER - MATCHING TIMESHEET STYLE
+   First 2 columns frozen: EMP ID, NAME
+   From 3rd column onwards: horizontally scrollable
+   ========================================================= */
+
+/* TABLE WRAPPER - SCROLLABLE WITH FROZEN COLUMNS */
+.resignationTableWrapper {
+  width: 100%;
+  height: calc(100vh - 280px);
+  max-height: 500px;
+  overflow: auto;
+  position: relative;
+  background: #fff;
+  border: 1px solid #ddd;
+  border-radius: 10px;
+  overscroll-behavior: contain;
+  isolation: isolate;
+}
+
+/* Scrollbar styling */
+.resignationTableWrapper::-webkit-scrollbar {
+  height: 12px;
+  width: 12px;
+}
+
+.resignationTableWrapper::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 6px;
+}
+
+.resignationTableWrapper::-webkit-scrollbar-thumb {
+  background: #888;
+  border-radius: 6px;
+}
+
+.resignationTableWrapper::-webkit-scrollbar-thumb:hover {
+  background: #555;
+}
+
+/* FIX STICKY BLEEDING DURING SCROLL */
+.resignationTableWrapper .table {
+  overflow: visible;
+  border-collapse: separate;
+  border-spacing: 0;
+  min-width: 1600px;
+  width: max-content;
+  table-layout: fixed;
+  background: #fff;
+}
+
+.resignationTableWrapper .table th,
+.resignationTableWrapper .table td {
+  background-clip: padding-box;
+  box-sizing: border-box;
+}
+
+.resignationTableWrapper .table tbody tr:hover td:nth-child(1),
+.resignationTableWrapper .table tbody tr:hover td:nth-child(2) {
+  background: #f8fdff;
+}
+
+.resignationTableWrapper .table thead {
+  display: table-header-group !important;
+}
+
+.resignationTableWrapper .table tbody {
+  display: table-row-group !important;
+}
+
+.resignationTableWrapper .table tr {
+  display: table-row !important;
+}
+
+.resignationTableWrapper .table th,
+.resignationTableWrapper .table td {
+  display: table-cell !important;
+}
+
+/* HEADER CELLS - STICKY AT TOP */
+.resignationTableWrapper .table thead th {
+  position: sticky;
+  top: 0;
+  z-index: 200;
+  background: #0d3b66;
+  color: white;
+  padding: 12px 10px;
+  text-align: center;
+  font-size: 14px;
+  font-weight: 600;
+  white-space: nowrap;
+  border-right: 1px solid rgba(255,255,255,0.2);
+  border-bottom: 2px solid #16306d;
+  border-top: 1px solid rgba(255,255,255,0.2);
+  overflow: visible !important;
+}
+
+.resignationTableWrapper .table thead th:first-child {
+  border-left: 1px solid rgba(255,255,255,0.2);
+}
+
+/* BODY CELLS */
+.resignationTableWrapper .table td {
+  padding: 12px 10px;
+  text-align: center;
+  font-size: 14px;
+  white-space: nowrap;
+  background: #fff;
+  border-right: 1px solid #e0e0e0;
+  border-bottom: 1px solid #e0e0e0;
+}
+
+.resignationTableWrapper .table tbody tr:first-child td {
+  border-top: 1px solid #e0e0e0;
+}
+
+.resignationTableWrapper .table tbody tr td:first-child {
+  border-left: 1px solid #e0e0e0;
+}
+
+.resignationTableWrapper .table tbody tr:hover td {
+  background: #f8fdff;
+}
+
+/* FROZEN COLUMN 1 - EMP ID (STICKY LEFT) */
+.resignationTableWrapper .table th:nth-child(1),
+.resignationTableWrapper .table td:nth-child(1) {
+  position: sticky;
+  left: 0;
+  width: 140px;
+  min-width: 140px;
+  max-width: 140px;
+  z-index: 300;
+  background: white;
+}
+
+.resignationTableWrapper .table thead th:nth-child(1) {
+  z-index: 500;
+  background: #0d3b66 !important;
+  box-shadow: 2px 0 5px rgba(0,0,0,0.15);
+}
+
+.resignationTableWrapper .table tbody td:nth-child(1) {
+  background: #fff;
+  box-shadow: 2px 0 4px -1px rgba(0,0,0,0.1);
+}
+
+/* FROZEN COLUMN 2 - NAME (STICKY LEFT) */
+.resignationTableWrapper .table th:nth-child(2),
+.resignationTableWrapper .table td:nth-child(2) {
+  position: sticky;
+  left: 140px;
+  width: 180px;
+  min-width: 180px;
+  max-width: 180px;
+  z-index: 300;
+  background: white;
+}
+
+.resignationTableWrapper .table thead th:nth-child(2) {
+  z-index: 500;
+  background: #0d3b66 !important;
+  box-shadow: 2px 0 5px rgba(0,0,0,0.15);
+}
+
+.resignationTableWrapper .table tbody td:nth-child(2) {
+  background: #fff;
+  box-shadow: 2px 0 4px -1px rgba(0,0,0,0.1);
+}
+
+/* SCROLLABLE COLUMNS (3 onwards) - DEPT, MANAGER, etc. */
+.resignationTableWrapper .table th:nth-child(n+3),
+.resignationTableWrapper .table td:nth-child(n+3) {
+  min-width: 160px;
+  width: 160px;
+}
+
+/* MAINTAIN BACKGROUND ON HOVER FOR FROZEN COLUMNS */
+.resignationTableWrapper .table tbody tr:hover td:nth-child(1),
+.resignationTableWrapper .table tbody tr:hover td:nth-child(2) {
+  background: #f8fdff;
+  box-shadow: 2px 0 4px -1px rgba(0, 0, 0, 0.1);
+}

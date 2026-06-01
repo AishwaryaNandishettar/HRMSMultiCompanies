@@ -373,6 +373,8 @@ if (!matchesColumnFilters) return false;
     setExitFrom("");
     setExitTo("");
     setViewMode("all");
+    setColumnFilters({});
+    setTempSelections({});
   };
 
   const exportExcel = () => {

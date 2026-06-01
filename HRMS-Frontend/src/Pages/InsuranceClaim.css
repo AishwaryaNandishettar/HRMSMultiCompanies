@@ -203,13 +203,14 @@
 ========================================================= */
 .insurance-container .table-wrapper {
   width: 100%;
-  max-height: 70vh;
-  overflow: auto;
+  height: 500px;
+  overflow-x: auto !important;
+  overflow-y: auto !important;
+  position: relative;
   border: 1px solid #ddd;
   border-radius: 10px;
   background: #fff;
-  position: relative;
-  isolation: isolate;
+  -webkit-overflow-scrolling: touch;
 }
 
 /* Scrollbar styling */
@@ -314,13 +315,13 @@
    FROZEN COLUMN 1 - EMPLOYEE ID (STICKY LEFT)
 ========================================================= */
 .insurance-container .col-1 {
-  width: 160px;
-  min-width: 160px;
-  max-width: 160px;
+  width: 180px;
+  min-width: 180px;
+  max-width: 180px;
 
   position: sticky;
   left: 0;
-  z-index: 120;
+  z-index: 30;
   background: #fff;
   box-shadow: 2px 0 4px -1px rgba(0,0,0,0.1);
 }
@@ -331,17 +332,18 @@
   box-shadow: 2px 0 4px -1px rgba(0, 0, 0, 0.15);
 }
 
+
 /* =========================================================
-   FROZEN COLUMN 2 - EMPLOYEE NAME (STICKY LEFT)
+   FROZEN COLUMN 2 - EMPLOYEE NAME
 ========================================================= */
 .insurance-container .col-2 {
- width: 160px;
-  min-width: 160px;
-  max-width: 160px;
+  width: 180px;
+  min-width: 180px;
+  max-width: 180px;
 
   position: sticky;
-  left: 0;
-  z-index: 120;
+  left: 180px;   /* ✅ width of col-1 */
+  z-index: 30;
   background: #fff;
   box-shadow: 2px 0 4px -1px rgba(0,0,0,0.1);
 }
@@ -1133,4 +1135,63 @@
     max-height: 180px !important;
     overflow-y: auto !important;
   }
+}
+/* First frozen column - Employee ID */
+.col-1 {
+  position: sticky;
+  left: 0;
+  min-width: 120px;
+  z-index: 30;
+  background: #fff;
+}
+
+/* Second frozen column - Employee Name */
+.col-2 {
+  position: sticky;
+  left: 120px;   /* same width as col-1 */
+  min-width: 180px;
+  z-index: 30;
+  background: #fff;
+}
+.grid-header .col-1,
+.grid-header .col-2 {
+  position: sticky;
+  background: #2f6699;   /* your header color */
+  z-index: 100;
+}
+/* =========================================================
+   FINAL FREEZE HEADER + 2 COLUMNS
+========================================================= */
+
+.insurance-container .grid-header .cell {
+  position: sticky !important;
+  top: 0 !important;
+  z-index: 500 !important;
+  background: #2c5f8d !important;
+}
+
+/* Employee ID */
+.insurance-container .grid-header .col-1 {
+  left: 0 !important;
+  z-index: 700 !important;
+}
+
+.insurance-container .grid-body .col-1 {
+  position: sticky !important;
+  left: 0 !important;
+  background: #fff !important;
+  z-index: 100 !important;
+}
+
+/* Employee Name */
+.insurance-container .grid-header .col-2 {
+  left: 180px !important;
+  z-index: 700 !important;
+}
+
+.insurance-container .grid-body .col-2 {
+  position: sticky !important;
+  left: 180px !important;
+  background: #fff !important;
+  z-index: 100 !important;
 }

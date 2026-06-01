@@ -1290,3 +1290,148 @@
 .insurance-container .table-wrapper {
   -webkit-overflow-scrolling: touch;
 }
+/* =========================================================
+   REIMBURSEMENT - VERTICAL SCROLL FIX
+   ONLY TABLE BODY SCROLLS
+========================================================= */
+
+.insurance-container .table-wrapper {
+  height: 500px !important;
+  max-height: 500px !important;
+
+  overflow-y: auto !important;
+  overflow-x: auto !important;
+
+  position: relative !important;
+  display: block !important;
+}
+
+/* keep header frozen */
+.insurance-container .claim-table thead th {
+  position: sticky !important;
+  top: 0 !important;
+  z-index: 500 !important;
+  background: #1f3c88 !important;
+}
+
+/* ensure table behaves normally */
+.insurance-container .claim-table {
+  width: max-content !important;
+  min-width: 100% !important;
+  border-collapse: separate !important;
+  border-spacing: 0 !important;
+}
+
+/* body rows */
+.insurance-container .claim-table tbody {
+  position: relative !important;
+}
+
+/* smooth scrolling */
+.insurance-container .table-wrapper {
+  -webkit-overflow-scrolling: touch;
+}
+.insurance-container {
+  height: calc(100vh - 120px);
+  overflow: hidden;
+}
+
+.insurance-container .table-wrapper {
+  height: calc(100vh - 320px) !important;
+}
+/* =========================================================
+   SHOW ONLY 5 ROWS + SCROLL REMAINING RECORDS
+========================================================= */
+
+.insurance-container .table-wrapper {
+  height: 320px !important;   /* adjust if your row height differs */
+  max-height: 320px !important;
+
+  overflow-y: auto !important;
+  overflow-x: auto !important;
+
+  position: relative;
+  display: block;
+}
+
+/* keep header fixed */
+.insurance-container .claim-table thead th {
+  position: sticky !important;
+  top: 0 !important;
+  z-index: 500 !important;
+  background: #1f3c88 !important;
+}
+/* ==========================================
+   FILTER POPUP FULLY VISIBLE
+========================================== */
+
+.insurance-container .table-wrapper {
+  overflow-x: auto !important;
+  overflow-y: auto !important;
+}
+
+/* allow popup to overflow table */
+.insurance-container .claim-table,
+.insurance-container .claim-table thead,
+.insurance-container .claim-table th,
+.insurance-container .table-header-cell {
+  overflow: visible !important;
+}
+
+/* popup */
+.insurance-container .excel-filter-popup {
+  position: absolute !important;
+  top: 100% !important;
+  left: 0 !important;
+
+  width: 260px;
+  max-height: 350px !important;
+
+  display: flex;
+  flex-direction: column;
+
+  z-index: 999999 !important;
+}
+
+/* list scrolls */
+.insurance-container .excel-checkbox-list {
+  flex: 1;
+  max-height: 180px;
+  overflow-y: auto;
+}
+
+/* footer always visible */
+.insurance-container .excel-filter-footer {
+  position: sticky;
+  bottom: 0;
+  background: #f3f3f3;
+  border-top: 1px solid #ccc;
+  z-index: 5;
+}
+
+/* buttons */
+.insurance-container .excel-ok-btn,
+.insurance-container .excel-cancel-btn {
+  height: 32px;
+  min-width: 75px;
+}
+/* popup must receive clicks */
+.excel-filter-popup {
+  z-index: 999999 !important;
+  pointer-events: auto !important;
+}
+
+/* buttons clickable */
+.excel-ok-btn,
+.excel-cancel-btn {
+  position: relative;
+  z-index: 1000000 !important;
+  pointer-events: auto !important;
+  cursor: pointer;
+}
+
+/* prevent table cells from sitting above popup */
+.claim-table th,
+.claim-table td {
+  overflow: visible !important;
+}

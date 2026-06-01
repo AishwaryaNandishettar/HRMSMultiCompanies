@@ -9,6 +9,8 @@ const PayrollToolbar = ({
   setToMonth,
   sortType,
   setSortType,
+  columnFilters,
+  setColumnFilters,
   onExport,
   onUpdatePayroll,
   onProcessAll   // ✅ ADD THIS LINE
@@ -39,6 +41,29 @@ const PayrollToolbar = ({
         <option value="high">High Salary (6L+)</option>
         <option value="low">Low Salary</option>
       </select>
+
+      {(search || fromMonth || toMonth || sortType || Object.keys(columnFilters || {}).some(key => columnFilters[key])) && (
+        <button
+          onClick={() => {
+            setSearch("");
+            setFromMonth("");
+            setToMonth("");
+            setSortType("");
+            if (setColumnFilters) {
+              setColumnFilters({});
+            }
+          }}
+          style={{
+            padding: "6px 12px",
+            borderRadius: "6px",
+            border: "1px solid #ccc",
+            cursor: "pointer",
+            background: "#f5f5f5"
+          }}
+        >
+          Clear Filters
+        </button>
+      )}
 
     
 

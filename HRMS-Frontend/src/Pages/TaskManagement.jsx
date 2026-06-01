@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import "./Task.css";
-import { getTasks } from "../api/taskApi";
+import { getTasks, createTaskApi } from "../api/taskApi";
 import * as XLSX from "xlsx";
 import { saveAs } from "file-saver";
 export default function Task() {
@@ -23,6 +23,7 @@ const role =
     dueDate: "",
   });
 
+  
   /* =========================
      TASK DATA
   ========================= */
@@ -94,18 +95,39 @@ const loadTasks = async () => {
   try {
     const response = await getTasks();
 
-    console.log("BACKEND TASKS =", response.data);
+    console.log(
+      "TASK COUNT:",
+      response.data.length
+    );
+
+    console.log(
+      "TASK DATA:",
+      response.data
+    );
 
     setTaskData(response.data);
 
   } catch (error) {
-
-    console.error("TASK FETCH ERROR =", error);
-
+    console.error(error);
   }
 };
 
+useEffect(() => {
+  loadTasks();
 
+  setColumnFilters({
+    empid: [],
+    employeename: [],
+    task: [],
+    assignedby: [],
+    priority: [],
+    assignDate: [],
+    dueDate: [],
+    department: [],
+    status: [],
+    approval: [],
+  });
+}, []);
 
 
 
@@ -147,6 +169,34 @@ const renderFilterPopup = (key) => {
       />
 
       <div className="taskPage-filterList">
+         {/* Select All */}
+  {suggestions.length > 0 && (
+    <label className="taskPage-filterItem taskPage-selectAll">
+      <input
+        type="checkbox"
+        checked={
+          suggestions.length > 0 &&
+          suggestions.every((s) =>
+            (columnFilters[key] || []).includes(s)
+          )
+        }
+        onChange={(e) => {
+          if (e.target.checked) {
+            setColumnFilters({
+              ...columnFilters,
+              [key]: [...suggestions],
+            });
+          } else {
+            setColumnFilters({
+              ...columnFilters,
+              [key]: [],
+            });
+          }
+        }}
+      />
+      <span>Select All</span>
+    </label>
+  )}
 
         {suggestions.length > 0 ? (
 
@@ -304,33 +354,29 @@ const renderFilterPopup = (key) => {
      ASSIGN TASK
   ========================= */
 
-  const assignTask = () => {
+ 
 
-    if (
-      !taskForm.task ||
-      !taskForm.assignedTo ||
-      !taskForm.dueDate
-    ) {
-      alert("Please fill all fields");
-      return;
-    }
+const assignTask = async () => {
+  if (
+    !taskForm.task ||
+    !taskForm.assignedTo ||
+    !taskForm.dueDate
+  ) {
+    alert("Please fill all fields");
+    return;
+  }
 
-
-    const newTask = {
-      id: `EMP00${taskData.length + 1}`,
-      employee: taskForm.assignedTo,
-      task: taskForm.task,
-      manager: role,
+  try {
+    const payload = {
+      title: taskForm.task,
+      assigneeName: taskForm.assignedTo,
       priority: taskForm.priority,
-      assignDate: new Date().toLocaleDateString(),
       dueDate: taskForm.dueDate,
-      dept: "HRMS",
-      progress: 0,
-      status: "Assigned",
-      approval: "Pending",
     };
 
-    setTaskData([newTask, ...taskData]);
+    await createTaskApi(payload);
+
+    await loadTasks(); // reload from backend
 
     setTaskForm({
       task: "",
@@ -338,7 +384,13 @@ const renderFilterPopup = (key) => {
       priority: "Medium",
       dueDate: "",
     });
-  };
+
+  } catch (err) {
+    console.error("Task Create Error", err);
+    alert("Failed to assign task");
+  }
+};
+
 
   return (
 
@@ -544,6 +596,36 @@ const renderFilterPopup = (key) => {
       ========================= */}
 
     <div className="taskPage-tableWrapper">
+
+  {/* Clear Filters Button */}
+  {Object.keys(columnFilters).some(key => columnFilters[key] && columnFilters[key].length > 0) && (
+    <div style={{ marginBottom: "10px", display: "flex", justifyContent: "flex-end" }}>
+      <button
+        onClick={() => {
+          setColumnFilters({
+            empid: [],
+            employeename: [],
+            task: [],
+            assignedby: [],
+            priority: [],
+            assigndate: [],
+            duedate: [],
+            department: [],
+            progress: []
+          });
+        }}
+        style={{
+          padding: "6px 12px",
+          borderRadius: "6px",
+          border: "1px solid #ccc",
+          cursor: "pointer",
+          background: "#f5f5f5"
+        }}
+      >
+        Clear Filters
+      </button>
+    </div>
+  )}
 
   <div className="taskPage-tableContainer">
 

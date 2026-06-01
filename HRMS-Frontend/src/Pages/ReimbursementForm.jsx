@@ -191,8 +191,16 @@ const filteredData = requests.filter((r) => {
   return Object.keys(filters).every((key) => {
 
     // no filter selected
-    if (!filters[key]) return true;
+    if (!filters[key] || (Array.isArray(filters[key]) && filters[key].length === 0)) return true;
 
+    // Array filter (from column header checkboxes)
+    if (Array.isArray(filters[key])) {
+      return filters[key].some(v =>
+        String(r[key] || "").toLowerCase() === String(v).toLowerCase()
+      );
+    }
+
+    // String filter (from top bar inputs)
     return String(r[key] || "")
       .toLowerCase()
       .includes(String(filters[key]).toLowerCase());
@@ -235,6 +243,21 @@ const filteredData = requests.filter((r) => {
             <option value={STATUS_APPROVED}>Approved</option>
             <option value={STATUS_REJECTED}>Rejected</option>
           </select>
+
+          {(filters.name || filters.department || filters.status || Object.keys(filters).some(key => filters[key] && key !== 'name' && key !== 'department' && key !== 'status')) && (
+            <button
+              onClick={() => setFilters({})}
+              style={{
+                padding: "6px 12px",
+                borderRadius: "6px",
+                border: "1px solid #ccc",
+                cursor: "pointer",
+                background: "#f5f5f5"
+              }}
+            >
+              Clear Filters
+            </button>
+          )}
 
           <button className="search-btn">Search</button>
 
@@ -607,11 +630,11 @@ const filteredData = requests.filter((r) => {
       <label className="excel-checkbox-item">
         <input
           type="checkbox"
-          checked={!filters[col.key]}
+          checked={!filters[col.key] || (Array.isArray(filters[col.key]) && filters[col.key].length === 0)}
           onChange={() => {
             setFilters({
               ...filters,
-              [col.key]: ""
+              [col.key]: []
             });
           }}
         />
@@ -626,14 +649,15 @@ const filteredData = requests.filter((r) => {
         >
           <input
             type="checkbox"
-            checked={filters[col.key] === val}
+            checked={Array.isArray(filters[col.key]) ? filters[col.key].includes(val) : filters[col.key] === val}
             onChange={() => {
+              const current = Array.isArray(filters[col.key]) ? filters[col.key] : (filters[col.key] ? [filters[col.key]] : []);
+              const updated = current.includes(val)
+                ? current.filter(v => v !== val)
+                : [...current, val];
               setFilters({
                 ...filters,
-                [col.key]:
-                  filters[col.key] === val
-                    ? ""
-                    : val
+                [col.key]: updated
               });
             }}
           />
@@ -657,7 +681,7 @@ const filteredData = requests.filter((r) => {
         onClick={() => {
           setFilters({
             ...filters,
-            [col.key]: ""
+            [col.key]: []
           });
 
           setActiveFilter(null);

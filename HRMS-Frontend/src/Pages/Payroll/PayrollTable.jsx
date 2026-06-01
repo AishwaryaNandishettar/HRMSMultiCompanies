@@ -3,15 +3,29 @@ import PayrollRow from "./PayrollRow";
 import payslipData from "../../Data/PaySlipData";
 import "./Payroll.css";
 
-const PayrollTable = ({ data, onViewPayslip, onProfileView , onEditPayroll, onDownloadPayslip,onProcessPayroll,onStatusChange}) => {
+const PayrollTable = ({ data, onViewPayslip, onProfileView , onEditPayroll, onDownloadPayslip,onProcessPayroll,onStatusChange, columnFilters, setColumnFilters }) => {
    /* =========================
      FILTER STATES
   ========================= */
 
   const [activeFilter, setActiveFilter] = useState(null);
   const [filterText, setFilterText] = useState("");
-  const [filters, setFilters] = useState({});
+  const [filters, setFilters] = useState(columnFilters || {});
   const [selectedValues, setSelectedValues] = useState({});
+
+  // Sync internal filters with parent
+  useEffect(() => {
+    if (setColumnFilters) {
+      setColumnFilters(filters);
+    }
+  }, [filters]);
+
+  // Sync parent filters with internal state
+  useEffect(() => {
+    if (columnFilters) {
+      setFilters(columnFilters);
+    }
+  }, [columnFilters]);
 
   const popupRef = useRef();
    /* =========================

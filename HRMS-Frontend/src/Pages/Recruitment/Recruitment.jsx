@@ -59,6 +59,7 @@ const JobTable = ({ jobs , setJobs}) => {
   const [search, setSearch] = useState("");
   
   const [openFilter, setOpenFilter] = useState(null);
+  
   const [statusFilter, setStatusFilter] = useState("All");
   const [deptFilter, setDeptFilter] = useState("All");
   const [dateFilter, setDateFilter] = useState("All");
@@ -70,9 +71,24 @@ const JobTable = ({ jobs , setJobs}) => {
     appliedDate: '', l1InterviewDate: '', l2InterviewDate: '', l3InterviewDate: '', l4InterviewDate: '',
     offerDate: '', onboardingDate: ''
   });
-
-  // ── OFFER LETTER STATE ── ✅ ADDED BACK: For releasing offer letters in main table
+    // ── OFFER LETTER STATE ── ✅ ADDED BACK: For releasing offer letters in main table
   const [offerLetterJob, setOfferLetterJob] = useState(null);
+ const [showReleaseOffer, setShowReleaseOffer] = useState(false);
+
+  useEffect(() => {
+    if (showReleaseOffer) {
+      document.body.classList.add("release-offer-open");
+    } else {
+      document.body.classList.remove("release-offer-open");
+    }
+
+    return () => {
+      document.body.classList.remove("release-offer-open");
+    };
+  }, [showReleaseOffer]);
+
+
+
  
 const [showPostJob, setShowPostJob] = useState(false);
  
@@ -397,7 +413,8 @@ const handleSubmit = async (e) => {
         e.stopPropagation();
         e.nativeEvent.stopImmediatePropagation();
 
-        setOfferLetterJob(job);
+         setShowReleaseOffer(true);
+  setOfferLetterJob(job);
       }}
       style={{
         background: 'linear-gradient(135deg, #16a34a, #22c55e)',
@@ -441,7 +458,10 @@ const handleSubmit = async (e) => {
         {offerLetterJob && (
           <ReleaseOfferLetterModal
             job={offerLetterJob}
-            onClose={() => setOfferLetterJob(null)}
+            onClose={() => {
+  setOfferLetterJob(null);
+  setShowReleaseOffer(false);
+}}
           />
         )}
 
@@ -817,46 +837,6 @@ const handleSubmit = async (e) => {
   </div>
 )}
       </div>
-
-     
-      {selectedCandidate && (
-  <div className="modal-overlay">
-    <div className="modal-content">
-
-      <h2>Candidate Details</h2>
-
-      <p><b>Name:</b> {selectedCandidate.name || "N/A"}</p>
-      <p><b>Job Title:</b> {selectedCandidate.jobTitle || "N/A"}</p>
-      <p><b>Department:</b> {selectedCandidate.department || "N/A"}</p>
-      <p><b>Designation:</b> {selectedCandidate.designation || "N/A"}</p>
-      <p><b>Status:</b> {selectedCandidate.status || "N/A"}</p>
-
-      <hr />
-
-      <p><b>Current Stage Meaning:</b></p>
-      <p>
-        {selectedCandidate.status === "Shortlisted" &&
-          "Candidate has passed initial screening and is shortlisted for next round."}
-
-        {selectedCandidate.status === "Interview Stage" &&
-          "Candidate is scheduled or undergoing interview process."}
-
-        {selectedCandidate.status === "Selected" &&
-          "Candidate has been selected for offer."}
-
-        {!selectedCandidate.status &&
-          "Candidate is under review."}
-      </p>
-
-      <div className="modal-actions">
-        <button onClick={() => setSelectedCandidate(null)}>
-          Close
-        </button>
-      </div>
-
-    </div>
-  </div>
-)}
     </div>
   );
 };
@@ -867,11 +847,20 @@ const CandidatePipeline = ({
   interviewCount,
   rejectedCount,
   selectedCount,
-  jobs
+  jobs,
+  setSelectedCandidate
 }) => {
   const navigate = useNavigate();
   return (
-    <aside className="pipeline-card">
+   <aside
+  className="pipeline-card"
+  style={{
+    background: "red",
+    width: "320px",
+    minHeight: "500px",
+    display: "block"
+  }}
+>
       <h3>Candidate Pipeline</h3>
 
       {/* Funnel */}
@@ -1065,6 +1054,7 @@ if (user?.role === "EMP") {
   return null; // ❌ hides entire page for employee
 }
   const [jobs, setJobs] = useState([]);
+  const [selectedCandidate, setSelectedCandidate] = useState(null);
   useEffect(() => {
   const fetchJobs = async () => {
     try {
@@ -1166,14 +1156,14 @@ const interviewJobs = jobs.filter(j => j.status === "Interview Stage");
 
       <section className="content">
       <JobTable jobs={jobs} setJobs={setJobs} />
-      <CandidatePipeline
+  <CandidatePipeline
   appliedCount={appliedCount}
   shortlistedCount={shortlistedCount}
   interviewCount={interviewCount}
   rejectedCount={rejectedCount}
   selectedCount={selectedCount}
   jobs={jobs}
-
+  setSelectedCandidate={setSelectedCandidate}
 />
         <HiringAnalytics
   jobs={jobs}
@@ -1184,6 +1174,46 @@ const interviewJobs = jobs.filter(j => j.status === "Interview Stage");
   selectedCount={selectedCount}
 />
       </section>
+      
+      {selectedCandidate && (
+  <div className="modal-overlay">
+    <div className="modal-content">
+
+      <h2>Candidate Details</h2>
+
+      <p><b>Name:</b> {selectedCandidate.name || "N/A"}</p>
+      <p><b>Job Title:</b> {selectedCandidate.jobTitle || "N/A"}</p>
+      <p><b>Department:</b> {selectedCandidate.department || "N/A"}</p>
+      <p><b>Designation:</b> {selectedCandidate.designation || "N/A"}</p>
+      <p><b>Status:</b> {selectedCandidate.status || "N/A"}</p>
+
+      <hr />
+
+      <p><b>Current Stage Meaning:</b></p>
+      <p>
+        {selectedCandidate.status === "Shortlisted" &&
+          "Candidate has passed initial screening and is shortlisted for next round."}
+
+        {selectedCandidate.status === "Interview Stage" &&
+          "Candidate is scheduled or undergoing interview process."}
+
+        {selectedCandidate.status === "Selected" &&
+          "Candidate has been selected for offer."}
+
+        {!selectedCandidate.status &&
+          "Candidate is under review."}
+      </p>
+
+      <div className="modal-actions">
+        <button onClick={() => setSelectedCandidate(null)}>
+          Close
+        </button>
+      </div>
+
     </div>
+  </div>
+)}
+    </div>
+    
   );
 }

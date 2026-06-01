@@ -426,6 +426,26 @@ return String(value ?? "")
             )}
           </select>
 
+          {(filters.employeeName || filters.department || filters.status || fromMonth || toMonth || 
+            Object.keys(filters).some(key => Array.isArray(filters[key]) && filters[key].length > 0)) && (
+            <button
+              onClick={() => {
+                setFilters({});
+                setFromMonth("");
+                setToMonth("");
+              }}
+              style={{
+                padding: "6px 12px",
+                borderRadius: "6px",
+                border: "1px solid #ccc",
+                cursor: "pointer",
+                background: "#f5f5f5"
+              }}
+            >
+              Clear Filters
+            </button>
+          )}
+
           {(role === ROLE_ADMIN || role === ROLE_EMP) && (
             <button className="new-claim-btn" onClick={() => setShowForm(!showForm)}>
               + New Claim

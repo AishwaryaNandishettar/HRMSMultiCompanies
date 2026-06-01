@@ -16,6 +16,9 @@ const isRecord =
 
 console.log("USER =>", user);
 console.log("EMPLOYEE =>", employee);
+
+  // 👇 ADD THIS HERE
+  console.log("Payroll Employee Data =>", employee);
   const profile = {
   name:
   employee?.empName ||
@@ -49,25 +52,41 @@ avatar:
   user?.profileImage ||
   user?.image ||
   `https://ui-avatars.com/api/?name=${encodeURIComponent(
-    user?.fullName || user?.name || "Employee"
-  )}`,
+    employee?.empName ||
+    employee?.fullName ||
+    employee?.employee?.fullName ||
+    employee?.employee?.name ||
+    employee?.name ||
+    user?.fullName ||
+    user?.name ||
+    user?.employeeName ||
+    user?.username ||
+    user?.email?.split("@")[0] ||
+    "Employee"
+  )}&background=random&size=200`,
 
-  gross:
-    employee?.gross ||
-    employee?.grossPay ||
-    employee?.salary ||
-    0,
+gross:
+  employee?.gross ||
+  employee?.grossPay ||
+  employee?.gross_salary ||
+  employee?.grossSalary ||
+  employee?.payroll?.grossPay ||
+  employee?.payroll?.gross ||
+  employee?.salary ||
+  0,
 
      deduction:
     (employee?.tax || 0) +
     (employee?.pf || 0) +
     (employee?.insurance || 0),
 
-  net:
-    employee?.net ||
-    employee?.netPay ||
-    employee?.salary ||
-    0,
+net:
+  employee?.net ||
+  employee?.netPay ||
+  employee?.net_salary ||
+  employee?.netSalary ||
+  employee?.salary ||
+  0,
 
      history: employee
     ? [

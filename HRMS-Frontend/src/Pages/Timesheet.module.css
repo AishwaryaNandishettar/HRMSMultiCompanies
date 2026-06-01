@@ -1325,15 +1325,3 @@
 
   box-sizing: border-box;
 }
-.excelItem input[type="checkbox"] {
-  margin: 0;
-  flex-shrink: 0;
-}
-
-.excelItem span {
-  flex: 1;
-  text-align: left;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}

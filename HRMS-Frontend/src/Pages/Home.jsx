@@ -62,6 +62,8 @@
       const [attendanceChartData, setAttendanceChartData] = useState([]);
       const [leaveChartData, setLeaveChartData] = useState([]);
       const [homeData, setHomeData] = useState(null);
+
+
       
       // Enhanced state for role-based KPIs
       const [myAttendancePercentage, setMyAttendancePercentage] = useState(0);
@@ -73,7 +75,7 @@
       const [calendarEvents, setCalendarEvents] = useState([]);
       const [last3MonthsPayroll, setLast3MonthsPayroll] = useState([]);
       const [systemNotifications, setSystemNotifications] = useState([]);
-      
+      const [showEmpFilter, setShowEmpFilter] = useState(false);
       const employeeSummary = employees.map(emp => ({
     fullName: emp.fullName,
     employeeId: emp.employeeId,
@@ -81,6 +83,17 @@
     designation: emp.designation,
   }));
       
+  const handleEmployeeSelect = (employee) => {
+  setSelectedEmployees((prev) => {
+    if (prev.includes(employee)) {
+      return prev.filter((e) => e !== employee);
+    }
+    return [...prev, employee];
+  });
+
+  // CLOSE POPUP AFTER SELECTION
+  setShowEmpFilter(false);
+};
       // 🔄 LIVE ATTENDANCE AUTO REFRESH (30 sec)
   useEffect(() => {
     const interval = setInterval(() => {
@@ -95,6 +108,38 @@
     try {
       const data = await fetchHomeData(user.email);
       setHomeData(data);
+      
+      // If todayAttendance is not in homeData, fetch it separately
+      if (!data.todayAttendance || !data.todayAttendance.checkIn) {
+        try {
+          const userId = user.id || user._id || user.employeeId || user.empId;
+          const attendanceData = await getMyAttendance(userId);
+          
+          // Find today's attendance record
+          const today = new Date().toLocaleDateString("en-CA"); // YYYY-MM-DD format
+          const todayRecord = Array.isArray(attendanceData) 
+            ? attendanceData.find(r => r.date === today)
+            : Array.isArray(attendanceData?.data)
+            ? attendanceData.data.find(r => r.date === today)
+            : null;
+          
+          if (todayRecord) {
+            setHomeData(prev => ({
+              ...prev,
+              todayAttendance: {
+                status: todayRecord.status || (todayRecord.checkIn ? "Checked In" : "Not Checked In"),
+                checkIn: todayRecord.checkIn,
+                checkOut: todayRecord.checkOut,
+                date: todayRecord.date,
+                tos: todayRecord.tos,
+                attendanceType: todayRecord.attendanceType || todayRecord.type
+              }
+            }));
+          }
+        } catch (err) {
+          console.error("Failed to fetch today's attendance:", err);
+        }
+      }
     } catch (err) {
       console.error("Refresh failed", err);
     }
@@ -424,7 +469,43 @@ useEffect(() => {
             console.log("✅ Home data loaded:", data);
             console.log("📊 Leave users count:", data.leaveUsers?.length || 0);
             console.log("📋 Leave users data:", data.leaveUsers);
+            console.log("🕐 Today attendance data:", data.todayAttendance);
             setHomeData(data);
+
+            // ✅ If todayAttendance is not in homeData, fetch it separately from attendance API
+            if (!data.todayAttendance || !data.todayAttendance.checkIn) {
+              try {
+                const userId = user.id || user._id || user.employeeId || user.empId;
+                const attendanceData = await getMyAttendance(userId);
+                
+                // Find today's attendance record
+                const today = new Date().toLocaleDateString("en-CA"); // YYYY-MM-DD format
+                const todayRecord = Array.isArray(attendanceData) 
+                  ? attendanceData.find(r => r.date === today)
+                  : Array.isArray(attendanceData?.data)
+                  ? attendanceData.data.find(r => r.date === today)
+                  : null;
+                
+                console.log("📅 Today's date:", today);
+                console.log("📋 Today's attendance record:", todayRecord);
+                
+                if (todayRecord) {
+                  setHomeData(prev => ({
+                    ...prev,
+                    todayAttendance: {
+                      status: todayRecord.status || (todayRecord.checkIn ? "Checked In" : "Not Checked In"),
+                      checkIn: todayRecord.checkIn,
+                      checkOut: todayRecord.checkOut,
+                      date: todayRecord.date,
+                      tos: todayRecord.tos,
+                      attendanceType: todayRecord.attendanceType || todayRecord.type
+                    }
+                  }));
+                }
+              } catch (err) {
+                console.error("Failed to fetch today's attendance:", err);
+              }
+            }
 
             // ✅ Set attendance percentage from backend stats (works for ALL roles)
             if (data.stats && data.stats.attendancePercentage !== undefined) {
@@ -654,6 +735,28 @@ useEffect(() => {
     return [...new Set(employees.map(emp => emp[key]))];
   };
 
+  const getVisibleUniqueValues = (key) => {
+  return [
+    ...new Set(
+      employees
+        .filter((emp) => {
+          const matchesSearch =
+            (emp.fullName || "")
+              .toLowerCase()
+              .includes(search.toLowerCase()) ||
+            (emp.employeeId || "")
+              .toString()
+              .toLowerCase()
+              .includes(search.toLowerCase());
+
+          return matchesSearch;
+        })
+        .slice(0, 5) // same records shown in table
+        .map((emp) => emp[key])
+        .filter(Boolean)
+    ),
+  ];
+};
   const filteredEmployees = employees.filter((emp) => {
     const active =
       (emp.status || "").toUpperCase() === "ACTIVE";
@@ -979,36 +1082,31 @@ useEffect(() => {
                     <option>IT</option>
                     <option>Sales</option>
                   </select>
+
+                  {(search || Object.keys(filters).some(key => filters[key] && filters[key].length > 0)) && (
+                    <button
+                      onClick={() => {
+                        setSearch("");
+                        setFilters({});
+                      }}
+                      style={{
+                        padding: "6px 12px",
+                        borderRadius: "6px",
+                        border: "1px solid #ccc",
+                        cursor: "pointer",
+                        background: "#f5f5f5",
+                        marginLeft: "10px"
+                      }}
+                    >
+                      Clear Filters
+                    </button>
+                  )}
                 </div>
 
                 <div className="scrollable-box emp-scroll">
                   <table className="emp-table">
                   <thead>
-                    {activeFilter && (
-    <div className="filter-popup">
-      {getUniqueValues(activeFilter).map((value) => (
-        <label key={value}>
-          <input
-            type="checkbox"
-            checked={
-              filters[activeFilter]?.includes(value) || false
-            }
-            onChange={(e) => {
-              setFilters((prev) => ({
-                ...prev,
-                [activeFilter]: e.target.checked
-                  ? [...(prev[activeFilter] || []), value]
-                  : (prev[activeFilter] || []).filter(
-                      (v) => v !== value
-                    ),
-              }));
-            }}
-          />
-          {value}
-        </label>
-      ))}
-    </div>
-  )}
+
     <tr>
   <th style={{ position: "relative" }}>
     <div
@@ -1036,33 +1134,33 @@ useEffect(() => {
         />
 
         {/* Checkbox List */}
-        {getUniqueValues("fullName")
-          .filter((value) =>
-            String(value)
-              .toLowerCase()
-              .includes(filterText.toLowerCase())
-          )
-          .map((value) => (
-            <label key={value}>
-              <input
-                type="checkbox"
-                checked={
-                  filters.fullName?.includes(value) || false
-                }
-                onChange={(e) => {
-                  setFilters((prev) => ({
-                    ...prev,
-                    fullName: e.target.checked
-                      ? [...(prev.fullName || []), value]
-                      : (prev.fullName || []).filter(
-                          (v) => v !== value
-                        ),
-                  }));
-                }}
-              />
-              {value}
-            </label>
-          ))}
+<div className="filter-checkbox-list">
+ {getVisibleUniqueValues("fullName")
+    .filter((value) =>
+      String(value)
+        .toLowerCase()
+        .includes(filterText.toLowerCase())
+    )
+    .map((value) => (
+      <label key={value}>
+        <input
+          type="checkbox"
+          checked={filters.fullName?.includes(value) || false}
+          onChange={(e) => {
+            setFilters((prev) => ({
+              ...prev,
+              fullName: e.target.checked
+                ? [...(prev.fullName || []), value]
+                : (prev.fullName || []).filter(
+                    (v) => v !== value
+                  ),
+            }));
+          }}
+        />
+        {value}
+      </label>
+    ))}
+</div>
 
         {/* Buttons */}
         <div className="filter-buttons">
@@ -1104,33 +1202,35 @@ useEffect(() => {
         />
 
         {/* Checkbox List */}
-        {getUniqueValues("department")
-          .filter((value) =>
-            String(value)
-              .toLowerCase()
-              .includes(filterText.toLowerCase())
-          )
-          .map((value) => (
-            <label key={value}>
-              <input
-                type="checkbox"
-                checked={
-                  filters.department?.includes(value) || false
-                }
-                onChange={(e) => {
-                  setFilters((prev) => ({
-                    ...prev,
-                    fullName: e.target.checked
-                      ? [...(prev.fullName || []), value]
-                      : (prev.fullName || []).filter(
-                          (v) => v !== value
-                        ),
-                  }));
-                }}
-              />
-              {value}
-            </label>
-          ))}
+     <div className="filter-checkbox-list">
+ {getVisibleUniqueValues("department")
+    .filter((value) =>
+      String(value)
+        .toLowerCase()
+        .includes(filterText.toLowerCase())
+    )
+    .map((value) => (
+      <label key={value}>
+        <input
+          type="checkbox"
+        checked={
+  filters.department?.includes(value) || false
+}
+onChange={(e) => {
+  setFilters((prev) => ({
+    ...prev,
+    department: e.target.checked
+      ? [...(prev.department || []), value]
+      : (prev.department || []).filter(
+          (v) => v !== value
+        ),
+  }));
+}}
+        />
+        {value}
+      </label>
+    ))}
+</div>
 
         {/* Buttons */}
         <div className="filter-buttons">
@@ -1161,7 +1261,7 @@ useEffect(() => {
       Role <span>▼</span>
     </div>
 
-    {activeFilter === "role" && (
+   {activeFilter === "designation" && (
       <div className="filter-popup">
 
         {/* Search Box */}
@@ -1173,7 +1273,7 @@ useEffect(() => {
         />
 
         {/* Checkbox List */}
-        {getUniqueValues("role")
+        {getVisibleUniqueValues("designation")
           .filter((value) =>
             String(value)
               .toLowerCase()
@@ -1187,14 +1287,14 @@ useEffect(() => {
                   filters.designation?.includes(value) || false
                 }
                 onChange={(e) => {
-                  setFilters((prev) => ({
-                    ...prev,
-                    fullName: e.target.checked
-                      ? [...(prev.fullName || []), value]
-                      : (prev.fullName || []).filter(
-                          (v) => v !== value
-                        ),
-                  }));
+                 setFilters((prev) => ({
+  ...prev,
+  designation: e.target.checked
+    ? [...(prev.designation || []), value]
+    : (prev.designation || []).filter(
+        (v) => v !== value
+      ),
+}));
                 }}
               />
               {value}
@@ -1241,7 +1341,7 @@ useEffect(() => {
         />
 
         {/* Checkbox List */}
-        {getUniqueValues("status")
+        {getVisibleUniqueValues("status")
           .filter((value) =>
             String(value)
               .toLowerCase()
@@ -1255,14 +1355,14 @@ useEffect(() => {
                   filters.status?.includes(value) || false
                 }
                 onChange={(e) => {
-                  setFilters((prev) => ({
-                    ...prev,
-                    fullName: e.target.checked
-                      ? [...(prev.fullName || []), value]
-                      : (prev.fullName || []).filter(
-                          (v) => v !== value
-                        ),
-                  }));
+                 setFilters((prev) => ({
+  ...prev,
+  status: e.target.checked
+    ? [...(prev.status || []), value]
+    : (prev.status || []).filter(
+        (v) => v !== value
+      ),
+}));
                 }}
               />
               {value}
@@ -1443,17 +1543,43 @@ useEffect(() => {
   <div className="attendance-info">
     <div>
       <strong>Status:</strong>{" "}
-      {homeData?.todayAttendance?.status || "Not Checked In"}
+      {homeData?.todayAttendance?.status || 
+       (homeData?.todayAttendance?.checkIn || homeData?.todayAttendance?.checkInTime ? "Checked In" : "Not Checked In")}
     </div>
 
     <div>
       <strong>Check-In:</strong>{" "}
-      {homeData?.todayAttendance?.checkInTime || "--"}
+      {homeData?.todayAttendance?.checkIn || 
+       homeData?.todayAttendance?.checkInTime || 
+       "--"}
     </div>
 
     <div>
       <strong>Check-Out:</strong>{" "}
-      {homeData?.todayAttendance?.checkOutTime || "--"}
+      {homeData?.todayAttendance?.checkOut || 
+       homeData?.todayAttendance?.checkOutTime || 
+       "--"}
+    </div>
+
+    <div>
+      <strong>Total Hours:</strong>{" "}
+      {(() => {
+        const checkIn = homeData?.todayAttendance?.checkIn || homeData?.todayAttendance?.checkInTime;
+        const checkOut = homeData?.todayAttendance?.checkOut || homeData?.todayAttendance?.checkOutTime;
+        if (!checkIn || checkIn === "-") return "--";
+        const parseTime = (timeStr) => {
+          const now = new Date();
+          return new Date(`${now.toDateString()} ${timeStr}`);
+        };
+        const start = parseTime(checkIn);
+        const end = checkOut && checkOut !== "-" ? parseTime(checkOut) : new Date();
+        const diff = end - start;
+        if (diff < 0) return "--";
+        const hrs = Math.floor(diff / (1000 * 60 * 60));
+        const mins = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+        const secs = Math.floor((diff % (1000 * 60)) / 1000);
+        return `${hrs}h ${mins}m ${secs}s`;
+      })()}
     </div>
   </div>
 
@@ -1479,19 +1605,25 @@ useEffect(() => {
   ).trim(),
 
   empId:
-    user?.employeeId ||
-    user?.empId ||
-    user?.id ||
-    "",
+    (user?.role === "admin" || user?.role === "ADMIN")
+      ? "ADMIN001"
+      : user?.employeeId ||
+        user?.empId ||
+        user?.employeeCode ||
+        "",
           name:
-    user?.name ||
-    user?.fullName ||
-    user?.email ||
-    "N/A",
+    (user?.role === "admin" || user?.role === "ADMIN")
+      ? (user?.name || user?.fullName || "Admin")
+      : user?.name ||
+        user?.fullName ||
+        user?.email ||
+        "N/A",
           department: user?.department,
           message: `${user?.name} checked in`,
       type: "success",
-      link: "/attendance"
+      link: "/attendance",
+      attendanceType: "Office",
+      tos: user?.tos || "-"
         }),
       });
 

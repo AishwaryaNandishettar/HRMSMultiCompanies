@@ -969,3 +969,33 @@
   padding: 3px 8px;
   cursor: pointer;
 }
+.excel-filter-popup {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  z-index: 999999 !important;
+}
+
+.employee-table thead th {
+  overflow: visible !important;
+}
+
+.table-wrapper {
+  overflow: auto;
+  position: relative;
+}
+.filter-footer {
+  position: sticky;
+  bottom: 0;
+  background: #fff;
+  padding: 6px;
+  border-top: 1px solid #ddd;
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+}
+
+.filter-list {
+  max-height: 180px;
+  overflow-y: auto;
+}

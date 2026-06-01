@@ -44,6 +44,7 @@ const Payroll = () => {
   const [fromMonth, setFromMonth] = useState("");
 const [toMonth, setToMonth] = useState("");
 const [sortType, setSortType] = useState("");
+const [columnFilters, setColumnFilters] = useState({});
 const [currentPage, setCurrentPage] = useState(1);
 const rowsPerPage = 6;
 
@@ -471,6 +472,8 @@ const handleExport = () => {
   setToMonth={setToMonth}
    sortType={sortType}
   setSortType={setSortType}
+  columnFilters={columnFilters}
+  setColumnFilters={setColumnFilters}
    onExport={handleExport}   // ✅ ADD THIS
   onUpdatePayroll={user?.role === "admin" || user?.role === "hr" ? () => navigate("/update-payroll") : undefined}
     onProcessAll={user?.role === "admin" || user?.role === "hr" ? handleProcessAll : undefined}
@@ -485,6 +488,8 @@ const handleExport = () => {
 onProcessPayroll={user?.role === "admin" || user?.role === "hr" ? handleProcessPayroll : undefined}
 onProcessAll={user?.role === "admin" || user?.role === "hr" ? handleProcessAll : undefined}
 onStatusChange={user?.role === "admin" || user?.role === "hr" ? handleStatusChange : undefined}
+columnFilters={columnFilters}
+setColumnFilters={setColumnFilters}
 />
 
             <PayrollFooter 

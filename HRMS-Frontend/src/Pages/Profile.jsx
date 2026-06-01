@@ -1,4 +1,4 @@
-    import { useState, useEffect } from "react";
+    import React, { useState, useEffect, useRef } from "react";
     //import { getSkillsByEmployee, addSkill, updateManagerRating } from "../api/skillApi";
     import styles from "./Profile.module.css";
     import { fetchMyProfile } from "../api/profileApi";
@@ -9,14 +9,18 @@
     import { submitResignation, getResignationsByEmployee, updateResignationStatus, getAllResignations, getResignationsForApproval, getAllResignationsByManager, getResignationsForHRApproval, approveResignation, rejectResignation } from "../api/resignationApi";
 
     export default function ProfileView() {
+      const popupRef = useRef(null);
       const { user } = useContext(AuthContext);
       const [status, setStatus] = useState("Available");
       const [view, setView] = useState("overview");
       const [showIncrementLetter, setShowIncrementLetter] = useState(false);
       const [selectedEmployee, setSelectedEmployee] = useState(null);
-      const [allEmployees, setAllEmployees] = useState([]);
-
       
+      const [allEmployees, setAllEmployees] = useState([]);
+const [filters, setFilters] = useState({});
+      const [activeFilter, setActiveFilter] = useState(null);
+const [columnFilters, setColumnFilters] = useState({});
+const [tempFilterValues, setTempFilterValues] = useState({});
       const [showEditModal, setShowEditModal] = useState(false);
       const [showJobModal, setShowJobModal] = useState(false);
       const [earlyRelease, setEarlyRelease] = useState(false);
@@ -59,6 +63,14 @@ const [calculatedLwd, setCalculatedLwd] = useState("");
       const [allManagerResignations, setAllManagerResignations] = useState([]);
       const [pendingHRResignations, setPendingHRResignations] = useState([]);
       const [allResignations, setAllResignations] = useState([]);
+      
+      // Filter states for resignation table
+      const [resignationFilters, setResignationFilters] = useState({});
+      const [resignationFilterText, setResignationFilterText] = useState("");
+      
+      // Filter states for compensation table
+      const [compensationFilters, setCompensationFilters] = useState({});
+      const [compensationFilterText, setCompensationFilterText] = useState("");
       
       const [exitData, setExitData] = useState({
   reason: "",
@@ -158,6 +170,28 @@ useEffect(() => {
   loadEmployees();
 }, [profileData]);
 
+
+useEffect(() => {
+  const handleClickOutside = (e) => {
+    if (
+      popupRef.current &&
+      !popupRef.current.contains(e.target)
+    ) {
+      setActiveFilter(null);
+    }
+  };
+
+  document.addEventListener("mousedown", handleClickOutside);
+
+  return () => {
+    document.removeEventListener(
+      "mousedown",
+      handleClickOutside
+    );
+  };
+}, []);
+
+
 // ✅ ADD THIS: Load employees on component mount (don't wait for profileData)
 useEffect(() => {
   const loadEmployeesOnMount = async () => {
@@ -189,6 +223,11 @@ useEffect(() => {
 
   loadEmployeesOnMount();
 }, []);
+
+
+
+
+
     const empId = localStorage.getItem("empId");
     console.log("empId from localStorage:", empId);
       
@@ -206,6 +245,21 @@ useEffect(() => {
     });
       /* ✅ SAFE API CALL */
     useEffect(() => {
+      // Load skills from localStorage if available, otherwise use defaults
+      const empId = profileData?.employeeId || user?.employeeId || user?.empId;
+      if (empId) {
+        const stored = localStorage.getItem("skills_" + empId);
+        if (stored) {
+          try {
+            const parsed = JSON.parse(stored);
+            if (Array.isArray(parsed) && parsed.length > 0) {
+              setSkills(parsed);
+              return;
+            }
+          } catch (e) {}
+        }
+      }
+      // Default skills if nothing in localStorage
       setSkills([
         {
           id: 1,
@@ -229,7 +283,7 @@ useEffect(() => {
           managerRating: 3,
         },
       ]);
-    }, []);
+    }, [profileData, user]);
 
               
         useEffect(() => {
@@ -466,6 +520,90 @@ const getDesignation = () => {
   if (role === "MANAGER") return "Engineering Manager";
   return "Software Developer";
 };
+
+
+const compensationColumns = [
+  { key: "employeeId", label: "Emp ID" },
+  { key: "empName", label: "Employee Name" },
+  { key: "dob", label: "DOB" },
+  { key: "joiningDate", label: "DOJ" },
+  { key: "tenure", label: "Tenure" },
+  { key: "ctc", label: "CTC" },
+  { key: "hikeValue", label: "Hike Value" },
+  { key: "hikePercent", label: "Hike %" },
+  { key: "hikeYear", label: "Hike Year" },
+  { key: "designation", label: "Designation" },
+  { key: "department", label: "Department" },
+];
+const filteredEmployees =
+  Array.isArray(allEmployees)
+    ? allEmployees.filter((emp) => {
+        return Object.keys(columnFilters).every((key) => {
+          if (
+            !columnFilters[key] ||
+            columnFilters[key].length === 0
+          )
+            return true;
+
+          let value;
+
+          switch (key) {
+            case "employeeId":
+              value = emp.employeeId || emp.id;
+              break;
+
+            case "empName":
+              value =
+                emp.empName ||
+                emp.name ||
+                emp.fullName ||
+                "N/A";
+              break;
+
+            default:
+              value = emp[key] || "-";
+          }
+
+          return columnFilters[key].includes(value);
+        });
+      })
+    : [];
+const getUniqueValues = (key) => {
+  return [
+    ...new Set(
+      allEmployees.map(
+        (emp) =>
+          emp[key] ||
+          emp.empName ||
+          emp.name ||
+          emp.fullName ||
+          "-"
+      )
+    ),
+  ];
+};
+
+
+
+useEffect(() => {
+  const handleClick = (e) => {
+    if (
+      popupRef.current &&
+      !popupRef.current.contains(e.target)
+    ) {
+      setActiveFilter(null);
+    }
+  };
+
+  document.addEventListener("mousedown", handleClick);
+
+  return () =>
+    document.removeEventListener(
+      "mousedown",
+      handleClick
+    );
+}, []);
+
       return (
         <div className={styles.profilePage}>
           <div className={styles.profileContainer}>
@@ -1150,30 +1288,737 @@ const getDesignation = () => {
                   {role === "ADMIN" && (
     <>
       <h4 style={{ marginTop: "20px" }}>Employee Compensation Tracking</h4>
-
+     <div className={styles.compensationTableWrapper}>
       <table className={styles.table}>
-        <thead>
-          <tr>
-            <th>Emp ID</th>
-            <th>Employee Name</th>
-            <th>DOB</th>
-            <th>DOJ</th>
-            <th>Tenure</th>
-              {/* NEW COLUMNS */}
-          <th>CTC</th>
-          <th>Hike Value</th>
-          <th>Hike %</th>
-          <th>Hike Year</th>
-            <th>Designation</th>
-            <th>Department</th>
-            <th>Increment Letter</th>
-            <th>Actions</th>
-          </tr>
-        </thead>
+      <thead>
+  <tr>
+
+    <th className={styles.filterHeader}>
+      Emp ID
+     <span
+     
+  className={styles.filterIcon}
+  onClick={(e) => {
+    e.stopPropagation();
+    setActiveFilter(
+      activeFilter === "employeeId"
+        ? null
+        : "employeeId"
+    )
+  }}
+>
+  ▼
+</span>
+{activeFilter === "employeeId" && (
+    <div
+        ref={popupRef}
+      className={styles.popup}
+    >
+      <input
+        className={styles.excelSearch}
+        placeholder="Search"
+        value={compensationFilterText}
+        onChange={(e) => setCompensationFilterText(e.target.value)}
+      />
+
+     <div className={styles.excelList}>
+  <label className={styles.excelItem}>
+    <input 
+      type="checkbox"
+      checked={!columnFilters.employeeId || columnFilters.employeeId?.length === [...new Set(allEmployees.map(e => e.employeeId || e.id))].length}
+      onChange={(e) => {
+        if (e.target.checked) {
+          setColumnFilters({...columnFilters, employeeId: [...new Set(allEmployees.map(emp => emp.employeeId || emp.id))]});
+        } else {
+          setColumnFilters({...columnFilters, employeeId: []});
+        }
+      }}
+    />
+    <span>(Select All)</span>
+  </label>
+
+  {Array.isArray(allEmployees) &&
+    [...new Set(allEmployees.map(e => e.employeeId || e.id))]
+      .filter(v => String(v).toLowerCase().includes(compensationFilterText.toLowerCase()))
+      .map((empId, index) => {
+        const selectedValues = columnFilters.employeeId || [...new Set(allEmployees.map(e => e.employeeId || e.id))];
+        return (
+          <label
+            key={index}
+            className={styles.excelItem}
+          >
+            <input 
+              type="checkbox"
+              checked={selectedValues.includes(empId)}
+              onChange={(e) => {
+                let updated = [...selectedValues];
+                if (e.target.checked) {
+                  updated.push(empId);
+                } else {
+                  updated = updated.filter((v) => v !== empId);
+                }
+                setColumnFilters({...columnFilters, employeeId: updated});
+              }}
+            />
+            <span>{empId}</span>
+          </label>
+        );
+      })}
+</div>
+
+      <div className={styles.excelActions}>
+  <button
+    onClick={() => setActiveFilter(null)}
+  >
+    OK
+  </button>
+
+  <button
+    onClick={() => {
+      const newFilters = {...columnFilters};
+      delete newFilters.employeeId;
+      setColumnFilters(newFilters);
+      setActiveFilter(null);
+    }}
+  >
+    Cancel
+  </button>
+</div>
+    </div>
+  )}
+</th>
+   
+
+    <th className={styles.filterHeader}>
+      Employee Name
+     <span
+  className={styles.filterIcon}
+  onClick={(e) => {
+    e.stopPropagation();
+    setActiveFilter(
+      activeFilter === "empName"
+        ? null
+        : "empName"
+    )
+  }}
+>
+  ▼
+</span>
+{activeFilter === "empName" && (
+    <div
+       ref={popupRef}
+      className={styles.popup}
+    >
+      <input
+        className={styles.excelSearch}
+        placeholder="Search"
+      />
+
+    <div className={styles.excelList}>
+  <label className={styles.excelItem}>
+    <input type="checkbox" />
+    Select All
+  </label>
+
+  {Array.isArray(allEmployees) &&
+    allEmployees.map((emp, index) => (
+      <label
+        key={index}
+        className={styles.excelItem}
+      >
+        <input type="checkbox" />
+        {emp.employeeId || emp.id}
+      </label>
+    ))}
+</div>
+
+      <div className={styles.excelActions}>
+       <div className={styles.excelActions}>
+  <button
+    onClick={() => setActiveFilter(null)}
+  >
+    OK
+  </button>
+
+  <button
+    onClick={() => setActiveFilter(null)}
+  >
+    Cancel
+  </button>
+</div>
+      </div>
+    </div>
+  )}
+</th>
+   
+
+    <th className={styles.filterHeader}>
+      DOB
+     <span
+  className={styles.filterIcon}
+   onClick={(e) => {
+    e.stopPropagation();
+    setActiveFilter(
+      activeFilter === "dob"
+        ? null
+        : "dob"
+    )
+  }}
+>
+  ▼
+</span>
+{activeFilter === "dob" && (
+    <div
+       ref={popupRef}
+      className={styles.popup}
+    >
+      <input
+        className={styles.excelSearch}
+        placeholder="Search"
+      />
+
+     <div className={styles.excelList}>
+  <label className={styles.excelItem}>
+    <input type="checkbox" />
+    Select All
+  </label>
+
+  {Array.isArray(allEmployees) &&
+    allEmployees.map((emp, index) => (
+      <label
+        key={index}
+        className={styles.excelItem}
+      >
+        <input type="checkbox" />
+        {emp.employeeId || emp.id}
+      </label>
+    ))}
+</div>
+
+      <div className={styles.excelActions}>
+       <div className={styles.excelActions}>
+  <button
+    onClick={() => setActiveFilter(null)}
+  >
+    OK
+  </button>
+
+  <button
+    onClick={() => setActiveFilter(null)}
+  >
+    Cancel
+  </button>
+</div>
+      </div>
+    </div>
+  )}
+</th>
+
+    <th className={styles.filterHeader}>
+      DOJ
+    <span
+  className={styles.filterIcon}
+   onClick={(e) => {
+    e.stopPropagation();
+    setActiveFilter(
+      activeFilter === "doj"
+        ? null
+        : "doj"
+    )
+  }}
+>
+  ▼
+</span>
+{activeFilter === "doj" && (
+    <div
+        ref={popupRef}
+      className={styles.popup}
+    >
+      <input
+        className={styles.excelSearch}
+        placeholder="Search"
+      />
+
+      <div className={styles.excelList}>
+  <label className={styles.excelItem}>
+    <input type="checkbox" />
+    Select All
+  </label>
+
+  {Array.isArray(allEmployees) &&
+    allEmployees.map((emp, index) => (
+      <label
+        key={index}
+        className={styles.excelItem}
+      >
+        <input type="checkbox" />
+        {emp.employeeId || emp.id}
+      </label>
+    ))}
+</div>
+
+      <div className={styles.excelActions}>
+       <div className={styles.excelActions}>
+  <button
+    onClick={() => setActiveFilter(null)}
+  >
+    OK
+  </button>
+
+  <button
+    onClick={() => setActiveFilter(null)}
+  >
+    Cancel
+  </button>
+</div>
+      </div>
+    </div>
+  )}
+</th>
+
+    <th className={styles.filterHeader}>
+      Tenure
+    <span
+  className={styles.filterIcon}
+   onClick={(e) => {
+    e.stopPropagation();
+    setActiveFilter(
+      activeFilter === "tenure"
+        ? null
+        : "tenure"
+    )
+  }}
+>
+  ▼
+</span>
+{activeFilter === "tenure" && (
+    <div
+       ref={popupRef}
+      className={styles.popup}
+    >
+      <input
+        className={styles.excelSearch}
+        placeholder="Search"
+      />
+
+    <div className={styles.excelList}>
+  <label className={styles.excelItem}>
+    <input type="checkbox" />
+    Select All
+  </label>
+
+  {Array.isArray(allEmployees) &&
+    allEmployees.map((emp, index) => (
+      <label
+        key={index}
+        className={styles.excelItem}
+      >
+        <input type="checkbox" />
+        {emp.employeeId || emp.id}
+      </label>
+    ))}
+</div>
+
+      <div className={styles.excelActions}>
+       <div className={styles.excelActions}>
+  <button
+    onClick={() => setActiveFilter(null)}
+  >
+    OK
+  </button>
+
+  <button
+    onClick={() => setActiveFilter(null)}
+  >
+    Cancel
+  </button>
+</div>
+      </div>
+    </div>
+  )}
+</th>
+
+    <th className={styles.filterHeader}>
+      CTC
+     <span
+  className={styles.filterIcon}
+  onClick={(e) => {
+    e.stopPropagation();
+    setActiveFilter(
+      activeFilter === "ctc"
+        ? null
+        : "ctc"
+    )
+  }}
+>
+  ▼
+</span>
+
+   {activeFilter === "ctc" && (
+    <div
+       ref={popupRef}  
+      className={styles.popup}
+    >
+      <input
+        className={styles.excelSearch}
+        placeholder="Search"
+      />
+
+     <div className={styles.excelList}>
+  <label className={styles.excelItem}>
+    <input type="checkbox" />
+    Select All
+  </label>
+
+  {Array.isArray(allEmployees) &&
+    allEmployees.map((emp, index) => (
+      <label
+        key={index}
+        className={styles.excelItem}
+      >
+        <input type="checkbox" />
+        {emp.employeeId || emp.id}
+      </label>
+    ))}
+</div>
+
+      <div className={styles.excelActions}>
+      <div className={styles.excelActions}>
+  <button
+    onClick={() => setActiveFilter(null)}
+  >
+    OK
+  </button>
+
+  <button
+    onClick={() => setActiveFilter(null)}
+  >
+    Cancel
+  </button>
+</div>
+      </div>
+    </div>
+  )}
+</th>
+
+    <th className={styles.filterHeader}>
+      Hike Value
+      <span
+  className={styles.filterIcon}
+  onClick={(e) => {
+    e.stopPropagation();
+    setActiveFilter(
+      activeFilter === "hike value"
+        ? null
+        : "hike value"
+    )
+  }}
+>
+  ▼
+</span>
+{activeFilter === "hike value" && (
+    <div
+      ref={popupRef}
+      className={styles.popup}
+    >
+      <input
+        className={styles.excelSearch}
+        placeholder="Search"
+      />
+
+    <div className={styles.excelList}>
+  <label className={styles.excelItem}>
+    <input type="checkbox" />
+    Select All
+  </label>
+
+  {Array.isArray(allEmployees) &&
+    allEmployees.map((emp, index) => (
+      <label
+        key={index}
+        className={styles.excelItem}
+      >
+        <input type="checkbox" />
+        {emp.employeeId || emp.id}
+      </label>
+    ))}
+</div>
+
+      <div className={styles.excelActions}>
+<div className={styles.excelActions}>
+  <button
+    onClick={() => setActiveFilter(null)}
+  >
+    OK
+  </button>
+
+  <button
+    onClick={() => setActiveFilter(null)}
+  >
+    Cancel
+  </button>
+</div>
+      </div>
+    </div>
+  )}
+</th>
+
+    <th className={styles.filterHeader}>
+      Hike %
+     <span
+  className={styles.filterIcon}
+  onClick={(e) => {
+    e.stopPropagation();
+    setActiveFilter(
+      activeFilter === "hike %"
+        ? null
+        : "hike %"
+    )
+  }}
+>
+  ▼
+</span>
+{activeFilter === "hike %" && (
+    <div
+      ref={popupRef}
+      className={styles.popup}
+    >
+      <input
+        className={styles.excelSearch}
+        placeholder="Search"
+      />
+
+    <div className={styles.excelList}>
+  <label className={styles.excelItem}>
+    <input type="checkbox" />
+    Select All
+  </label>
+
+  {Array.isArray(allEmployees) &&
+    allEmployees.map((emp, index) => (
+      <label
+        key={index}
+        className={styles.excelItem}
+      >
+        <input type="checkbox" />
+        {emp.employeeId || emp.id}
+      </label>
+    ))}
+</div>
+
+      <div className={styles.excelActions}>
+<div className={styles.excelActions}>
+  <button
+    onClick={() => setActiveFilter(null)}
+  >
+    OK
+  </button>
+
+  <button
+    onClick={() => setActiveFilter(null)}
+  >
+    Cancel
+  </button>
+</div>
+      </div>
+    </div>
+  )}
+</th>
+    <th className={styles.filterHeader}>
+      Hike Year
+    <span
+  className={styles.filterIcon}
+  onClick={(e) => {
+    e.stopPropagation();
+    setActiveFilter(
+      activeFilter === "hike year"
+        ? null
+        : "hike year"
+    )
+  }}
+>
+  ▼
+</span>
+{activeFilter === "hike year" && (
+    <div
+        ref={popupRef}
+      className={styles.popup}
+    >
+      <input
+        className={styles.excelSearch}
+        placeholder="Search"
+      />
+
+    <div className={styles.excelList}>
+  <label className={styles.excelItem}>
+    <input type="checkbox" />
+    Select All
+  </label>
+
+  {Array.isArray(allEmployees) &&
+    allEmployees.map((emp, index) => (
+      <label
+        key={index}
+        className={styles.excelItem}
+      >
+        <input type="checkbox" />
+        {emp.employeeId || emp.id}
+      </label>
+    ))}
+</div>
+
+      <div className={styles.excelActions}>
+       <div className={styles.excelActions}>
+  <button
+    onClick={() => setActiveFilter(null)}
+  >
+    OK
+  </button>
+
+  <button
+    onClick={() => setActiveFilter(null)}
+  >
+    Cancel
+  </button>
+</div>
+      </div>
+    </div>
+  )}
+</th>
+
+    <th className={styles.filterHeader}>
+      Designation
+     <span
+  className={styles.filterIcon}
+  onClick={(e) => {
+    e.stopPropagation();
+    setActiveFilter(
+      activeFilter === "designation"
+        ? null
+        : "designation"
+    )
+  }}
+>
+  ▼
+</span>
+{activeFilter === "designation" && (
+    <div
+       ref={popupRef}
+      className={styles.popup}
+    >
+      <input
+        className={styles.excelSearch}
+        placeholder="Search"
+      />
+
+    <div className={styles.excelList}>
+  <label className={styles.excelItem}>
+    <input type="checkbox" />
+    Select All
+  </label>
+
+  {Array.isArray(allEmployees) &&
+    allEmployees.map((emp, index) => (
+      <label
+        key={index}
+        className={styles.excelItem}
+      >
+        <input type="checkbox" />
+        {emp.employeeId || emp.id}
+      </label>
+    ))}
+</div>
+
+      <div className={styles.excelActions}>
+       <div className={styles.excelActions}>
+  <button
+    onClick={() => setActiveFilter(null)}
+  >
+    OK
+  </button>
+
+  <button
+    onClick={() => setActiveFilter(null)}
+  >
+    Cancel
+  </button>
+</div>
+      </div>
+    </div>
+  )}
+</th>
+
+    <th className={styles.filterHeader}>
+      Department
+      <span
+  className={styles.filterIcon}
+  onClick={(e) => {
+    e.stopPropagation();
+    setActiveFilter(
+      activeFilter === "department"
+        ? null
+        : "department"
+    )
+  }}
+>
+  ▼
+</span>
+{activeFilter === "department" && (
+    <div
+       ref={popupRef}
+      className={styles.popup}
+    >
+      <input
+        className={styles.excelSearch}
+        placeholder="Search"
+      />
+
+     <div className={styles.excelList}>
+  <label className={styles.excelItem}>
+    <input type="checkbox" />
+    Select All
+  </label>
+
+  {Array.isArray(allEmployees) &&
+    allEmployees.map((emp, index) => (
+      <label
+        key={index}
+        className={styles.excelItem}
+      >
+        <input type="checkbox" />
+        {emp.employeeId || emp.id}
+      </label>
+    ))}
+</div>
+
+      <div className={styles.excelActions}>
+      <button>OK</button>
+      <div className={styles.excelActions}>
+  <button
+    onClick={() => setActiveFilter(null)}
+  >
+    OK
+  </button>
+
+  <button
+    onClick={() => setActiveFilter(null)}
+  >
+    Cancel
+  </button>
+</div>
+      </div>
+    </div>
+  )}
+</th>
+
+    <th>Increment Letter</th>
+    <th>Actions</th>
+  </tr>
+</thead>
 
         <tbody>
   {Array.isArray(allEmployees) &&
-  allEmployees.map((emp, i) => (
+filteredEmployees.map((emp, i) => (
       <tr key={i}>
        <td>{emp.employeeId || emp.id}</td>
        
@@ -1218,6 +2063,7 @@ const getDesignation = () => {
     ))}
   </tbody>
       </table>
+      </div>
     </>
   )}
                 </div>
@@ -2272,23 +3118,373 @@ const getDesignation = () => {
                       {/* ===== RESIGNATION TRACKING TABLE (ADMIN ONLY) ===== */}
                       <div style={{ marginTop: "30px" }}>
                         <h4>All Resignations Tracking</h4>
+                        <div className={styles.resignationTableWrapper}>
                         <table className={styles.table}>
                           <thead>
                             <tr>
-                              <th>Emp ID</th>
-                              <th>Name</th>
-                              <th>Dept</th>
-                              <th>Manager</th>
-                              <th>Reason</th>
-                              <th>Submitted Date</th>
-                              <th>Last Working Day</th>
-                              <th>Status</th>
-                              <th>Manager Approved By</th>
-                              <th>HR Approved By</th>
+                              <th className={styles.filterHeader}>
+                                Emp ID
+                                <span
+                                  className={styles.filterIcon}
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    setActiveFilter(activeFilter === "resignEmpId" ? null : "resignEmpId");
+                                  }}
+                                >
+                                  ▼
+                                </span>
+                                {activeFilter === "resignEmpId" && (
+                                  <div ref={popupRef} className={styles.popup}>
+                                    <input 
+                                      className={styles.excelSearch} 
+                                      placeholder="Search" 
+                                      value={resignationFilterText}
+                                      onChange={(e) => setResignationFilterText(e.target.value)}
+                                    />
+                                    <div className={styles.excelList}>
+                                      <label className={styles.excelItem}>
+                                        <input 
+                                          type="checkbox"
+                                          checked={!resignationFilters.empId || resignationFilters.empId?.length === [...new Set(allResignations.map(r => r.empId))].length}
+                                          onChange={(e) => {
+                                            if (e.target.checked) {
+                                              setResignationFilters({...resignationFilters, empId: [...new Set(allResignations.map(r => r.empId))]});
+                                            } else {
+                                              setResignationFilters({...resignationFilters, empId: []});
+                                            }
+                                          }}
+                                        />
+                                        <span>(Select All)</span>
+                                      </label>
+                                      {[...new Set(allResignations.map(r => r.empId))]
+                                        .filter(v => String(v).toLowerCase().includes(resignationFilterText.toLowerCase()))
+                                        .map((empId) => {
+                                          const selectedValues = resignationFilters.empId || [...new Set(allResignations.map(r => r.empId))];
+                                          return (
+                                            <label key={empId} className={styles.excelItem}>
+                                              <input
+                                                type="checkbox"
+                                                checked={selectedValues.includes(empId)}
+                                                onChange={(e) => {
+                                                  let updated = [...selectedValues];
+                                                  if (e.target.checked) {
+                                                    updated.push(empId);
+                                                  } else {
+                                                    updated = updated.filter((v) => v !== empId);
+                                                  }
+                                                  setResignationFilters({...resignationFilters, empId: updated});
+                                                }}
+                                              />
+                                              <span>{empId}</span>
+                                            </label>
+                                          );
+                                        })}
+                                    </div>
+                                    <div className={styles.excelActions}>
+                                      <button onClick={() => setActiveFilter(null)}>OK</button>
+                                      <button onClick={() => {
+                                        const newFilters = {...resignationFilters};
+                                        delete newFilters.empId;
+                                        setResignationFilters(newFilters);
+                                        setActiveFilter(null);
+                                      }}>Cancel</button>
+                                    </div>
+                                  </div>
+                                )}
+                              </th>
+                              <th className={styles.filterHeader}>
+                                Name
+                                <span
+                                  className={styles.filterIcon}
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    setActiveFilter(activeFilter === "resignName" ? null : "resignName");
+                                  }}
+                                >
+                                  ▼
+                                </span>
+                                {activeFilter === "resignName" && (
+                                  <div ref={popupRef} className={styles.popup}>
+                                    <input 
+                                      className={styles.excelSearch} 
+                                      placeholder="Search" 
+                                      value={resignationFilterText}
+                                      onChange={(e) => setResignationFilterText(e.target.value)}
+                                    />
+                                    <div className={styles.excelList}>
+                                      <label className={styles.excelItem}>
+                                        <input 
+                                          type="checkbox"
+                                          checked={!resignationFilters.empName || resignationFilters.empName?.length === [...new Set(allResignations.map(r => r.empName))].length}
+                                          onChange={(e) => {
+                                            if (e.target.checked) {
+                                              setResignationFilters({...resignationFilters, empName: [...new Set(allResignations.map(r => r.empName))]});
+                                            } else {
+                                              setResignationFilters({...resignationFilters, empName: []});
+                                            }
+                                          }}
+                                        />
+                                        <span>(Select All)</span>
+                                      </label>
+                                      {[...new Set(allResignations.map(r => r.empName))]
+                                        .filter(v => String(v).toLowerCase().includes(resignationFilterText.toLowerCase()))
+                                        .map((name) => {
+                                          const selectedValues = resignationFilters.empName || [...new Set(allResignations.map(r => r.empName))];
+                                          return (
+                                            <label key={name} className={styles.excelItem}>
+                                              <input
+                                                type="checkbox"
+                                                checked={selectedValues.includes(name)}
+                                                onChange={(e) => {
+                                                  let updated = [...selectedValues];
+                                                  if (e.target.checked) {
+                                                    updated.push(name);
+                                                  } else {
+                                                    updated = updated.filter((v) => v !== name);
+                                                  }
+                                                  setResignationFilters({...resignationFilters, empName: updated});
+                                                }}
+                                              />
+                                              <span>{name}</span>
+                                            </label>
+                                          );
+                                        })}
+                                    </div>
+                                    <div className={styles.excelActions}>
+                                      <button onClick={() => setActiveFilter(null)}>OK</button>
+                                      <button onClick={() => {
+                                        const newFilters = {...resignationFilters};
+                                        delete newFilters.empName;
+                                        setResignationFilters(newFilters);
+                                        setActiveFilter(null);
+                                      }}>Cancel</button>
+                                    </div>
+                                  </div>
+                                )}
+                              </th>
+                              <th className={styles.filterHeader}>
+                                Dept
+                                <span
+                                  className={styles.filterIcon}
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    setActiveFilter(activeFilter === "resignDept" ? null : "resignDept");
+                                  }}
+                                >
+                                  ▼
+                                </span>
+                                {activeFilter === "resignDept" && (
+                                  <div ref={popupRef} className={styles.popup}>
+                                    <input className={styles.excelSearch} placeholder="Search" />
+                                    <div className={styles.excelList}>
+                                      <label className={styles.excelItem}>
+                                        <input type="checkbox" /> Select All
+                                      </label>
+                                    </div>
+                                    <div className={styles.excelActions}>
+                                      <button onClick={() => setActiveFilter(null)}>OK</button>
+                                      <button onClick={() => setActiveFilter(null)}>Cancel</button>
+                                    </div>
+                                  </div>
+                                )}
+                              </th>
+                              <th className={styles.filterHeader}>
+                                Manager
+                                <span
+                                  className={styles.filterIcon}
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    setActiveFilter(activeFilter === "resignManager" ? null : "resignManager");
+                                  }}
+                                >
+                                  ▼
+                                </span>
+                                {activeFilter === "resignManager" && (
+                                  <div ref={popupRef} className={styles.popup}>
+                                    <input className={styles.excelSearch} placeholder="Search" />
+                                    <div className={styles.excelList}>
+                                      <label className={styles.excelItem}>
+                                        <input type="checkbox" /> Select All
+                                      </label>
+                                    </div>
+                                    <div className={styles.excelActions}>
+                                      <button onClick={() => setActiveFilter(null)}>OK</button>
+                                      <button onClick={() => setActiveFilter(null)}>Cancel</button>
+                                    </div>
+                                  </div>
+                                )}
+                              </th>
+                              <th className={styles.filterHeader}>
+                                Reason
+                                <span
+                                  className={styles.filterIcon}
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    setActiveFilter(activeFilter === "resignReason" ? null : "resignReason");
+                                  }}
+                                >
+                                  ▼
+                                </span>
+                                {activeFilter === "resignReason" && (
+                                  <div ref={popupRef} className={styles.popup}>
+                                    <input className={styles.excelSearch} placeholder="Search" />
+                                    <div className={styles.excelList}>
+                                      <label className={styles.excelItem}>
+                                        <input type="checkbox" /> Select All
+                                      </label>
+                                    </div>
+                                    <div className={styles.excelActions}>
+                                      <button onClick={() => setActiveFilter(null)}>OK</button>
+                                      <button onClick={() => setActiveFilter(null)}>Cancel</button>
+                                    </div>
+                                  </div>
+                                )}
+                              </th>
+                              <th className={styles.filterHeader}>
+                                Submitted Date
+                                <span
+                                  className={styles.filterIcon}
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    setActiveFilter(activeFilter === "resignSubmitted" ? null : "resignSubmitted");
+                                  }}
+                                >
+                                  ▼
+                                </span>
+                                {activeFilter === "resignSubmitted" && (
+                                  <div ref={popupRef} className={styles.popup}>
+                                    <input className={styles.excelSearch} placeholder="Search" />
+                                    <div className={styles.excelList}>
+                                      <label className={styles.excelItem}>
+                                        <input type="checkbox" /> Select All
+                                      </label>
+                                    </div>
+                                    <div className={styles.excelActions}>
+                                      <button onClick={() => setActiveFilter(null)}>OK</button>
+                                      <button onClick={() => setActiveFilter(null)}>Cancel</button>
+                                    </div>
+                                  </div>
+                                )}
+                              </th>
+                              <th className={styles.filterHeader}>
+                                Last Working Day
+                                <span
+                                  className={styles.filterIcon}
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    setActiveFilter(activeFilter === "resignLastDay" ? null : "resignLastDay");
+                                  }}
+                                >
+                                  ▼
+                                </span>
+                                {activeFilter === "resignLastDay" && (
+                                  <div ref={popupRef} className={styles.popup}>
+                                    <input className={styles.excelSearch} placeholder="Search" />
+                                    <div className={styles.excelList}>
+                                      <label className={styles.excelItem}>
+                                        <input type="checkbox" /> Select All
+                                      </label>
+                                    </div>
+                                    <div className={styles.excelActions}>
+                                      <button onClick={() => setActiveFilter(null)}>OK</button>
+                                      <button onClick={() => setActiveFilter(null)}>Cancel</button>
+                                    </div>
+                                  </div>
+                                )}
+                              </th>
+                              <th className={styles.filterHeader}>
+                                Status
+                                <span
+                                  className={styles.filterIcon}
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    setActiveFilter(activeFilter === "resignStatus" ? null : "resignStatus");
+                                  }}
+                                >
+                                  ▼
+                                </span>
+                                {activeFilter === "resignStatus" && (
+                                  <div ref={popupRef} className={styles.popup}>
+                                    <input className={styles.excelSearch} placeholder="Search" />
+                                    <div className={styles.excelList}>
+                                      <label className={styles.excelItem}>
+                                        <input type="checkbox" /> Select All
+                                      </label>
+                                    </div>
+                                    <div className={styles.excelActions}>
+                                      <button onClick={() => setActiveFilter(null)}>OK</button>
+                                      <button onClick={() => setActiveFilter(null)}>Cancel</button>
+                                    </div>
+                                  </div>
+                                )}
+                              </th>
+                              <th className={styles.filterHeader}>
+                                Manager Approved By
+                                <span
+                                  className={styles.filterIcon}
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    setActiveFilter(activeFilter === "resignMgrApproved" ? null : "resignMgrApproved");
+                                  }}
+                                >
+                                  ▼
+                                </span>
+                                {activeFilter === "resignMgrApproved" && (
+                                  <div ref={popupRef} className={styles.popup}>
+                                    <input className={styles.excelSearch} placeholder="Search" />
+                                    <div className={styles.excelList}>
+                                      <label className={styles.excelItem}>
+                                        <input type="checkbox" /> Select All
+                                      </label>
+                                    </div>
+                                    <div className={styles.excelActions}>
+                                      <button onClick={() => setActiveFilter(null)}>OK</button>
+                                      <button onClick={() => setActiveFilter(null)}>Cancel</button>
+                                    </div>
+                                  </div>
+                                )}
+                              </th>
+                              <th className={styles.filterHeader}>
+                                HR Approved By
+                                <span
+                                  className={styles.filterIcon}
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    setActiveFilter(activeFilter === "resignHRApproved" ? null : "resignHRApproved");
+                                  }}
+                                >
+                                  ▼
+                                </span>
+                                {activeFilter === "resignHRApproved" && (
+                                  <div ref={popupRef} className={styles.popup}>
+                                    <input className={styles.excelSearch} placeholder="Search" />
+                                    <div className={styles.excelList}>
+                                      <label className={styles.excelItem}>
+                                        <input type="checkbox" /> Select All
+                                      </label>
+                                    </div>
+                                    <div className={styles.excelActions}>
+                                      <button onClick={() => setActiveFilter(null)}>OK</button>
+                                      <button onClick={() => setActiveFilter(null)}>Cancel</button>
+                                    </div>
+                                  </div>
+                                )}
+                              </th>
                             </tr>
                           </thead>
                           <tbody>
-                            {allResignations.map((res, idx) => (
+                            {allResignations
+                              .filter((res) => {
+                                // Apply filters
+                                if (resignationFilters.empId && resignationFilters.empId.length > 0) {
+                                  if (!resignationFilters.empId.includes(res.empId)) return false;
+                                }
+                                if (resignationFilters.empName && resignationFilters.empName.length > 0) {
+                                  if (!resignationFilters.empName.includes(res.empName)) return false;
+                                }
+                                return true;
+                              })
+                              .map((res, idx) => (
                               <tr key={idx}>
                                 <td>{res.empId}</td>
                                 <td>{res.empName}</td>
@@ -2313,6 +3509,7 @@ const getDesignation = () => {
                             ))}
                           </tbody>
                         </table>
+                        </div>
                       </div>
                     </>
                   )}
@@ -2601,13 +3798,40 @@ const getDesignation = () => {
                             // Get skills for team members based on role
                             const teamMembers = role === "ADMIN" ? allEmployees : 
                               allEmployees.filter(emp => 
-                                // For managers, filter team members (you can customize this logic)
                                 emp.department === employee.department && emp.id !== employee.id
                               );
 
+                            // Debug: log all localStorage keys that start with "skills_"
+                            const allSkillKeys = Object.keys(localStorage).filter(k => k.startsWith("skills_"));
+                            console.log("🔑 All skill keys in localStorage:", allSkillKeys);
+                            console.log("👥 Team members:", teamMembers.map(e => ({ id: e.id, _id: e._id, employeeId: e.employeeId, empId: e.empId, name: e.fullName || e.name })));
+
                             const teamSkills = [];
                             teamMembers.forEach(emp => {
-                              const empSkills = JSON.parse(localStorage.getItem("skills_" + emp.id) || "[]");
+                              // Try all possible key variations to find skills
+                              const possibleKeys = [
+                                "skills_" + emp.employeeId,
+                                "skills_" + emp.id,
+                                "skills_" + emp._id,
+                                "skills_" + emp.empId,
+                              ].filter(Boolean);
+                              
+                              console.log(`🔍 Looking for skills for ${emp.fullName || emp.name} with keys:`, possibleKeys);
+                              
+                              let empSkills = [];
+                              for (const key of possibleKeys) {
+                                const stored = localStorage.getItem(key);
+                                if (stored) {
+                                  try {
+                                    const parsed = JSON.parse(stored);
+                                    if (Array.isArray(parsed) && parsed.length > 0) {
+                                      empSkills = parsed;
+                                      console.log(`✅ Found skills for ${emp.fullName || emp.name} at key: ${key}`, parsed);
+                                      break;
+                                    }
+                                  } catch (e) {}
+                                }
+                              }
                               empSkills.forEach(skill => {
                                 teamSkills.push({
                                   empId: emp.employeeId || emp.id,

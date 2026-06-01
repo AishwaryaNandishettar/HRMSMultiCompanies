@@ -478,7 +478,7 @@ export default function TimesheetManager() {
       )}
 
       {/* DUAL MONTH CALENDAR (From/To) */}
-      <div style={{ marginBottom: "10px", display: "flex", gap: "16px", alignItems: "center" }}>
+      <div style={{ marginBottom: "10px", display: "flex", gap: "16px", alignItems: "center", flexWrap: "wrap" }}>
         <div>
           <label style={{ marginRight: "8px" }}>From Month:</label>
           <input
@@ -495,9 +495,12 @@ export default function TimesheetManager() {
             onChange={(e) => setToMonth(e.target.value)}
           />
         </div>
-        {kpiFilter !== "ALL" && (
+        {(kpiFilter !== "ALL" || Object.keys(filters).some(key => filters[key] && filters[key].length > 0)) && (
           <button
-            onClick={() => setKpiFilter("ALL")}
+            onClick={() => {
+              setKpiFilter("ALL");
+              setFilters({});
+            }}
             style={{
               padding: "6px 12px",
               borderRadius: "6px",
@@ -506,7 +509,7 @@ export default function TimesheetManager() {
               background: "#f5f5f5",
             }}
           >
-            Clear KPI Filter
+            Clear Filters
           </button>
         )}
       </div>

@@ -31,7 +31,7 @@ import {
 } from "../../api/socket";
 
 /* API */
-import { fetchChatMessages} from "../../api/chatapi";
+import { fetchChatMessages, markChatMessagesSeen } from "../../api/chatapi";
 import { fetchChatUsers } from "../../api/chatUsersApi";
 import {
   fetchMyGroups,
@@ -328,10 +328,19 @@ const handleReply = (msg) => {
         .then((data) => setUnreadPerUser(normalizeUnreadKeys(data)))
         .catch((err) => console.error("Failed to refresh unread per user:", err));
 
-      // Update last message for the sender in users list
-      if (incomingMsg.senderEmail !== LOGGED_IN_EMAIL) {
+      // Update last message in the chat list
+      // ✅ FIX: Only update if this message is part of MY conversation
+      const myEmail = LOGGED_IN_EMAIL?.toLowerCase();
+      const sender = incomingMsg.senderEmail?.toLowerCase();
+      const receiver = incomingMsg.receiverEmail?.toLowerCase();
+      
+      // Only update last message if I'm either the sender or receiver
+      if (sender === myEmail || receiver === myEmail) {
+        // Update the OTHER person's chat entry (not mine)
+        const otherPersonEmail = sender === myEmail ? receiver : sender;
+        
         setUsers(prevUsers => prevUsers.map(u =>
-          u.email === incomingMsg.senderEmail
+          u.email?.toLowerCase() === otherPersonEmail
             ? { ...u, lastMessage: incomingMsg.content, lastMessageTime: incomingMsg.timestamp }
             : u
         ));
