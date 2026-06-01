@@ -415,16 +415,24 @@ export default function Performance() {
 
       {/* ── Admin/Manager: Team Performance Tracking (Always Show) ── */}
       {(isAdmin || isManager) && employees.length > 0 && (
-        <div className={styles.card}>
+        <div style={{
+          background: "white",
+          padding: "22px",
+          borderRadius: "14px",
+          boxShadow: "0 8px 24px rgba(0,0,0,0.05), 0 2px 6px rgba(0,0,0,0.04)",
+          marginBottom: "24px",
+          overflow: "visible"
+        }}>
           <h3 style={{ margin: "0 0 16px", fontSize: 16, fontWeight: 600, color: "#111827" }}>
             {isManager ? "Team Performance Tracking" : "Performance Tracking - All Employees"}
           </h3>
-          <table className={styles.table}>
+          <div className={styles.perfTableWrapper}>
+          <table className={styles.perfTable}>
             <thead>
               <tr>
-                <th style={{ textAlign: "left" }}>Employee</th>
-                <th style={{ textAlign: "left" }}>Department</th>
-                <th style={{ textAlign: "left" }}>Designation</th>
+                <th>Employee</th>
+                <th>Department</th>
+                <th>Designation</th>
                 <th>Overall Score</th>
                 <th>Performance Band</th>
                 <th>Last Review</th>
@@ -442,7 +450,7 @@ export default function Performance() {
                 const mockLastReview = ["Q3 2024", "Q4 2024", "Nov 2024"][Math.floor(Math.random() * 3)];
                 
                 return (
-                  <tr key={i} style={{ background: isSelected ? "#eff6ff" : undefined }}>
+                  <tr key={i} style={{ background: isSelected ? "#eff6ff" : i % 2 === 0 ? "#fff" : "#f9fafb" }}>
                     <td>
                       <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
                         <div style={{
@@ -454,7 +462,7 @@ export default function Performance() {
                           {(emp.fullName || "?")[0].toUpperCase()}
                         </div>
                         <div>
-                          <div style={{ fontWeight: isSelected ? 600 : 400, fontSize: 14 }}>
+                          <div style={{ fontWeight: isSelected ? 600 : 400, fontSize: 14, color: "#111827" }}>
                             {emp.fullName}
                           </div>
                           <div style={{ fontSize: 11, color: "#6b7280" }}>
@@ -463,8 +471,8 @@ export default function Performance() {
                         </div>
                       </div>
                     </td>
-                    <td>{emp.department || "—"}</td>
-                    <td>{emp.designation || "—"}</td>
+                    <td style={{ textAlign: "center" }}>{emp.department || "—"}</td>
+                    <td style={{ textAlign: "center" }}>{emp.designation || "—"}</td>
                     <td style={{ textAlign: "center" }}>
                       <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 4 }}>
                         <StarRating value={mockScore} />
@@ -502,6 +510,7 @@ export default function Performance() {
               })}
             </tbody>
           </table>
+          </div>
         </div>
       )}
 
@@ -543,8 +552,11 @@ export default function Performance() {
             </div>
           )}
 
-          {/* ── Monthly Trend Chart ── */}
-          <div className={styles.card}>
+          {/* ── Monthly Trend Chart + Performance Reviews side by side ── */}
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 20, marginBottom: 24 }}>
+
+          {/* Monthly Trend Chart */}
+          <div className={styles.card} style={{ marginBottom: 0 }}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
               <h3 style={{ margin: 0, fontSize: 16, fontWeight: 600, color: "#111827" }}>
                 Monthly Performance Trend
@@ -554,7 +566,7 @@ export default function Performance() {
               </span>
             </div>
             {monthlyRatings.length > 0 ? (
-              <ResponsiveContainer width="100%" height={260}>
+              <ResponsiveContainer width="100%" height={160}>
                 <LineChart data={monthlyRatings} margin={{ top: 5, right: 20, left: 0, bottom: 5 }}>
                   <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
                   <XAxis dataKey="month" tick={{ fontSize: 12 }} />
@@ -577,6 +589,54 @@ export default function Performance() {
               <p style={{ color: "#9ca3af", textAlign: "center", padding: 40 }}>No monthly data available</p>
             )}
           </div>
+
+          {/* ── Reviews ── */}
+          <div className={styles.card} style={{ marginBottom: 0 }}>
+            <h3 style={{ margin: "0 0 16px", fontSize: 16, fontWeight: 600, color: "#111827" }}>
+              Performance Reviews
+            </h3>
+            {reviews.length > 0 ? (
+              <div style={{ maxHeight: 200, overflowY: "auto" }}>
+              <table className={styles.table}>
+                <thead style={{ position: "sticky", top: 0, zIndex: 1 }}>
+                  <tr>
+                    <th style={{ textAlign: "left" }}>Reviewer</th>
+                    <th>Quarter</th>
+                    <th>Rating</th>
+                    <th style={{ textAlign: "left" }}>Comments</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {reviews.map((r, i) => (
+                    <tr key={i}>
+                      <td>
+                        <span style={{
+                          display: "inline-block", padding: "2px 8px",
+                          borderRadius: 12, fontSize: 11, fontWeight: 600,
+                          background: r.reviewer === "Manager" ? "#dbeafe"
+                            : r.reviewer === "HR" ? "#dcfce7" : "#fef9c3",
+                          color: r.reviewer === "Manager" ? "#1d4ed8"
+                            : r.reviewer === "HR" ? "#15803d" : "#854d0e"
+                        }}>
+                          {r.reviewer}
+                        </span>
+                      </td>
+                      <td style={{ textAlign: "center" }}>{r.quarter}</td>
+                      <td style={{ textAlign: "center" }}>
+                        <StarRating value={r.rating} />
+                      </td>
+                      <td style={{ color: "#4b5563" }}>{r.comments}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+              </div>
+            ) : (
+              <p style={{ color: "#9ca3af", textAlign: "center", padding: 20 }}>No reviews available</p>
+            )}
+          </div>
+
+          </div>{/* end side-by-side grid */}
 
           {/* ── Parameters + Radar ── */}
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 20, marginBottom: 24 }}>
@@ -665,50 +725,6 @@ export default function Performance() {
             </div>
           </div>
 
-          {/* ── Reviews ── */}
-          <div className={styles.card}>
-            <h3 style={{ margin: "0 0 16px", fontSize: 16, fontWeight: 600, color: "#111827" }}>
-              Performance Reviews
-            </h3>
-            {reviews.length > 0 ? (
-              <table className={styles.table}>
-                <thead>
-                  <tr>
-                    <th style={{ textAlign: "left" }}>Reviewer</th>
-                    <th>Quarter</th>
-                    <th>Rating</th>
-                    <th style={{ textAlign: "left" }}>Comments</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {reviews.map((r, i) => (
-                    <tr key={i}>
-                      <td>
-                        <span style={{
-                          display: "inline-block", padding: "2px 8px",
-                          borderRadius: 12, fontSize: 11, fontWeight: 600,
-                          background: r.reviewer === "Manager" ? "#dbeafe"
-                            : r.reviewer === "HR" ? "#dcfce7" : "#fef9c3",
-                          color: r.reviewer === "Manager" ? "#1d4ed8"
-                            : r.reviewer === "HR" ? "#15803d" : "#854d0e"
-                        }}>
-                          {r.reviewer}
-                        </span>
-                      </td>
-                      <td style={{ textAlign: "center" }}>{r.quarter}</td>
-                      <td style={{ textAlign: "center" }}>
-                        <StarRating value={r.rating} />
-                      </td>
-                      <td style={{ color: "#4b5563" }}>{r.comments}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            ) : (
-              <p style={{ color: "#9ca3af", textAlign: "center", padding: 20 }}>No reviews available</p>
-            )}
-          </div>
-
           {/* ── Employee: My Performance Summary ── */}
           {isEmployee && perfData && (
             <div className={styles.card}>
@@ -767,65 +783,7 @@ export default function Performance() {
             </div>
           )}
 
-          {/* ── Admin/Manager: All Employees Summary ── */}
-          {(isAdmin || isManager) && employees.length > 0 && (
-            <div className={styles.card}>
-              <h3 style={{ margin: "0 0 16px", fontSize: 16, fontWeight: 600, color: "#111827" }}>
-                Team Overview — Active Employees
-              </h3>
-              <table className={styles.table}>
-                <thead>
-                  <tr>
-                    <th style={{ textAlign: "left" }}>Employee</th>
-                    <th style={{ textAlign: "left" }}>Department</th>
-                    <th style={{ textAlign: "left" }}>Designation</th>
-                    <th>Action</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {employees.map((emp, i) => {
-                    const eid = emp.employeeId || emp.id;
-                    const isSelected = eid === selectedEmpId;
-                    return (
-                      <tr key={i} style={{ background: isSelected ? "#eff6ff" : undefined }}>
-                        <td>
-                          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                            <div style={{
-                              width: 30, height: 30, borderRadius: "50%",
-                              background: "linear-gradient(135deg,#3b82f6,#2563eb)",
-                              display: "flex", alignItems: "center", justifyContent: "center",
-                              color: "#fff", fontWeight: 700, fontSize: 12, flexShrink: 0
-                            }}>
-                              {(emp.fullName || "?")[0].toUpperCase()}
-                            </div>
-                            <span style={{ fontWeight: isSelected ? 600 : 400 }}>
-                              {emp.fullName}
-                            </span>
-                          </div>
-                        </td>
-                        <td>{emp.department || "—"}</td>
-                        <td>{emp.designation || "—"}</td>
-                        <td style={{ textAlign: "center" }}>
-                          <button
-                            onClick={() => setSelectedEmpId(eid)}
-                            style={{
-                              background: isSelected ? "#2563eb" : "#f1f5f9",
-                              color: isSelected ? "#fff" : "#374151",
-                              border: "none", borderRadius: 6,
-                              padding: "5px 12px", fontSize: 12,
-                              cursor: "pointer", fontWeight: 500
-                            }}
-                          >
-                            {isSelected ? "Viewing" : "View"}
-                          </button>
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            </div>
-          )}
+          {/* ── Admin/Manager: All Employees Summary — REMOVED (duplicate of Performance Tracking table above) ── */}
         </>
       )}
 

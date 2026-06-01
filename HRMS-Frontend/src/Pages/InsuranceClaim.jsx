@@ -466,6 +466,7 @@ return String(value ?? "")
               <input name="department" placeholder="Department *" value={role === ROLE_EMP ? user?.department || "" : formData.department} onChange={handleInput} required readOnly={role === ROLE_EMP} />
               <select name="relationship" onChange={handleInput} required>
                 <option value="">Relationship *</option>
+                <option value="Self">Self</option>
                 <option value="Father">Father</option>
                 <option value="Mother">Mother</option>
                 <option value="Wife">Wife</option>

@@ -2,7 +2,6 @@
     import Calendar from "react-calendar";
     import axios from "axios";
     import { useNavigate } from "react-router-dom";
-    
     import "react-calendar/dist/Calendar.css";
     import ViewPayslipModal from "./Payroll/ViewPayslipModal";
     
@@ -41,7 +40,13 @@
 
   
 
-
+/* ================= FORMAT TIME TO HH:MM:SS (display only) ================= */
+const formatTime = (timeStr) => {
+  if (!timeStr || timeStr === "-") return timeStr;
+  // Extract only HH:MM:SS from strings like "10:57:04.125480300" or "10:57:04 AM"
+  const match = String(timeStr).match(/^(\d{1,2}:\d{2}:\d{2})/);
+  return match ? match[1] : timeStr;
+};
 
 
     export default function Home() {
@@ -1549,15 +1554,15 @@ onChange={(e) => {
 
     <div>
       <strong>Check-In:</strong>{" "}
-      {homeData?.todayAttendance?.checkIn || 
-       homeData?.todayAttendance?.checkInTime || 
+      {formatTime(homeData?.todayAttendance?.checkIn || 
+       homeData?.todayAttendance?.checkInTime) || 
        "--"}
     </div>
 
     <div>
       <strong>Check-Out:</strong>{" "}
-      {homeData?.todayAttendance?.checkOut || 
-       homeData?.todayAttendance?.checkOutTime || 
+      {formatTime(homeData?.todayAttendance?.checkOut || 
+       homeData?.todayAttendance?.checkOutTime) || 
        "--"}
     </div>
 

@@ -135,7 +135,101 @@ background: linear-gradient(135deg, #93c5fd, #60a5fa);}
   margin-bottom: 24px;
 }
 
-/* ===== TABLE ===== */
+/* ===== PERFORMANCE TRACKING TABLE — STICKY HEADER (same pattern as TaskManagement) ===== */
+
+.perfTableWrapper {
+  width: 100%;
+  height: 310px;
+  overflow-x: auto;
+  overflow-y: auto;
+  position: relative;
+  background: #fff;
+  border: 1px solid #ddd;
+  border-radius: 10px;
+  overscroll-behavior: contain;
+  isolation: isolate;
+  /* NO overflow:hidden anywhere in ancestors — required for sticky to work */
+}
+
+.perfTableWrapper::-webkit-scrollbar {
+  height: 8px;
+  width: 8px;
+}
+
+.perfTableWrapper::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 6px;
+}
+
+.perfTableWrapper::-webkit-scrollbar-thumb {
+  background: #888;
+  border-radius: 6px;
+}
+
+.perfTableWrapper::-webkit-scrollbar-thumb:hover {
+  background: #555;
+}
+
+.perfTable {
+  width: 100%;
+  min-width: 750px;
+  border-collapse: collapse;
+  font-size: 14px;
+  table-layout: auto;
+}
+
+/* ── Sticky header — must be on th directly, not thead ── */
+.perfTable thead th {
+  position: sticky;
+  top: 0;
+  z-index: 200;
+  background: #1e3a5f;
+  color: #fff;
+  font-weight: 700;
+  padding: 11px 12px;
+  white-space: nowrap;
+  /* Column grid lines */
+  border-right: 1px solid rgba(255,255,255,0.25);
+  border-bottom: 2px solid #16306d;
+  /* Prevent background bleed during scroll */
+  background-clip: padding-box;
+}
+
+.perfTable thead th:last-child {
+  border-right: none;
+}
+
+.perfTable thead th:first-child {
+  text-align: left;
+}
+
+.perfTable thead th:not(:first-child) {
+  text-align: center;
+}
+
+.perfTable tbody tr {
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.perfTable tbody tr:nth-child(even) td {
+  background: #f9fafb;
+}
+
+.perfTable tbody tr:hover td {
+  background: #eff6ff !important;
+}
+
+/* Column grid lines on body cells */
+.perfTable tbody td {
+  padding: 10px 12px;
+  color: #1f2937;
+  background-clip: padding-box;
+  border-right: 1px solid #e5e7eb;
+}
+
+.perfTable tbody td:last-child {
+  border-right: none;
+}
 
 .table {
   width: 100%;
@@ -264,7 +358,7 @@ background: linear-gradient(135deg, #93c5fd, #60a5fa);}
   width: 100% !important;
 
   overflow-x: auto !important;
-  overflow-y: hidden !important;
+  overflow-y: visible !important;
 
   -webkit-overflow-scrolling: touch !important;
 
@@ -378,7 +472,7 @@ background: linear-gradient(135deg, #93c5fd, #60a5fa);}
     padding: 12px !important;
 
     overflow-x: auto !important;
-    overflow-y: hidden !important;
+    overflow-y: visible !important;
 
     -webkit-overflow-scrolling: touch !important;
 

@@ -10,6 +10,14 @@ import {
   checkOut as apiCheckOut,
 } from "../api/attendanceApi";
 
+/* ================= FORMAT TIME TO HH:MM:SS (display only) ================= */
+const formatTime = (timeStr) => {
+  if (!timeStr || timeStr === "-") return timeStr;
+  // Extract only HH:MM:SS from strings like "10:57:04.125480300" or "10:57:04 AM"
+  const match = String(timeStr).match(/^(\d{1,2}:\d{2}:\d{2})/);
+  return match ? match[1] : timeStr;
+};
+
 /* ================= GET LOGGED USER (supports both storage keys) ================= */
 const getLoggedUser = () => {
   try {
@@ -794,8 +802,8 @@ const filteredRecordsFinal = searchFiltered
                     <td>{r.reportingManager || "-"}</td>
                   )}
                     <td>{r.date}</td>
-                  <td>{r.checkIn}</td>
-                  <td>{r.checkOut && r.checkOut !== "-" ? r.checkOut : "-"}</td>
+                  <td>{formatTime(r.checkIn)}</td>
+                  <td>{r.checkOut && r.checkOut !== "-" ? formatTime(r.checkOut) : "-"}</td>
                   <td>{calculateHours(r.checkIn, r.checkOut)}</td>
                   <td>{r.locationIn}</td>
                   <td>{r.locationOut}</td>
