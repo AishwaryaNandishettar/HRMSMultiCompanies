@@ -264,12 +264,21 @@ const InsuranceClaim = () => {
   const normalizeKey = (key) => key?.toLowerCase();
 
   const filteredClaims = claims.filter((claim) => {
-    // ROLE FILTER
-    if (role === ROLE_EMP && user?.empCode !== claim.empCode) {
-      return false;
+    // ROLE FILTER - EMPLOYEES SHOULD ONLY SEE THEIR OWN CLAIMS
+    const userRole = (role || "").toLowerCase();
+    
+    if (userRole === ROLE_EMP) {
+      // Employee can only see their own claims
+      const userEmail = (user?.email || "").toLowerCase();
+      const claimEmail = (claim.employeeName || "").toLowerCase();
+      
+      if (userEmail !== claimEmail) {
+        return false;
+      }
     }
 
-    if (role === ROLE_ADMIN) {
+    // ADMIN ROLE FILTER - Only show certain statuses
+    if (userRole === ROLE_ADMIN) {
       const allowed = [
         "MANAGER_APPROVED",
         "REJECTED",
@@ -277,7 +286,7 @@ const InsuranceClaim = () => {
         "SETTLED"
       ];
 
-      const status = (claim.status || "").toUpperCase();
+      const status = (claim.status || "").toUpperCase().replace(/ /g, "_");
       if (!allowed.includes(status)) return false;
     }
 
@@ -319,29 +328,29 @@ const InsuranceClaim = () => {
       <div className="claim-dashboard">
         <div className="card total">
           <h4>Total Claims</h4>
-          <p>{claims.length}</p>
+          <p>{filteredClaims.length}</p>
         </div>
 
         <div className="card approved" style={{ color: "white" }}>
           <h4>Approved</h4>
-          <p>{claims.filter(c => c.status === "Insurance Approved" || c.status === "Settled").length}</p>
+          <p>{filteredClaims.filter(c => c.status === "Insurance Approved" || c.status === "Settled").length}</p>
         </div>
 
         <div className="card pending">
           <h4>Pending</h4>
-          <p>{claims.filter(c =>
+          <p>{filteredClaims.filter(c =>
             ["Submitted", "Manager Approved"].includes(c.status)
           ).length}</p>
         </div>
 
         <div className="card rejected">
           <h4>Rejected</h4>
-          <p>{claims.filter(c => c.status === "Rejected").length}</p>
+          <p>{filteredClaims.filter(c => c.status === "Rejected").length}</p>
         </div>
 
         <div className="card amount">
           <h4>Total Amount</h4>
-          <p>₹{claims.reduce((acc, c) => acc + Number(c.amount || 0), 0)}</p>
+          <p>₹{filteredClaims.reduce((acc, c) => acc + Number(c.amount || 0), 0)}</p>
         </div>
       </div>
 
