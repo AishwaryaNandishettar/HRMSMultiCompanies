@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Quick SMS Test</title>
+    <style>
+        body { font-family: Arial, sans-serif; max-width: 600px; margin: 50px auto; padding: 20px; }
+        .btn { background: #007bff; color: white; padding: 15px 25px; border: none; border-radius: 5px; cursor: pointer; margin: 10px 0; font-size: 16px; }
+        .btn:hover { background: #0056b3; }
+        .result { margin: 20px 0; padding: 15px; border-radius: 5px; background: #f8f9fa; }
+        .success { background: #d4edda; color: #155724; }
+        .error { background: #f8d7da; color: #721c24; }
+    </style>
+</head>
+<body>
+    <h1>🚀 Quick SMS Test</h1>
+    <h2>Your Phone: 9606408912</h2>
+    
+    <button class="btn" onclick="testSMS()">📱 Send Test SMS Now</button>
+    <button class="btn" onclick="checkServer()">🌐 Check Server</button>
+    
+    <div id="result" class="result"></div>
+
+    <script>
+        async function checkServer() {
+            const resultDiv = document.getElementById('result');
+            try {
+                resultDiv.innerHTML = '🔄 Checking server...';
+                const response = await fetch('http://localhost:8082/api/jobs/all');
+                if (response.ok) {
+                    resultDiv.innerHTML = '✅ Server is running on port 8082!';
+                    resultDiv.className = 'result success';
+                } else {
+                    throw new Error('Server error: ' + response.status);
+                }
+            } catch (error) {
+                resultDiv.innerHTML = `❌ Server not running: ${error.message}<br><br>Start backend: <code>mvn spring-boot:run</code>`;
+                resultDiv.className = 'result error';
+            }
+        }
+
+        async function testSMS() {
+            const resultDiv = document.getElementById('result');
+            try {
+                resultDiv.innerHTML = '📱 Sending SMS...';
+                resultDiv.className = 'result';
+                
+                const message = 'Quick test from HRMS at ' + new Date().toLocaleTimeString();
+                const url = `http://localhost:8082/api/jobs/test-sms?phone=9606408912&message=${encodeURIComponent(message)}`;
+                
+                console.log('Testing URL:', url);
+                
+                const response = await fetch(url);
+                const data = await response.json();
+                
+                if (data.success) {
+                    resultDiv.innerHTML = `
+                        ✅ <strong>SMS Sent Successfully!</strong><br>
+                        📱 Phone: ${data.phone}<br>
+                        🕒 Time: ${new Date().toLocaleTimeString()}<br><br>
+                        <strong>Check your phone (9606408912) now!</strong>
+                    `;
+                    resultDiv.className = 'result success';
+                } else {
+                    throw new Error(data.error);
+                }
+                
+            } catch (error) {
+                resultDiv.innerHTML = `
+                    ❌ <strong>SMS Failed</strong><br>
+                    Error: ${error.message}<br><br>
+                    <strong>Check:</strong><br>
+                    • Backend server running?<br>
+                    • Check backend console logs<br>
+                    • Twilio credentials correct?
+                `;
+                resultDiv.className = 'result error';
+                console.error('SMS Test Error:', error);
+            }
+        }
+        
+        // Auto check server on load
+        window.onload = checkServer;
+    </script>
+</body>
+</html>

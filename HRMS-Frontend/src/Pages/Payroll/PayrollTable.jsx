@@ -375,8 +375,7 @@ const totalNet = data.reduce(
 
               {(() => {
                 const tdStyle = {
-                  background:
-                    "linear-gradient(135deg, #1e3a5f 0%, #2563eb 100%)",
+                  background: "#0d3b66",
                   padding: "14px 12px",
                   color: "#ffffff",
                   fontWeight: "700",

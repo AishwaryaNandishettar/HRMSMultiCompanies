@@ -1,0 +1,304 @@
+/* ============================================
+   UPDATE STATUS MODAL - PROFESSIONAL STYLING
+============================================ */
+
+.update-status-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2000;
+  animation: fadeIn 0.2s ease;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.update-status-modal {
+  background: #ffffff;
+  border-radius: 16px;
+  width: 90%;
+  max-width: 520px;
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+  animation: slideUp 0.3s ease;
+}
+
+@keyframes slideUp {
+  from {
+    transform: translateY(30px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+/* ============================================
+   HEADER
+============================================ */
+
+.modal-header {
+  background: linear-gradient(135deg, #1e3a5f, #2563eb);
+  padding: 20px 24px;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+}
+
+.modal-header h3 {
+  margin: 0;
+  color: #ffffff;
+  font-size: 18px;
+  font-weight: 600;
+}
+
+.candidate-info {
+  margin: 6px 0 0;
+  color: rgba(255, 255, 255, 0.85);
+  font-size: 13px;
+}
+
+.close-btn {
+  background: rgba(255, 255, 255, 0.2);
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  color: #ffffff;
+  font-size: 28px;
+  font-weight: bold;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+  line-height: 1;
+}
+
+.close-btn:hover {
+  background: rgba(255, 255, 255, 0.3);
+  transform: scale(1.1);
+}
+
+/* ============================================
+   BODY
+============================================ */
+
+.modal-body {
+  padding: 24px;
+  width: 100%;
+  box-sizing: border-box;
+  overflow-y: auto;
+  flex: 1;
+  min-height: 0;
+}
+
+.form-group {
+  margin-bottom: 20px;
+  width: 100%;
+}
+
+.form-group label {
+  display: block;
+  font-size: 13px;
+  font-weight: 600;
+  color: #374151;
+  margin-bottom: 8px;
+}
+
+.status-select {
+  width: 100%;
+  padding: 12px 14px;
+  border: 2px solid #e5e7eb;
+  border-radius: 10px;
+  font-size: 14px;
+  font-weight: 500;
+  color: #1f2937 !important;
+  background: #ffffff !important;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-sizing: border-box;
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23333' d='M6 9L1 4h10z'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 12px center;
+  padding-right: 40px;
+}
+
+.status-select option {
+  color: #1f2937;
+  background: #ffffff;
+  padding: 10px;
+}
+
+.status-select:focus {
+  outline: none;
+  border-color: #2563eb;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+}
+
+.comments-textarea {
+  width: 100%;
+  padding: 12px 14px;
+  border: 2px solid #e5e7eb;
+  border-radius: 10px;
+  font-size: 14px !important;
+  color: #1f2937 !important;
+  font-family: inherit;
+  resize: vertical;
+  transition: all 0.2s ease;
+  box-sizing: border-box;
+  min-height: 120px;
+  line-height: 1.6;
+  background: #ffffff !important;
+}
+
+.comments-textarea:focus {
+  outline: none;
+  border-color: #2563eb;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+}
+
+.comments-textarea::placeholder {
+  color: #9ca3af;
+}
+
+/* ============================================
+   EMAIL INFO SECTION
+============================================ */
+
+.email-info {
+  background: #eff6ff;
+  border: 1px solid #bfdbfe;
+  border-radius: 10px;
+  padding: 14px 16px;
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+}
+
+.info-icon {
+  font-size: 24px;
+  flex-shrink: 0;
+}
+
+.email-info strong {
+  display: block;
+  font-size: 13px;
+  color: #1e40af;
+  margin-bottom: 4px;
+}
+
+.email-info p {
+  margin: 0;
+  font-size: 12px;
+  color: #3b82f6;
+  line-height: 1.5;
+}
+
+/* ============================================
+   FOOTER
+============================================ */
+
+.modal-footer {
+  padding: 16px 24px;
+  background: #f9fafb;
+  display: flex;
+  gap: 12px;
+  justify-content: flex-end;
+  border-top: 1px solid #e5e7eb;
+  flex-shrink: 0;
+}
+
+.cancel-btn,
+.save-notify-btn {
+  padding: 10px 20px;
+  border-radius: 10px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border: none;
+}
+
+.cancel-btn {
+  background: #ffffff;
+  color: #374151;
+  border: 2px solid #e5e7eb;
+}
+
+.cancel-btn:hover:not(:disabled) {
+  background: #f3f4f6;
+}
+
+.save-notify-btn {
+  background: linear-gradient(135deg, #2563eb, #3b82f6);
+  color: #ffffff;
+  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
+}
+
+.save-notify-btn:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(37, 99, 235, 0.4);
+}
+
+.cancel-btn:disabled,
+.save-notify-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* ============================================
+   MOBILE RESPONSIVE
+============================================ */
+
+@media (max-width: 768px) {
+  .update-status-modal {
+    width: 95%;
+    max-width: none;
+    max-height: 95vh;
+  }
+
+  .modal-header {
+    padding: 16px 18px;
+  }
+
+  .modal-header h3 {
+    font-size: 16px;
+  }
+
+  .candidate-info {
+    font-size: 12px;
+  }
+
+  .modal-body {
+    padding: 18px;
+  }
+
+  .modal-footer {
+    flex-direction: column-reverse;
+    padding: 14px 18px;
+    gap: 8px;
+  }
+
+  .cancel-btn,
+  .save-notify-btn {
+    width: 100%;
+    padding: 12px 20px;
+  }
+}

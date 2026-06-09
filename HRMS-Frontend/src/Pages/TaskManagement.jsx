@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import "./Task.css";
+import api from "../api/axios";
 import { getTasks, createTaskApi } from "../api/taskApi";
 import * as XLSX from "xlsx";
 import { saveAs } from "file-saver";
@@ -31,6 +32,9 @@ const role =
 const [taskData, setTaskData] = useState([]);
 const [activeFilter, setActiveFilter] = useState(null);
 const [filterText, setFilterText] = useState("");
+const [employees, setEmployees] = useState([]);
+const [uploadedFiles, setUploadedFiles] = useState({});
+
 const [columnFilters, setColumnFilters] = useState({
   empid: [],
   employeename: [],
@@ -129,7 +133,21 @@ useEffect(() => {
   });
 }, []);
 
+useEffect(() => {
+  loadEmployees();
+}, []);
 
+const loadEmployees = async () => {
+  try {
+    const res = await api.get("/api/employee/all");
+
+    setEmployees(res.data || []);
+
+    console.log("EMPLOYEES =>", res.data);
+  } catch (err) {
+    console.error("Employee Load Error", err);
+  }
+};
 
 const suggestions =
   activeFilter
@@ -391,6 +409,27 @@ const assignTask = async () => {
   }
 };
 
+const handleUpload = (e, task) => {
+  const file = e.target.files?.[0];
+
+  if (!file) return;
+
+  setUploadedFiles((prev) => ({
+    ...prev,
+    [task.id]: file,
+  }));
+
+  console.log("Uploaded:", file.name, "for task:", task.id);
+};
+
+const handleView = (task) => {
+  if (task.attachmentUrl) {
+    window.open(task.attachmentUrl, "_blank");
+  } else {
+    alert("No file uploaded");
+  }
+};
+
 
   return (
 
@@ -544,12 +583,14 @@ const assignTask = async () => {
                 Select Employee
               </option>
 
-              <option>Aman</option>
-              <option>Priya</option>
-              <option>Rahul</option>
-              <option>Sneha</option>
-              <option>Kiran</option>
-              <option>Divya</option>
+            {employees.map((emp) => (
+  <option
+    key={emp.id || emp._id}
+    value={emp.fullName}
+  >
+    {emp.fullName}
+  </option>
+))}
 
             </select>
 
@@ -839,7 +880,8 @@ const assignTask = async () => {
           <tr key={index}>
 
           <td className="taskPage-sticky-col taskPage-col-1">
-  {t.assigneeId || t.id}
+   {t.employeeId || t.assigneeId || t.id}
+
 </td>
 
            <td className="taskPage-sticky-col taskPage-col-2">
@@ -868,7 +910,7 @@ const assignTask = async () => {
     : t.assignDate}
 </td>
 
-            <td>{t.dueDate}</td>
+            <td>{t.dueDate ? new Date(t.dueDate).toLocaleDateString("en-GB") : "-"}</td>
 
             <td>{t.department || t.dept || "HRMS"}</td>
 
@@ -906,9 +948,19 @@ const assignTask = async () => {
 
             <td>
 
-              <button className="taskPage-uploadBtn">
-                Upload
-              </button>
+            <input
+  type="file"
+  id={`file-${t.id}`}
+  style={{ display: "none" }}
+  onChange={(e) => handleUpload(e, t)}
+/>
+
+<button
+  className="taskPage-uploadBtn"
+  onClick={() => document.getElementById(`file-${t.id}`).click()}
+>
+  Upload
+</button>
 
             </td>
 
@@ -918,9 +970,12 @@ const assignTask = async () => {
 
             <td>
 
-              <button className="taskPage-actionBtn">
-                View
-              </button>
+              <button
+  className="taskPage-actionBtn"
+  onClick={() => handleView(t)}
+>
+  View
+</button>
 
             </td>
 

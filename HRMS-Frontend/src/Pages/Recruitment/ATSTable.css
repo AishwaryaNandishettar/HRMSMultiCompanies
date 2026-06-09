@@ -1,232 +1,332 @@
-/* ===================================================== */
-/* 🔒 PIPELINE / ATS PAGE — FULLY ISOLATED STYLES */
-/* ===================================================== */
+/* =====================================================
+   ATS TABLE PAGE — ALL FOUR ROUTES
+   open-positions | new-applications | positions-filled | interview-scheduled
+===================================================== */
 
-.pipeline-wrapper {
-  padding: 20px;
+/* ── Page wrapper ── */
+.ats-wrapper {
+  padding: 20px 28px;
   background: #f5f7fb;
   min-height: 100vh;
+  font-family: "Inter", system-ui, -apple-system, sans-serif;
   color: #111827;
+  box-sizing: border-box;
 }
 
-/* HEADER */
-.pipeline-wrapper .top-bar {
+/* ── Header row ── */
+.ats-header {
   display: flex;
   align-items: center;
-  gap: 20px;
+  gap: 14px;
+  margin-bottom: 22px;
 }
 
-.pipeline-wrapper .back-btn {
-  background: #ffffff;
+.ats-back-btn {
+  background: #fff;
   border: 1px solid #e5e7eb;
-  padding: 8px 14px;
-  border-radius: 6px;
+  padding: 7px 14px;
+  border-radius: 7px;
   cursor: pointer;
+  color: #374151;
+  font-size: 13px;
+  font-weight: 500;
+  transition: background 0.15s;
+}
+.ats-back-btn:hover { background: #f3f4f6; }
+
+.ats-title {
+  font-size: 22px;
+  font-weight: 700;
+  color: #1e3a5f;
+  margin: 0;
+}
+
+/* ── KPI cards row — same size as Recruitment dashboard stat-cards ── */
+.ats-kpi-row {
+  display: flex;
+  gap: 16px;
+  margin-bottom: 20px;
+  flex-wrap: wrap;
+}
+
+.ats-kpi-card {
+  flex: 0 1 auto;
+  width: 300px;
+  height: 78px;
+
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px;
+  border-radius: 14px;
+  color: #fff;
+  border: none;
+  box-shadow: 0 12px 28px rgba(0,0,0,0.18);
+  transition: transform 0.25s ease, box-shadow 0.25s ease;
+  cursor: default;
+  
+}
+
+.ats-kpi-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 16px 36px rgba(0,0,0,0.22);
+}
+.ats-kpi-card {
+  height: 78px;
+  padding: 10px 16px;
+  display: flex;
+  align-items: flex-start;   /* instead of center */
+  justify-content: space-between;
+}
+
+.ats-kpi-left {
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  align-items: flex-start;
+  gap: 4px;                 /* same as first image */
+}
+
+.ats-kpi-label {
+  font-size: 11px;
+  font-weight: 600;
+  line-height: 1;
+  margin: 0;
+}
+
+.ats-kpi-value {
+  font-size: 34px;
+  font-weight: 700;
+  line-height: 1;
+  margin: 0;
+}
+
+/* ── Toolbar: search + export ── */
+.ats-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.ats-search-wrap {
+  display: flex;
+  align-items: center;
+  background: #fff;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  padding: 0 12px;
+  flex: 1;
+  max-width: 340px;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.05);
+  transition: border-color 0.15s;
+}
+.ats-search-wrap:focus-within { border-color: #2563eb; }
+
+.ats-search-icon {
+  font-size: 14px;
+  margin-right: 8px;
+  color: #9ca3af;
+}
+
+.ats-search {
+  border: none;
+  outline: none;
+  padding: 9px 0;
+  font-size: 14px;
+  width: 100%;
+  background: transparent;
   color: #111827;
 }
 
-/* ===================================================== */
-/* 🔥 STAGE CARDS — FIXED VISIBILITY */
-/* ===================================================== */
-
-.pipeline-wrapper .stats-row {
-  display: flex;
-  gap: 15px;
-  margin: 20px 0;
-}
-
-.pipeline-wrapper .pipeline-stat {
-  padding: 14px 20px;
-  border-radius: 10px;
-  font-weight: 700;
-  flex: 1;
-  display: flex;
-  justify-content: space-between;
+.ats-export-btn {
+  background: linear-gradient(135deg, #2563eb, #1d4ed8);
+  color: #fff;
   border: none;
-  cursor: pointer;
-  transition: 0.2s ease;
-  color: #ffffff !important;   /* FORCE WHITE */
-}
-
-/* Unique Class Names (NO MORE .blue .green etc) */
-
-.pipeline-wrapper .stat-applied {
-  background: linear-gradient(90deg,#3b82f6,#2563eb);
-}
-
-.pipeline-wrapper .stat-shortlisted {
-  background: linear-gradient(90deg,#fbbf24,#f59e0b);
-}
-
-.pipeline-wrapper .stat-interview {
-  background: linear-gradient(90deg,#fb923c,#f97316);
-}
-
-.pipeline-wrapper .stat-rejected {
-  background: linear-gradient(90deg,#ef4444,#dc2626);
-}
-
-.pipeline-wrapper .stat-selected {
-  background: linear-gradient(90deg,#22c55e,#16a34a);
-}
-
-.pipeline-wrapper .pipeline-stat:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 6px 14px rgba(0,0,0,0.2);
-}
-
-.pipeline-wrapper .active-stat {
-  outline: 3px solid #ffffff;
-}
-
-/* ===================================================== */
-/* SEARCH + EXPORT */
-/* ===================================================== */
-
-.pipeline-wrapper .table-controls {
-  display: flex;
-  justify-content: space-between;
-  margin-bottom: 15px;
-}
-
-.pipeline-wrapper .table-controls input {
-  width: 60%;
-  padding: 10px;
-  border-radius: 6px;
-  border: 1px solid #e5e7eb;
-}
-
-.pipeline-wrapper .export-btn {
-  background: #2563eb;
-  border: none;
-  padding: 10px 16px;
-  color: white;
-  border-radius: 6px;
-  cursor: pointer;
-}
-
-/* ===================================================== */
-/* TABLE */
-/* ===================================================== */
-
-.pipeline-wrapper .table-container {
-  background: #ffffff;
-  border-radius: 10px;
-  border: 1px solid #e5e7eb;
-  overflow-x: auto;
-}
-
-.pipeline-wrapper .recruitment-table {
-  width: 100%;
-  border-collapse: collapse;
-}
-
-.pipeline-wrapper .recruitment-table th {
-  text-align: left;
-  padding: 14px;
+  padding: 9px 18px;
+  border-radius: 8px;
   font-size: 14px;
-  color: #6b7280;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  box-shadow: 0 3px 10px rgba(37,99,235,0.3);
+  transition: background 0.15s, transform 0.1s;
+}
+.ats-export-btn:hover {
+  background: linear-gradient(135deg, #1d4ed8, #1e40af);
+  transform: translateY(-1px);
 }
 
-.pipeline-wrapper .recruitment-table td {
-  padding: 14px;
-  border-top: 1px solid #e5e7eb;
+/* ── Table wrapper — sticky header scroll ── */
+.ats-table-wrapper {
+  width: 100%;
+  height: calc(100vh - 340px);
+  min-height: 260px;
+  overflow-x: auto;
+  overflow-y: auto;
+  border-radius: 10px;
+  border: 1px solid #e5e7eb;
+  background: #fff;
+  isolation: isolate;
+  overscroll-behavior: contain;
 }
 
-.pipeline-wrapper .recruitment-table tr:hover {
-  background: #f3f4f6;
+.ats-table-wrapper::-webkit-scrollbar { width: 8px; height: 8px; }
+.ats-table-wrapper::-webkit-scrollbar-track { background: #f1f1f1; border-radius: 6px; }
+.ats-table-wrapper::-webkit-scrollbar-thumb { background: #9ca3af; border-radius: 6px; }
+.ats-table-wrapper::-webkit-scrollbar-thumb:hover { background: #6b7280; }
+
+/* ── Table ── */
+.ats-table {
+  width: 100%;
+  min-width: 700px;
+  border-collapse: collapse;
+  font-size: 14px;
 }
 
-/* ===================================================== */
-/* BADGES — COMPLETELY ISOLATED */
-/* ===================================================== */
+/* ── Sticky frozen header ── */
+.ats-table thead th {
+  position: sticky;
+  top: 0;
+  z-index: 200;
+  background: #1e3a5f;
+  color: #fff;
+  font-weight: 700;
+  padding: 12px 14px;
+  text-align: left;
+  white-space: nowrap;
+  border-right: 1px solid rgba(255,255,255,0.2);
+  border-bottom: 2px solid #16306d;
+  background-clip: padding-box;
+}
+.ats-table thead th:last-child { border-right: none; }
 
-.pipeline-wrapper .pipeline-badge {
-  padding: 6px 12px;
+/* ── Body rows ── */
+.ats-table tbody tr { border-bottom: 1px solid #e5e7eb; }
+.ats-table tbody tr:nth-child(even) td { background: #f9fafb; }
+.ats-table tbody tr:hover td { background: #eff6ff !important; }
+
+.ats-table tbody td {
+  padding: 11px 14px;
+  color: #374151;
+  border-right: 1px solid #e5e7eb;
+  background-clip: padding-box;
+}
+.ats-table tbody td:last-child { border-right: none; }
+
+/* ── Status badges ── */
+.ats-badge {
+  display: inline-block;
+  padding: 4px 12px;
   border-radius: 999px;
   font-size: 12px;
   font-weight: 600;
-  color: white !important;
-  display: inline-block;
 }
 
-.pipeline-wrapper .badge-applied {
-  background: #3b82f6;
+.ats-badge-open           { background: #dcfce7; color: #15803d; }
+.ats-badge-closed         { background: #f1f5f9; color: #475569; }
+.ats-badge-selected       { background: #dbeafe; color: #1d4ed8; }
+.ats-badge-shortlisted    { background: #fef9c3; color: #854d0e; }
+.ats-badge-rejected       { background: #fee2e2; color: #b91c1c; }
+.ats-badge-interview-stage { background: #ffedd5; color: #c2410c; }
+
+/* ── View button ── */
+.ats-view-btn {
+  background: #f1f5f9;
+  border: 1px solid #e2e8f0;
+  padding: 5px 14px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  color: #374151;
+  transition: background 0.15s;
+}
+.ats-view-btn:hover { background: #e2e8f0; }
+
+/* ── Empty state ── */
+.ats-empty {
+  text-align: center;
+  padding: 40px;
+  color: #9ca3af;
+  font-size: 15px;
+  background: #fff;
+  border-radius: 10px;
+  border: 1px solid #e5e7eb;
 }
 
-.pipeline-wrapper .badge-shortlisted {
-  background: #f59e0b;
-}
-
-.pipeline-wrapper .badge-interview {
-  background: #f97316;
-}
-
-.pipeline-wrapper .badge-rejected {
-  background: #ef4444;
-}
-
-.pipeline-wrapper .badge-selected {
-  background: #22c55e;
-}
-
-/* ===================================================== */
-/* ACTION BUTTONS */
-/* ===================================================== */
-
-.pipeline-wrapper .action-btn {
-  background:#6b7280;
-  border:none;
-  padding:6px 10px;
-  border-radius:6px;
-  cursor:pointer;
-  color:white;
-  margin-right:6px;
-}
-
-/* ===================================================== */
-/* EXPORT MODAL */
-/* ===================================================== */
-
-.pipeline-wrapper .export-overlay {
-  position: fixed;
-  inset: 0;
-  background: rgba(0,0,0,0.4);
+/* ── Pagination ── */
+.ats-pagination {
   display: flex;
   justify-content: center;
   align-items: center;
+  gap: 16px;
+  margin-top: 16px;
 }
 
-.pipeline-wrapper .export-modal {
-  background: white;
-  padding: 25px;
-  border-radius: 12px;
-  width: 260px;
-  text-align: center;
-}
-
-.pipeline-wrapper .export-modal button {
-  margin: 6px;
-  padding: 8px 14px;
+.ats-pagination button {
+  padding: 7px 16px;
+  border: none;
   border-radius: 6px;
+  background: #1e3a5f;
+  color: #fff;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+.ats-pagination button:disabled {
+  background: #d1d5db;
+  cursor: not-allowed;
+}
+.ats-pagination button:not(:disabled):hover { background: #2563eb; }
+.ats-pagination span { font-size: 13px; color: #6b7280; }
+
+/* ── Export overlay / modal ── */
+.export-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.45);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.export-modal {
+  background: #fff;
+  padding: 28px;
+  border-radius: 14px;
+  width: 280px;
+  text-align: center;
+  box-shadow: 0 20px 40px rgba(0,0,0,0.2);
+}
+
+.export-modal h3 {
+  margin: 0 0 18px;
+  font-size: 17px;
+  color: #111827;
+}
+
+.export-modal button {
+  margin: 6px;
+  padding: 9px 18px;
+  border-radius: 7px;
   border: none;
   cursor: pointer;
+  font-size: 13px;
+  font-weight: 500;
+  background: #1e3a5f;
+  color: #fff;
+  transition: background 0.15s;
 }
+.export-modal button:hover { background: #2563eb; }
 
-/* ===================================================== */
-/* PAGINATION */
-/* ===================================================== */
-
-.pipeline-wrapper .pagination {
-  display:flex;
-  justify-content:space-between;
-  margin-top:15px;
+.export-modal .cancel-btn {
+  background: #f3f4f6;
+  color: #374151;
+  margin-top: 8px;
 }
-
-.pipeline-wrapper .pagination button {
-  padding:6px 12px;
-  border:none;
-  border-radius:6px;
-  background:#374151;
-  color:white;
-}
+.export-modal .cancel-btn:hover { background: #e5e7eb; }

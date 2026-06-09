@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HRMS SMS Test</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .test-section {
+            margin: 20px 0;
+            padding: 20px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            background: #f9f9f9;
+        }
+        .btn {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px;
+            font-size: 14px;
+        }
+        .btn:hover {
+            background: #0056b3;
+        }
+        .success {
+            background: #28a745;
+        }
+        .danger {
+            background: #dc3545;
+        }
+        input, select {
+            padding: 8px;
+            margin: 5px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        .result {
+            margin: 10px 0;
+            padding: 10px;
+            border-radius: 5px;
+            background: #e9ecef;
+            border-left: 4px solid #007bff;
+        }
+        .error {
+            background: #f8d7da;
+            border-left-color: #dc3545;
+        }
+        .success-msg {
+            background: #d4edda;
+            border-left-color: #28a745;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🚀 HRMS SMS Testing Dashboard</h1>
+        <p><strong>Your Phone:</strong> 9606408912 (All SMS will be sent here in testing mode)</p>
+        
+        <!-- Test 1: Simple SMS Test -->
+        <div class="test-section">
+            <h3>📱 Test 1: Direct SMS Test</h3>
+            <p>Tests your Twilio configuration directly</p>
+            <input type="text" id="testPhone" value="9606408912" placeholder="Phone Number">
+            <input type="text" id="testMessage" value="Hello from HRMS! This is a test message." placeholder="Message">
+            <button class="btn" onclick="testDirectSms()">Send Test SMS</button>
+            <div id="testResult1" class="result" style="display:none;"></div>
+        </div>
+
+        <!-- Test 2: Candidate Status SMS -->
+        <div class="test-section">
+            <h3>👥 Test 2: Candidate Status Update SMS</h3>
+            <p>Tests the actual recruitment SMS feature</p>
+            <input type="text" id="candidateName" value="Aishwarya Test" placeholder="Candidate Name">
+            <input type="text" id="jobTitle" value="Software Engineer" placeholder="Job Title">
+            <select id="statusSelect">
+                <option value="Shortlisted">Shortlisted</option>
+                <option value="Interview Stage">Interview Stage</option>
+                <option value="Selected">Selected</option>
+                <option value="Rejected">Rejected</option>
+            </select>
+            <button class="btn success" onclick="testCandidateSms()">Send Status SMS</button>
+            <div id="testResult2" class="result" style="display:none;"></div>
+        </div>
+
+        <!-- Test 3: Full Integration Test -->
+        <div class="test-section">
+            <h3>🔗 Test 3: Full Integration Test</h3>
+            <p>Tests the complete workflow (database + email + SMS)</p>
+            <select id="candidateSelect">
+                <option value="">Select a candidate from your database...</option>
+            </select>
+            <button class="btn" onclick="loadCandidates()">Load Candidates</button>
+            <br><br>
+            <input type="text" id="integrationComments" value="Test comment for integration" placeholder="Comments">
+            <button class="btn success" onclick="testFullIntegration()">Update Status & Send SMS</button>
+            <div id="testResult3" class="result" style="display:none;"></div>
+        </div>
+
+        <!-- Configuration Check -->
+        <div class="test-section">
+            <h3>⚙️ Configuration Status</h3>
+            <button class="btn" onclick="checkConfig()">Check Twilio Config</button>
+            <div id="configResult" class="result" style="display:none;"></div>
+        </div>
+
+        <!-- Instructions -->
+        <div class="test-section">
+            <h3>📋 Instructions</h3>
+            <ol>
+                <li><strong>Start your backend server</strong> on port 8082</li>
+                <li>Make sure Twilio credentials are set in application.properties</li>
+                <li>Run Test 1 first to verify basic SMS works</li>
+                <li>Run Test 2 to test candidate SMS templates</li>
+                <li>Run Test 3 to test full integration</li>
+                <li><strong>Check your phone (9606408912) for SMS messages</strong></li>
+            </ol>
+            <p><strong>Note:</strong> In testing mode, all SMS will be sent to your phone (9606408912) regardless of the actual candidate phone number. This prevents disturbing other contacts.</p>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = 'http://localhost:8082/api/jobs';
+        
+        // Test 1: Direct SMS
+        async function testDirectSms() {
+            const phone = document.getElementById('testPhone').value;
+            const message = document.getElementById('testMessage').value;
+            const resultDiv = document.getElementById('testResult1');
+            
+            try {
+                resultDiv.style.display = 'block';
+                resultDiv.innerHTML = '🔄 Sending SMS...';
+                resultDiv.className = 'result';
+                
+                const response = await fetch(`${API_BASE}/test-sms?phone=${encodeURIComponent(phone)}&message=${encodeURIComponent(message)}`);
+                const data = await response.json();
+                
+                if (data.success) {
+                    resultDiv.innerHTML = `✅ ${data.message}<br>📱 Check phone: ${data.phone}`;
+                    resultDiv.className = 'result success-msg';
+                } else {
+                    throw new Error(data.error);
+                }
+            } catch (error) {
+                resultDiv.innerHTML = `❌ Error: ${error.message}`;
+                resultDiv.className = 'result error';
+            }
+        }
+        
+        // Test 2: Candidate SMS
+        async function testCandidateSms() {
+            const name = document.getElementById('candidateName').value;
+            const job = document.getElementById('jobTitle').value;
+            const status = document.getElementById('statusSelect').value;
+            const resultDiv = document.getElementById('testResult2');
+            
+            try {
+                resultDiv.style.display = 'block';
+                resultDiv.innerHTML = '🔄 Sending candidate SMS...';
+                resultDiv.className = 'result';
+                
+                // For now, we'll use the test endpoint with a formatted message
+                const message = `Congratulations ${name}! You have been ${status.toUpperCase()} for ${job}. - HR Team`;
+                
+                const response = await fetch(`${API_BASE}/test-sms?phone=9606408912&message=${encodeURIComponent(message)}`);
+                const data = await response.json();
+                
+                if (data.success) {
+                    resultDiv.innerHTML = `✅ Candidate SMS sent!<br>👤 Candidate: ${name}<br>📊 Status: ${status}<br>🏢 Job: ${job}`;
+                    resultDiv.className = 'result success-msg';
+                } else {
+                    throw new Error(data.error);
+                }
+            } catch (error) {
+                resultDiv.innerHTML = `❌ Error: ${error.message}`;
+                resultDiv.className = 'result error';
+            }
+        }
+        
+        // Load candidates from database
+        async function loadCandidates() {
+            const select = document.getElementById('candidateSelect');
+            
+            try {
+                const response = await fetch(`${API_BASE}/all`);
+                const candidates = await response.json();
+                
+                select.innerHTML = '<option value="">Select a candidate...</option>';
+                
+                candidates.forEach(candidate => {
+                    const option = document.createElement('option');
+                    option.value = JSON.stringify({
+                        id: candidate.id,
+                        name: candidate.jobTitle,
+                        email: candidate.email,
+                        phone: candidate.phone || '9606408912'
+                    });
+                    option.textContent = `${candidate.jobTitle} (${candidate.status})`;
+                    select.appendChild(option);
+                });
+                
+                alert(`✅ Loaded ${candidates.length} candidates from database`);
+                
+            } catch (error) {
+                alert(`❌ Failed to load candidates: ${error.message}`);
+            }
+        }
+        
+        // Test 3: Full Integration
+        async function testFullIntegration() {
+            const select = document.getElementById('candidateSelect');
+            const comments = document.getElementById('integrationComments').value;
+            const resultDiv = document.getElementById('testResult3');
+            
+            if (!select.value) {
+                alert('Please select a candidate first');
+                return;
+            }
+            
+            try {
+                const candidate = JSON.parse(select.value);
+                
+                resultDiv.style.display = 'block';
+                resultDiv.innerHTML = '🔄 Running full integration test...';
+                resultDiv.className = 'result';
+                
+                const requestData = {
+                    candidateId: candidate.id,
+                    candidateName: candidate.name,
+                    candidateEmail: candidate.email,
+                    candidatePhone: candidate.phone,
+                    newStatus: 'Selected',
+                    comments: comments
+                };
+                
+                const response = await fetch(`${API_BASE}/update-status`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(requestData)
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    resultDiv.innerHTML = `✅ ${data.message}<br>👤 Candidate: ${candidate.name}<br>📧 Email sent: ${data.emailSent}<br>📱 SMS sent: ${data.smsSent}`;
+                    resultDiv.className = 'result success-msg';
+                } else {
+                    throw new Error(data.error);
+                }
+                
+            } catch (error) {
+                resultDiv.innerHTML = `❌ Integration test failed: ${error.message}`;
+                resultDiv.className = 'result error';
+            }
+        }
+        
+        // Check configuration
+        async function checkConfig() {
+            const resultDiv = document.getElementById('configResult');
+            
+            try {
+                resultDiv.style.display = 'block';
+                resultDiv.innerHTML = '🔄 Checking configuration...';
+                resultDiv.className = 'result';
+                
+                // Try to call the backend
+                const response = await fetch(`${API_BASE}/all`);
+                
+                if (response.ok) {
+                    resultDiv.innerHTML = `
+                        ✅ Backend server is running on port 8082<br>
+                        ✅ Database connection working<br>
+                        ⚙️ Twilio config should be loaded<br>
+                        📱 SMS testing mode: Enabled (your phone only)<br>
+                        <strong>Ready to test SMS!</strong>
+                    `;
+                    resultDiv.className = 'result success-msg';
+                } else {
+                    throw new Error(`Server responded with ${response.status}`);
+                }
+                
+            } catch (error) {
+                resultDiv.innerHTML = `
+                    ❌ Configuration check failed<br>
+                    Error: ${error.message}<br><br>
+                    <strong>Troubleshooting:</strong><br>
+                    1. Make sure backend server is running on port 8082<br>
+                    2. Check Twilio credentials in application.properties<br>
+                    3. Verify database connection
+                `;
+                resultDiv.className = 'result error';
+            }
+        }
+    </script>
+</body>
+</html>

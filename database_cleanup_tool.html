@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Database Cleanup Tool</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; max-width: 1000px; }
+        .section { margin: 20px 0; padding: 20px; border: 2px solid #ddd; border-radius: 8px; }
+        .success { color: green; background: #f0f8f0; padding: 10px; border-radius: 4px; }
+        .error { color: red; background: #f8f0f0; padding: 10px; border-radius: 4px; }
+        .warning { color: orange; background: #fff8f0; padding: 10px; border-radius: 4px; }
+        button { padding: 12px 24px; margin: 8px; font-size: 16px; border: none; border-radius: 4px; cursor: pointer; }
+        .primary { background: #007bff; color: white; }
+        .danger { background: #dc3545; color: white; }
+        .warning-btn { background: #ffc107; color: black; }
+        .results { margin: 15px 0; padding: 15px; background: #f8f9fa; border-radius: 4px; }
+        .duplicate-item { margin: 8px 0; padding: 8px; background: white; border-left: 4px solid #dc3545; }
+        pre { background: #f1f1f1; padding: 10px; border-radius: 4px; overflow-x: auto; }
+    </style>
+</head>
+<body>
+    <h1>🔧 HRMS Database Cleanup Tool</h1>
+    
+    <div class="warning">
+        <strong>⚠️ Important:</strong> This tool fixes database issues that can cause employee update errors. 
+        Run this before adding new employees or updating existing ones.
+    </div>
+
+    <div class="section">
+        <h2>📊 Step 1: Check for Duplicate Employee IDs</h2>
+        <p>Check if there are multiple employees with the same employeeId (this causes the update error you're seeing)</p>
+        <button class="primary" onclick="checkDuplicates()">Check for Duplicates</button>
+        <div id="duplicateResults"></div>
+    </div>
+
+    <div class="section">
+        <h2>🔧 Step 2: Fix Duplicate Employee IDs</h2>
+        <p>Automatically fix duplicate employeeIds by making them unique</p>
+        <button class="warning-btn" onclick="fixDuplicates()">Fix Duplicates</button>
+        <div id="fixResults"></div>
+    </div>
+
+    <div class="section">
+        <h2>🆔 Step 3: Generate Missing Employee IDs</h2>
+        <p>Generate employeeIds for employees that don't have one</p>
+        <button class="primary" onclick="generateMissingIds()">Generate Missing IDs</button>
+        <div id="generateResults"></div>
+    </div>
+
+    <div class="section">
+        <h2>✅ Step 4: Sync Manager Data</h2>
+        <p>Ensure all manager assignments are synced between Employee and User tables</p>
+        <button class="primary" onclick="syncManagers()">Sync All Manager Data</button>
+        <div id="syncResults"></div>
+    </div>
+
+    <script>
+        const API_BASE = 'http://localhost:8082/api';
+
+        async function checkDuplicates() {
+            const resultDiv = document.getElementById('duplicateResults');
+            resultDiv.innerHTML = '<p>🔍 Checking for duplicates...</p>';
+            
+            try {
+                const response = await fetch(`${API_BASE}/cleanup/check-duplicates`);
+                const data = await response.json();
+                
+                let html = `<div class="results">
+                    <h3>📊 Duplicate Check Results:</h3>
+                    <p><strong>Total Employees:</strong> ${data.totalEmployees}</p>
+                    <p><strong>Duplicate EmployeeIds Found:</strong> ${data.duplicateEmployeeIds}</p>
+                </div>`;
+                
+                if (data.duplicateEmployeeIds > 0) {
+                    html += '<div class="error"><strong>⚠️ Duplicates Found:</strong></div>';
+                    for (const [empId, duplicates] of Object.entries(data.duplicateDetails)) {
+                        html += `<div class="duplicate-item">
+                            <strong>EmployeeId: ${empId}</strong> (${duplicates.length} records)<br>`;
+                        duplicates.forEach(emp => {
+                            html += `&nbsp;&nbsp;• ${emp.fullName || emp.email} (ID: ${emp.id})<br>`;
+                        });
+                        html += '</div>';
+                    }
+                    html += '<div class="warning"><strong>⚠️ You MUST fix these duplicates before updating employees!</strong></div>';
+                } else {
+                    html += '<div class="success">✅ No duplicate employeeIds found! Database is clean.</div>';
+                }
+                
+                resultDiv.innerHTML = html;
+            } catch (error) {
+                resultDiv.innerHTML = `<div class="error">❌ Error: ${error.message}</div>`;
+            }
+        }
+
+        async function fixDuplicates() {
+            const resultDiv = document.getElementById('fixResults');
+            resultDiv.innerHTML = '<p>🔧 Fixing duplicates...</p>';
+            
+            try {
+                const response = await fetch(`${API_BASE}/cleanup/fix-duplicates`, {
+                    method: 'POST'
+                });
+                const data = await response.json();
+                
+                let html = `<div class="results">
+                    <h3>🔧 Fix Results:</h3>
+                    <p><strong>Fixed:</strong> ${data.fixedCount} records</p>
+                    <p><strong>Errors:</strong> ${data.errorCount} records</p>
+                </div>`;
+                
+                if (data.fixedCount > 0) {
+                    html += '<div class="success"><strong>✅ Fixed Employees:</strong><ul>';
+                    data.fixedEmployees.forEach(fix => {
+                        html += `<li>${fix}</li>`;
+                    });
+                    html += '</ul></div>';
+                }
+                
+                if (data.errorCount > 0) {
+                    html += '<div class="error">❌ Some records could not be fixed. Check server logs.</div>';
+                }
+                
+                resultDiv.innerHTML = html;
+            } catch (error) {
+                resultDiv.innerHTML = `<div class="error">❌ Error: ${error.message}</div>`;
+            }
+        }
+
+        async function generateMissingIds() {
+            const resultDiv = document.getElementById('generateResults');
+            resultDiv.innerHTML = '<p>🆔 Generating missing employeeIds...</p>';
+            
+            try {
+                const response = await fetch(`${API_BASE}/cleanup/generate-missing-employee-ids`, {
+                    method: 'POST'
+                });
+                const data = await response.json();
+                
+                let html = `<div class="results">
+                    <h3>🆔 Generation Results:</h3>
+                    <p><strong>Generated:</strong> ${data.generatedCount} employeeIds</p>
+                    <p><strong>Errors:</strong> ${data.errorCount} records</p>
+                </div>`;
+                
+                if (data.generatedCount > 0) {
+                    html += '<div class="success"><strong>✅ Generated IDs:</strong><ul>';
+                    data.generatedIds.forEach(id => {
+                        html += `<li>${id}</li>`;
+                    });
+                    html += '</ul></div>';
+                } else {
+                    html += '<div class="success">✅ All employees already have employeeIds!</div>';
+                }
+                
+                resultDiv.innerHTML = html;
+            } catch (error) {
+                resultDiv.innerHTML = `<div class="error">❌ Error: ${error.message}</div>`;
+            }
+        }
+
+        async function syncManagers() {
+            const resultDiv = document.getElementById('syncResults');
+            resultDiv.innerHTML = '<p>🔄 Syncing manager data...</p>';
+            
+            try {
+                const response = await fetch(`${API_BASE}/diagnostic/sync-managers`, {
+                    method: 'POST'
+                });
+                const data = await response.json();
+                
+                resultDiv.innerHTML = `<div class="success">
+                    <h3>✅ Manager Sync Complete!</h3>
+                    <p>${data.message}</p>
+                </div>`;
+            } catch (error) {
+                resultDiv.innerHTML = `<div class="error">❌ Error: ${error.message}</div>`;
+            }
+        }
+        
+        // Auto-check on load
+        window.onload = function() {
+            checkDuplicates();
+        };
+    </script>
+</body>
+</html>

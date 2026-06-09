@@ -20,7 +20,7 @@
   .payroll-page {
     background: var(--bg-main);
     min-height: 100vh;
-    padding: 24px;
+    padding: 10px 16px;
   }
 
   /* =========================
@@ -30,7 +30,7 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 24px;
+    margin-bottom: 10px;
   }
 
   .payroll-header h2 { font-size: 22px; color: var(--text-dark); margin-bottom: 4px; }
@@ -53,7 +53,7 @@
     display: grid;
     grid-template-columns: repeat(3, 1fr);
     gap: 18px;
-    margin-bottom: 24px;
+    margin-bottom: 12px;
   }
 
   .stat-card {
@@ -301,7 +301,7 @@
   .payroll-page {
     background: #f8f9fb;
     min-height: 100vh;
-    padding: 16px 20px;
+    padding: 10px 16px;
     font-family: Inter, system-ui, sans-serif;
   }
 
@@ -310,7 +310,7 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 14px;
+    margin-bottom: 10px;
   }
 
   .payroll-header h2 {
@@ -328,7 +328,7 @@
     display: grid;
     grid-template-columns: repeat(4, minmax(210px, 1fr));
     gap: 10px;
-    margin-bottom: 16px;
+    margin-bottom: 12px;
   }
 
   .kpi-card {
@@ -400,7 +400,7 @@
     padding: 14px;
     border-radius: 12px;
     box-shadow: 0 4px 14px rgba(0,0,0,.08);
-    margin-bottom: 14px;
+    margin-bottom: 10px;
   }
 
   .payroll-toolbar input,
@@ -1071,7 +1071,7 @@
   /* Matches Profile / HRMS industry layout */
 
   .page-wrapper {
-    padding: 24px;
+    padding: 10px 16px;
     background: #f4f6f9;
     min-height: calc(100vh - 80px);
     box-sizing: border-box;
@@ -1092,7 +1092,7 @@
     grid-template-columns: 3fr 1.2fr;
     gap: 24px;
     align-items: flex-start;
-    margin-top: 18px;
+    margin-top: 8px;
   }
 
   /* LEFT SIDE */
@@ -2711,4 +2711,150 @@
 
   /* NEW */
   max-height: calc(92vh - 140px);
+}
+/* ==========================================
+   PAYROLL PAGE - MOVE PROFILE CARD RIGHT
+   ========================================== */
+
+.payroll-content {
+  display: flex !important;
+  align-items: flex-start;
+}
+
+.payroll-right {
+  flex: 0 0 380px !important;
+  width: 380px !important;
+  max-width: 380px !important;
+
+  display: flex !important;
+  justify-content: center !important;
+
+  padding-top: 0 !important;
+}
+
+.payroll-right .profile-card {
+  width: 100% !important;
+  max-width: 380px !important;
+
+  position: sticky !important;
+  top: 20px !important;
+
+  margin-top: 0 !important;
+  transform: none !important;
+}
+.profile-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.profile-card img,
+.profile-avatar {
+  width: 90px;
+  height: 90px;
+  border-radius: 50%;
+  display: block;
+  margin: 0 auto 15px auto;
+}
+/* FORCE PROFILE CARD TO RIGHT EDGE */
+
+.payroll-right {
+  display: flex !important;
+  justify-content: flex-end !important;
+}
+
+.payroll-right .profile-card {
+  margin-left: auto !important;
+ transform: none !important;
+}
+/* ==========================================
+   PAYROLL ONLY - PROFILE CARD POSITION FIX
+   ========================================== */
+
+.payroll-right .profile-card {
+  position: sticky !important;
+
+  top: 70px !important;   /* move card down */
+
+  margin-top: 35px !important; /* extra downward spacing */
+
+  transform: translateX(25px) !important; /* keep right shift */
+
+  max-width: 520px !important;
+}
+.payroll-right .profile-card {
+  top: 90px !important;
+  margin-top: 50px !important;
+  transform: translateX(25px) !important;
+}
+/* ==========================================
+   ALIGN CARD WITH TABLE
+   ========================================== */
+
+.payroll-right .profile-card {
+  position: sticky !important;
+
+  top: 120px !important;
+
+  transform: translateX(25px) !important;
+
+  margin-top: 0 !important;
+}
+/* Move whole right section down */
+.payroll-right {
+  padding-top: 70px !important;
+}
+
+/* ==========================================
+   UPDATE PAYROLL BUTTON - POSITION ABOVE PROFILE CARD
+   ========================================== */
+
+.payroll-header .btn-primary {
+  position: fixed !important;
+  
+  top: 190px !important;
+  right: 50px !important;
+  
+  z-index: 100 !important;
+  
+  padding: 10px 20px !important;
+  border-radius: 10px !important;
+  
+  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3) !important;
+  
+  transition: all 0.2s ease !important;
+}
+
+.payroll-header .btn-primary:hover {
+  transform: translateY(-2px) !important;
+  box-shadow: 0 6px 16px rgba(37, 99, 235, 0.4) !important;
+}
+/* ==========================================
+   PAYROLL PROFILE CARD AVATAR FIX
+========================================== */
+
+.payroll-right .profile-card {
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  text-align: center !important;
+}
+
+.payroll-right .profile-card .profile-avatar,
+.payroll-right .profile-card img {
+  display: block !important;
+  width: 80px !important;
+  height: 80px !important;
+  border-radius: 50% !important;
+  margin: 0 auto 12px auto !important;
+  object-fit: cover !important;
+}
+
+.payroll-right .profile-card h3 {
+  margin-top: 0 !important;
+  margin-bottom: 4px !important;
+}
+
+.payroll-right .profile-card .muted {
+  margin-bottom: 16px !important;
 }

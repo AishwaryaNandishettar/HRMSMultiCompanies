@@ -77,12 +77,22 @@
     }
 
     public Employee updateEmployee(String employeeId, com.omoikaneinnovation.hmrsbackend.dto.EmployeeUpdateDTO dto) {
-        Optional<Employee> employeeOpt = employeeRepo.findByEmployeeId(employeeId);
-        if (employeeOpt.isEmpty()) {
+        // ✅ FIX: Handle duplicate employeeId issue safely
+        List<Employee> employees = employeeRepo.findAll().stream()
+            .filter(e -> employeeId.equals(e.getEmployeeId()) || employeeId.equals(e.getId()))
+            .toList();
+            
+        Employee employee = null;
+        if (!employees.isEmpty()) {
+            // If multiple employees found with same employeeId, use the first one
+            employee = employees.get(0);
+            if (employees.size() > 1) {
+                System.out.println("⚠️ Warning: Multiple employees found with ID: " + employeeId + 
+                    ". Using first match: " + employee.getFullName());
+            }
+        } else {
             throw new RuntimeException("Employee not found with ID: " + employeeId);
         }
-
-        Employee employee = employeeOpt.get();
 
         // Update fields if provided
         if (dto.getFullName() != null && !dto.getFullName().trim().isEmpty()) {
@@ -136,12 +146,33 @@
         // New fields
         if (dto.getLocation() != null) employee.setLocation(dto.getLocation());
         if (dto.getManager() != null) employee.setManager(dto.getManager());
-        if (dto.getManagerEmail() != null) employee.setManagerEmail(dto.getManagerEmail());
+        if (dto.getManagerEmail() != null) {
+            String oldManagerEmail = employee.getManagerEmail();
+            employee.setManagerEmail(dto.getManagerEmail());
+            System.out.println("✅ Manager updated: " + oldManagerEmail + " → " + dto.getManagerEmail());
+            
+            // ✅ FIX: Sync manager changes to User table for attendance visibility
+            Optional<User> userOpt = userRepository.findByEmail(employee.getEmail());
+            if (userOpt.isPresent()) {
+                User user = userOpt.get();
+                user.setManagerEmail(dto.getManagerEmail());
+                if (dto.getManager() != null) {
+                    user.setManagerName(dto.getManager());
+                }
+                userRepository.save(user);
+                System.out.println("✅ Synced manager changes to User table for: " + employee.getEmail());
+            } else {
+                System.out.println("⚠️ Warning: User not found for email: " + employee.getEmail());
+            }
+        }
         if (dto.getDob() != null && !dto.getDob().trim().isEmpty()) employee.setDob(dto.getDob());
         if (dto.getDoj() != null && !dto.getDoj().trim().isEmpty()) employee.setDoj(dto.getDoj());
         if (dto.getExitDate() != null) employee.setExitDate(dto.getExitDate());
         if (dto.getStatus() != null && !dto.getStatus().trim().isEmpty()) employee.setStatus(dto.getStatus());
 
-        return employeeRepo.save(employee);
+        Employee saved = employeeRepo.save(employee);
+        System.out.println("✅ Employee updated successfully: " + saved.getFullName());
+        
+        return saved;
     }
     }

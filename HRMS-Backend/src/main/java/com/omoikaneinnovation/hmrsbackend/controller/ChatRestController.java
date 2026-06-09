@@ -80,11 +80,24 @@ public class ChatRestController {
             @RequestParam String sender,
             @RequestParam String receiver
     ) {
+        System.out.println("🔍 markSeen called - sender: " + sender + ", receiver: " + receiver);
+        
+        // Frontend sends: sender=loggedInUser, receiver=otherUser
+        // We need to mark messages where receiverEmail=loggedInUser AND senderEmail=otherUser as seen
+        // findUnseen(receiver, sender) → query: { receiverEmail: receiver, senderEmail: sender }
+        // So pass: receiver=loggedInUser(sender param), sender=otherUser(receiver param)
         List<ChatMessage> messages =
-                messageRepository.findUnseen(sender, receiver);
+                messageRepository.findUnseen(sender, receiver);  // ✅ sender=loggedInUser is the receiver of messages
 
-        messages.forEach(m -> m.setSeen(true));
+        System.out.println("🔍 Found " + messages.size() + " unseen messages to mark as seen");
+        
+        messages.forEach(m -> {
+            System.out.println("🔍 Marking message as seen - ID: " + m.getId() + ", from: " + m.getSenderEmail() + ", to: " + m.getReceiverEmail());
+            m.setSeen(true);
+        });
+        
         messageRepository.saveAll(messages);
+        System.out.println("✅ Saved " + messages.size() + " messages as seen");
     }
 
     /* ================= SET ACTIVE PERSONAL CHAT ================= */
@@ -110,12 +123,19 @@ public class ChatRestController {
     /* ================= UNREAD USERS COUNT ================= */
     @GetMapping("/unread-count")
     public int getUnreadUsersCount(@RequestParam String receiver) {
+        System.out.println("🔍 getUnreadUsersCount called for receiver: " + receiver);
+        
         List<ChatMessage> unseenMessages = messageRepository.findAllUnseenForReceiver(receiver);
+        
+        System.out.println("🔍 Found " + unseenMessages.size() + " total unseen messages for " + receiver);
         
         // Get unique sender emails
         Set<String> uniqueSenders = unseenMessages.stream()
                 .map(ChatMessage::getSenderEmail)
                 .collect(Collectors.toSet());
+        
+        System.out.println("🔍 Unique senders with unseen messages: " + uniqueSenders);
+        System.out.println("✅ Returning unread users count: " + uniqueSenders.size());
         
         return uniqueSenders.size();
     }

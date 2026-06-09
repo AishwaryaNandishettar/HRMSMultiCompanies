@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useCallback } from "react";
 import "./ReleaseOfferLetterModal.css";
 
 import {
@@ -12,7 +12,104 @@ import {
   getAllTemplates,
   getTemplatePreview,
   saveOfferLetter,
+  sendOfferLetterEmail,
+  deleteTemplate,
 } from "../../api/recruitmentApi";
+
+// ── Word-like toolbar commands ──
+const execCmd = (cmd, value = null) => {
+  document.execCommand(cmd, false, value);
+};
+
+// ── Isolated Word Editor Component ──
+// Using React.memo so parent state changes NEVER re-render this component.
+// The editor owns its own DOM — React never touches innerHTML after mount.
+const WordEditor = React.memo(function WordEditor({ initialHtml, editorRef, onSendEmail, onDownload, downloading }) {
+  const [fontSize, setFontSize] = React.useState("3");
+
+  // Inject HTML once on mount only
+  React.useEffect(() => {
+    if (editorRef.current && initialHtml) {
+      editorRef.current.innerHTML = initialHtml;
+      editorRef.current.focus();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); // empty deps = runs once on mount only
+
+  return (
+    <div className="word-editor-section">
+      {/* ── TOOLBAR ── */}
+      <div className="word-toolbar">
+        <div className="word-toolbar-group">
+          <button className="word-tool-btn" title="Bold (Ctrl+B)" onMouseDown={(e) => { e.preventDefault(); execCmd("bold"); }}><b>B</b></button>
+          <button className="word-tool-btn" title="Italic (Ctrl+I)" onMouseDown={(e) => { e.preventDefault(); execCmd("italic"); }}><i>I</i></button>
+          <button className="word-tool-btn" title="Underline (Ctrl+U)" onMouseDown={(e) => { e.preventDefault(); execCmd("underline"); }}><u>U</u></button>
+        </div>
+        <div className="word-toolbar-divider" />
+        <div className="word-toolbar-group">
+          <button className="word-tool-btn" title="Align Left"   onMouseDown={(e) => { e.preventDefault(); execCmd("justifyLeft"); }}>≡</button>
+          <button className="word-tool-btn" title="Align Center" onMouseDown={(e) => { e.preventDefault(); execCmd("justifyCenter"); }}>☰</button>
+          <button className="word-tool-btn" title="Align Right"  onMouseDown={(e) => { e.preventDefault(); execCmd("justifyRight"); }}>≡</button>
+        </div>
+        <div className="word-toolbar-divider" />
+        <div className="word-toolbar-group">
+          <select
+            className="word-font-select"
+            title="Font Size"
+            value={fontSize}
+            onChange={(e) => { setFontSize(e.target.value); execCmd("fontSize", e.target.value); }}
+          >
+            <option value="1">8</option>
+            <option value="2">10</option>
+            <option value="3">12</option>
+            <option value="4">14</option>
+            <option value="5">18</option>
+            <option value="6">24</option>
+            <option value="7">36</option>
+          </select>
+        </div>
+        <div className="word-toolbar-divider" />
+        <div className="word-toolbar-group">
+          <input type="color" className="word-color-pick" title="Text Color" defaultValue="#000000"
+            onInput={(e) => execCmd("foreColor", e.target.value)} />
+          <button className="word-tool-btn" title="Highlight" onMouseDown={(e) => { e.preventDefault(); execCmd("hiliteColor", "#fef08a"); }}>🖍</button>
+        </div>
+        <div className="word-toolbar-divider" />
+        <div className="word-toolbar-group">
+          <button className="word-tool-btn" title="Bullet List"   onMouseDown={(e) => { e.preventDefault(); execCmd("insertUnorderedList"); }}>• List</button>
+          <button className="word-tool-btn" title="Numbered List" onMouseDown={(e) => { e.preventDefault(); execCmd("insertOrderedList"); }}>1. List</button>
+        </div>
+        <div className="word-toolbar-divider" />
+        <div className="word-toolbar-group">
+          <button className="word-tool-btn word-tool-undo" title="Undo (Ctrl+Z)" onMouseDown={(e) => { e.preventDefault(); execCmd("undo"); }}>↩ Undo</button>
+          <button className="word-tool-btn word-tool-redo" title="Redo (Ctrl+Y)" onMouseDown={(e) => { e.preventDefault(); execCmd("redo"); }}>↪ Redo</button>
+        </div>
+      </div>
+
+      {/* ── DOCUMENT BODY ── */}
+      <div className="word-page-wrap">
+        <div className="word-page">
+          <div
+            ref={editorRef}
+            className="word-editor-body"
+            contentEditable
+            suppressContentEditableWarning
+            spellCheck
+            style={{ outline: "none", minHeight: "600px" }}
+          />
+        </div>
+      </div>
+
+      {/* ── ACTION BUTTONS ── */}
+      <div className="form-actions">
+        <button className="btn-secondary" onClick={onSendEmail}>📧 Send Offer Letter</button>
+        <button className="btn-primary" onClick={onDownload} disabled={downloading}>
+          {downloading ? "Generating..." : "📥 Download PDF"}
+        </button>
+      </div>
+    </div>
+  );
+});
 
 export default function ReleaseOfferLetterModal({ job, onClose }) {
 
@@ -61,10 +158,19 @@ export default function ReleaseOfferLetterModal({ job, onClose }) {
   const [status, setStatus] = useState(null);
   const [uploading, setUploading] = useState(false);
   const [downloading, setDownloading] = useState(false);
+  const [deleting, setDeleting] = useState(null); // Track which template is being deleted
 
   // ── INLINE EDIT STATE ──
   // When user clicks a field, show an inline input overlay instead of prompt()
   const [activeEdit, setActiveEdit] = useState(null); // { field, inputValue }
+
+  // ── WORD EDITOR STATE ──
+  // Store initial HTML as a ref — changing it does NOT trigger a re-render.
+  // The WordEditor component is memoized and only mounts once per tab switch.
+  const wordEditorHtmlRef = useRef("");
+  const editorRef = useRef(null);
+  // Key forces WordEditor to fully remount when a new template loads
+  const [editorKey, setEditorKey] = useState(0);
 
   const fileInputRef = useRef(null);
   // refs to each page image element so we can measure rendered size
@@ -166,6 +272,59 @@ export default function ReleaseOfferLetterModal({ job, onClose }) {
       setEditableFields(fields);
 
       setStatus({ type: "success", message: `Template loaded successfully (${images.length} page${images.length > 1 ? "s" : ""})` });
+
+      // ── Build word-editor HTML from extracted text fields ──
+      // Group fields by page and sort by Y (top to bottom), then X
+      const sorted = [...fields].sort((a, b) =>
+        a.page !== b.page ? a.page - b.page :
+        b.y !== a.y ? b.y - a.y : a.x - b.x
+      );
+      
+      // Build readable HTML lines from PDF text items
+      // Group consecutive text items that are on the same line
+      const lines = [];
+      let currentY = null;
+      let currentLine = [];
+      
+      sorted.forEach(field => {
+        const text = field.value || field.originalText || "";
+        if (!text.trim()) return;
+        
+        // If this is a new line (different Y position with some tolerance)
+        if (currentY === null || Math.abs(field.y - currentY) > 5) {
+          // Finish the current line
+          if (currentLine.length > 0) {
+            lines.push(currentLine.join(" "));
+          }
+          // Start a new line
+          currentLine = [text];
+          currentY = field.y;
+        } else {
+          // Same line, add to current line
+          currentLine.push(text);
+        }
+      });
+      
+      // Don't forget the last line
+      if (currentLine.length > 0) {
+        lines.push(currentLine.join(" "));
+      }
+      
+      // Convert lines to HTML paragraphs
+      const htmlLines = lines.map(line =>
+        `<p style="margin:6px 0;line-height:1.4;font-size:14px;">${line.replace(/</g,"&lt;").replace(/>/g,"&gt;")}</p>`
+      ).join("");
+      
+      const newHtml = htmlLines || "<p>Start typing your offer letter here...</p>";
+      
+      console.log("Word editor HTML built:");
+      console.log("Fields:", fields.length);
+      console.log("Lines created:", lines.length);
+      console.log("Sample lines:", lines.slice(0, 3));
+      
+      // Store in ref (no re-render) and bump key to remount WordEditor cleanly
+      wordEditorHtmlRef.current = newHtml;
+      setEditorKey(k => k + 1);
     } catch (err) {
       console.error("Failed to load template:", err);
       setStatus({ type: "error", message: err?.message || "Failed to load template" });
@@ -181,6 +340,43 @@ export default function ReleaseOfferLetterModal({ job, onClose }) {
     setSelectedTemplate(templateId);
     await loadTemplatePreview(templateId);
     setActiveTab("preview");
+  };
+
+  // ── DELETE TEMPLATE ──
+  const handleDeleteTemplate = async (templateId, templateName) => {
+    // Confirm deletion
+    const confirmed = window.confirm(
+      `Are you sure you want to delete the template "${templateName}"? This action cannot be undone.`
+    );
+    
+    if (!confirmed) return;
+
+    setDeleting(templateId);
+    try {
+      await deleteTemplate(templateId);
+      setStatus({ type: "success", message: `Template "${templateName}" deleted successfully!` });
+      
+      // Reload templates list
+      await loadTemplates();
+      
+      // If the deleted template was selected, clear the selection
+      if (selectedTemplate === templateId) {
+        setSelectedTemplate(null);
+        setPdfPageImages([]);
+        setEditableFields([]);
+        wordEditorHtmlRef.current = "";
+        setEditorKey(k => k + 1);
+      }
+      
+    } catch (err) {
+      console.error("Failed to delete template:", err);
+      setStatus({ 
+        type: "error", 
+        message: `Failed to delete template: ${err?.response?.data?.message || err?.message || "Unknown error"}` 
+      });
+    } finally {
+      setDeleting(null);
+    }
   };
 
   // ── CLICK ON A TEXT FIELD IN EDIT MODE ──
@@ -231,9 +427,60 @@ export default function ReleaseOfferLetterModal({ job, onClose }) {
     setDownloading(true);
     try {
       const freshBuffer = window.originalPdfBytes.slice(0);
-      // Apply field edits first, then placeholder replacements
-      const withEdits = await applyFieldEditsTopdf(freshBuffer, editableFields);
-      const finalPdfBytes = await replacePlaceholdersInPdf(withEdits.buffer, form);
+      
+      // Get the current content from the word editor
+      const editorEl = editorRef.current;
+      let finalPdfBytes;
+      
+      if (editorEl && editableFields.length > 0) {
+        // Extract all text content from the word editor
+        const editorHtml = editorEl.innerHTML || "";
+        const editorText = editorEl.innerText || "";
+        
+        // Create updated fields based on the editor content
+        // We'll map the editor content to the original PDF fields more intelligently
+        const updatedFields = [...editableFields];
+        
+        // Split editor text into paragraphs and lines
+        const editorParagraphs = editorText.split(/\n\n+/).filter(p => p.trim());
+        const editorLines = editorText.split(/\n/).filter(l => l.trim());
+        
+        console.log("Editor content analysis:");
+        console.log("Paragraphs:", editorParagraphs.length);
+        console.log("Lines:", editorLines.length);
+        console.log("Original fields:", editableFields.length);
+        
+        // Strategy: Map editor lines to PDF fields by position and content similarity
+        let lineIndex = 0;
+        
+        for (let i = 0; i < updatedFields.length && lineIndex < editorLines.length; i++) {
+          const field = updatedFields[i];
+          const editorLine = editorLines[lineIndex];
+          
+          // Skip very short original text (likely formatting elements)
+          if (!field.originalText || field.originalText.length < 2) {
+            continue;
+          }
+          
+          // Map this field to current editor line
+          if (editorLine && editorLine.trim()) {
+            updatedFields[i] = {
+              ...field,
+              value: editorLine.trim()
+            };
+            lineIndex++;
+            console.log(`Mapped field ${i}: "${field.originalText}" -> "${editorLine.trim()}"`);
+          }
+        }
+        
+        // Apply the mapped field edits to PDF
+        const withEdits = await applyFieldEditsTopdf(freshBuffer, updatedFields);
+        finalPdfBytes = await replacePlaceholdersInPdf(withEdits.buffer || withEdits, form);
+      } else {
+        // Fallback: use existing field edits
+        const withEdits = await applyFieldEditsTopdf(freshBuffer, editableFields);
+        finalPdfBytes = await replacePlaceholdersInPdf(withEdits.buffer || withEdits, form);
+      }
 
       const blob = new Blob([finalPdfBytes], { type: "application/pdf" });
       const url = URL.createObjectURL(blob);
@@ -289,8 +536,56 @@ export default function ReleaseOfferLetterModal({ job, onClose }) {
 
     try {
       const freshBuffer = window.originalPdfBytes.slice(0);
-      const withEdits = await applyFieldEditsTopdf(freshBuffer, editableFields);
-      const finalPdfBytes = await replacePlaceholdersInPdf(withEdits.buffer, form);
+      
+      // Get the current content from the word editor (same logic as download)
+      const editorEl = editorRef.current;
+      let finalPdfBytes;
+      
+      if (editorEl && editableFields.length > 0) {
+        // Extract all text content from the word editor
+        const editorText = editorEl.innerText || "";
+        
+        // Create updated fields based on the editor content
+        const updatedFields = [...editableFields];
+        
+        // Split editor text into lines
+        const editorLines = editorText.split(/\n/).filter(l => l.trim());
+        
+        console.log("Email: Editor content analysis:");
+        console.log("Lines:", editorLines.length);
+        console.log("Original fields:", editableFields.length);
+        
+        // Map editor lines to PDF fields
+        let lineIndex = 0;
+        
+        for (let i = 0; i < updatedFields.length && lineIndex < editorLines.length; i++) {
+          const field = updatedFields[i];
+          const editorLine = editorLines[lineIndex];
+          
+          // Skip very short original text (likely formatting elements)
+          if (!field.originalText || field.originalText.length < 2) {
+            continue;
+          }
+          
+          // Map this field to current editor line
+          if (editorLine && editorLine.trim()) {
+            updatedFields[i] = {
+              ...field,
+              value: editorLine.trim()
+            };
+            lineIndex++;
+            console.log(`Email: Mapped field ${i}: "${field.originalText}" -> "${editorLine.trim()}"`);
+          }
+        }
+        
+        // Apply the mapped field edits to PDF
+        const withEdits = await applyFieldEditsTopdf(freshBuffer, updatedFields);
+        finalPdfBytes = await replacePlaceholdersInPdf(withEdits, form);
+      } else {
+        // Fallback: use existing field edits
+        const withEdits = await applyFieldEditsTopdf(freshBuffer, editableFields);
+        finalPdfBytes = await replacePlaceholdersInPdf(withEdits, form);
+      }
 
       const blob = new Blob([finalPdfBytes], { type: "application/pdf" });
       const candidateName = form.candidateName || "Candidate";
@@ -307,25 +602,10 @@ export default function ReleaseOfferLetterModal({ job, onClose }) {
       emailFormData.append("file", file);
 
       console.log("Sending email to:", recipientEmail.trim());
-      console.log("Subject:", `Offer Letter - ${form.position || "Position"}`);
-      console.log("Candidate name:", candidateName);
 
-      const response = await fetch(
-        `${import.meta.env.VITE_API_BASE_URL || "http://localhost:8082"}/api/offer-templates/send-offer-letter`,
-        {
-          method: "POST",
-          body: emailFormData,
-        }
-      );
-
-      if (!response.ok) {
-        const errorText = await response.text();
-        console.error("Email sending failed:", errorText);
-        throw new Error(`Email sending failed: ${errorText || response.statusText}`);
-      }
-
-      const result = await response.text();
-      console.log("Email sent successfully:", result);
+      // ✅ Use axios instance — automatically picks up VITE_API_BASE_URL
+      // so it works both on localhost and after Vercel deployment
+      await sendOfferLetterEmail(emailFormData);
 
       setStatus({ 
         type: "success", 
@@ -461,12 +741,26 @@ export default function ReleaseOfferLetterModal({ job, onClose }) {
                 ) : (
                   templates.map(t => (
                     <div key={t.id}
-                      className={`template-card ${selectedTemplate === t.id ? "selected" : ""}`}
-                      onClick={() => handleSelectTemplate(t.id)}>
-                      <div className="template-icon">📄</div>
-                      <div className="template-name">{t.templateName}</div>
-                      <div className="template-company">{t.companyName}</div>
-                      <div className="template-date">{new Date(t.uploadedAt).toLocaleDateString()}</div>
+                      className={`template-card ${selectedTemplate === t.id ? "selected" : ""}`}>
+                      <div className="template-content" onClick={() => handleSelectTemplate(t.id)}>
+                        <div className="template-icon">📄</div>
+                        <div className="template-name">{t.templateName}</div>
+                        <div className="template-company">{t.companyName}</div>
+                        <div className="template-date">{new Date(t.uploadedAt).toLocaleDateString()}</div>
+                      </div>
+                      <div className="template-actions">
+                        <button 
+                          className="delete-template-btn"
+                          title="Delete Template"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleDeleteTemplate(t.id, t.templateName);
+                          }}
+                          disabled={deleting === t.id}
+                        >
+                          {deleting === t.id ? "..." : "🗑️"}
+                        </button>
+                      </div>
                     </div>
                   ))
                 )}
@@ -500,118 +794,16 @@ export default function ReleaseOfferLetterModal({ job, onClose }) {
             </div>
           )}
 
-          {/* ── EDIT TAB ── */}
+          {/* ── EDIT TAB — Word-like editor ── */}
           {activeTab === "edit" && (
-            <div className="edit-section">
-              <div className="edit-hint">
-                💡 <strong>Click on any text</strong> in the document below to edit it directly.
-              </div>
-
-              {pdfRendering ? (
-                <div className="loading">Updating preview...</div>
-              ) : pdfPageImages.length > 0 ? (
-                <div className="pdf-preview-editor">
-                  {pdfPageImages.map((imgSrc, pageIdx) => (
-                    <div
-                      key={pageIdx}
-                      className="pdf-page-editor"
-                      style={{ position: "relative", display: "inline-block", width: "100%" }}
-                    >
-                      {/* The rendered PDF page image */}
-                      <img
-                        ref={el => pageImgRefs.current[pageIdx] = el}
-                        src={imgSrc}
-                        alt={`Page ${pageIdx + 1}`}
-                        className="editable-pdf-image"
-                        style={{ width: "100%", display: "block" }}
-                      />
-
-                      {/* Clickable overlays for every text element on this page */}
-                      {editableFields
-                        .filter(f => f.page === pageIdx)
-                        .map((field) => {
-                          const overlayStyle = getOverlayStyle(field, pageIdx);
-                          const isBeingEdited =
-                            activeEdit?.field.page === field.page &&
-                            activeEdit?.field.index === field.index;
-
-                          return isBeingEdited ? (
-                            /* ── INLINE EDIT INPUT ── */
-                            <div
-                              key={`edit-${field.page}-${field.index}`}
-                              style={{
-                                ...overlayStyle,
-                                zIndex: 200,
-                                display: "flex",
-                                alignItems: "center",
-                                gap: 4,
-                              }}
-                            >
-                              <input
-                                autoFocus
-                                className="inline-edit-input"
-                                value={activeEdit.inputValue}
-                                onChange={(e) => setActiveEdit(prev => ({ ...prev, inputValue: e.target.value }))}
-                                onKeyDown={(e) => {
-                                  if (e.key === "Enter") handleEditConfirm();
-                                  if (e.key === "Escape") handleEditCancel();
-                                }}
-                                style={{
-                                  width: "100%",
-                                  fontSize: `${Math.max((field.fontSize || 12) * (overlayStyle.width ? parseFloat(overlayStyle.width) / (field.width || 80) : 1), 10)}px`,
-                                  padding: "1px 3px",
-                                  border: "2px solid #2563eb",
-                                  borderRadius: 3,
-                                  background: "#fff",
-                                  outline: "none",
-                                }}
-                              />
-                              <button
-                                onClick={handleEditConfirm}
-                                style={{ background: "#16a34a", color: "#fff", border: "none", borderRadius: 3, padding: "2px 6px", cursor: "pointer", fontSize: 11, whiteSpace: "nowrap" }}
-                              >✓</button>
-                              <button
-                                onClick={handleEditCancel}
-                                style={{ background: "#dc2626", color: "#fff", border: "none", borderRadius: 3, padding: "2px 6px", cursor: "pointer", fontSize: 11 }}
-                              >✕</button>
-                            </div>
-                          ) : (
-                            /* ── HOVER HIGHLIGHT OVERLAY ── */
-                            <div
-                              key={`field-${field.page}-${field.index}`}
-                              className="pdf-text-overlay"
-                              title={`Click to edit: "${field.value}"`}
-                              onClick={() => handleFieldClick(field)}
-                              style={{
-                                ...overlayStyle,
-                                cursor: "text",
-                                zIndex: 100,
-                                background: "transparent",
-                                border: "1px solid transparent",
-                                borderRadius: 2,
-                                transition: "background 0.15s, border-color 0.15s",
-                              }}
-                            />
-                          );
-                        })}
-
-                      <div className="page-number">Page {pageIdx + 1}</div>
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <div className="no-preview"><p>No preview available</p></div>
-              )}
-
-              <div className="form-actions">
-                <button className="btn-secondary" onClick={handleSendEmail}>
-                  📧 Send Offer Letter
-                </button>
-                <button className="btn-primary" onClick={handleDownload} disabled={downloading}>
-                  {downloading ? "Generating..." : "📥 Download PDF"}
-                </button>
-              </div>
-            </div>
+            <WordEditor
+              key={editorKey}
+              initialHtml={wordEditorHtmlRef.current}
+              editorRef={editorRef}
+              onSendEmail={handleSendEmail}
+              onDownload={handleDownload}
+              downloading={downloading}
+            />
           )}
 
           {/* ── DOWNLOAD TAB ── */}

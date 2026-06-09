@@ -41,6 +41,12 @@ private String onboardingDate;    // Joining / onboarding date
 private String interviewLevel;    // L1 / L2 (when status = Interview Stage)
 private String selectionLevel;    // L1 Selected / L2 Selected (when status = Selected)
 
+// ── CANDIDATE CONTACT & REMARKS ──
+private String email;             // Candidate email for notifications
+private String phone;             // Candidate phone number for SMS/WhatsApp notifications
+private String comments;          // HR comments/remarks about status change
+private String assignedTo;         // HR person assigned to this candidate (aishwarya/padmanabh/mahesh)
+
     // Constructors
     public Job() {}
 
@@ -180,4 +186,17 @@ public void setInterviewLevel(String interviewLevel) { this.interviewLevel = int
 
 public String getSelectionLevel() { return selectionLevel; }
 public void setSelectionLevel(String selectionLevel) { this.selectionLevel = selectionLevel; }
+
+// ── CANDIDATE CONTACT & REMARKS ──
+public String getEmail() { return email; }
+public void setEmail(String email) { this.email = email; }
+
+public String getPhone() { return phone; }
+public void setPhone(String phone) { this.phone = phone; }
+
+public String getComments() { return comments; }
+public void setComments(String comments) { this.comments = comments; }
+
+public String getAssignedTo() { return assignedTo; }
+public void setAssignedTo(String assignedTo) { this.assignedTo = assignedTo; }
 }

@@ -6,6 +6,7 @@ import {
   createReimbursement,
   updateReimbursementStatus
 } from "../api/reimbursementApi";
+import { createNotification } from "../api/notificationApi";
 
 const ROLE_EMP = "employee";
 const ROLE_MGR = "manager";
@@ -130,12 +131,26 @@ useEffect(() => {
   }
 }, [form.claimType]);
  const loadData = async () => {
-  const res = await getReimbursements({
-    role: user?.role,
-    empCode: user?.empCode
-  });
-
-  setRequests(res.data);
+  try {
+    const res = await getReimbursements();
+    console.log("Reimbursement API response:", res);
+    
+    // Handle different response structures
+    const data = res?.data?.data || res?.data || res || [];
+    console.log("Processed reimbursement data:", data);
+    console.log("Current user context:", {
+      role: user?.role,
+      empCode: user?.empCode,
+      employeeId: user?.employeeId,
+      id: user?.id,
+      email: user?.email
+    });
+    
+    setRequests(Array.isArray(data) ? data : []);
+  } catch (error) {
+    console.error("Error loading reimbursements:", error);
+    setRequests([]);
+  }
 };
 
   // ================= CREATE =================
@@ -145,9 +160,9 @@ useEffect(() => {
     try {
      const formData = new FormData();
 
-// append normal fields
+// append normal fields - skip empty values
 Object.keys(form).forEach((key) => {
-  if (key !== "files") {
+  if (key !== "files" && form[key] !== "" && form[key] !== null && form[key] !== undefined) {
     formData.append(key, form[key]);
   }
 });
@@ -159,17 +174,85 @@ if (form.files && form.files.length > 0) {
   });
 }
 
-formData.append("amount", Number(form.amount));
+formData.append("amount", Number(form.amount) || 0);
 formData.append("status", STATUS_PENDING);
 formData.append("submittedDate", new Date().toISOString());
 
-await createReimbursement(formData);
+console.log("Submitting reimbursement with data:");
+for (let pair of formData.entries()) {
+  console.log(pair[0] + ': ' + pair[1]);
+}
+
+const response = await createReimbursement(formData);
+console.log("Reimbursement API response:", response);
+
+      // Create notification for the home page
+      try {
+        // Generate a truly unique ID that won't conflict
+        const uniqueId = `reimb_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+        
+        const notificationData = {
+          id: uniqueId,
+          message: `New reimbursement claim submitted by ${form.empName} for ₹${form.amount}`,
+          type: "info",
+          badge: 1,
+          link: "/reimbursement",
+          focus: "reimbursement",
+          targetRole: "admin",
+          read: false,
+          time: new Date().toLocaleTimeString(),
+          createdAt: new Date().toISOString()
+        };
+        
+        console.log("📤 Creating notification with unique ID:", uniqueId);
+        const notifResponse = await createNotification(notificationData);
+        console.log("✅ Notification created successfully:", notifResponse);
+        
+      } catch (notifError) {
+        console.error("❌ Failed to create notification:", notifError);
+        console.error("Error details:", notifError.response?.data || notifError.message);
+      }
 
       loadData();
       setShowForm(false);
+      
+      // Reset form
+      setForm({
+        empName: "",
+        empCode: "",
+        claimType: "",
+        location: "",
+        pincode: "",
+        state: "",
+        district: "",
+        checkIn: "",
+        checkOut: "",
+        vehicleType: "",
+        incidentDate: "",
+        hospitalName: "",
+        billNumber: "",
+        settlementDate: "",
+        travelFromDate: "",
+        travelToDate: "",
+        fromLocation: "",
+        toLocation: "",
+        policyNumber: "",
+        amount: "",
+        description: "",
+        files: [],
+        otherTitle: "",
+        otherReference: "",
+        submittedDate: "",
+        accommodationType: "",
+        receiptNumber: ""
+      });
+
+      alert("Reimbursement claim submitted successfully!");
 
     } catch (err) {
-      console.error(err);
+      console.error("Reimbursement submission error:", err);
+      console.error("Error details:", err.response?.data || err.message);
+      alert(`Failed to submit reimbursement claim: ${err.response?.data?.message || err.message || 'Unknown error'}`);
     }
   };
 
@@ -184,7 +267,21 @@ const filteredData = requests.filter((r) => {
 
   // EMPLOYEE → only own records
   if (role === ROLE_EMP) {
-    if (user?.empCode !== r.empCode) return false;
+    const userCode = user?.empCode || user?.employeeId || user?.id || "";
+    const recordCode = r.empCode || r.employeeCode || r.employeeId || "";
+    
+    console.log("Employee filter check:", {
+      userRole: role,
+      userCode: userCode,
+      recordCode: recordCode,
+      recordEmpName: r.empName,
+      match: String(userCode).toLowerCase() === String(recordCode).toLowerCase()
+    });
+    
+    // Match by empCode or employeeId
+    if (String(userCode).toLowerCase() !== String(recordCode).toLowerCase()) {
+      return false;
+    }
   }
 
   // APPLY FILTERS FOR ALL ROLES

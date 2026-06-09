@@ -268,23 +268,30 @@ export function buildPlaceholderMap(form) {
 export async function replacePlaceholdersInPdf(originalArrayBuffer, form) {
   try {
     console.log("=== replacePlaceholdersInPdf called ===");
-    console.log("Original ArrayBuffer size:", originalArrayBuffer?.byteLength);
+    console.log("Original data type:", typeof originalArrayBuffer);
+    console.log("Is ArrayBuffer?", originalArrayBuffer instanceof ArrayBuffer);
+    console.log("Is Uint8Array?", originalArrayBuffer instanceof Uint8Array);
+    console.log("Data size:", originalArrayBuffer?.byteLength || originalArrayBuffer?.length);
     console.log("Form data:", form);
     
-    // Ensure we have a valid ArrayBuffer
-    if (!originalArrayBuffer || originalArrayBuffer.byteLength === 0) {
-      throw new Error("Invalid or empty ArrayBuffer provided");
+    // Handle both ArrayBuffer and Uint8Array inputs
+    let workingBuffer;
+    if (originalArrayBuffer instanceof ArrayBuffer) {
+      workingBuffer = originalArrayBuffer.slice(0);
+    } else if (originalArrayBuffer instanceof Uint8Array) {
+      workingBuffer = originalArrayBuffer.buffer.slice(originalArrayBuffer.byteOffset, originalArrayBuffer.byteOffset + originalArrayBuffer.byteLength);
+    } else if (originalArrayBuffer?.buffer instanceof ArrayBuffer) {
+      // Handle other TypedArray types
+      workingBuffer = originalArrayBuffer.buffer.slice(0);
+    } else {
+      throw new Error("Invalid input: expected ArrayBuffer or Uint8Array");
     }
     
-    // Create a fresh copy to avoid detached buffer issues
-    const freshBuffer = originalArrayBuffer.slice
-  ? originalArrayBuffer.slice(0)
-  : originalArrayBuffer;
-    console.log("Fresh buffer created, size:", freshBuffer.byteLength);
+    console.log("Working buffer created, size:", workingBuffer.byteLength);
     
     // ── Strategy A: raw byte replacement for placeholders ──
-    const originalBytes = new Uint8Array(freshBuffer);
-    console.log("Uint8Array created from fresh buffer, length:", originalBytes.length);
+    const originalBytes = new Uint8Array(workingBuffer);
+    console.log("Uint8Array created from working buffer, length:", originalBytes.length);
     
     let pdfStr = "";
     for (let i = 0; i < originalBytes.length; i++) {
@@ -328,7 +335,7 @@ export async function replacePlaceholdersInPdf(originalArrayBuffer, form) {
 
     console.log("No replacements made, trying advanced PDF processing...");
     // ── Strategy B: find real text positions and overlay ──
-    return await overlayRealTextInPdf(freshBuffer, form);
+    return await overlayRealTextInPdf(workingBuffer, form);
 
   } catch (err) {
     console.error("[pdfUtils] replacePlaceholdersInPdf error:", err);
@@ -336,6 +343,9 @@ export async function replacePlaceholdersInPdf(originalArrayBuffer, form) {
     
     // Return original data as fallback
     try {
+      if (originalArrayBuffer instanceof Uint8Array) {
+        return originalArrayBuffer.slice(0);
+      }
       return new Uint8Array(originalArrayBuffer.slice(0));
     } catch (fallbackError) {
       console.error("Fallback also failed:", fallbackError);
@@ -546,15 +556,21 @@ export async function extractEditableFields(pdfData) {
 ───────────────────────────────────────────────────────────── */
 export async function applyFieldEditsTopdf(originalArrayBuffer, fields) {
   try {
+    console.log("=== applyFieldEditsTopdf called ===");
+    console.log("Original buffer size:", originalArrayBuffer?.byteLength);
+    console.log("Fields to process:", fields?.length);
+    
     if (!originalArrayBuffer || originalArrayBuffer.byteLength === 0) {
       throw new Error("Invalid or empty ArrayBuffer");
     }
 
     // Only process fields whose value has changed from the original
     const changedFields = fields.filter(f => f.value !== f.originalText);
-
+    console.log("Changed fields:", changedFields.length);
+    
     if (changedFields.length === 0) {
       // Nothing changed — return original bytes unchanged
+      console.log("No changes detected, returning original buffer");
       return new Uint8Array(originalArrayBuffer.slice(0));
     }
 
@@ -566,17 +582,25 @@ export async function applyFieldEditsTopdf(originalArrayBuffer, fields) {
     const font = await pdfDoc.embedFont(StandardFonts.Helvetica);
     const fontBold = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
 
+    console.log("PDF loaded with", pages.length, "pages");
+
     for (const field of changedFields) {
       const page = pages[field.page];
-      if (!page) continue;
+      if (!page) {
+        console.warn(`Page ${field.page} not found, skipping field`);
+        continue;
+      }
 
-      const { height: pageH } = page.getSize();
-      const fs = field.fontSize || 11;
+      const fs = Math.max(field.fontSize || 11, 8); // Minimum font size
+      
+      console.log(`Processing field: "${field.originalText}" -> "${field.value}" at (${field.x}, ${field.y})`);
 
-      // White-out the original text area
-      const padding = 2;
-      const rectW = Math.max(field.width || 0, (field.originalText?.length || 1) * fs * 0.6) + 10;
-      const rectH = fs + padding * 2 + 4;
+      // White-out the original text area with generous padding
+      const padding = 3;
+      const originalTextWidth = (field.originalText?.length || 1) * fs * 0.6;
+      const newTextWidth = (field.value?.length || 1) * fs * 0.6;
+      const rectW = Math.max(field.width || 0, originalTextWidth, newTextWidth) + 20;
+      const rectH = fs + padding * 4;
 
       page.drawRectangle({
         x: field.x - padding,
@@ -588,23 +612,36 @@ export async function applyFieldEditsTopdf(originalArrayBuffer, fields) {
       });
 
       // Draw the new text at the same position
-      page.drawText(field.value || "", {
-        x: field.x,
-        y: field.y + 1,
-        size: fs,
-        font,
-        color: rgb(0, 0, 0),
-        maxWidth: rectW,
-      });
+      if (field.value && field.value.trim()) {
+        page.drawText(field.value.trim(), {
+          x: field.x,
+          y: field.y + 1,
+          size: fs,
+          font,
+          color: rgb(0, 0, 0),
+          maxWidth: rectW - 5,
+        });
+      }
+      
+      console.log(`Applied field edit: "${field.value}"`);
     }
 
     const savedBytes = await pdfDoc.save();
-    console.log(`✅ Applied ${changedFields.length} field edits to PDF`);
+    console.log(`✅ Applied ${changedFields.length} field edits to PDF, output size:`, savedBytes.length);
+    
+    // Return the savedBytes directly (it's already a Uint8Array)
     return savedBytes;
 
   } catch (err) {
     console.error("[pdfUtils] applyFieldEditsTopdf error:", err);
+    console.error("Error stack:", err.stack);
+    
     // Return original as fallback
-    return new Uint8Array(originalArrayBuffer.slice(0));
+    try {
+      return new Uint8Array(originalArrayBuffer.slice(0));
+    } catch (fallbackError) {
+      console.error("Fallback failed:", fallbackError);
+      throw new Error("PDF field editing failed: " + err.message);
+    }
   }
 }

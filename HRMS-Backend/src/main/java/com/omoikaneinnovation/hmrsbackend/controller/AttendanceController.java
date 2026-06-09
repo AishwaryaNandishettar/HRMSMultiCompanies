@@ -51,4 +51,9 @@ public List<Attendance> getByUser(@PathVariable String userId) {
     public List<AttendanceDTO> getAllAttendance() {
         return attendanceService.getAllAttendance();
     }
+
+    @DeleteMapping("/{id}")
+    public String deleteAttendance(@PathVariable String id) {
+        return attendanceService.deleteAttendance(id);
+    }
 }

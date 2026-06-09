@@ -19,7 +19,7 @@ export const fetchChatMessages = async (sender, receiver, token) => {
 export const markChatMessagesSeen = async (sender, receiver, token) => {
   try {
     const res = await axios.put(
-      `${API}/mark-seen`,
+      `${API}/seen`,  // ✅ Fixed: was /mark-seen, should be /seen
       null,
       {
         params: { sender, receiver },
@@ -38,7 +38,7 @@ export const markChatMessagesSeen = async (sender, receiver, token) => {
 ========================= */
 export const fetchUnreadUsersCount = async (email, token) => {
   const res = await axios.get(
-    `${BASE}/api/chat/unread-users-count?email=${email}`,
+    `${BASE}/api/chat/unread-count?receiver=${email}`,  // ✅ Fixed: was email=, should be receiver=
     {
       headers: { Authorization: `Bearer ${token}` },
     }
@@ -51,7 +51,7 @@ export const fetchUnreadUsersCount = async (email, token) => {
 ========================= */
 export const fetchUnreadMessagesPerUser = async (email, token) => {
   const res = await axios.get(
-    `${BASE}/api/chat/unread-per-user?email=${email}`,
+    `${BASE}/api/chat/unread-per-user?receiver=${email}`,  // ✅ Fixed: was email=, should be receiver=
     {
       headers: { Authorization: `Bearer ${token}` },
     }

@@ -1,0 +1,362 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HRMS - Twilio SMS Testing</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #2c3e50;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .section {
+            margin-bottom: 30px;
+            padding: 20px;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            background-color: #fafafa;
+        }
+        .section h3 {
+            color: #34495e;
+            margin-bottom: 15px;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+            color: #555;
+        }
+        input, textarea, select {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 14px;
+            box-sizing: border-box;
+        }
+        textarea {
+            height: 80px;
+            resize: vertical;
+        }
+        button {
+            background-color: #3498db;
+            color: white;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            margin-right: 10px;
+            margin-top: 10px;
+        }
+        button:hover {
+            background-color: #2980b9;
+        }
+        .config-btn {
+            background-color: #95a5a6;
+        }
+        .config-btn:hover {
+            background-color: #7f8c8d;
+        }
+        .result {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 5px;
+            white-space: pre-wrap;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        .success {
+            background-color: #d4edda;
+            border: 1px solid #c3e6cb;
+            color: #155724;
+        }
+        .error {
+            background-color: #f8d7da;
+            border: 1px solid #f5c6cb;
+            color: #721c24;
+        }
+        .info {
+            background-color: #d1ecf1;
+            border: 1px solid #bee5eb;
+            color: #0c5460;
+        }
+        .note {
+            background-color: #fff3cd;
+            border: 1px solid #ffeaa7;
+            color: #856404;
+            padding: 10px;
+            border-radius: 5px;
+            margin-bottom: 15px;
+        }
+        .verified-numbers {
+            background-color: #e8f5e8;
+            padding: 10px;
+            border-radius: 5px;
+            margin: 10px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🚀 HRMS Twilio SMS Testing</h1>
+        
+        <div class="note">
+            <strong>📋 Twilio Trial Account Notes:</strong><br>
+            • You can only send SMS to verified numbers: +919606408912, +919930145419<br>
+            • SMS to unverified numbers will be redirected to the first verified number for testing<br>
+            • Make sure your backend is running on http://localhost:8082
+        </div>
+
+        <!-- Configuration Section -->
+        <div class="section">
+            <h3>📊 Configuration Check</h3>
+            <button class="config-btn" onclick="checkConfig()">Check Twilio Configuration</button>
+            <div id="configResult"></div>
+        </div>
+
+        <!-- Simple SMS Test -->
+        <div class="section">
+            <h3>📱 Simple SMS Test</h3>
+            <div class="form-group">
+                <label for="testPhone">Phone Number (without country code):</label>
+                <input type="text" id="testPhone" placeholder="9606408912" value="9606408912">
+            </div>
+            <div class="form-group">
+                <label for="testMessage">Message:</label>
+                <textarea id="testMessage" placeholder="Enter your test message">Hello! This is a test SMS from HRMS Twilio integration. 🚀</textarea>
+            </div>
+            <button onclick="sendTestSms()">Send Test SMS</button>
+            <div id="testResult"></div>
+        </div>
+
+        <!-- Candidate SMS Test -->
+        <div class="section">
+            <h3>👤 Candidate Status SMS Test</h3>
+            <div class="form-group">
+                <label for="candidatePhone">Candidate Phone:</label>
+                <input type="text" id="candidatePhone" placeholder="9606408912" value="9606408912">
+            </div>
+            <div class="form-group">
+                <label for="candidateName">Candidate Name:</label>
+                <input type="text" id="candidateName" placeholder="Nikita" value="Nikita">
+            </div>
+            <div class="form-group">
+                <label for="jobTitle">Job Title:</label>
+                <input type="text" id="jobTitle" placeholder="Software Developer" value="Software Developer">
+            </div>
+            <div class="form-group">
+                <label for="candidateStatus">Status:</label>
+                <select id="candidateStatus">
+                    <option value="Shortlisted">Shortlisted</option>
+                    <option value="Interview Stage">Interview Stage</option>
+                    <option value="Selected">Selected</option>
+                    <option value="Rejected">Rejected</option>
+                </select>
+            </div>
+            <button onclick="sendCandidateSms()">Send Candidate SMS</button>
+            <div id="candidateResult"></div>
+        </div>
+
+        <!-- HR SMS Test -->
+        <div class="section">
+            <h3>👥 HR Notification SMS Test</h3>
+            <div class="form-group">
+                <label for="hrJobTitle">Job Title:</label>
+                <input type="text" id="hrJobTitle" placeholder="Software Developer" value="Software Developer">
+            </div>
+            <div class="form-group">
+                <label for="hrStatus">Status:</label>
+                <select id="hrStatus">
+                    <option value="Shortlisted">Shortlisted</option>
+                    <option value="Interview Stage">Interview Stage</option>
+                    <option value="Selected">Selected</option>
+                    <option value="Rejected">Rejected</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="hrCandidateEmail">Candidate Email:</label>
+                <input type="email" id="hrCandidateEmail" placeholder="nikita@example.com" value="nikita@example.com">
+            </div>
+            <button onclick="sendHrSms()">Send HR SMS</button>
+            <div id="hrResult"></div>
+        </div>
+    </div>
+
+    <script>
+        const BASE_URL = 'http://localhost:8082/api/test/sms';
+
+        async function checkConfig() {
+            const resultDiv = document.getElementById('configResult');
+            resultDiv.innerHTML = '<div class="info">Checking configuration...</div>';
+
+            try {
+                const response = await fetch(`${BASE_URL}/config`);
+                const data = await response.json();
+
+                let html = '<div class="success">Configuration Status:\n\n';
+                html += `Twilio Enabled: ${data.twilioEnabled}\n`;
+                html += `Account SID: ${data.accountSid}\n`;
+                html += `Phone Number: ${data.phoneNumber}\n`;
+                html += `Auth Token Set: ${data.authTokenSet}\n`;
+                html += `Verified Numbers: ${data.verifiedNumbers.join(', ')}\n`;
+                html += '</div>';
+
+                if (data.verifiedNumbers && data.verifiedNumbers.length > 0) {
+                    html += '<div class="verified-numbers"><strong>✅ Verified Numbers:</strong><br>';
+                    data.verifiedNumbers.forEach(num => {
+                        html += `📱 ${num}<br>`;
+                    });
+                    html += '</div>';
+                }
+
+                resultDiv.innerHTML = html;
+            } catch (error) {
+                resultDiv.innerHTML = `<div class="error">Configuration check failed:\n${error.message}</div>`;
+            }
+        }
+
+        async function sendTestSms() {
+            const phone = document.getElementById('testPhone').value;
+            const message = document.getElementById('testMessage').value;
+            const resultDiv = document.getElementById('testResult');
+
+            if (!phone || !message) {
+                resultDiv.innerHTML = '<div class="error">Please enter both phone number and message</div>';
+                return;
+            }
+
+            resultDiv.innerHTML = '<div class="info">Sending SMS...</div>';
+
+            try {
+                const response = await fetch(`${BASE_URL}/send?phone=${encodeURIComponent(phone)}&message=${encodeURIComponent(message)}`);
+                const data = await response.json();
+
+                if (data.success) {
+                    let html = '<div class="success">✅ SMS Sent Successfully!\n\n';
+                    html += `Phone: ${data.phoneNumber}\n`;
+                    html += `Verified: ${data.isVerifiedNumber ? 'Yes' : 'No'}\n`;
+                    if (!data.isVerifiedNumber) {
+                        html += `Note: ${data.note}\n`;
+                    }
+                    html += `Message: ${message}</div>`;
+                    resultDiv.innerHTML = html;
+                } else {
+                    resultDiv.innerHTML = `<div class="error">❌ SMS Failed:\n${data.message}\n\nPhone: ${data.phoneNumber}\nVerified: ${data.isVerifiedNumber}\nVerified Numbers: ${data.verifiedNumbers?.join(', ')}</div>`;
+                }
+            } catch (error) {
+                resultDiv.innerHTML = `<div class="error">Request failed:\n${error.message}</div>`;
+            }
+        }
+
+        async function sendCandidateSms() {
+            const phone = document.getElementById('candidatePhone').value;
+            const name = document.getElementById('candidateName').value;
+            const job = document.getElementById('jobTitle').value;
+            const status = document.getElementById('candidateStatus').value;
+            const resultDiv = document.getElementById('candidateResult');
+
+            if (!phone || !name || !job) {
+                resultDiv.innerHTML = '<div class="error">Please fill all fields</div>';
+                return;
+            }
+
+            resultDiv.innerHTML = '<div class="info">Sending candidate SMS...</div>';
+
+            try {
+                const response = await fetch(`${BASE_URL}/candidate`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        phone: phone,
+                        name: name,
+                        job: job,
+                        status: status
+                    })
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    let html = '<div class="success">✅ Candidate SMS Sent!\n\n';
+                    html += `Candidate: ${data.candidateName}\n`;
+                    html += `Job: ${data.jobTitle}\n`;
+                    html += `Status: ${data.status}\n`;
+                    html += `Phone: ${data.phoneNumber}</div>`;
+                    resultDiv.innerHTML = html;
+                } else {
+                    resultDiv.innerHTML = `<div class="error">❌ Candidate SMS Failed:\n${data.message}</div>`;
+                }
+            } catch (error) {
+                resultDiv.innerHTML = `<div class="error">Request failed:\n${error.message}</div>`;
+            }
+        }
+
+        async function sendHrSms() {
+            const job = document.getElementById('hrJobTitle').value;
+            const status = document.getElementById('hrStatus').value;
+            const candidateEmail = document.getElementById('hrCandidateEmail').value;
+            const resultDiv = document.getElementById('hrResult');
+
+            if (!job || !candidateEmail) {
+                resultDiv.innerHTML = '<div class="error">Please fill all fields</div>';
+                return;
+            }
+
+            resultDiv.innerHTML = '<div class="info">Sending HR SMS...</div>';
+
+            try {
+                const response = await fetch(`${BASE_URL}/hr`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        job: job,
+                        status: status,
+                        candidateEmail: candidateEmail
+                    })
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    let html = '<div class="success">✅ HR SMS Sent!\n\n';
+                    html += `Job: ${data.jobTitle}\n`;
+                    html += `Status: ${data.status}\n`;
+                    html += `Candidate: ${data.candidateEmail}</div>`;
+                    resultDiv.innerHTML = html;
+                } else {
+                    resultDiv.innerHTML = `<div class="error">❌ HR SMS Failed:\n${data.message}</div>`;
+                }
+            } catch (error) {
+                resultDiv.innerHTML = `<div class="error">Request failed:\n${error.message}</div>`;
+            }
+        }
+
+        // Auto-load configuration on page load
+        window.addEventListener('load', checkConfig);
+    </script>
+</body>
+</html>

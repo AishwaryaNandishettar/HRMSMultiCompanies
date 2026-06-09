@@ -3,9 +3,11 @@
     import com.omoikaneinnovation.hmrsbackend.dto.AttendanceDTO;
     import com.omoikaneinnovation.hmrsbackend.model.Attendance;
     import com.omoikaneinnovation.hmrsbackend.model.Employee;
+    import com.omoikaneinnovation.hmrsbackend.model.LeaveRequest;
     import com.omoikaneinnovation.hmrsbackend.model.User;
     import com.omoikaneinnovation.hmrsbackend.repository.AttendanceRepository;
     import com.omoikaneinnovation.hmrsbackend.repository.EmployeeRepository;
+    import com.omoikaneinnovation.hmrsbackend.repository.LeaveRepository;
     import com.omoikaneinnovation.hmrsbackend.repository.UserRepository;
     import org.springframework.beans.factory.annotation.Autowired;
     import org.springframework.web.client.RestTemplate;
@@ -20,7 +22,6 @@
     import java.util.Map;
     import java.util.HashMap;
     import java.util.ArrayList;
-
     @Service
     public class AttendanceService {
 
@@ -36,6 +37,11 @@
        @Autowired
 private RestTemplate restTemplate;
 
+       @Autowired
+       private NotificationService notificationService;
+
+       @Autowired
+       private LeaveRepository leaveRepo;
         public String checkIn(String userId) {
             return checkIn(userId, null);
         }
@@ -46,10 +52,18 @@ private RestTemplate restTemplate;
 
             // Normalize userId: if it looks like an email, find the user and get their ID
             String normalizedUserId = userId;
+            User currentUser = null;
             if (userId != null && userId.contains("@")) {
                 Optional<User> userOpt = userRepo.findByEmail(userId);
                 if (userOpt.isPresent()) {
-                    normalizedUserId = userOpt.get().getId();
+                    currentUser = userOpt.get();
+                    normalizedUserId = currentUser.getId();
+                }
+            } else {
+                // If userId is not email, try to find user by ID
+                Optional<User> userOpt = userRepo.findById(normalizedUserId);
+                if (userOpt.isPresent()) {
+                    currentUser = userOpt.get();
                 }
             }
 
@@ -70,9 +84,6 @@ private RestTemplate restTemplate;
                 attendance.setName(payload.get("name"));
                 attendance.setDepartment(payload.get("department"));
                 attendance.setLocationIn(payload.get("locationIn"));
-                attendance.setReportingManager(payload.get("reportingManager"));
-                attendance.setManagerId(payload.get("managerId"));
-                attendance.setManagerEmail(payload.get("managerEmail"));
                 attendance.setTos(payload.get("tos"));
                 attendance.setAttendanceType(payload.get("attendanceType") != null ? payload.get("attendanceType") : "Office");
                 attendance.setStatus(payload.get("status") != null ? payload.get("status") : "Pending Approval");
@@ -83,6 +94,30 @@ private RestTemplate restTemplate;
                     int hour = Integer.parseInt(checkInTime.split(":")[0]);
                     attendance.setLate(hour > 9 ? "Yes" : "No");
                 }
+            }
+            
+            // ✅ FIX: Always fetch and set current manager information from User table
+            if (currentUser != null) {
+                // Use current manager info from User table (this ensures updated managers are reflected)
+                if (currentUser.getManagerEmail() != null) {
+                    attendance.setManagerEmail(currentUser.getManagerEmail());
+                }
+                if (currentUser.getManagerName() != null) {
+                    attendance.setReportingManager(currentUser.getManagerName());
+                }
+                if (currentUser.getManagerId() != null) {
+                    attendance.setManagerId(currentUser.getManagerId());
+                }
+                
+                System.out.println("✅ Check-in: Set manager info from User table - " +
+                    "Manager: " + currentUser.getManagerName() + 
+                    " (" + currentUser.getManagerEmail() + ") for user: " + currentUser.getEmail());
+            } else {
+                // Fallback: use payload manager info if User not found
+                attendance.setReportingManager(payload != null ? payload.get("reportingManager") : null);
+                attendance.setManagerId(payload != null ? payload.get("managerId") : null);
+                attendance.setManagerEmail(payload != null ? payload.get("managerEmail") : null);
+                System.out.println("⚠️ Check-in: User not found, using payload manager info (may be outdated)");
             }
 
             attendanceRepo.save(attendance);
@@ -126,7 +161,20 @@ private RestTemplate restTemplate;
             // Calculate early leave (before 18:00)
             int outHour = out.getHour();
             attendance.setEarlyLeave(outHour < 18 ? "Yes" : "No");
-            attendance.setStatus("Pending Approval");
+
+            // ── AUTO STATUS based on worked hours ──
+            // >= 8 hours (480 min) → Present
+            // >= 4 hours (240 min) → Half Day
+            // < 4 hours            → Half Day (came but left very early)
+            String autoStatus;
+            if (minutes >= 480) {
+                autoStatus = "Present";
+            } else if (minutes >= 240) {
+                autoStatus = "Half Day";
+            } else {
+                autoStatus = "Half Day";
+            }
+            attendance.setStatus(autoStatus);
 
             // Update location out if provided
             if (payload != null && payload.get("locationOut") != null) {
@@ -140,28 +188,54 @@ private RestTemplate restTemplate;
 
      public List<AttendanceDTO> getManagerAttendance(String managerEmail) {
 
-    // Get all users under this manager
+    System.out.println("🔍 getManagerAttendance called with managerEmail: " + managerEmail);
+    
+    // Get all users under this manager (try exact match first, then case-insensitive)
     List<User> team = userRepo.findByManagerEmail(managerEmail);
+    if (team.isEmpty()) {
+        System.out.println("🔄 No exact match found, trying case-insensitive search...");
+        team = userRepo.findByManagerEmailIgnoreCase(managerEmail);
+    }
+    
+    System.out.println("📋 Found " + team.size() + " team members for manager: " + managerEmail);
+    
+    for (User u : team) {
+        System.out.println("  - Team member: " + u.getEmail() + " (ID: " + u.getId() + ", Name: " + u.getName() + ")");
+    }
 
     List<String> userIds = new ArrayList<>();
     team.forEach(u -> userIds.add(u.getId()));
 
-    // Also include the manager's own records
-    Optional<User> managerOpt = userRepo.findByEmail(managerEmail);
+    // Also include the manager's own records (try exact match first, then case-insensitive)
+    Optional<User> managerOptTemp = userRepo.findByEmail(managerEmail);
+    if (managerOptTemp.isEmpty()) {
+        System.out.println("🔄 Manager not found with exact email, trying case-insensitive...");
+        managerOptTemp = userRepo.findByEmailIgnoreCase(managerEmail);
+    }
+    
+    final Optional<User> managerOpt = managerOptTemp; // Make it final for lambda use
+    
     if (managerOpt.isPresent()) {
         User manager = managerOpt.get();
         String managerId = manager.getId();
+        System.out.println("📋 Manager found: " + manager.getEmail() + " (ID: " + managerId + ")");
         if (!userIds.contains(managerId)) {
             userIds.add(managerId);
         }
+    } else {
+        System.out.println("❌ Manager not found with email: " + managerEmail);
     }
+
+    System.out.println("📋 Total userIds to fetch attendance for: " + userIds.size() + " -> " + userIds);
 
     // If no userIds found, return empty list
     if (userIds.isEmpty()) {
+        System.out.println("❌ No userIds found - returning empty list");
         return new ArrayList<>();
     }
 
     List<Attendance> records = attendanceRepo.findByUserIdIn(userIds);
+    System.out.println("📋 Found " + records.size() + " attendance records for these users");
 
     // Enrich each record with proper employee details
     return records.stream()
@@ -203,9 +277,42 @@ public Attendance getByUserIdAndDate(String userId, String date) {
     return attendanceRepo.findByUserIdAndDate(userId, date);
 }
 
-        public List<AttendanceDTO> getAllAttendance() {
-            List<Attendance> records = attendanceRepo.findAll();
-            return records.stream().map(r -> enrichAttendance(r)).collect(Collectors.toList());
+    /**
+     * Get all attendance records with proper filtering
+     */
+    public List<AttendanceDTO> getAllAttendance() {
+        List<Attendance> records = attendanceRepo.findAll();
+        return records.stream()
+                .map(r -> enrichAttendance(r))
+                .filter(dto -> {
+                    // ✅ FILTER OUT EMPTY RECORDS AT BACKEND LEVEL
+                    // Only return records with valid essential data
+                    boolean hasValidEmpId = dto.getEmpId() != null && 
+                                          !dto.getEmpId().equals("-") && 
+                                          !dto.getEmpId().trim().isEmpty();
+                    boolean hasValidName = dto.getName() != null && 
+                                         !dto.getName().equals("-") && 
+                                         !dto.getName().trim().isEmpty();
+                    boolean hasValidDate = dto.getDate() != null && 
+                                         !dto.getDate().equals("-") && 
+                                         !dto.getDate().trim().isEmpty();
+                    
+                    return hasValidEmpId && hasValidName && hasValidDate;
+                })
+                .collect(Collectors.toList());
+    }
+
+        public String deleteAttendance(String id) {
+            try {
+                if (attendanceRepo.existsById(id)) {
+                    attendanceRepo.deleteById(id);
+                    return "Attendance record deleted successfully";
+                } else {
+                    return "Attendance record not found";
+                }
+            } catch (Exception e) {
+                return "Failed to delete attendance record: " + e.getMessage();
+            }
         }
 
         /**
@@ -241,26 +348,26 @@ public Attendance getByUserIdAndDate(String userId, String date) {
     dto.setTos(a.getTos());
 
     // Enrich missing fields from User/Employee if needed
-    if ((dto.getEmpId() == null || dto.getName() == null) && a.getUserId() != null) {
+    if (a.getUserId() != null && !a.getUserId().isBlank()) {
         Optional<User> userOpt = Optional.empty();
 
-        if (a.getUserId() != null && !a.getUserId().isBlank()) {
-            userOpt = userRepo.findById(a.getUserId());
+        // Try to find user by different methods
+        userOpt = userRepo.findById(a.getUserId());
 
-            if (userOpt.isEmpty()) {
-                userOpt = userRepo.findByEmail(a.getUserId());
-            }
+        if (userOpt.isEmpty()) {
+            userOpt = userRepo.findByEmail(a.getUserId());
+        }
 
-            if (userOpt.isEmpty()) {
-                userOpt = userRepo.findAll().stream()
-                        .filter(u -> a.getUserId().equals(u.getEmployeeId()))
-                        .findFirst();
-            }
+        if (userOpt.isEmpty()) {
+            userOpt = userRepo.findAll().stream()
+                    .filter(u -> a.getUserId().equals(u.getEmployeeId()))
+                    .findFirst();
         }
 
         if (userOpt.isPresent()) {
             User user = userOpt.get();
 
+            // Set manager details
             if (dto.getManagerId() == null || dto.getManagerId().isEmpty()) {
                 dto.setManagerId(user.getManagerEmail() != null ? user.getManagerEmail() : "-");
             }
@@ -275,17 +382,15 @@ public Attendance getByUserIdAndDate(String userId, String date) {
                 if (resolvedName == null || resolvedName.isBlank()) {
                     resolvedName = user.getEmail() != null
                         ? user.getEmail().split("@")[0]
-                        : "-";
+                        : null;
                 }
-                if (resolvedName == null || resolvedName.isBlank() || resolvedName.equals(user.getEmail())) {
-                    resolvedName = user.getEmail() != null
-                        ? user.getEmail().split("@")[0]
-                        : "-";
-                    if (!resolvedName.isEmpty() && !resolvedName.equals("-")) {
-                        resolvedName = Character.toUpperCase(resolvedName.charAt(0)) + resolvedName.substring(1);
-                    }
+                // Only capitalize if we have a valid name
+                if (resolvedName != null && !resolvedName.isEmpty() && !resolvedName.equals("-")) {
+                    resolvedName = Character.toUpperCase(resolvedName.charAt(0)) + resolvedName.substring(1);
+                    dto.setName(resolvedName);
+                } else {
+                    dto.setName(null); // Keep it null for filtering
                 }
-                dto.setName(resolvedName);
             }
 
             if (dto.getDepartment() == null || dto.getDepartment().isEmpty()) {
@@ -310,16 +415,11 @@ public Attendance getByUserIdAndDate(String userId, String date) {
                 dto.setReportingManager(reportingManager);
             }
 
-            // Resolve empId
+            // Resolve empId with better fallback logic
             if (dto.getEmpId() == null || dto.getEmpId().isEmpty()) {
                 String resolvedEmpId = user.getEmployeeId();
 
-                if (resolvedEmpId == null || resolvedEmpId.isBlank()) {
-                    resolvedEmpId = user.getEmployeeId() != null
-                        ? user.getEmployeeId()
-                        : user.getId();
-                }
-
+                // If user.employeeId is null, try Employee collection
                 if (resolvedEmpId == null || resolvedEmpId.isBlank()) {
                     Optional<Employee> empByUserId = employeeRepo.findByUserId(a.getUserId());
                     if (empByUserId.isPresent()) {
@@ -334,37 +434,23 @@ public Attendance getByUserIdAndDate(String userId, String date) {
                     }
                 }
 
+                // Generate fallback empId only if we have valid user data
                 if (resolvedEmpId == null || resolvedEmpId.isBlank()) {
                     String rawId = user.getId() != null ? user.getId() : "";
-                    resolvedEmpId = "EMP" + rawId.replaceAll("[^a-zA-Z0-9]", "").toUpperCase()
-                        .substring(Math.max(0, rawId.length() - 6));
+                    if (rawId.length() >= 6) {
+                        resolvedEmpId = "EMP" + rawId.replaceAll("[^a-zA-Z0-9]", "").toUpperCase()
+                            .substring(Math.max(0, rawId.length() - 6));
+                    } else {
+                        resolvedEmpId = "EMP" + rawId.replaceAll("[^a-zA-Z0-9]", "").toUpperCase();
+                    }
                 }
                 dto.setEmpId(resolvedEmpId);
             }
-        } else {
-            if (dto.getEmpId() == null || dto.getEmpId().isEmpty()) {
-                dto.setEmpId(a.getUserId());
-            }
-            if (dto.getName() == null || dto.getName().isEmpty()) {
-                dto.setName("-");
-            }
-            if (dto.getDepartment() == null || dto.getDepartment().isEmpty()) {
-                dto.setDepartment("-");
-            }
-            if (dto.getReportingManager() == null || dto.getReportingManager().isEmpty()) {
-                dto.setReportingManager("-");
-            }
-            if (dto.getManagerId() == null || dto.getManagerId().isEmpty()) {
-                dto.setManagerId("-");
-            }
         }
+        // If no user found, leave essential fields as null for filtering
     }
 
-    // Set defaults for null fields
-    if (dto.getEmpId() == null) dto.setEmpId("-");
-    if (dto.getName() == null) dto.setName("-");
-    if (dto.getDepartment() == null) dto.setDepartment("-");
-    if (dto.getReportingManager() == null) dto.setReportingManager("-");
+    // Only set defaults for non-essential fields
     if (dto.getManagerId() == null) dto.setManagerId("-");
     if (dto.getManagerEmail() == null) dto.setManagerEmail("-");
     if (dto.getLocationIn() == null) dto.setLocationIn("-");
@@ -391,25 +477,128 @@ public void checkMissedCheckouts() {
         if (!today.equals(a.getDate())) continue;
 
         // already checked-in but NOT checked-out
-       if (a.getCheckIn() != null && a.getCheckOut() == null) {
+        if (a.getCheckIn() != null && a.getCheckOut() == null) {
 
-    Map<String, Object> notification = new HashMap<>();
+            com.omoikaneinnovation.hmrsbackend.model.Notification notification =
+                new com.omoikaneinnovation.hmrsbackend.model.Notification();
+            notification.setMessage("User " + a.getUserId() + " missed checkout today");
+            notification.setType("warning");
+            notification.setUserId(a.getUserId());
+            notification.setBadge(1);
+            notification.setLink("/attendance");
 
-    notification.put("message", "User " + a.getUserId() + " missed checkout today");
-    notification.put("type", "warning");
-    notification.put("userId", a.getUserId());
-    notification.put("date", today);
-
-    try {
-    restTemplate.postForObject(
-        "http://localhost:8082/api/notifications",
-        notification,
-        String.class
-    );
-} catch (Exception e) {
-    System.out.println("Notification service not available");
-}
-}
+            try {
+                notificationService.save(notification);
+            } catch (Exception e) {
+                System.out.println("Notification save failed: " + e.getMessage());
+            }
+        }
     }
 }
+
+    /**
+     * Runs every night at 11:00 PM.
+     * For every active user who has NO attendance record for today:
+     *   - If they have an APPROVED leave covering today → status = "On Leave"
+     *   - Otherwise                                     → status = "Absent"
+     *
+     * Also handles users who checked in but never checked out by end of day
+     * → marks them as "Half Day" (they came but didn't complete the day properly).
+     */
+    @Scheduled(cron = "0 0 23 * * *")
+    public void autoMarkAbsentAndLeave() {
+
+        String today = LocalDate.now().toString();
+        System.out.println("⏰ [AutoMark] Running attendance auto-status for: " + today);
+
+        // All attendance records for today
+        List<Attendance> todayRecords = attendanceRepo.findAll().stream()
+                .filter(a -> today.equals(a.getDate()))
+                .collect(Collectors.toList());
+
+        // Build a set of userIds who already have a record today
+        java.util.Set<String> checkedInUserIds = todayRecords.stream()
+                .map(Attendance::getUserId)
+                .collect(java.util.stream.Collectors.toSet());
+
+        // ── Part 1: fix records that have checkIn but no checkOut (missed checkout) ──
+        for (Attendance a : todayRecords) {
+            if (a.getCheckIn() != null && !a.getCheckIn().isBlank()
+                    && (a.getCheckOut() == null || a.getCheckOut().isBlank())) {
+                // Checked in but never checked out → Half Day
+                if (!"Half Day".equals(a.getStatus()) && !"Present".equals(a.getStatus())) {
+                    a.setStatus("Half Day");
+                    attendanceRepo.save(a);
+                    System.out.println("✏️  [AutoMark] Half Day (no checkout): userId=" + a.getUserId());
+                }
+            }
+        }
+
+        // ── Part 2: create Absent / On Leave records for users with NO record today ──
+        List<User> allUsers = userRepo.findAll();
+
+        // All approved leaves that cover today
+        List<LeaveRequest> todayLeaves = leaveRepo.findAll().stream()
+                .filter(l -> "APPROVED".equalsIgnoreCase(l.getStatus()))
+                .filter(l -> {
+                    try {
+                        LocalDate start = LocalDate.parse(l.getStartDate());
+                        LocalDate end   = LocalDate.parse(l.getEndDate());
+                        LocalDate date  = LocalDate.parse(today);
+                        return !date.isBefore(start) && !date.isAfter(end);
+                    } catch (Exception e) {
+                        return false;
+                    }
+                })
+                .collect(Collectors.toList());
+
+        java.util.Set<String> onLeaveUserIds = todayLeaves.stream()
+                .map(LeaveRequest::getUserId)
+                .collect(java.util.stream.Collectors.toSet());
+
+        // Day of week — skip Sundays (1=Mon … 7=Sun)
+        java.time.DayOfWeek dayOfWeek = LocalDate.parse(today).getDayOfWeek();
+        boolean isWeeklyOff = (dayOfWeek == java.time.DayOfWeek.SUNDAY);
+
+        if (isWeeklyOff) {
+            System.out.println("ℹ️  [AutoMark] Sunday — skipping absent marking.");
+            return;
+        }
+
+        for (User user : allUsers) {
+            String uid = user.getId();
+
+            // Already has a record today — skip
+            if (checkedInUserIds.contains(uid)) continue;
+
+            String resolvedStatus;
+            String resolvedAttendanceType;
+
+            if (onLeaveUserIds.contains(uid)) {
+                resolvedStatus       = "On Leave";
+                resolvedAttendanceType = "Leave";
+            } else {
+                resolvedStatus       = "Absent";
+                resolvedAttendanceType = "Absent";
+            }
+
+            // Create a minimal attendance record so it shows up in the table
+            Attendance absent = new Attendance();
+            absent.setUserId(uid);
+            absent.setDate(today);
+            absent.setEmpId(user.getEmployeeId() != null ? user.getEmployeeId() : "-");
+            absent.setName(user.getName() != null ? user.getName() : "-");
+            absent.setDepartment(user.getDepartment() != null ? user.getDepartment() : "-");
+            absent.setStatus(resolvedStatus);
+            absent.setAttendanceType(resolvedAttendanceType);
+            absent.setLate("No");
+            absent.setEarlyLeave("No");
+            absent.setManagerEmail(user.getManagerEmail() != null ? user.getManagerEmail() : "-");
+
+            attendanceRepo.save(absent);
+            System.out.println("✏️  [AutoMark] " + resolvedStatus + " created for userId=" + uid + " (" + user.getName() + ")");
+        }
+
+        System.out.println("✅ [AutoMark] Done for " + today);
+    }
     }

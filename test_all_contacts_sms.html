@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test SMS for All Contacts</title>
+    <style>
+        body { font-family: Arial, sans-serif; max-width: 600px; margin: 50px auto; padding: 20px; }
+        .test-box { border: 1px solid #ddd; padding: 15px; margin: 10px 0; border-radius: 8px; }
+        button { padding: 10px 20px; margin: 5px; background: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer; }
+        button:hover { background: #0056b3; }
+        .result { margin-top: 10px; padding: 10px; border-radius: 4px; }
+        .success { background: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
+        .error { background: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
+    </style>
+</head>
+<body>
+    <h1>🧪 SMS Test for All HR Contacts</h1>
+    <p>Test Twilio SMS delivery to all HR team members</p>
+
+    <!-- Aishwarya Test -->
+    <div class="test-box">
+        <h3>📱 Aishwarya: 9606408912</h3>
+        <button onclick="testSMS('9606408912', 'aishwarya')">Send Test SMS</button>
+        <div id="result-aishwarya" class="result" style="display:none;"></div>
+    </div>
+
+    <!-- Padmanabh Test -->
+    <div class="test-box">
+        <h3>📱 Padmanabh: 935327825</h3>
+        <button onclick="testSMS('935327825', 'padmanabh')">Send Test SMS</button>
+        <div id="result-padmanabh" class="result" style="display:none;"></div>
+    </div>
+
+    <!-- Mahesh Test -->
+    <div class="test-box">
+        <h3>📱 Mahesh: 8197977894</h3>
+        <button onclick="testSMS('8197977894', 'mahesh')">Send Test SMS</button>
+        <div id="result-mahesh" class="result" style="display:none;"></div>
+    </div>
+
+    <!-- Nikita Test -->
+    <div class="test-box">
+        <h3>📱 Nikita (Candidate): 9930145419</h3>
+        <button onclick="testSMS('9930145419', 'nikita')">Send Test SMS</button>
+        <div id="result-nikita" class="result" style="display:none;"></div>
+    </div>
+
+    <script>
+        async function testSMS(phoneNumber, person) {
+            const resultDiv = document.getElementById(`result-${person}`);
+            resultDiv.style.display = 'block';
+            resultDiv.className = 'result';
+            resultDiv.textContent = '⏳ Sending SMS...';
+
+            try {
+                const response = await fetch('http://localhost:8082/api/jobs/test-sms', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        phoneNumber: phoneNumber,
+                        message: `Test SMS from HRMS - ${new Date().toLocaleTimeString()}`
+                    })
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    resultDiv.className = 'result success';
+                    resultDiv.textContent = `✅ ${data.message}`;
+                } else {
+                    resultDiv.className = 'result error';
+                    resultDiv.textContent = `❌ ${data.message}`;
+                }
+
+            } catch (error) {
+                resultDiv.className = 'result error';
+                resultDiv.textContent = `❌ Network Error: ${error.message}`;
+            }
+        }
+
+        // Test all contacts at once
+        function testAllContacts() {
+            testSMS('9606408912', 'aishwarya');
+            setTimeout(() => testSMS('935327825', 'padmanabh'), 1000);
+            setTimeout(() => testSMS('8197977894', 'mahesh'), 2000);
+            setTimeout(() => testSMS('9930145419', 'nikita'), 3000);
+        }
+    </script>
+
+    <div style="text-align: center; margin-top: 30px;">
+        <button onclick="testAllContacts()" style="background: #28a745; font-size: 16px;">
+            🚀 Test All Contacts
+        </button>
+    </div>
+
+    <div style="margin-top: 20px; padding: 15px; background: #f8f9fa; border-radius: 8px;">
+        <h4>📋 Instructions:</h4>
+        <ol>
+            <li>Make sure your backend is running on port 8082</li>
+            <li>Click individual contact buttons to test specific numbers</li>
+            <li>Or click "Test All Contacts" to test everyone at once</li>
+            <li>Check your WhatsApp/SMS to see which messages are delivered</li>
+            <li>Check backend console logs for detailed error messages</li>
+        </ol>
+    </div>
+</body>
+</html>

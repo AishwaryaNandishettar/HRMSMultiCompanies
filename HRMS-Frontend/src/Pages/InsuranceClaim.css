@@ -1,12 +1,4 @@
-/* =========================================================
-   INSURANCE CLAIM PAGE - SCOPED STYLES ONLY
-   First 2 columns frozen: Employee ID, Employee Name
-   From 3rd column onwards: horizontally scrollable
-========================================================= */
-
-/* =========================================================
-   MAIN CONTAINER
-========================================================= */
+/* Insurance Claim Management - Clean CSS */
 .insurance-container {
   width: 95%;
   margin: 20px auto;
@@ -15,205 +7,156 @@
   border-radius: 10px;
   font-family: Arial, sans-serif;
   box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+  height: calc(100vh - 120px);
+  overflow: hidden;
 }
 
 .insurance-container h2 {
   text-align: left;
-  margin-bottom: 20px;
-  font-size: 24px;
+  margin-bottom: 12px;
+  font-size: 22px;
   font-weight: 600;
 }
 
-/* =========================================================
-   DASHBOARD CARDS
-========================================================= */
-.insurance-container .claim-dashboard {
+/* Filter Section */
+.filter-section {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  background: #eefaff;
+  padding: 10px;
+  border-radius: 8px;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.filter-section input,
+.filter-section select {
+  padding: 8px 10px;
+  border: 1px solid #d5d5d5;
+  border-radius: 6px;
+  font-size: 14px;
+  outline: none;
+  background: white;
+}
+
+/* Buttons */
+.search-btn,
+.export-btn,
+.new-claim-btn {
+  padding: 8px 12px;
+  border: none;
+  background: blueviolet;
+  color: white;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 14px;
+}
+
+.new-claim-btn { background: #28a745; }
+.export-btn { background: #009688; }
+
+/* Dashboard Cards */
+.claim-dashboard {
   display: grid;
   grid-template-columns: repeat(5, 1fr);
   gap: 12px;
   margin-bottom: 20px;
 }
 
-.insurance-container .card {
+.card {
   padding: 15px;
   border-radius: 10px;
   color: white;
   text-align: center;
 }
 
-.insurance-container .card h4 {
-  margin: 0 0 8px 0;
-  font-size: 14px;
-  font-weight: 500;
-}
+.card.total { background: #007bff; }
+.card.approved { background: #28a745; }
+.card.pending { background: #ff9800; }
+.card.rejected { background: #dc3545; }
+.card.amount { background: #6f42c1; }
 
-.insurance-container .card p {
-  margin: 0;
-  font-size: 24px;
-  font-weight: bold;
-}
-
-.insurance-container .card.total { background: #007bff; }
-.insurance-container .card.approved { background: #28a745; }
-.insurance-container .card.pending { background: #ff9800; }
-.insurance-container .card.rejected { background: #dc3545; }
-.insurance-container .card.amount { background: #6f42c1; }
-
-/* =========================================================
-   BUTTONS
-========================================================= */
-.insurance-container .export-btn,
-.insurance-container .new-claim-btn {
-  padding: 8px 16px;
-  border: none;
-  color: white;
-  border-radius: 6px;
-  cursor: pointer;
-  font-size: 14px;
-  font-weight: 500;
-}
-
-.insurance-container .export-btn {
-  background: #009688;
-}
-
-.insurance-container .new-claim-btn {
-  background: #28a745;
-}
-
-.insurance-container .export-btn:hover,
-.insurance-container .new-claim-btn:hover {
-  opacity: 0.85;
-}
-
-/* =========================================================
-   FILTER SECTION
-========================================================= */
-.insurance-container .filter-section {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 10px;
-  background: #eefaff;
-  padding: 12px;
-  border-radius: 8px;
-  margin-bottom: 20px;
-  align-items: center;
-}
-
-.insurance-container .filter-section input,
-.insurance-container .filter-section select {
-  padding: 8px 12px;
-  border: 1px solid #d5d5d5;
-  border-radius: 6px;
-  font-size: 14px;
-  background: white;
-  min-width: 150px;
-}
-
-/* =========================================================
-   CLAIM FORM
-========================================================= */
-.insurance-container .claim-form {
+/* Claim Form */
+.claim-form {
   background: #f8ffff;
-  padding: 20px;
+  padding: 18px;
   border-radius: 10px;
-  margin-bottom: 20px;
+  margin-top: 12px;
   border: 1px solid #d7f1ff;
 }
 
-.insurance-container .claim-form h3 {
-  margin-top: 0;
-  margin-bottom: 15px;
+.claim-form h3 {
+  margin-bottom: 12px;
   font-size: 18px;
+  font-weight: 600;
 }
 
-.insurance-container .form-grid {
+/* Form Grid */
+.form-grid {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 12px;
-  margin-bottom: 12px;
+  grid-template-columns: repeat(3, minmax(240px, 1fr));
+  gap: 16px;
 }
 
-.insurance-container .form-grid input,
-.insurance-container .form-grid select {
+.form-grid input,
+.form-grid select {
   padding: 10px;
-  border: 1px solid #ccc;
+  border: 1px solid #cccccc;
   border-radius: 6px;
   font-size: 14px;
-  background: white;
   width: 100%;
   box-sizing: border-box;
 }
 
-.insurance-container .date-range {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.insurance-container .date-range input {
-  flex: 1;
-}
-
-.insurance-container .date-separator {
-  font-size: 14px;
-  color: #666;
-}
-
-.insurance-container textarea {
+.claim-form textarea {
   width: 100%;
-  padding: 10px;
-  border: 1px solid #ccc;
-  border-radius: 6px;
-  font-size: 14px;
   min-height: 80px;
-  margin-bottom: 12px;
-  box-sizing: border-box;
-  font-family: Arial, sans-serif;
+  padding: 10px;
+  border-radius: 6px;
+  border: 1px solid #cccccc;
+  margin-top: 8px;
 }
 
-.insurance-container .submit-btn,
-.insurance-container .cancel-btn {
-  padding: 10px 20px;
+.submit-btn {
+  margin-top: 12px;
+  padding: 10px 16px;
   border: none;
+  background: #0066cc;
+  color: white;
   border-radius: 6px;
   cursor: pointer;
-  font-size: 14px;
-  font-weight: 500;
-  margin-right: 10px;
+  font-size: 15px;
 }
 
-.insurance-container .submit-btn {
-  background: #007bff;
+.cancel-btn {
+  padding: 10px 16px;
+  border: none;
+  background: #dc3545;
   color: white;
-}
-
-.insurance-container .cancel-btn {
-  background: #6c757d;
-  color: white;
-}
-
-.insurance-container .submit-btn:hover,
-.insurance-container .cancel-btn:hover {
-  opacity: 0.85;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 15px;
 }
 
 /* =========================================================
-   TABLE WRAPPER - SCROLLABLE WITH FROZEN COLUMNS
+   TABLE STRUCTURE - EXACTLY LIKE REIMBURSEMENT
 ========================================================= */
+
+/* ================= TABLE WRAPPER - SCROLLABLE WITH FIXED HEADERS ================= */
 .insurance-container .table-wrapper {
   width: 100%;
-  height: 500px;
-  overflow-x: auto !important;
-  overflow-y: auto !important;
-  position: relative;
+  height: calc(100vh - 320px) !important;
+  max-height: 500px !important;
+  overflow: auto;
   border: 1px solid #ddd;
   border-radius: 10px;
   background: #fff;
+  position: relative;
+  display: block !important;
   -webkit-overflow-scrolling: touch;
 }
 
-/* Scrollbar styling */
 .insurance-container .table-wrapper::-webkit-scrollbar {
   height: 12px;
   width: 12px;
@@ -233,274 +176,181 @@
   background: #555;
 }
 
-/* =========================================================
-   GRID TABLE - REAL TABLE STRUCTURE
-========================================================= */
-.insurance-container .grid-table {
+/* ================= TABLE - FIXED LAYOUT ================= */
+.insurance-container .claim-table {
   display: table !important;
-  width: max-content;
-  min-width: 100%;
-  border-collapse: separate;
-  border-spacing: 0;
-  table-layout: fixed;
+  width: max-content !important;
+  min-width: 100% !important;
+  border-collapse: separate !important;
+  border-spacing: 0 !important;
   position: relative;
+  table-layout: fixed;
 }
 
-.insurance-container .grid-header {
+/* REMOVE GRID/FLEX DAMAGE FROM OTHER CSS */
+.insurance-container .claim-table thead {
   display: table-header-group !important;
 }
 
-.insurance-container .grid-body {
+.insurance-container .claim-table tbody {
   display: table-row-group !important;
 }
 
-.insurance-container .grid-row {
+.insurance-container .claim-table tr {
   display: table-row !important;
 }
 
-.insurance-container .cell {
+.insurance-container .claim-table th,
+.insurance-container .claim-table td {
   display: table-cell !important;
+  vertical-align: middle;
   box-sizing: border-box;
 }
 
-/* =========================================================
-   HEADER CELLS - STICKY AT TOP
-========================================================= */
-.insurance-container .grid-header .cell {
+/* ================= STICKY HEADER - STAYS FIXED WHILE SCROLLING ================= */
+.insurance-container .claim-table thead {
   position: sticky;
   top: 0;
-  z-index: 100;
-  background: #2c5f8d;
-  color: white;
+  z-index: 300;
+}
+
+.insurance-container .claim-table thead th {
+  position: sticky !important;
+  top: 0 !important;
+  background: #1f3c88 !important;
+  color: white !important;
   padding: 12px 10px;
   text-align: center;
+  vertical-align: middle;
   font-size: 13px;
   font-weight: 600;
+  border: 1px solid #16306d;
   white-space: nowrap;
-  border-right: 1px solid rgba(255,255,255,0.2);
-  border-bottom: 2px solid #1e4a6d;
-  border-top: 1px solid rgba(255,255,255,0.2);
+  box-sizing: border-box;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  z-index: 500 !important;
+  border-right: 1px solid #dcdcdc !important;
+  border-bottom: 1px solid #dcdcdc !important;
+  border-top: 1px solid #16306d !important;
 }
 
-.insurance-container .grid-header .cell:first-child {
-  border-left: 1px solid rgba(255,255,255,0.2);
-}
-
-/* =========================================================
-   BODY CELLS - WITH GRID LINES
-========================================================= */
-.insurance-container .grid-body .cell {
-  padding: 12px 10px;
-  text-align: center;
-  font-size: 13px;
-  white-space: nowrap;
+/* ================= BODY ROWS ================= */
+.insurance-container .claim-table td {
   background: #fff;
-  border-right: 1px solid #e0e0e0;
-  border-bottom: 1px solid #e0e0e0;
+  padding: 12px 10px;
+  border: 1px solid #eee;
+  text-align: center;
+  font-size: 14px;
+  white-space: nowrap;
+  box-sizing: border-box;
+  border-right: 1px solid #dcdcdc !important;
+  border-bottom: 1px solid #dcdcdc !important;
 }
 
-.insurance-container .grid-body .grid-row:first-child .cell {
-  border-top: 1px solid #e0e0e0;
-}
-
-.insurance-container .grid-body .cell:first-child {
-  border-left: 1px solid #e0e0e0;
-}
-
-.insurance-container .grid-row:hover .cell {
+.insurance-container .claim-table tbody tr:hover td {
   background: #f8fdff;
 }
 
-/* =========================================================
-   FROZEN COLUMN 1 - EMPLOYEE ID (STICKY LEFT)
-========================================================= */
-.insurance-container .col-1 {
-  width: 180px;
-  min-width: 180px;
-  max-width: 180px;
+/* ================= COLUMN WIDTHS - CONSISTENT ACROSS HEADER AND BODY ================= */
 
+/* Employee ID - STICKY COLUMN 1 */
+.insurance-container .claim-table th:nth-child(1),
+.insurance-container .claim-table td:nth-child(1) {
+  min-width: 170px !important;
+  width: 170px !important;
+  max-width: 170px !important;
   position: sticky;
   left: 0;
-  z-index: 30;
-  background: #fff;
-  box-shadow: 2px 0 4px -1px rgba(0,0,0,0.1);
+  z-index: 120;
+  border-left: 1px solid #dcdcdc !important;
 }
 
-.insurance-container .grid-header .col-1 {
-  z-index: 150;
-  background: #2c5f8d;
-  box-shadow: 2px 0 4px -1px rgba(0, 0, 0, 0.15);
+.insurance-container .claim-table th:nth-child(1) {
+  background: #1f3c88 !important;
+  z-index: 700 !important;
 }
 
-
-/* =========================================================
-   FROZEN COLUMN 2 - EMPLOYEE NAME
-========================================================= */
-.insurance-container .col-2 {
-  width: 180px;
-  min-width: 180px;
-  max-width: 180px;
-
-  position: sticky;
-  left: 180px;   /* ✅ width of col-1 */
-  z-index: 30;
-  background: #fff;
-  box-shadow: 2px 0 4px -1px rgba(0,0,0,0.1);
+.insurance-container .claim-table td:nth-child(1) {
+  background: #fff !important;
+  z-index: 50 !important;
+  box-shadow: 2px 0 4px -1px rgba(0, 0, 0, 0.08);
 }
 
-.insurance-container .grid-header .col-2 {
-  z-index: 150;
-  background: #2c5f8d;
-  box-shadow: 2px 0 4px -1px rgba(0, 0, 0, 0.15);
-}
-
-.insurance-container .grid-body .col-1 {
+/* Employee Name - STICKY COLUMN 2 */
+.insurance-container .claim-table th:nth-child(2),
+.insurance-container .claim-table td:nth-child(2) {
+  min-width: 200px !important;
+  width: 200px !important;
+  max-width: 200px !important;
   text-align: left;
-  padding-left: 8px;
-}
-/* =========================================================
-   SCROLLABLE COLUMNS (3 onwards)
-========================================================= */
-.insurance-container .grid-header .cell:nth-child(n+3),
-.insurance-container .grid-row .cell:nth-child(n+3) {
-  min-width: 140px;
-  width: 140px;
+  padding-left: 12px;
+  padding-right: 10px;
+  position: sticky;
+  left: 170px;
+  z-index: 120;
 }
 
-/* =========================================================
-   MAINTAIN BACKGROUND ON HOVER FOR FROZEN COLUMNS
-========================================================= */
-.insurance-container .grid-row:hover .col-1,
-.insurance-container .grid-row:hover .col-2 {
-  background: #f8fdff;
-  box-shadow: 2px 0 4px -1px rgba(0, 0, 0, 0.1);
+.insurance-container .claim-table th:nth-child(2) {
+  background: #1f3c88 !important;
+  z-index: 700 !important;
 }
 
-/* =========================================================
-   HEADER FILTER DROPDOWN
-========================================================= */
+.insurance-container .claim-table td:nth-child(2) {
+  background: #fff !important;
+  z-index: 50 !important;
+  text-align: left;
+  box-shadow: 2px 0 4px -1px rgba(0, 0, 0, 0.08);
+}
+
+/* Regular columns */
+.insurance-container .claim-table th:nth-child(n+3),
+.insurance-container .claim-table td:nth-child(n+3) {
+  min-width: 150px;
+  width: 150px;
+}
+
+/* Maintain background on hover for sticky columns */
+.insurance-container .claim-table tbody tr:hover td:nth-child(1),
+.insurance-container .claim-table tbody tr:hover td:nth-child(2) {
+  background: #f8fdff !important;
+}
+
+/* Header Cell */
 .insurance-container .table-header-cell {
-  position: relative;
+  position: relative !important;
   cursor: pointer;
-  width: 100%;
-  height: 100%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  overflow: visible !important;
 }
 
 .insurance-container .header-label {
-  display: flex;
+  display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: 5px;
-  color: white;
-  font-weight: 600;
-  white-space: nowrap;
-}
-
-/* =========================================================
-   FILTER POPUP
-========================================================= */
-.insurance-container .filter-popup {
-  position: absolute;
-  top: 100%;
-  left: 0;
-  background: white;
-  border: 1px solid #ccc;
-  border-radius: 6px;
-  padding: 8px;
-  z-index: 9999;
-  width: 200px;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-  margin-top: 4px;
-}
-
-.insurance-container .filter-popup input {
   width: 100%;
-  padding: 6px 8px;
-  border: 1px solid #ddd;
-  border-radius: 4px;
-  font-size: 13px;
-  margin-bottom: 8px;
-  box-sizing: border-box;
+  padding: 0;
 }
 
-.insurance-container .filter-list {
-  max-height: 180px;
-  overflow-y: auto;
+/* Left align for Employee Name header */
+.insurance-container .claim-table th:nth-child(2) .header-label {
+  justify-content: flex-start;
+  padding-left: 0;
 }
 
-.insurance-container .filter-list div {
-  padding: 6px 8px;
-  cursor: pointer;
-  font-size: 13px;
-  border-radius: 4px;
-  color: #333;
-}
-
-.insurance-container .filter-list div:hover {
-  background: #e8f4ff;
-}
-
-/* =========================================================
-   RESPONSIVE
-========================================================= */
-@media (max-width: 768px) {
-  .insurance-container {
-    width: 100%;
-    padding: 10px;
-  }
-
-  .insurance-container .table-wrapper {
-    max-height: 400px;
-  }
-
-  .insurance-container .grid-header .cell,
-  .insurance-container .grid-body .cell {
-    padding: 8px;
-    font-size: 12px;
-  }
-
-  .insurance-container .form-grid {
-    grid-template-columns: 1fr;
-  }
-}
-/* =========================================================
-   EXCEL STYLE FILTER POPUP
-========================================================= */
-
+/* ================= EXCEL STYLE FILTER POPUP ================= */
 .insurance-container .excel-filter-popup {
-  position: absolute;
-  top: 100%;
-  left: 0;
+  position: absolute !important;
+  top: 100% !important;
+  left: 0 !important;
   width: 260px;
   background: #f3f3f3;
   border: 1px solid #bfbfbf;
-  z-index: 99999;
+  z-index: 999999 !important;
   box-shadow: 0 3px 10px rgba(0,0,0,0.2);
   padding: 0;
   border-radius: 2px;
   color: #222;
-}
-
-.insurance-container .excel-filter-item {
-  padding: 10px 14px;
-  font-size: 13px;
-  cursor: pointer;
-  background: #f3f3f3;
-  border-bottom: 1px solid #e2e2e2;
-  text-align: left;
-  color: #222;
-}
-
-.insurance-container .excel-filter-item:hover {
-  background: #dbe9f9;
-}
-
-.insurance-container .excel-filter-divider {
-  height: 1px;
-  background: #cfcfcf;
+  overflow: visible !important;
 }
 
 .insurance-container .excel-filter-search {
@@ -511,6 +361,7 @@
   font-size: 13px;
   outline: none;
   background: white;
+  box-sizing: border-box;
 }
 
 .insurance-container .excel-checkbox-list {
@@ -559,639 +410,100 @@
 .insurance-container .excel-cancel-btn:hover {
   background: #e6f0ff;
 }
+
+/* Status Classes */
+.status {
+  font-weight: 600;
+}
+
+.status.pending { color: #d88c00; }
+.status.approved { color: #1e8f32; }
+.status.rejected { color: #c62828; }
+
+/* Date Range Styling */
+.date-range {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: end;
+  gap: 10px;
+}
+
+.date-separator {
+  align-self: end;
+  padding-bottom: 10px;
+  font-weight: bold;
+  color: #555;
+}
+
 /* =========================================================
-   MOBILE FIX - INSURANCE TABLE + FILTER ALIGNMENT
+   MOBILE RESPONSIVE FIX
 ========================================================= */
+
 @media (max-width: 768px) {
-
-  /* =========================
-     CONTAINER
-  ========================= */
-  .insurance-container {
-    width: 100%;
-    padding: 10px 8px;
-    overflow-x: hidden;
+  .form-grid { 
+    grid-template-columns: 1fr; 
   }
-
-  /* =========================
-     FILTER SECTION ALIGN FIX
-  ========================= */
-  .insurance-container .filter-section {
-    display: grid !important;
-    grid-template-columns: 1fr 1fr;
-    gap: 8px;
-    align-items: center;
+  .filter-section { 
+    flex-direction: column; 
+    align-items: stretch; 
   }
-
-  .insurance-container .filter-section input,
-  .insurance-container .filter-section select,
-  .insurance-container .filter-section button {
-    width: 100%;
-    min-width: unset !important;
-    margin: 0;
-  }
-
-  /* make buttons proper */
-  .insurance-container .export-btn,
-  .insurance-container .new-claim-btn {
-    width: 100%;
-    justify-content: center;
-  }
-
-  /* =========================
-     TABLE WRAPPER
-  ========================= */
-  .insurance-container .table-wrapper {
-    width: 100%;
-    overflow-x: auto !important;
-    overflow-y: auto !important;
-
-    -webkit-overflow-scrolling: touch;
-
-    max-height: unset !important;
-    border-radius: 10px;
-  }
-
-  /* =========================
-     TABLE SIZE
-  ========================= */
-  .insurance-container .grid-table {
-    min-width: 950px !important;
-    width: max-content !important;
-  }
-
-  /* =========================
-     FROZEN COLUMN 1
-  ========================= */
- .insurance-container .col-1 {
-  width: 130px !important;
-  min-width: 130px !important;
-  max-width: 130px !important;
-}
-
-.insurance-container .col-2 {
-  left: 130px !important;
-
-  width: 180px !important;
-  min-width: 180px !important;
-  max-width: 180px !important;
-}
-
-  /* =========================
-     FROZEN COLUMN 2
-  ========================= */
-  .insurance-container .col-2 {
-    left: 75px !important;
-
-    width: 115px !important;
-    min-width: 115px !important;
-    max-width: 115px !important;
-
-    font-size: 11px !important;
-    padding: 8px 5px !important;
-  }
-
-  /* =========================
-     3RD COLUMN ONWARDS
-  ========================= */
-  .insurance-container .grid-header .cell:nth-child(n+3),
-  .insurance-container .grid-row .cell:nth-child(n+3) {
-    min-width: 115px !important;
-    width: 115px !important;
-
-    font-size: 11px !important;
-    padding: 8px 6px !important;
-  }
-
-  /* =========================
-     HEADER TEXT
-  ========================= */
-  .insurance-container .header-label {
-    gap: 3px;
-    font-size: 11px;
-  }
-
-  /* =========================
-     FILTER POPUP MOBILE
-  ========================= */
-  .insurance-container .excel-filter-popup,
-  .insurance-container .filter-popup {
-    width: 180px !important;
-    max-width: 180px !important;
-
-    left: 0 !important;
-    right: auto !important;
-  }
-
-  /* checkbox alignment */
-  .insurance-container .excel-checkbox-item {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-
-    font-size: 12px;
-    line-height: 1.3;
-  }
-
-  .insurance-container .excel-checkbox-item input {
-    margin: 0;
-    flex-shrink: 0;
-  }
-
-  /* =========================
-     DASHBOARD CARDS
-  ========================= */
-  .insurance-container .claim-dashboard {
+  .claim-dashboard {
     grid-template-columns: repeat(2, 1fr);
   }
 
-  /* =========================
-     FORM GRID
-  ========================= */
-  .insurance-container .form-grid {
-    grid-template-columns: 1fr !important;
+  /* prevent full page horizontal scroll */
+  html,
+  body {
+    overflow-x: hidden !important;
   }
 
-  /* prevent zigzag date row */
-  .insurance-container .date-range {
-    display: grid;
-    grid-template-columns: 1fr auto 1fr;
-    gap: 6px;
-    align-items: center;
-  }
-}
-/* =========================================================
-   MOBILE FILTER FULL VISIBILITY FIX
-========================================================= */
-@media (max-width: 768px) {
-
-  /* filter section full width */
-  .insurance-container .filter-section {
-    display: flex !important;
-    flex-direction: column !important;
-    align-items: stretch !important;
-    gap: 8px !important;
-
+  .insurance-container {
+    overflow-x: hidden;
     width: 100%;
-  }
-
-  /* every field visible */
-  .insurance-container .filter-section input,
-  .insurance-container .filter-section select,
-  .insurance-container .filter-section button {
-    width: 100% !important;
-    min-width: 100% !important;
-    max-width: 100% !important;
-
+    padding: 8px;
     box-sizing: border-box;
   }
 
-  /* fix date row */
-  .insurance-container .date-range {
-    display: flex !important;
-    width: 100%;
-    gap: 6px;
-    align-items: center;
-  }
-
-  .insurance-container .date-range input {
-    flex: 1;
-    min-width: 0;
-  }
-
-  /* export button visible */
-  .insurance-container .export-btn,
-  .insurance-container .new-claim-btn {
-    width: 100% !important;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-  }
-
-  /* prevent clipping */
-  .insurance-container {
-    overflow-x: hidden;
-  }
-}
-/* =========================================================
-   MOBILE FILTER DROPDOWN + DATE FIX
-========================================================= */
-@media (max-width: 768px) {
-
-  /* filter section should never overflow */
-  .insurance-container .filter-section {
-    overflow: visible !important;
-    position: relative;
-  }
-
-  /* fix all inputs/select widths */
-  .insurance-container .filter-section input,
-  .insurance-container .filter-section select {
-    width: 100% !important;
-    min-width: 0 !important;
-    max-width: 100% !important;
-  }
-
-  /* =========================
-     DATE RANGE FIX
-  ========================= */
-  .insurance-container .date-range {
-    display: grid !important;
-    grid-template-columns: 55px 1fr 30px 1fr !important;
-    align-items: center;
-    gap: 4px;
-
-    width: 100%;
-  }
-
-  .insurance-container .date-range input {
-    width: 100% !important;
-    min-width: 0 !important;
-  }
-
-  .insurance-container .date-separator {
-    text-align: center;
-    font-size: 12px;
-  }
-
-  /* =========================
-     STATUS DROPDOWN FIX
-  ========================= */
-  .insurance-container select {
-    position: relative;
-    z-index: 20;
-  }
-
-  /* native dropdown visible inside screen */
-  .insurance-container .filter-section,
-  .insurance-container .claim-form {
-    transform: translateZ(0);
-  }
-
-  /* prevent clipping */
-  .insurance-container,
-  .insurance-container .claim-form,
-  .insurance-container .table-wrapper {
-    overflow: visible !important;
-  }
-
-  /* extra spacing so dropdown not cut */
-  .insurance-container .filter-section {
-    padding-bottom: 14px;
-  }
-}
-/* =========================================================
-   MOBILE DATE RANGE PERFECT FIX
-========================================================= */
-@media (max-width: 768px) {
-
-  .insurance-container .date-range {
-    display: flex !important;
-    align-items: center;
-    gap: 4px;
-    width: 100%;
-  }
-
-  /* labels */
-  .insurance-container .date-range label,
-  .insurance-container .date-range span {
-    flex-shrink: 0;
-    font-size: 11px;
-  }
-
-  /* both date inputs */
-  .insurance-container .date-range input {
-    flex: 1 !important;
-    min-width: 0 !important;
-    width: auto !important;
-
-    padding: 6px 4px !important;
-    font-size: 11px !important;
-  }
-
-  /* separator */
-  .insurance-container .date-separator {
-    flex-shrink: 0;
-    font-size: 11px;
-  }
-}
-/* =========================================================
-   MOBILE FROM-TO DATE PERFECT INLINE FIX
-========================================================= */
-@media (max-width: 768px) {
-
-  /* date row */
-  .insurance-container .date-range {
-    display: flex !important;
-    align-items: center !important;
-    gap: 4px !important;
-    width: 100% !important;
-  }
-
-  /* FROM text */
-  .insurance-container .date-range label,
-  .insurance-container .date-range span,
-  .insurance-container .date-separator {
-    flex-shrink: 0 !important;
-    font-size: 10px !important;
-    white-space: nowrap;
-  }
-
-  /* BOTH DATE INPUTS */
-  .insurance-container .date-range input[type="date"] {
-    width: 78px !important;
-    min-width: 78px !important;
-    max-width: 78px !important;
-
-    padding: 4px 2px !important;
-    font-size: 10px !important;
-
-    box-sizing: border-box !important;
-  }
-
-  /* reduce calendar icon spacing */
-  .insurance-container .date-range input::-webkit-calendar-picker-indicator {
-    margin-left: 0 !important;
-    padding: 0 !important;
-  }
-}
-/* =========================================================
-   MOBILE EXPORT BUTTON SMALL RIGHT ALIGN FIX
-========================================================= */
-@media (max-width: 768px) {
-
-  .insurance-container .export-btn {
-    width: auto !important;
-    min-width: 110px !important;
-    max-width: 140px !important;
-
-    padding: 7px 12px !important;
-    font-size: 12px !important;
-
-    display: inline-flex !important;
-    justify-content: center;
-    align-items: center;
-
-    margin-left: auto !important;
-  }
-}
-/* =========================================================
-   FORCE FROM/TO INSIDE DATE INPUT - MOBILE ONLY
-========================================================= */
-@media (max-width: 768px) {
-
-  /* hide original labels */
-  .insurance-container .date-range label,
-  .insurance-container .date-separator {
-    display: none !important;
-  }
-
-  .insurance-container .date-range {
-    display: flex !important;
-    align-items: center !important;
-    gap: 4px !important;
-    width: 100% !important;
-  }
-
-  /* wrapper relative */
-  .insurance-container .date-range > div,
-  .insurance-container .date-range {
-    position: relative;
-  }
-
-  /* common date input */
-  .insurance-container .date-range input[type="date"] {
-    width: 82px !important;
-    min-width: 82px !important;
-    max-width: 82px !important;
-
-    padding-left: 24px !important;
-    padding-right: 4px !important;
-    padding-top: 4px !important;
-    padding-bottom: 4px !important;
-
-    font-size: 10px !important;
-    box-sizing: border-box !important;
-  }
-
-  /* FROM text */
-  .insurance-container .date-range input[type="date"]:first-of-type {
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg'/%3E");
-  }
-
-  .insurance-container .date-range input[type="date"]:first-of-type::before {
-    content: "From";
-  }
-
-  /* fake inline labels */
-  .insurance-container .date-range input[type="date"]:first-of-type {
-    position: relative;
-  }
-
-  .insurance-container .date-range input[type="date"]:last-of-type {
-    position: relative;
-  }
-
-  /* insert text visually */
-  .insurance-container .date-range {
-    --label-color: #666;
-  }
-
-  .insurance-container .date-range::before {
-    content: "From";
-    position: absolute;
-    left: 8px;
-    top: 50%;
-    transform: translateY(-50%);
-    font-size: 9px;
-    color: var(--label-color);
-    z-index: 2;
-    pointer-events: none;
-  }
-
-  .insurance-container .date-range::after {
-    content: "To";
-    position: absolute;
-    left: 96px;
-    top: 50%;
-    transform: translateY(-50%);
-    font-size: 9px;
-    color: var(--label-color);
-    z-index: 2;
-    pointer-events: none;
-  }
-}
-/* =========================================
-   FORCE MOBILE STICKY COLUMNS FIX
-========================================= */
-@media (max-width: 768px) {
-
-  .insurance-container .grid-header .col-1,
-  .insurance-container .grid-body .col-1 {
-    position: sticky !important;
-    left: 0 !important;
-    z-index: 9999 !important;
-    background: #fff !important;
-  }
-
-  .insurance-container .grid-header .col-1 {
-    background: #2c5f8d !important;
-  }
-
-  .insurance-container .grid-header .col-2,
-  .insurance-container .grid-body .col-2 {
-    position: sticky !important;
-    left: 75px !important;
-    z-index: 9999 !important;
-    background: #fff !important;
-  }
-
-  .insurance-container .grid-header .col-2 {
-    background: #2c5f8d !important;
-  }
-
+  /* ONLY table scrolls */
   .insurance-container .table-wrapper {
     overflow-x: auto !important;
-    position: relative !important;
-  }
-
-  .insurance-container .grid-table {
-    position: relative !important;
-  }
-}
-/* =========================================================
-   FORCE FIX - MOBILE STICKY FILTER POPUP
-========================================================= */
-
-@media (max-width: 768px) {
-
-  /* main wrapper should allow popup outside */
-  .insurance-container,
-  .insurance-container .table-wrapper,
-  .insurance-container .grid-table,
-  .insurance-container .grid-header,
-  .insurance-container .grid-row,
-  .insurance-container .cell {
-    overflow: visible !important;
-  }
-
-  /* IMPORTANT */
-  .insurance-container .grid-header .cell {
-    position: sticky !important;
-    z-index: 10 !important;
-  }
-
-  /* frozen columns lower */
-  .insurance-container .col-1,
-  .insurance-container .col-2 {
-    z-index: 11 !important;
-    overflow: visible !important;
-  }
-
-  /* active popup column highest */
-  .insurance-container .table-header-cell:has(.excel-filter-popup),
-  .insurance-container .table-header-cell:has(.filter-popup) {
-    z-index: 999999 !important;
-    overflow: visible !important;
-  }
-
-  /* popup itself */
-  .insurance-container .excel-filter-popup,
-  .insurance-container .filter-popup {
-    position: absolute !important;
-
-    top: 100% !important;
-    left: 0 !important;
-
-    width: 190px !important;
-    max-width: 190px !important;
-
-    z-index: 99999999 !important;
-
-    overflow: visible !important;
-
-    background: #f3f3f3 !important;
-
-    box-shadow: 0 4px 14px rgba(0,0,0,0.3) !important;
-  }
-
-  /* footer buttons */
-  .insurance-container .excel-filter-footer {
-    display: flex !important;
-    gap: 6px !important;
-    padding: 8px !important;
-  }
-
-  .insurance-container .excel-ok-btn,
-  .insurance-container .excel-cancel-btn {
-    flex: 1 !important;
-    min-width: 0 !important;
-    height: 30px !important;
-    font-size: 12px !important;
-  }
-
-  /* list scroll */
-  .insurance-container .excel-checkbox-list {
-    max-height: 180px !important;
     overflow-y: auto !important;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  /* STICKY COLUMN 1 SMALLER */
+  .insurance-container .claim-table th:nth-child(1),
+  .insurance-container .claim-table td:nth-child(1) {
+    min-width: 95px !important;
+    width: 95px !important;
+    max-width: 95px !important;
+    left: 0 !important;
+    font-size: 11px;
+    padding: 8px 6px !important;
+  }
+
+  /* STICKY COLUMN 2 SMALLER */
+  .insurance-container .claim-table th:nth-child(2),
+  .insurance-container .claim-table td:nth-child(2) {
+    min-width: 110px !important;
+    width: 110px !important;
+    max-width: 110px !important;
+    left: 95px !important;
+    font-size: 11px;
+    padding: 8px 6px !important;
+  }
+
+  /* 3RD COLUMN ONWARDS */
+  .insurance-container .claim-table th:nth-child(n+3),
+  .insurance-container .claim-table td:nth-child(n+3) {
+    min-width: 120px !important;
+    width: 120px !important;
+    font-size: 11px;
   }
 }
-/* First frozen column - Employee ID */
-.col-1 {
-  position: sticky;
-  left: 0;
-  min-width: 120px;
-  z-index: 30;
-  background: #fff;
-}
 
-/* Second frozen column - Employee Name */
-.col-2 {
-  position: sticky;
-  left: 120px;   /* same width as col-1 */
-  min-width: 180px;
-  z-index: 30;
-  background: #fff;
-}
-.grid-header .col-1,
-.grid-header .col-2 {
-  position: sticky;
-  background: #2f6699;   /* your header color */
-  z-index: 100;
-}
-/* =========================================================
-   FINAL FREEZE HEADER + 2 COLUMNS
-========================================================= */
-
-.insurance-container .grid-header .cell {
-  position: sticky !important;
-  top: 0 !important;
-  z-index: 500 !important;
-  background: #2c5f8d !important;
-}
-
-/* Employee ID */
-.insurance-container .grid-header .col-1 {
-  left: 0 !important;
-  z-index: 700 !important;
-}
-
-.insurance-container .grid-body .col-1 {
-  position: sticky !important;
-  left: 0 !important;
-  background: #fff !important;
-  z-index: 100 !important;
-}
-
-/* Employee Name */
-.insurance-container .grid-header .col-2 {
-  left: 180px !important;
-  z-index: 700 !important;
-}
-
-.insurance-container .grid-body .col-2 {
-  position: sticky !important;
-  left: 180px !important;
-  background: #fff !important;
-  z-index: 100 !important;
+@media (max-width: 480px) {
+  .claim-dashboard {
+    grid-template-columns: 1fr;
+  }
 }

@@ -82,6 +82,13 @@ public class TaskService {
         if (updated.getRejectReason() != null) {
             existing.setRejectReason(updated.getRejectReason());
         }
+        if (updated.getAttachmentUrl() != null) {
+    existing.setAttachmentUrl(updated.getAttachmentUrl());
+}
+
+if (updated.getAttachmentName() != null) {
+    existing.setAttachmentName(updated.getAttachmentName());
+}
         if (updated.getTitle() != null) existing.setTitle(updated.getTitle());
         if (updated.getDescription() != null) existing.setDescription(updated.getDescription());
         if (updated.getPriority() != null) existing.setPriority(updated.getPriority());

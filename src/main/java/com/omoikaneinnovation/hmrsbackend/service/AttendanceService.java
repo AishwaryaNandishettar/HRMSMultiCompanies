@@ -46,10 +46,18 @@ private RestTemplate restTemplate;
 
             // Normalize userId: if it looks like an email, find the user and get their ID
             String normalizedUserId = userId;
+            User currentUser = null;
             if (userId != null && userId.contains("@")) {
                 Optional<User> userOpt = userRepo.findByEmail(userId);
                 if (userOpt.isPresent()) {
-                    normalizedUserId = userOpt.get().getId();
+                    currentUser = userOpt.get();
+                    normalizedUserId = currentUser.getId();
+                }
+            } else {
+                // If userId is not email, try to find user by ID
+                Optional<User> userOpt = userRepo.findById(normalizedUserId);
+                if (userOpt.isPresent()) {
+                    currentUser = userOpt.get();
                 }
             }
 
@@ -70,9 +78,6 @@ private RestTemplate restTemplate;
                 attendance.setName(payload.get("name"));
                 attendance.setDepartment(payload.get("department"));
                 attendance.setLocationIn(payload.get("locationIn"));
-                attendance.setReportingManager(payload.get("reportingManager"));
-                attendance.setManagerId(payload.get("managerId"));
-                attendance.setManagerEmail(payload.get("managerEmail"));
                 attendance.setTos(payload.get("tos"));
                 attendance.setAttendanceType(payload.get("attendanceType") != null ? payload.get("attendanceType") : "Office");
                 attendance.setStatus(payload.get("status") != null ? payload.get("status") : "Pending Approval");
@@ -83,6 +88,30 @@ private RestTemplate restTemplate;
                     int hour = Integer.parseInt(checkInTime.split(":")[0]);
                     attendance.setLate(hour > 9 ? "Yes" : "No");
                 }
+            }
+            
+            // ✅ FIX: Always fetch and set current manager information from User table
+            if (currentUser != null) {
+                // Use current manager info from User table (this ensures updated managers are reflected)
+                if (currentUser.getManagerEmail() != null) {
+                    attendance.setManagerEmail(currentUser.getManagerEmail());
+                }
+                if (currentUser.getManagerName() != null) {
+                    attendance.setReportingManager(currentUser.getManagerName());
+                }
+                if (currentUser.getManagerId() != null) {
+                    attendance.setManagerId(currentUser.getManagerId());
+                }
+                
+                System.out.println("✅ Check-in: Set manager info from User table - " +
+                    "Manager: " + currentUser.getManagerName() + 
+                    " (" + currentUser.getManagerEmail() + ") for user: " + currentUser.getEmail());
+            } else {
+                // Fallback: use payload manager info if User not found
+                attendance.setReportingManager(payload != null ? payload.get("reportingManager") : null);
+                attendance.setManagerId(payload != null ? payload.get("managerId") : null);
+                attendance.setManagerEmail(payload != null ? payload.get("managerEmail") : null);
+                System.out.println("⚠️ Check-in: User not found, using payload manager info (may be outdated)");
             }
 
             attendanceRepo.save(attendance);

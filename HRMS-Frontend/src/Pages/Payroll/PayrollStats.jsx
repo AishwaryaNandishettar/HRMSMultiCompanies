@@ -13,26 +13,27 @@ const PayrollStats = ({
 }) => {
   return (
     <div className="kpi-row">
+
       {/* TOTAL SALARY */}
       <div className="kpi-card blue">
         <div className="kpi-content">
           <p className="kpi-title">Total Salary</p>
           <h2 className="kpi-value">
-  ₹ {totalPayroll?.toLocaleString() || 0}
-</h2>
+            ₹ {(totalPayroll || 0).toLocaleString()}
+          </h2>
         </div>
         <div className="kpi-icon">
           <FaMoneyBillWave />
         </div>
       </div>
 
-      {/* TOTAL DEDUCTIONS */}
+      {/* TOTAL DEDUCTIONS — always positive, no minus sign */}
       <div className="kpi-card red">
         <div className="kpi-content">
           <p className="kpi-title">Total Deductions</p>
-     <h2 className="kpi-value">
-  -₹ {totalDeductions?.toLocaleString() || 0}
-</h2>
+          <h2 className="kpi-value">
+            ₹ {(totalDeductions || 0).toLocaleString()}
+          </h2>
         </div>
         <div className="kpi-icon">
           <FaMinusCircle />
@@ -43,14 +44,15 @@ const PayrollStats = ({
       <div className="kpi-card green">
         <div className="kpi-content">
           <p className="kpi-title">Total Net Pay</p>
-        <h2 className="kpi-value">
-  ₹ {totalNetPay?.toLocaleString() || 0}
-</h2>
+          <h2 className="kpi-value">
+            ₹ {(totalNetPay || 0).toLocaleString()}
+          </h2>
         </div>
         <div className="kpi-icon">
           <FaWallet />
         </div>
       </div>
+
     </div>
   );
 };

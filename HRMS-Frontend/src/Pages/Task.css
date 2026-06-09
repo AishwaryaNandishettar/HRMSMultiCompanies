@@ -10,7 +10,8 @@
 
   font-family: Arial, sans-serif;
 
-  overflow: hidden;
+  overflow-x: hidden;
+  overflow-y: auto;
   box-sizing: border-box;
 }
 
@@ -149,7 +150,8 @@
 
 .taskPage-tableWrapper {
   width: 100%;
-  height: calc(100vh - 280px);
+  height: calc(100vh - 320px);
+  min-height: 300px;
 
   overflow: auto;
   position: relative;
@@ -161,6 +163,7 @@
   overscroll-behavior: contain;
 
   isolation: isolate;
+  padding-bottom: 2px;
 }
 
 /* Scrollbar styling */
@@ -208,6 +211,17 @@
   display: table-row-group !important;
 }
 
+/* Ensure last row is fully visible */
+.taskPage-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.taskPage-table::after {
+  content: "";
+  display: block;
+  height: 8px;
+}
+
 .taskPage-table tr {
   display: table-row !important;
 }
@@ -246,7 +260,7 @@
 ========================================================= */
 
 .taskPage-table {
-  min-width: 2200px;
+  min-width: 1400px;
   width: max-content;
 
   border-collapse: separate;
@@ -389,8 +403,8 @@
 ========================================================= */
 .taskPage-table th:nth-child(n+3),
 .taskPage-table td:nth-child(n+3) {
-  min-width: 160px;
-  width: 160px;
+  min-width: 130px;
+  width: 130px;
 }
 /* =========================================================
    MAINTAIN BACKGROUND ON HOVER FOR FROZEN COLUMNS

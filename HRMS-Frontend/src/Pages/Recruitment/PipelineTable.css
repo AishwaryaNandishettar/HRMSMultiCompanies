@@ -93,12 +93,12 @@
 
 .stat.yellow {
   background: linear-gradient(135deg, #fbbf24, #f59e0b);
-  color: #1f2937; /* 👈 improves readability */
+  color: #ffffff;
 }
 
 .stat.yellow span,
 .stat.yellow strong {
-  color: #1f2937;
+  color: #ffffff;
 }
 
 .stat.orange {
@@ -189,11 +189,21 @@
   padding: 14px;
   font-size: 14px;
   color: white;
+  border-left: 1px solid #374151;
+}
+
+.recruitment-table th:first-child {
+  border-left: none;
 }
 
 .recruitment-table td {
   padding: 14px;
   border-top: 1px solid var(--border-color);
+  border-left: 1px solid var(--border-color);
+}
+
+.recruitment-table td:first-child {
+  border-left: none;
 }
 
 .recruitment-table tr:hover {

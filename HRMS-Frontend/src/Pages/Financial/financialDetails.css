@@ -29,3 +29,22 @@ td {
 tr:hover {
   background: #f1f5f9;
 }
+.fd-header{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  margin-bottom:20px;
+}
+
+.fd-header input{
+  padding:8px;
+  border:1px solid #ddd;
+  border-radius:6px;
+  cursor:pointer;
+}
+.fd-header{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  margin-bottom:20px;
+}

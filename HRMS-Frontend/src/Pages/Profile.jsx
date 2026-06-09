@@ -730,6 +730,12 @@ useEffect(() => {
             onChange={(e)=>setPersonalEdit({...personalEdit, name:e.target.value})}
           />
 
+          <input
+            type="date"
+            placeholder="Date of Birth"
+            value={personalEdit.dob}
+            onChange={(e)=>setPersonalEdit({...personalEdit, dob:e.target.value})}
+          />
         
           <input
             placeholder="Email"
@@ -1080,7 +1086,7 @@ useEffect(() => {
     {role === "ADMIN" && (
   <button
     className={styles.editBtn}
-    onClick={() => setShowEditModal(true)}
+    onClick={() => setShowJobModal(true)}
   >
     Edit
   </button>

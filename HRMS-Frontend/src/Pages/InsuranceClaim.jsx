@@ -3,151 +3,23 @@ import React, { useState, useContext, useEffect, useRef } from "react";
 import { AuthContext } from "../Context/Authcontext";
 import "./InsuranceClaim.css";
 import { createClaim, getClaims, updateClaimStatus, updateApprovedAmount } from "../api/insuranceApi";
-import jsPDF from "jspdf";
+
 
 const InsuranceClaim = () => {
   const { user } = useContext(AuthContext);
   console.log("LOGGED USER:", user);
   console.log("ROLE FROM BACKEND:", user?.role);
 
-  useEffect(() => {
-    fetchClaims();
-  }, []);
-
-useEffect(() => {
-  const handleClick = (e) => {
-    if (popupRef.current && !popupRef.current.contains(e.target)) {
-      setActiveFilter(null);
-      setFilterText("");
-    }
-  };
-
-  document.addEventListener("mousedown", handleClick);
-  return () => document.removeEventListener("mousedown", handleClick);
-}, []);
-
-  const ROLE_EMP = "employee";
-  const ROLE_ADMIN = "admin";
-
-  const fetchClaims = async () => {
-    const data = await getClaims();
-    console.log("API DATA:", data);
-    setClaims([...data]);
-  };
-
   const [showForm, setShowForm] = useState(false);
   const [activeFilter, setActiveFilter] = useState(null);
   const [filterText, setFilterText] = useState("");
   const popupRef = useRef();
   const [claims, setClaims] = useState([]);
-const [selectedFilterValues, setSelectedFilterValues] = useState({});
-const [sortConfig, setSortConfig] = useState({
-  key: "",
-  direction: ""
-});
- const getUnique = (key) => {
-  return [
-    ...new Set(
-      claims
-        .map((r) => {
-          const value =
-  r?.[key] ??
-  r?.[normalizeKey(key)] ??
-  "";
-          return value ?? "";
-        })
-        .filter((v) => v !== null && v !== undefined && v !== "")
-    )
-  ];
-};
-
-const handleCheckboxChange = (column, value) => {
-  setSelectedFilterValues((prev) => {
-    const current = prev[column] || [];
-
-    if (current.includes(value)) {
-      return {
-        ...prev,
-        [column]: current.filter((v) => v !== value)
-      };
-    }
-
-    return {
-      ...prev,
-      [column]: [...current, value]
-    };
+  const [selectedFilterValues, setSelectedFilterValues] = useState({});
+  const [sortConfig, setSortConfig] = useState({
+    key: "",
+    direction: ""
   });
-};
-
-const handleSelectAll = (column, values) => {
-  setSelectedFilterValues((prev) => ({
-    ...prev,
-    [column]: [...values]
-  }));
-};
-
-const applyExcelFilter = (column) => {
-  const values = selectedFilterValues[column] || [];
-
-  setFilters({
-    ...filters,
-    [column]: values
-  });
-
-  setActiveFilter(null);
-};
-
-const clearExcelFilter = (column) => {
-  setFilters({
-    ...filters,
-    [column]: []
-  });
-
-  setSelectedFilterValues({
-    ...selectedFilterValues,
-    [column]: []
-  });
-};
-
-const sortColumn = (key, direction) => {
-  setSortConfig({ key, direction });
-
-  const sorted = [...claims].sort((a, b) => {
-    const valA = String(a[key] || "").toLowerCase();
-    const valB = String(b[key] || "").toLowerCase();
-
-    if (direction === "asc") {
-      return valA.localeCompare(valB);
-    }
-
-    return valB.localeCompare(valA);
-  });
-
-  setClaims(sorted);
-};
-  const [role, setRole] = useState("");
-
-  useEffect(() => {
-    if (user?.role) {
-      setRole((user.role || "").toLowerCase());
-      // Pre-fill employee data for employees
-      if ((user.role || "").toLowerCase() === "employee") {
-        setFormData(prev => ({
-          ...prev,
-          employeeName: user?.email || "",
-          employeeCode: user?.employeeCode || "",
-          department: user?.department || ""
-        }));
-      }
-    }
-  }, [user]);
-
- const suggestions =
-  activeFilter
-    ? getUnique(activeFilter).filter((v) =>
-        String(v).toLowerCase().includes(filterText.toLowerCase())
-      )
-    : [];
 
   const [fromMonth, setFromMonth] = useState("");
   const [toMonth, setToMonth] = useState("");
@@ -173,6 +45,132 @@ const sortColumn = (key, direction) => {
   });
 
   const [filters, setFilters] = useState({});
+  const [role, setRole] = useState("");
+
+  useEffect(() => {
+    fetchClaims();
+  }, []);
+
+  useEffect(() => {
+    const handleClick = (e) => {
+      if (popupRef.current && !popupRef.current.contains(e.target)) {
+        setActiveFilter(null);
+        setFilterText("");
+      }
+    };
+
+    document.addEventListener("mousedown", handleClick);
+    return () => document.removeEventListener("mousedown", handleClick);
+  }, []);
+
+  useEffect(() => {
+    if (user?.role) {
+      setRole((user.role || "").toLowerCase());
+      // Pre-fill employee data for employees
+      if ((user.role || "").toLowerCase() === "employee") {
+        setFormData(prev => ({
+          ...prev,
+          employeeName: user?.email || "",
+          employeeCode: user?.employeeCode || "",
+          department: user?.department || ""
+        }));
+      }
+    }
+  }, [user]);
+
+  const ROLE_EMP = "employee";
+  const ROLE_ADMIN = "admin";
+
+  const fetchClaims = async () => {
+    const data = await getClaims();
+    console.log("API DATA:", data);
+    setClaims([...data]);
+  };
+
+  const getUnique = (key) => {
+    return [
+      ...new Set(
+        claims
+          .map((r) => {
+            const value = r?.[key];
+            return value ?? "";
+          })
+          .filter((v) => v !== null && v !== undefined && v !== "")
+      )
+    ];
+  };
+
+  const handleCheckboxChange = (column, value) => {
+    setSelectedFilterValues((prev) => {
+      const current = prev[column] || [];
+
+      if (current.includes(value)) {
+        return {
+          ...prev,
+          [column]: current.filter((v) => v !== value)
+        };
+      }
+
+      return {
+        ...prev,
+        [column]: [...current, value]
+      };
+    });
+  };
+
+  const handleSelectAll = (column, values) => {
+    setSelectedFilterValues((prev) => ({
+      ...prev,
+      [column]: [...values]
+    }));
+  };
+
+  const applyExcelFilter = (column) => {
+    const values = selectedFilterValues[column] || [];
+
+    setFilters({
+      ...filters,
+      [column]: values
+    });
+
+    setActiveFilter(null);
+  };
+
+  const clearExcelFilter = (column) => {
+    setFilters({
+      ...filters,
+      [column]: []
+    });
+
+    setSelectedFilterValues({
+      ...selectedFilterValues,
+      [column]: []
+    });
+  };
+
+  const sortColumn = (key, direction) => {
+    setSortConfig({ key, direction });
+
+    const sorted = [...claims].sort((a, b) => {
+      const valA = String(a[key] || "").toLowerCase();
+      const valB = String(b[key] || "").toLowerCase();
+
+      if (direction === "asc") {
+        return valA.localeCompare(valB);
+      }
+
+      return valB.localeCompare(valA);
+    });
+
+    setClaims(sorted);
+  };
+
+  const suggestions =
+    activeFilter
+      ? getUnique(activeFilter).filter((v) =>
+          String(v).toLowerCase().includes(filterText.toLowerCase())
+        )
+      : [];
 
   const handleInput = (e) => {
     if (e.target.name === "documents") {
@@ -208,20 +206,6 @@ const sortColumn = (key, direction) => {
     a.href = url;
     a.download = "insurance_claims.csv";
     a.click();
-  };
-
-  const exportToPDF = () => {
-    const doc = new jsPDF();
-    let y = 10;
-    filteredClaims.forEach((c, i) => {
-      doc.text(
-        `${i + 1}. ${c.employeeName} - ₹${c.amount} - ${c.status}`,
-        10,
-        y
-      );
-      y += 10;
-    });
-    doc.save("claims.pdf");
   };
 
   const handleSubmit = async (e) => {
@@ -277,70 +261,56 @@ const sortColumn = (key, direction) => {
     fetchClaims();
   };
 
-  // ✅ TIMELINE LOGIC
-  const getTimeline = (status) => {
-    const stages = [
-      "Submitted",
-      "Manager Approved",
-      "HR Approved",
-      "Insurance Approved",
-      "Settled",
-    ];
-    const currentIndex = stages.indexOf(status);
-
-    return stages.map((stage, index) => ({
-      stage,
-      completed: index <= currentIndex,
-    }));
-  };
   const normalizeKey = (key) => key?.toLowerCase();
 
-
-
   const filteredClaims = claims.filter((claim) => {
-  // ROLE FILTER
- if (role === ROLE_EMP && user?.employeeCode !== claim.employeeCode) {
-  return false;
-}
+    // ROLE FILTER
+    if (role === ROLE_EMP && user?.empCode !== claim.empCode) {
+      return false;
+    }
 
-  if (role === ROLE_ADMIN) {
-  const allowed = [
-    "SUBMITTED",
-    "MANAGER_APPROVED",
-    "REJECTED",
-    "INSURANCE_APPROVED",
-    "SETTLED"
-  ];
+    if (role === ROLE_ADMIN) {
+      const allowed = [
+        "MANAGER_APPROVED",
+        "REJECTED",
+        "INSURANCE_APPROVED",
+        "SETTLED"
+      ];
 
-  const status = (claim.status || "").toUpperCase();
+      const status = (claim.status || "").toUpperCase();
+      if (!allowed.includes(status)) return false;
+    }
 
-  if (!allowed.includes(status)) {
-    return false;
-  }
-}
-  // COLUMN FILTERS (HEADER DROPDOWN FILTERS)
-  return Object.keys(filters).every((key) => {
-    if (
-  !filters[key] ||
-  (Array.isArray(filters[key]) && filters[key].length === 0)
-) {
-  return true;
-}
+    if (fromMonth && toMonth) {
+      const claimMonth = claim.fromDate
+        ? claim.fromDate.substring(0, 7)
+        : "";
 
-const value =
-  claim?.[key] ??
-  claim?.[normalizeKey(key)] ??
-  "";
+      if (claimMonth < fromMonth || claimMonth > toMonth) {
+        return false;
+      }
+    }
 
-if (Array.isArray(filters[key])) {
-return filters[key].includes(String(value));
-}
+    // COLUMN FILTERS (HEADER DROPDOWN FILTERS)
+    return Object.keys(filters).every((key) => {
+      if (
+        !filters[key] ||
+        (Array.isArray(filters[key]) && filters[key].length === 0)
+      ) {
+        return true;
+      }
 
-return String(value ?? "")
-  .toLowerCase()
-  .includes(String(filters[key]).toLowerCase());
+      const value = claim?.[key] ?? claim?.[normalizeKey(key)];
+
+      if (Array.isArray(filters[key])) {
+        return filters[key].includes(value);
+      }
+
+      return String(value ?? "")
+        .toLowerCase()
+        .includes(String(filters[key]).toLowerCase());
+    });
   });
-});
   return (
     <div className="insurance-container">
       <h2>Insurance Claim Management</h2>
@@ -354,13 +324,13 @@ return String(value ?? "")
 
         <div className="card approved" style={{ color: "white" }}>
           <h4>Approved</h4>
-          <p>{claims.filter(c => c.status === "INSURANCE_APPROVED" || c.status === "Settled").length}</p>
+          <p>{claims.filter(c => c.status === "Insurance Approved" || c.status === "Settled").length}</p>
         </div>
 
         <div className="card pending">
           <h4>Pending</h4>
           <p>{claims.filter(c =>
-            ["Submitted", "MANAGER_APPROVED"].includes(c.status)
+            ["Submitted", "Manager Approved"].includes(c.status)
           ).length}</p>
         </div>
 
@@ -426,26 +396,6 @@ return String(value ?? "")
             )}
           </select>
 
-          {(filters.employeeName || filters.department || filters.status || fromMonth || toMonth || 
-            Object.keys(filters).some(key => Array.isArray(filters[key]) && filters[key].length > 0)) && (
-            <button
-              onClick={() => {
-                setFilters({});
-                setFromMonth("");
-                setToMonth("");
-              }}
-              style={{
-                padding: "6px 12px",
-                borderRadius: "6px",
-                border: "1px solid #ccc",
-                cursor: "pointer",
-                background: "#f5f5f5"
-              }}
-            >
-              Clear Filters
-            </button>
-          )}
-
           {(role === ROLE_ADMIN || role === ROLE_EMP) && (
             <button className="new-claim-btn" onClick={() => setShowForm(!showForm)}>
               + New Claim
@@ -472,6 +422,9 @@ return String(value ?? "")
                 <option value="Wife">Wife</option>
                 <option value="Husband">Husband</option>
                 <option value="Brother">Brother</option>
+                <option value="Sister">Sister</option>
+                <option value="Son">Son</option>
+                <option value="Daughter">Daughter</option>
                 <option value="Other">Other</option>
               </select>
               <select name="claimType" onChange={handleInput} required>
@@ -577,325 +530,152 @@ return String(value ?? "")
         </div>
       )}
 
-      {/* TABLE */}
+      {/* TABLE - PROPER STRUCTURE LIKE REIMBURSEMENT */}
       <div className="table-wrapper">
-<div className="grid-table">
+        <table className="claim-table">
+          <thead>
+            <tr>
+              {[
+                { label: "Employee ID", key: "id" },
+                { label: "Employee Name", key: "employeeName" },
+                { label: "Reporting Manager", key: "managerName" },
+                { label: "Emp Code", key: "employeeCode" },
+                { label: "Claim Type", key: "claimType" },
+                { label: "Claim Raised Date", key: "fromDate" },
+                { label: "Claim Settled Date", key: "claimSettledDate" },
+                { label: "Admitted Days", key: "admittedDays" },
+                { label: "Claim Amount", key: "amount" },
+                { label: "Approved Amount", key: "approvedAmount" },
+                { label: "Status", key: "status" }
+              ].map(col => (
+                <th
+                  key={col.key}
+                  className="table-header-cell"
+                  onClick={() => {
+                    setActiveFilter(col.key);
+                    setFilterText("");
+                  }}
+                >
+                  <span className="header-label">
+                    {col.label} ⏷
+                  </span>
 
-  {/* HEADER */}
-  <div className="grid-header">
-    <div className="cell sticky col-1 table-header-cell" onClick={() => { setActiveFilter("id"); setFilterText(""); }}>
-      <span className="header-label">Employee ID ⏷</span>
-   {activeFilter === "id" && (
-  <div className="excel-filter-popup" ref={popupRef}>
+                  {activeFilter === col.key && (
+                    <div className="excel-filter-popup" ref={popupRef}>
+                      <input
+                        type="text"
+                        className="excel-filter-search"
+                        placeholder="Search"
+                        value={filterText}
+                        onChange={(e) => setFilterText(e.target.value)}
+                        onClick={(e) => e.stopPropagation()}
+                      />
 
-  
+                      <div className="excel-checkbox-list">
+                        <label className="excel-checkbox-item">
+                          <input
+                            type="checkbox"
+                            checked={
+                              (selectedFilterValues[col.key] || []).length ===
+                              getUnique(col.key).length
+                            }
+                            onChange={() =>
+                              handleSelectAll(col.key, getUnique(col.key))
+                            }
+                          />
+                          (Select All)
+                        </label>
 
-    <div className="excel-filter-divider"></div>
+                        {getUnique(col.key)
+                          .filter((v) =>
+                            String(v)
+                              .toLowerCase()
+                              .includes(filterText.toLowerCase())
+                          )
+                          .map((val, i) => (
+                            <label
+                              key={i}
+                              className="excel-checkbox-item"
+                            >
+                              <input
+                                type="checkbox"
+                                checked={
+                                  selectedFilterValues[col.key]?.includes(val) ||
+                                  false
+                                }
+                                onChange={() =>
+                                  handleCheckboxChange(col.key, val)
+                                }
+                              />
+                              {val || "Empty"}
+                            </label>
+                          ))}
+                      </div>
 
-    <input
-      type="text"
-      placeholder="Search"
-      value={filterText}
-      onChange={(e) => setFilterText(e.target.value)}
-      className="excel-filter-search"
-    />
+                      <div className="excel-filter-footer">
+                        <button
+                          className="excel-ok-btn"
+                          onClick={() => applyExcelFilter(col.key)}
+                        >
+                          OK
+                        </button>
 
-    <div className="excel-checkbox-list">
+                        <button
+                          className="excel-cancel-btn"
+                          onClick={() => {
+                            clearExcelFilter(col.key);
+                            setActiveFilter(null);
+                          }}
+                        >
+                          Cancel
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                </th>
+              ))}
 
-      <label className="excel-checkbox-item">
-        <input
-          type="checkbox"
-          checked={
-            (selectedFilterValues["id"] || []).length ===
-            getUnique("id").length
-          }
-          onChange={() =>
-            handleSelectAll("id", getUnique("id"))
-          }
-        />
-        (Select All)
-      </label>
+              {role === ROLE_ADMIN && <th>Action</th>}
+            </tr>
+          </thead>
 
-      {getUnique("id")
-        .filter((v) =>
-          String(v)
-            .toLowerCase()
-            .includes(filterText.toLowerCase())
-        )
-        .map((val, i) => (
-          <label
-            key={i}
-            className="excel-checkbox-item"
-          >
-            <input
-              type="checkbox"
-              checked={
-                selectedFilterValues["id"]?.includes(val) ||
-                false
-              }
-              onChange={() =>
-                handleCheckboxChange("id", val)
-              }
-            />
-            {val || "Empty"}
-          </label>
-        ))}
-    </div>
+          <tbody>
+            {filteredClaims.map(c => (
+              <tr key={c.id}>
+                <td>{c.id}</td>
+                <td>{c.employeeName}</td>
+                <td>{c.managerName || 'N/A'}</td>
+                <td>{c.employeeCode}</td>
+                <td>{c.claimType}</td>
+                <td>{c.fromDate}</td>
+                <td>{c.claimSettledDate || '-'}</td>
+                <td>{c.admittedDays}</td>
+                <td>₹{c.amount}</td>
+                <td>{c.approvedAmount ? `₹${c.approvedAmount}` : '-'}</td>
+                <td>{c.status}</td>
 
-    <div className="excel-filter-footer">
-      <button
-        className="excel-ok-btn"
-        onClick={() => applyExcelFilter("id")}
-      >
-        OK
-      </button>
-
-      <button
-        className="excel-cancel-btn"
-        onClick={() => {
-          clearExcelFilter("id");
-          setActiveFilter(null);
-        }}
-      >
-        Cancel
-      </button>
-    </div>
-
-  </div>
-)}
-    </div>
-    
-    <div className="cell sticky col-2 table-header-cell" onClick={() => { setActiveFilter("employeeName"); setFilterText(""); }}>
-      <span className="header-label">Employee Name ⏷</span>
-    {activeFilter === "employeeName" && (
-  <div className="excel-filter-popup" ref={popupRef}>
-
-   
-
-    <div className="excel-filter-divider"></div>
-
-    <input
-      type="text"
-      placeholder="Search"
-      value={filterText}
-      onChange={(e) => setFilterText(e.target.value)}
-      className="excel-filter-search"
-    />
-
-    <div className="excel-checkbox-list">
-
-      <label className="excel-checkbox-item">
-        <input
-          type="checkbox"
-          checked={
-            (selectedFilterValues["employeeName"] || []).length ===
-            getUnique("employeeName").length
-          }
-          onChange={() =>
-            handleSelectAll(
-              "employeeName",
-              getUnique("employeeName")
-            )
-          }
-        />
-        (Select All)
-      </label>
-
-      {getUnique("employeeName")
-        .filter((v) =>
-          String(v)
-            .toLowerCase()
-            .includes(filterText.toLowerCase())
-        )
-        .map((val, i) => (
-          <label
-            key={i}
-            className="excel-checkbox-item"
-          >
-            <input
-              type="checkbox"
-              checked={
-                selectedFilterValues["employeeName"]?.includes(val) ||
-                false
-              }
-              onChange={() =>
-                handleCheckboxChange("employeeName", val)
-              }
-            />
-            {val || "Empty"}
-          </label>
-        ))}
-    </div>
-
-    <div className="excel-filter-footer">
-      <button
-        className="excel-ok-btn"
-        onClick={() => applyExcelFilter("employeeName")}
-      >
-        OK
-      </button>
-
-      <button
-        className="excel-cancel-btn"
-        onClick={() => {
-          clearExcelFilter("employeeName");
-          setActiveFilter(null);
-        }}
-      >
-        Cancel
-      </button>
-    </div>
-
-  </div>
-)}
-    </div>
-    
-    <div className="cell table-header-cell department-header" onClick={() => { setActiveFilter("department"); setFilterText(""); }}>
-      <span className="header-label">Department ⏷</span>
-      {activeFilter === "department" && (
-        <div className="filter-popup" ref={popupRef}>
-          <input type="text" placeholder="Search..." value={filterText} onChange={(e) => setFilterText(e.target.value)} />
-          <div className="filter-list">
-            {getUnique("department").filter((v) => String(v).toLowerCase().includes(filterText.toLowerCase())).map((val, i) => (
-              <div key={i} onClick={() => { setFilters({ ...filters, department: val }); setActiveFilter(null); setFilterText(""); }}>
-                {val || "Empty"}
-              </div>
+                {role === ROLE_ADMIN && (
+                  <td>
+                    <select onChange={(e) => updateStatus(c.id, e.target.value)}>
+                      <option value="SUBMITTED">Submitted</option>
+                      <option value="MANAGER_APPROVED">Manager Approved</option>
+                      <option value="HR_APPROVED">HR Approved</option>
+                      <option value="INSURANCE_APPROVED">Insurance Approved</option>
+                      <option value="SETTLED">Settled</option>
+                      <option value="REJECTED">Rejected</option>
+                    </select>
+                    <input
+                      type="number"
+                      placeholder="Approved Amount"
+                      onChange={(e) => updateApprovedAmountHandler(c.id, e.target.value)}
+                      style={{ marginLeft: '10px', width: '120px' }}
+                    />
+                  </td>
+                )}
+              </tr>
             ))}
-          </div>
-        </div>
-      )}
-    </div>
-    
-    {[
-      { label: "Reporting Manager", key: "managerName" },
-      { label: "Emp Code", key: "employeeCode" },
-      { label: "Claim Type", key: "claimType" },
-      { label: "Claim Raised Date", key: "fromDate" },
-      { label: "Claim Settled Date", key: "claimSettledDate" },
-      { label: "Admitted Days", key: "admittedDays" },
-      { label: "Claim Amount", key: "amount" },
-      { label: "Approved Amount", key: "approvedAmount" },
-      { label: "Status", key: "status" }
-    ].map((col, index) => (
-      <div 
-        key={col.key} 
-        className="cell table-header-cell"
-        onClick={() => {
-          setActiveFilter(col.key);
-          setFilterText("");
-        }}
-      >
-        <span className="header-label">
-          {col.label} ⏷
-        </span>
-
-{activeFilter === col.key && (
-  <div className="excel-filter-popup" ref={popupRef}>
-
-    
-
-    
-
-    <div className="excel-filter-divider"></div>
-
-    <input
-      type="text"
-      placeholder="Search"
-      value={filterText}
-      onChange={(e) => setFilterText(e.target.value)}
-      className="excel-filter-search"
-    />
-
-    <div className="excel-checkbox-list">
-
-      <label className="excel-checkbox-item">
-        <input
-          type="checkbox"
-          checked={
-            (selectedFilterValues[col.key] || []).length ===
-            getUnique(col.key).length
-          }
-          onChange={() =>
-            handleSelectAll(col.key, getUnique(col.key))
-          }
-        />
-        (Select All)
-      </label>
-
-      {getUnique(col.key)
-        .filter((v) =>
-          String(v)
-            .toLowerCase()
-            .includes(filterText.toLowerCase())
-        )
-        .map((val, i) => (
-          <label
-            key={i}
-            className="excel-checkbox-item"
-          >
-            <input
-              type="checkbox"
-              checked={
-                selectedFilterValues[col.key]?.includes(String(val))||
-                false
-              }
-              onChange={() =>
-                handleCheckboxChange(col.key, String(val))
-              }
-            />
-            {val || "Empty"}
-          </label>
-        ))}
-    </div>
-
-    <div className="excel-filter-footer">
-      <button
-        className="excel-ok-btn"
-        onClick={() => applyExcelFilter(col.key)}
-      >
-        OK
-      </button>
-
-      <button
-        className="excel-cancel-btn"
-        onClick={() => {
-          clearExcelFilter(col.key);
-          setActiveFilter(null);
-        }}
-      >
-        Cancel
-      </button>
-    </div>
-
-  </div>
-)}
-      </div>
-    ))}
-  </div>
-
-  {/* BODY */}
-  <div className="grid-body">
-    {filteredClaims.map((c) => (
-      <div className="grid-row" key={c.id}>
-
-        <div className="cell sticky col-1">{c.id}</div>
-        <div className="cell sticky col-2">{c.employeeName}</div>
-        <div className="cell">{c.department || 'N/A'}</div>
-        <div className="cell">{c.managerName}</div>
-        <div className="cell">{c.employeeCode}</div>
-        <div className="cell">{c.claimType}</div>
-        <div className="cell">{c.fromDate}</div>
-        <div className="cell">{c.claimSettledDate}</div>
-        <div className="cell">{c.admittedDays}</div>
-        <div className="cell">₹{c.amount}</div>
-        <div className="cell">{c.approvedAmount}</div>
-        <div className="cell">{c.status}</div>
-
-      </div>
-    ))}
-  </div>
-
-</div>
+          </tbody>
+        </table>
       </div>
     </div>
   );

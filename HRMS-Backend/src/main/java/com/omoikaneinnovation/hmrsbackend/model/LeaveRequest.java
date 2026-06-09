@@ -17,6 +17,8 @@ public class LeaveRequest {
     private String reason;
     private String status; // PENDING, APPROVED, REJECTED
     private String employeeName;
+    private String employeeEmail;  // ✅ employee's own email for notifications
+    private String ccEmail;        // ✅ CC email
 
    private String managerEmail;
 
@@ -51,4 +53,10 @@ public void setManagerEmail(String managerEmail) {
 
    public String getEmployeeName() { return employeeName; }
 public void setEmployeeName(String employeeName) { this.employeeName = employeeName; }
+
+    public String getEmployeeEmail() { return employeeEmail; }
+    public void setEmployeeEmail(String employeeEmail) { this.employeeEmail = employeeEmail; }
+
+    public String getCcEmail() { return ccEmail; }
+    public void setCcEmail(String ccEmail) { this.ccEmail = ccEmail; }
 }

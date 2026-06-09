@@ -19,12 +19,19 @@ public class TaskService {
 
     // ── CREATE ──
     public Task createTask(Task task) {
+        if (task.getAssigneeName() != null) {
+    userRepo.findAll().stream()
+            .filter(u -> task.getAssigneeName().equalsIgnoreCase(u.getFullName()))
+            .findFirst()
+            .ifPresent(user -> task.setAssigneeId(user.getEmployeeId()));
+}
         task.setStatus("ASSIGNED");
         task.setProgress(0);
         task.setCreatedAt(new Date());
         task.setUpdatedAt(new Date());
         if (task.getHistory() == null) task.setHistory(new java.util.ArrayList<>());
         task.getHistory().add("Task created and assigned");
+
         return repo.save(task);
     }
 

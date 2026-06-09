@@ -437,12 +437,31 @@ if (!matchesColumnFilters) return false;
     if (!updateTarget) return;
     setUpdateSaving(true);
     try {
-      await updateEmployee(updateTarget.employeeId, updateForm);
+      // ✅ FIX: Use the correct ID field for the update
+      // The backend expects employeeId (custom ID like "IT-EMP-0001"), not MongoDB _id
+      const idToUse = updateTarget.employeeId || updateTarget.id;
+      
+      console.log("🔍 Update Target:", updateTarget);
+      console.log("🔍 Using ID:", idToUse);
+      console.log("🔍 Update Form:", updateForm);
+      
+      if (!idToUse) {
+        throw new Error("Employee ID not found in employee data");
+      }
+      
+      await updateEmployee(idToUse, updateForm);
       alert("✅ Employee updated successfully!");
       setShowUpdateModal(false);
       fetchEmployees(); // refresh table
     } catch (err) {
       console.error("Update failed:", err);
+      console.error("Error details:", {
+        message: err.message,
+        response: err.response?.data,
+        status: err.response?.status,
+        updateTarget: updateTarget,
+        updateForm: updateForm
+      });
       alert("❌ Failed to update: " + (err.response?.data || err.message));
     } finally {
       setUpdateSaving(false);

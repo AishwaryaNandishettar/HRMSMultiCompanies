@@ -337,7 +337,7 @@
     display: grid;
     grid-template-columns: 2fr 1fr;
     gap: 16px;
-    margin-top: 0;
+    margin-top: 20px;
   }
 
   /* ================= PAYROLL ================= */
@@ -374,18 +374,31 @@
     padding: 10px;
     border-radius: 8px;
     color: #ffffff !important;
-    margin-bottom: 6px;
+    margin-bottom: 1px;
     font-size: 12px;
+    position: relative;
   }
 
   .notify.green { background: #22c55e; }
   .notify.blue { background: #2563eb; }
   .notify.red { background: #ef4444; }
+  .notify.success { background: #22c55e; }
+  .notify.info { background: #3b82f6; }
+  .notify.warning { background: #f59e0b; }
+  .notify.pending { background: #8b5cf6; }
 
   /* ONLY 5 VISIBLE */
   .notif-scroll {
     max-height: 210px;
     overflow-y: auto;
+  }
+
+  /* MAKE NOTIFICATION PANEL STICKY */
+  .notification-panel-sticky {
+    position: sticky;
+    top: 80px; /* Adjust based on your header height */
+    z-index: 100;
+    margin-bottom: 16px;
   }
   /* ================= ATTENDANCE LEGEND ================= */
   .attendance-panel {
@@ -527,7 +540,8 @@
   }
 
   .small-panel {
-    height: 220px;
+    min-height: 220px;
+    height: auto;
   }
 
   .payroll-scroll {
@@ -948,6 +962,7 @@
 
   /* ================= NOTIFICATION BADGES ================= */
   .notification-badge {
+    display: flex;
     position: absolute;
     top: 8px;
     right: 10px;
@@ -961,7 +976,6 @@
     background: #ef4444;
     color: white;
 
-    display: flex;
     align-items: center;
     justify-content: center;
 
@@ -973,10 +987,6 @@
     border: 2px solid white;
 
     line-height: 1;
-  }
-
-  .notify {
-    position: relative;
   }
 
   .notify.success { background: #22c55e; }
@@ -1513,24 +1523,15 @@
     width: 90%;
     max-width: 600px;
   }
-  .notify {
-    position: relative;
-    padding: 10px 14px;
-    margin-bottom: 8px;
-    border-radius: 8px;
-    display: flex;
-    align-items: center;
-    min-height: 40px;
-  }
 
   .notification-text {
     font-size: 13px;
     font-weight: 500;
-    color: #1f2937;
     padding-right: 35px;
   }
 
   .notification-badge {
+    display: flex;
     position: absolute;
     right: 10px;
     top: 8px;
@@ -1540,7 +1541,6 @@
     height: 18px;
     border-radius: 50%;
     font-size: 11px;
-    display: flex;
     align-items: center;
     justify-content: center;
   }

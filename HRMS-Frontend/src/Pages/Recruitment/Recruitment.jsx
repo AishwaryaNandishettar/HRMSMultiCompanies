@@ -1059,7 +1059,9 @@ if (user?.role === "EMP") {
   const fetchJobs = async () => {
     try {
       const res = await getAllJobs();
-      setJobs(Array.isArray(res) ? res : []);
+      const jobsArray = Array.isArray(res) ? res : [];
+      console.log("🔍 DEBUG Recruitment: Fetched jobs from API:", jobsArray);
+      setJobs(jobsArray);
     } catch (err) {
       console.error("Failed to load jobs", err);
       setJobs([]);
@@ -1117,6 +1119,7 @@ const interviewJobs = jobs.filter(j => j.status === "Interview Stage");
   title="New Applicants"
   value={newApplicants.length}
   variant="red"
+  icon={<Users className="stat-svg" />}
   onClick={() =>
     navigate('/recruitment/ats/new-applications', {
       state: { jobs: newApplicants }
@@ -1128,6 +1131,7 @@ const interviewJobs = jobs.filter(j => j.status === "Interview Stage");
   title="Positions Filled"
   value={filledJobsCount}
   variant="green"
+  icon={<CheckCircle className="stat-svg" />}
   onClick={() =>
     navigate('/recruitment/ats/positions-filled', {
       state: {
@@ -1145,6 +1149,7 @@ const interviewJobs = jobs.filter(j => j.status === "Interview Stage");
   title="Interview Scheduled"
   value={interviewJobs.length}
   variant="light"
+  icon={<Calendar className="stat-svg" />}
   onClick={() =>
     navigate('/recruitment/ats/interview-scheduled', {
       state: { stage: "Interview Stage" }

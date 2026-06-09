@@ -1,4 +1,4 @@
-import api from "./axios"; // ✅ use authenticated axios
+import api from "../api/axios";
 
 const BASE_URL = "/api/tasks";
 

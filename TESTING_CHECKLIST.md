@@ -1,404 +1,382 @@
-# Receiver Call Reception - Testing Checklist
+# 🧪 Testing Checklist - Update Status Feature
 
-## Pre-Testing Setup
+## ✅ Phase 1: Visual Test (No Backend Required)
 
-- [ ] Backend is running on port 8082
-- [ ] Frontend is running on port 5173
-- [ ] Two browser windows/tabs open
-- [ ] Both users logged in
-- [ ] WebSocket connection is working
+### **Test 1: Check Columns Appear**
 
----
+1. Open your pipeline page: http://localhost:5176/recruitment/pipeline
+2. Look at the table headers
+3. ✅ Verify you see these columns:
+   - ID
+   - Name
+   - **Email** ← NEW
+   - Role
+   - Exp
+   - Status
+   - Recruiter
+   - Stage
+   - **Comments** ← NEW
+   - Action
 
-## Test 1: Basic Call Reception ✅
-
-### Setup
-- [ ] User A logged in on Window 1
-- [ ] User B logged in on Window 2
-- [ ] Both on WorkChat page
-
-### Execution
-- [ ] User A: Open WorkChat
-- [ ] User A: Select User B from chat list
-- [ ] User A: Click "Voice Call" button
-- [ ] Wait 2 seconds
-
-### Verification
-- [ ] User B: See `GlobalCallNotification` overlay
-- [ ] User B: Hear ringtone sound
-- [ ] User B: See caller's name (User A)
-- [ ] User B: See "Incoming Voice Call" text
-- [ ] User B: See Accept button (green)
-- [ ] User B: See Reject button (red)
-- [ ] User A: See "Calling..." screen
-- [ ] User A: See User B's name
-
-### Result
-- [ ] PASS / [ ] FAIL
+**Expected Result:** ✅ You should see Email and Comments columns (they might show "-" if no data)
 
 ---
 
-## Test 2: Call Acceptance ✅
+### **Test 2: Check Action Menu Opens**
 
-### Setup
-- [ ] From Test 1, User B sees notification
+1. Click the **"⋯"** (three dots) button on any candidate
+2. A dropdown menu should appear
 
-### Execution
-- [ ] User B: Click "Accept" button
-- [ ] Wait 3 seconds
-
-### Verification
-- [ ] User B: Notification disappears
-- [ ] User B: Navigated to WorkChat (if not already there)
-- [ ] User B: See AdvancedCallScreen
-- [ ] User A: See AdvancedCallScreen
-- [ ] Both: See video/audio controls
-- [ ] Both: See participant list
-- [ ] Both: See call duration timer
-
-### Result
-- [ ] PASS / [ ] FAIL
+**Expected Result:** ✅ Menu opens
 
 ---
 
-## Test 3: Call Rejection ✅
+### **Test 3: Check "Update Status" Button**
 
-### Setup
-- [ ] User A: Initiate new call to User B
-- [ ] User B: See notification
+1. In the action menu, look at the top
+2. You should see **"✏️ Update Status"** in blue text
+3. It should be the first option
 
-### Execution
-- [ ] User B: Click "Reject" button
-- [ ] Wait 2 seconds
-
-### Verification
-- [ ] User B: Notification disappears
-- [ ] User A: See "Call rejected" or timeout
-- [ ] User A: Call screen closes
-- [ ] User A: Back to chat screen
-- [ ] User B: Back to chat screen
-
-### Result
-- [ ] PASS / [ ] FAIL
+**Expected Result:** ✅ "Update Status" appears at top in blue
 
 ---
 
-## Test 4: Call Timeout ✅
+### **Test 4: Open Modal**
 
-### Setup
-- [ ] User A: Initiate call to User B
-- [ ] User B: See notification
+1. Click **"✏️ Update Status"**
+2. A modal should slide up from bottom
 
-### Execution
-- [ ] User B: Don't respond
-- [ ] Wait 30 seconds
+**Expected Result:** ✅ Modal opens with animation
 
-### Verification
-- [ ] User A: Call times out after ~30 seconds
-- [ ] User A: See "Call ended" or similar
-- [ ] User A: Call screen closes
-- [ ] User B: Notification disappears
-- [ ] User B: Back to chat screen
-
-### Result
-- [ ] PASS / [ ] FAIL
+**If Modal Doesn't Open:**
+- Press F12 to open browser console
+- Look for red error messages
+- Take a screenshot and show me
 
 ---
 
-## Test 5: Multiple Pages ✅
+### **Test 5: Check Modal Content**
 
-### Setup
-- [ ] User B logged in
-- [ ] User B on Home page (not WorkChat)
+When modal opens, you should see:
 
-### Execution
-- [ ] User A: Initiate call to User B
-- [ ] Wait 2 seconds
+1. ✅ Header: "Update Candidate Status"
+2. ✅ Candidate info: Name (email)
+3. ✅ Status dropdown with options:
+   - Received / Applied
+   - Shortlisted
+   - Interview Stage
+   - Selected
+   - Rejected
+4. ✅ Comments textarea
+5. ✅ Email notification info box
+6. ✅ Two buttons: Cancel | Save & Notify Candidate
 
-### Verification
-- [ ] User B: See `GlobalCallNotification` overlay on Home page
-- [ ] User B: Hear ringtone sound
-- [ ] User B: See caller's name
-- [ ] User B: Click "Accept"
-- [ ] User B: Navigated to WorkChat
-- [ ] Both: Call connects
-
-### Result
-- [ ] PASS / [ ] FAIL
+**Expected Result:** ✅ All elements visible
 
 ---
 
-## Test 6: Video Call ✅
+### **Test 6: Fill Form**
 
-### Setup
-- [ ] User A: Open WorkChat
-- [ ] User A: Select User B
+1. Select a status from dropdown (e.g., "Shortlisted")
+2. Type in comments: "Great candidate, moving forward"
+3. Try clicking "Save & Notify Candidate"
 
-### Execution
-- [ ] User A: Click "Video Call" button
-- [ ] Wait 2 seconds
-
-### Verification
-- [ ] User B: See notification
-- [ ] User B: See "Incoming Video Call" text
-- [ ] User B: Hear ringtone
-- [ ] User B: Click "Accept"
-- [ ] Both: See video streams
-
-### Result
-- [ ] PASS / [ ] FAIL
+**Expected Result:** 
+- If backend not ready: Error message appears
+- This is OK! It means frontend is working correctly
 
 ---
 
-## Test 7: Ringtone Sound ✅
+## ✅ Phase 2: Backend Test (After API Created)
 
-### Setup
-- [ ] User B: Volume is ON
-- [ ] User B: Not muted
+### **Test 7: Add Test Email Data**
 
-### Execution
-- [ ] User A: Initiate call
-- [ ] Wait for notification
+**Option A: Using MongoDB Compass**
 
-### Verification
-- [ ] User B: Hear ringtone sound
-- [ ] Sound continues until Accept/Reject
-- [ ] Sound stops after Accept/Reject
+1. Open MongoDB Compass
+2. Connect to your database
+3. Find `candidates` or `jobs` collection
+4. Edit the first candidate document:
+   ```json
+   {
+     "_id": "696cb175c2b8b04848f4a39a",
+     "jobTitle": "Frontend Developer",
+     "designation": "Web Developer",
+     "status": "Selected",
+     "email": "test@example.com",  ← ADD THIS
+     "comments": ""                 ← ADD THIS
+   }
+   ```
+5. Save changes
+6. Repeat for 2-3 more candidates
 
-### Result
-- [ ] PASS / [ ] FAIL
+**Option B: Using Script**
 
----
-
-## Test 8: Browser Notification ✅
-
-### Setup
-- [ ] Browser notifications enabled
-- [ ] User B: Notification permission granted
-
-### Execution
-- [ ] User A: Initiate call
-- [ ] Wait for notification
-
-### Verification
-- [ ] User B: See browser notification (if enabled)
-- [ ] Notification shows caller's name
-- [ ] Notification shows call type (Voice/Video)
-
-### Result
-- [ ] PASS / [ ] FAIL
+1. Update `ADD_TEST_DATA.js` with your real candidate IDs
+2. Run: `node ADD_TEST_DATA.js`
 
 ---
 
-## Test 9: Call Controls ✅
+### **Test 8: Verify Email Appears in Table**
 
-### Setup
-- [ ] Call is connected between User A and User B
+1. Refresh your pipeline page
+2. Check the Email column
+3. You should now see email addresses instead of "-"
 
-### Execution
-- [ ] User A: Click mute button
-- [ ] User B: See mute indicator
-- [ ] User A: Click camera off button
-- [ ] User B: See video off indicator
-- [ ] User A: Click end call button
-
-### Verification
-- [ ] Mute/unmute works
-- [ ] Camera on/off works
-- [ ] End call works
-- [ ] Both: Call disconnects
-- [ ] Both: Back to chat screen
-
-### Result
-- [ ] PASS / [ ] FAIL
+**Expected Result:** ✅ Email addresses visible in table
 
 ---
 
-## Test 10: Concurrent Calls ✅
+### **Test 9: Test Backend API (Using Postman)**
 
-### Setup
-- [ ] User A, User B, User C all logged in
+Before testing from frontend, test the API directly:
 
-### Execution
-- [ ] User A: Call User B
-- [ ] User B: Accept
-- [ ] User A: Call User C (while on call with B)
-- [ ] User C: See notification
+1. Open Postman or Thunder Client
+2. Create new POST request
+3. URL: `http://localhost:5000/api/candidates/update-status`
+4. Headers:
+   ```
+   Content-Type: application/json
+   ```
+5. Body (JSON):
+   ```json
+   {
+     "candidateId": "696cb175c2b8b04848f4a39a",
+     "candidateName": "Frontend Developer",
+     "candidateEmail": "test@example.com",
+     "newStatus": "Shortlisted",
+     "comments": "Test comment from Postman",
+     "emailSubject": "Application Shortlisted",
+     "emailBody": "Dear Candidate, You have been shortlisted!"
+   }
+   ```
+6. Click **Send**
 
-### Verification
-- [ ] User C: See notification
-- [ ] User C: Can accept/reject
-- [ ] User A: Can manage both calls
-- [ ] No errors in console
-
-### Result
-- [ ] PASS / [ ] FAIL
-
----
-
-## Test 11: WebSocket Connection ✅
-
-### Setup
-- [ ] User B: Open browser console
-
-### Execution
-- [ ] Type: `window.stompClient.connected`
-- [ ] Type: `Object.keys(window.stompClient.subscriptions)`
-
-### Verification
-- [ ] `window.stompClient.connected` returns `true`
-- [ ] Subscriptions include `/user/queue/call`
-- [ ] Subscriptions include `/user/queue/call-chat`
-
-### Result
-- [ ] PASS / [ ] FAIL
-
----
-
-## Test 12: No Console Errors ✅
-
-### Setup
-- [ ] User B: Open browser console (F12)
-
-### Execution
-- [ ] User A: Initiate call
-- [ ] User B: Accept call
-- [ ] User A: End call
-
-### Verification
-- [ ] No red errors in console
-- [ ] No warnings about subscriptions
-- [ ] No WebSocket errors
-- [ ] No undefined errors
-
-### Result
-- [ ] PASS / [ ] FAIL
-
----
-
-## Test 13: Performance ✅
-
-### Setup
-- [ ] Monitor browser performance (F12 → Performance)
-
-### Execution
-- [ ] User A: Initiate call
-- [ ] User B: Accept call
-- [ ] Monitor for 10 seconds
-
-### Verification
-- [ ] No memory leaks
-- [ ] CPU usage normal
-- [ ] No lag or stuttering
-- [ ] Smooth animations
-
-### Result
-- [ ] PASS / [ ] FAIL
-
----
-
-## Test 14: Mobile Responsiveness ✅
-
-### Setup
-- [ ] Open browser on mobile device
-- [ ] User B logged in
-
-### Execution
-- [ ] User A (desktop): Initiate call
-- [ ] User B (mobile): See notification
-
-### Verification
-- [ ] Notification displays correctly on mobile
-- [ ] Buttons are clickable on mobile
-- [ ] Ringtone plays on mobile
-- [ ] Accept/Reject works on mobile
-
-### Result
-- [ ] PASS / [ ] FAIL
-
----
-
-## Test 15: Network Interruption ✅
-
-### Setup
-- [ ] Call is connected
-
-### Execution
-- [ ] Disconnect network (turn off WiFi)
-- [ ] Wait 5 seconds
-- [ ] Reconnect network
-
-### Verification
-- [ ] Call handles disconnection gracefully
-- [ ] No crashes
-- [ ] Can reconnect
-- [ ] Or see appropriate error message
-
-### Result
-- [ ] PASS / [ ] FAIL
-
----
-
-## Summary
-
-### Total Tests: 15
-- [ ] Passed: ___
-- [ ] Failed: ___
-- [ ] Skipped: ___
-
-### Overall Result
-- [ ] ALL PASS - Ready for deployment
-- [ ] SOME FAIL - Fix issues and retest
-- [ ] CRITICAL FAIL - Do not deploy
-
-### Issues Found
-```
-1. _______________________________________________
-2. _______________________________________________
-3. _______________________________________________
+**Expected Result:**
+```json
+{
+  "success": true,
+  "message": "Status updated and email sent",
+  "candidate": { ... }
+}
 ```
 
-### Notes
+**If Error:**
+- Check if backend server is running
+- Check .env file has email credentials
+- Check MongoDB connection
+
+---
+
+### **Test 10: Full Flow Test (Frontend → Backend → Email)**
+
+Now test the complete flow:
+
+1. Go to pipeline page
+2. Click "⋯" on a candidate
+3. Click "✏️ Update Status"
+4. Modal opens
+5. Select status: "Shortlisted"
+6. Add comment: "Excellent technical skills"
+7. Click "Save & Notify Candidate"
+8. Wait 2-3 seconds
+
+**Expected Results:**
+
+1. ✅ Success alert appears: "Status updated! Email sent to..."
+2. ✅ Modal closes
+3. ✅ Table updates immediately:
+   - Status badge changes to "Shortlisted"
+   - Comments column shows your comment
+4. ✅ Check candidate's email inbox
+   - Email should arrive within 1-2 minutes
+   - Subject: "Application Shortlisted - Congratulations!"
+
+---
+
+## 🐛 Troubleshooting
+
+### **Problem 1: Modal Not Opening**
+
+**Check Console:**
+1. Press F12
+2. Go to Console tab
+3. Look for errors like:
+   - "UpdateStatusModal is not defined"
+   - "Cannot find module"
+
+**Solution:**
+- Make sure `UpdateStatusModal.jsx` file exists
+- Check import statement in PipelineTable.jsx
+- Restart frontend server
+
+---
+
+### **Problem 2: Email Column Shows "-"**
+
+**Reason:** Database doesn't have email field yet
+
+**Solution:**
+1. Add email field to database manually
+2. Or use the ADD_TEST_DATA.js script
+3. Refresh page
+
+---
+
+### **Problem 3: Backend API Not Working**
+
+**Check:**
+1. Is backend server running?
+   ```bash
+   npm start  # or node server.js
+   ```
+2. Check terminal for errors
+3. Verify .env file has:
+   ```
+   EMAIL_USER=your-email@gmail.com
+   EMAIL_PASSWORD=your-app-password
+   ```
+4. Is nodemailer installed?
+   ```bash
+   npm install nodemailer
+   ```
+
+---
+
+### **Problem 4: Email Not Sending**
+
+**Common Issues:**
+
+1. **Wrong Email Password**
+   - Use App Password, not regular Gmail password
+   - Get from: https://myaccount.google.com/apppasswords
+
+2. **Gmail Blocking SMTP**
+   - Enable "Less secure app access" (not recommended)
+   - OR use App Password (recommended)
+
+3. **Network Issue**
+   - Check internet connection
+   - Try sending test email from Postman first
+
+---
+
+## 📊 Expected Behavior Summary
+
+### **When HR Updates Status to "Shortlisted":**
+
 ```
-_______________________________________________
-_______________________________________________
-_______________________________________________
+1. HR clicks "⋯" → "Update Status"
+2. Modal opens
+3. HR selects "Shortlisted"
+4. HR adds comment: "Good communication skills"
+5. HR clicks "Save & Notify Candidate"
+
+Backend:
+├─ Updates database
+├─ Saves comment
+└─ Sends email
+
+Frontend:
+├─ Shows success message
+├─ Closes modal
+└─ Updates table immediately
+
+Candidate:
+└─ Receives email within 1-2 minutes
 ```
 
 ---
 
-## Sign-Off
+## 📸 Screenshots to Take
 
-**Tested By**: ___________________
-**Date**: ___________________
-**Time**: ___________________
-**Environment**: Development / Staging / Production
+When testing, take screenshots of:
 
-**Approval**: ___________________
-
----
-
-## Deployment Decision
-
-- [ ] APPROVED - Ready for production
-- [ ] CONDITIONAL - Fix issues first
-- [ ] REJECTED - Do not deploy
-
-**Reason**: _______________________________________________
+1. ✅ Pipeline table showing Email & Comments columns
+2. ✅ Action menu with "Update Status" button
+3. ✅ Modal opened and filled
+4. ✅ Success message after save
+5. ✅ Table updated with new status and comments
+6. ✅ Email received in candidate's inbox
 
 ---
 
-## Post-Deployment Monitoring
+## ✅ Final Checklist
 
-- [ ] Monitor error logs
-- [ ] Monitor user feedback
-- [ ] Monitor performance metrics
-- [ ] Check for WebSocket issues
-- [ ] Verify ringtone plays
-- [ ] Verify notifications appear
+### Frontend:
+- [ ] Email column visible in table
+- [ ] Comments column visible in table
+- [ ] "⋯" action button works
+- [ ] "Update Status" button appears (in blue)
+- [ ] Modal opens when clicked
+- [ ] Modal has all form fields
+- [ ] Modal closes with Cancel button
+- [ ] No console errors
+
+### Backend:
+- [ ] Backend server running
+- [ ] .env file configured
+- [ ] nodemailer installed
+- [ ] API endpoint created
+- [ ] Database has email & comments fields
+- [ ] Postman test successful
+
+### Email:
+- [ ] Email credentials correct
+- [ ] Test email sends from Postman
+- [ ] Email arrives in inbox
+- [ ] Subject and body correct
+- [ ] Candidate name personalized
+
+### Complete Flow:
+- [ ] Update status from frontend
+- [ ] Success message appears
+- [ ] Database updates
+- [ ] Table updates immediately
+- [ ] Email sends to candidate
+- [ ] Comments saved
 
 ---
 
-**Testing Checklist Version**: 1.0
-**Last Updated**: May 16, 2026
-**Status**: Ready for Testing
+## 🎯 Quick Test Commands
+
+```bash
+# Start frontend
+cd HRMS-Frontend
+npm run dev
+
+# Start backend (in separate terminal)
+cd HRMS-Backend
+npm start
+
+# Test API with curl
+curl -X POST http://localhost:5000/api/candidates/update-status \
+  -H "Content-Type: application/json" \
+  -d '{
+    "candidateId": "696cb175c2b8b04848f4a39a",
+    "candidateName": "Test Candidate",
+    "candidateEmail": "test@example.com",
+    "newStatus": "Shortlisted",
+    "comments": "Test comment",
+    "emailSubject": "Test Email",
+    "emailBody": "This is a test email"
+  }'
+```
+
+---
+
+## 🆘 If Stuck
+
+1. Check browser console (F12)
+2. Check backend terminal for errors
+3. Verify .env file configuration
+4. Test backend API with Postman first
+5. Add console.log() statements to debug
+6. Share error messages for help
+
+---
+
+**Remember:** Test in phases! Don't try to test everything at once.
+
+**Start with:** Frontend visual test → Then backend API → Then complete flow
+

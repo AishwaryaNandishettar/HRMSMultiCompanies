@@ -303,6 +303,7 @@
 }
 
 .template-card {
+  position: relative;
   background: white;
   border: 2px solid #e5e7eb;
   border-radius: 12px;
@@ -310,6 +311,9 @@
   text-align: center;
   cursor: pointer;
   transition: all 0.2s;
+  display: flex;
+  flex-direction: column;
+  min-height: 160px;
 }
 
 .template-card:hover {
@@ -324,7 +328,15 @@
   box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
 }
 
+.template-card .template-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  cursor: pointer;
+}
+
 .template-card .template-icon {
+  color: #3b82f6;
   font-size: 48px;
   margin-bottom: 12px;
 }
@@ -345,6 +357,44 @@
 .template-card .template-date {
   font-size: 12px;
   color: #9ca3af;
+  margin-top: auto;
+}
+
+/* ── DELETE TEMPLATE BUTTON ── */
+.template-card .template-actions {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  z-index: 10;
+}
+
+.delete-template-btn {
+  background: #f87171;
+  border: none;
+  color: white;
+  width: 32px;
+  height: 32px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-size: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0.8;
+}
+
+.delete-template-btn:hover:not(:disabled) {
+  background: #ef4444;
+  opacity: 1;
+  transform: scale(1.05);
+}
+
+.delete-template-btn:disabled {
+  background: #d1d5db;
+  color: #9ca3af;
+  cursor: not-allowed;
+  transform: none;
 }
 
 .no-templates {
@@ -1022,4 +1072,147 @@
 .release-offer-modal {
   position: relative;
   z-index: 100000 !important;
+}
+
+
+/* ═══════════════════════════════════════════════════════════
+   WORD-LIKE EDITOR
+   ═══════════════════════════════════════════════════════════ */
+
+.word-editor-section {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  height: 100%;
+}
+
+/* ── Toolbar ── */
+.word-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px;
+  padding: 8px 12px;
+  background: #f1f5f9;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px 8px 0 0;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+.word-toolbar-group {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+}
+
+.word-toolbar-divider {
+  width: 1px;
+  height: 22px;
+  background: #cbd5e1;
+  margin: 0 6px;
+}
+
+.word-tool-btn {
+  min-width: 32px;
+  height: 30px;
+  padding: 0 8px;
+  background: #fff;
+  border: 1px solid #d1d5db;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 600;
+  color: #374151;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.15s, border-color 0.15s;
+  white-space: nowrap;
+}
+
+.word-tool-btn:hover {
+  background: #e0e7ff;
+  border-color: #6366f1;
+  color: #4338ca;
+}
+
+.word-tool-undo,
+.word-tool-redo {
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.word-font-select {
+  height: 30px;
+  padding: 0 6px;
+  border: 1px solid #d1d5db;
+  border-radius: 5px;
+  font-size: 13px;
+  background: #fff;
+  cursor: pointer;
+  color: #374151;
+}
+
+.word-color-pick {
+  width: 30px;
+  height: 30px;
+  padding: 1px;
+  border: 1px solid #d1d5db;
+  border-radius: 5px;
+  cursor: pointer;
+  background: #fff;
+}
+
+/* ── Page wrapper (simulates Word paper) ── */
+.word-page-wrap {
+  background: #e5e7eb;
+  padding: 24px 12px;
+  flex: 1;
+  /* No overflow/max-height here — the modal-body scrolls instead */
+}
+
+/* ── The white "paper" ── */
+.word-page {
+  background: #ffffff;
+  width: 100%;
+  max-width: 794px;   /* A4 width at 96dpi */
+  margin: 0 auto;
+  padding: 60px 72px;
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.15);
+  border-radius: 2px;
+  min-height: 600px;
+  box-sizing: border-box;
+}
+
+/* ── The actual editable content area ── */
+.word-editor-body {
+  font-family: "Times New Roman", Times, serif;
+  font-size: 13px;
+  line-height: 1.8;
+  color: #111827;
+  outline: none;
+  min-height: 500px;
+  word-wrap: break-word;
+  /* Do NOT set overflow or scroll here — let the page grow naturally */
+  caret-color: #2563eb;
+  /* Ensure caret is always visible by keeping focus ring off but caret on */
+  -webkit-user-modify: read-write;
+}
+
+/* Show blinking cursor when focused */
+.word-editor-body:focus {
+  outline: none;
+}
+
+/* Paragraph spacing */
+.word-editor-body p {
+  margin: 0 0 6px;
+}
+
+/* Selection highlight */
+.word-editor-body ::selection {
+  background: #bfdbfe;
+  color: #1e40af;
 }

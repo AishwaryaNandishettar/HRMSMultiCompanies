@@ -37,7 +37,10 @@ const getLoggedUser = () => {
 export default function Attendance() {
   const location = useLocation();
 
-const focus = location.state?.focus;
+  const focus = location.state?.focus;
+  const filterEmployee = location.state?.filterEmployee; // ✅ Employee ID from notification
+  const employeeName = location.state?.employeeName;     // ✅ Employee name from notification
+
   const today = new Date().toLocaleDateString("en-CA");
   const [selectedDate, setSelectedDate] = useState(today);
 
@@ -50,11 +53,13 @@ const focus = location.state?.focus;
   const popupRef = useRef();
 
   const [records, setRecords] = useState([]);
-const [attendanceFilter, setAttendanceFilter] = useState("");
+  const [loading, setLoading] = useState(true); // Add loading state
+  const [attendanceFilter, setAttendanceFilter] = useState("");
   const [fromDate, setFromDate] = useState("");
   const [toDate, setToDate] = useState("");
 
-  const [empSearch, setEmpSearch] = useState("");
+  // ✅ Automatically set empSearch if employee filter is passed from notification
+  const [empSearch, setEmpSearch] = useState(filterEmployee || "");
   const [showExportMenu, setShowExportMenu] = useState(false);
   const exportRef = useRef();
 
@@ -63,7 +68,11 @@ const [attendanceFilter, setAttendanceFilter] = useState("");
 
   /* ================= FETCH RECORDS ================= */
   const fetchRecords = async () => {
+    setLoading(true); // Start loading
+    
     try {
+      console.log("🔄 Fetching attendance records...", { role, user: loggedUser.email });
+      
       let response;
 
       if (role === "employee") {
@@ -73,13 +82,16 @@ const [attendanceFilter, setAttendanceFilter] = useState("");
           loggedUser._id ||
           loggedUser.employeeId ||
           loggedUser.empId;
+        console.log("👤 Employee fetching for userId:", userId);
         response = await getMyAttendance(userId);
       } else if (role === "manager") {
         // Manager sees their own + their team's attendance
         const managerEmail = loggedUser.email;
+        console.log("👥 Manager fetching for email:", managerEmail);
         response = await getManagerAttendance(managerEmail);
       } else {
         // Admin sees all
+        console.log("👑 Admin fetching all records");
         response = await getAllAttendance();
       }
 
@@ -91,45 +103,61 @@ const [attendanceFilter, setAttendanceFilter] = useState("");
         ? response.content
         : [];
 
+      console.log("📊 Raw attendance data received:", rawData.length, "records");
+
       // Map backend DTO fields to frontend display fields
-      const data = rawData.map((r) => ({
-        userId: r.userId || "-",
-    empId:
-  r.role === "admin" ||
-  r.empId === "ADMIN001"
-    ? "ADMIN001"
-    : r.empId ||
-      r.employeeId ||
-      "-",
+      const data = rawData
+        .map((r) => ({
+          userId: r.userId || "-",
+          empId:
+            r.role === "admin" ||
+            r.empId === "ADMIN001" ||
+            r.employeeId === "ADMIN001"
+              ? "ADMIN001"
+              : r.empId ||
+                r.employeeId ||
+                "-",
 
-name:
-  r.role === "admin" ||
-  r.empId === "ADMIN001"
-    ? "Aishwarya"
-    : r.employeeName ||
-      r.name ||
-      r.fullName ||
-      "-",
-        department: r.department || r.dept || "-",
-        managerId: r.managerId || "-",
-        managerEmail: r.managerEmail || r.managerId || "-",
-        reportingManager:
-          r.reportingManager || r.managerName || r.managerEmail || "-",
-        tos: r.tos || "-",
-        date: r.date || "-",
-        checkIn: r.checkIn || "-",
-        checkOut: r.checkOut || "-",
-        locationIn: r.locationIn || "-",
-        locationOut: r.locationOut || "-",
-        late: r.late || "No",
-        earlyLeave: r.earlyLeave || "-",
-        status: r.status || "Pending Approval",
-        attendanceType: r.attendanceType || r.type || "Office",
-      }));
+          name:
+            r.role === "admin" ||
+            r.empId === "ADMIN001" ||
+            r.employeeId === "ADMIN001" ||
+            (loggedUser.role === "admin" && (r.userId === loggedUser.id || r.userId === loggedUser._id))
+              ? "Aishwarya"
+              : r.employeeName ||
+                r.name ||
+                r.fullName ||
+                "-",
+          department: r.department || r.dept || "-",
+          managerId: r.managerId || "-",
+          managerEmail: r.managerEmail || r.managerId || "-",
+          reportingManager:
+            r.reportingManager || r.managerName || r.managerEmail || "-",
+          tos: r.tos || "-",
+          date: r.date || "-",
+          checkIn: r.checkIn || "-",
+          checkOut: r.checkOut || "-",
+          locationIn: r.locationIn || "-",
+          locationOut: r.locationOut || "-",
+          late: r.late || "No",
+          earlyLeave: r.earlyLeave || "-",
+          status: r.status || "Pending Approval",
+          attendanceType: r.attendanceType || r.type || "Office",
+        }));
 
+      console.log("✅ Processed attendance data:", data.length, "records");
       setRecords(data);
+      
+      // Log sample record for debugging
+      if (data.length > 0) {
+        console.log("📄 Sample record:", data[0]);
+      }
+      
     } catch (err) {
-      console.error("Attendance fetch failed", err);
+      console.error("❌ Attendance fetch failed:", err);
+      setRecords([]); // Set empty array on error
+    } finally {
+      setLoading(false); // End loading
     }
   };
 
@@ -148,12 +176,14 @@ name:
   }, []);
 
   useEffect(() => {
+    console.log("🚀 Attendance component mounted, fetching records immediately...");
     fetchRecords();
   }, []);
 
   // Live auto-refresh every 30 seconds
   useEffect(() => {
     const interval = setInterval(() => {
+      console.log("🔄 Auto-refreshing attendance records...");
       fetchRecords();
     }, 30000);
     return () => clearInterval(interval);
@@ -216,9 +246,10 @@ name:
           });
 
           alert("Check-in successful");
-          setTimeout(async () => {
-            await fetchRecords();
-          }, 500);
+          
+          // Immediate refresh after check-in
+          console.log("✅ Check-in successful, refreshing records...");
+          await fetchRecords();
 
           if (refresh) refresh();
         } catch (err) {
@@ -269,7 +300,11 @@ name:
           });
 
           alert("Check-out successful");
-          fetchRecords();
+          
+          // Immediate refresh after check-out
+          console.log("✅ Check-out successful, refreshing records...");
+          await fetchRecords();
+          
           if (refresh) refresh();
         } catch (err) {
           console.error("Check-out failed", err);
@@ -383,8 +418,15 @@ name:
   ...new Set(searchFiltered.map((r) => r[key])),
 ];
 
-const filteredRecordsFinal = searchFiltered
+  const filteredRecordsFinal = searchFiltered
   .filter((r) => {
+    // Date range filter
+    if (fromDate || toDate) {
+      const recordDate = new Date(r.date);
+      if (fromDate && recordDate < new Date(fromDate)) return false;
+      if (toDate   && recordDate > new Date(toDate))   return false;
+    }
+
     // Existing attendance filters
     if (attendanceFilter === "forgotCheckout") {
       return !r.checkOut || r.checkOut === "-";
@@ -660,6 +702,22 @@ const filteredRecordsFinal = searchFiltered
                 minWidth: "220px",
               }}
             />
+            {/* ✅ Show badge if filtered from notification */}
+            {filterEmployee && empSearch && (
+              <span
+                style={{
+                  marginLeft: "8px",
+                  padding: "4px 10px",
+                  background: "#fff3cd",
+                  color: "#856404",
+                  borderRadius: "12px",
+                  fontSize: "12px",
+                  fontWeight: "600",
+                }}
+              >
+                Filtered: {employeeName || empSearch}
+              </span>
+            )}
           </div>
           {(fromDate || toDate || empSearch || Object.keys(filters).length > 0) && (
             <button
@@ -809,7 +867,29 @@ const filteredRecordsFinal = searchFiltered
                   <td>{r.locationOut}</td>
                   <td>{r.late}</td>
                   <td>{r.earlyLeave}</td>
-                  <td>{r.status}</td>
+                  <td>
+                    <span style={{
+                      display: 'inline-block',
+                      padding: '3px 10px',
+                      borderRadius: '999px',
+                      fontSize: '12px',
+                      fontWeight: '600',
+                      background:
+                        r.status === 'Present'          ? '#dcfce7' :
+                        r.status === 'Half Day'         ? '#fef9c3' :
+                        r.status === 'Absent'           ? '#fee2e2' :
+                        r.status === 'On Leave'         ? '#dbeafe' :
+                        r.status === 'Pending Approval' ? '#f3f4f6' : '#f3f4f6',
+                      color:
+                        r.status === 'Present'          ? '#16a34a' :
+                        r.status === 'Half Day'         ? '#854d0e' :
+                        r.status === 'Absent'           ? '#dc2626' :
+                        r.status === 'On Leave'         ? '#1d4ed8' :
+                        r.status === 'Pending Approval' ? '#6b7280' : '#6b7280',
+                    }}>
+                      {r.status}
+                    </span>
+                  </td>
                   <td>{r.tos}</td>
                   <td>{r.attendanceType || "Office"}</td>
                 </tr>

@@ -19,7 +19,7 @@ body {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 24px;
+  margin-bottom: 14px;
 }
 
 .header h1 {
@@ -68,7 +68,7 @@ body {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 8px 15px;
+  padding: 16px 18px;
   border-radius: 14px;
   border: none;
   cursor: pointer;
@@ -110,11 +110,21 @@ body {
 }
 
 .stat-icon {
-  font-size: 25px;
-  /* opacity: 1.0;
-  background: rgba(255,255,255,0.25);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  margin-left: 12px;
+  background: rgba(255, 255, 255, 0.22);
+  border-radius: 12px;
   padding: 10px;
-  border-radius: 12px; */
+}
+
+.stat-svg {
+  width: 26px;
+  height: 26px;
+  color: #ffffff;
+  opacity: 0.9;
 }
 
 .stat-btn:focus-visible {
@@ -509,6 +519,8 @@ table thead th {
   padding: 8px 12px;
   font-size: 13px;
   cursor: pointer;
+  color: #111827;
+  background: #ffffff;
 }
 
 .filter-option:hover {
@@ -934,7 +946,7 @@ tbody td {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 18px 20px;
+  padding: 16px 18px;
   border-radius: 14px;
   border: none;
   cursor: pointer;
@@ -988,8 +1000,24 @@ tbody td {
   font-weight: 700;
 }
 
+/* ===== ICON ===== */
+
 .stat-icon {
-  font-size: 26px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  margin-left: 12px;
+  background: rgba(255, 255, 255, 0.22);
+  border-radius: 12px;
+  padding: 10px;
+}
+
+.stat-svg {
+  width: 26px;
+  height: 26px;
+  color: #ffffff;
+  opacity: 0.9;
 }
 .modal-overlay {
   position: absolute;

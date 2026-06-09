@@ -99,8 +99,13 @@ const formatTime = (timeStr) => {
   // CLOSE POPUP AFTER SELECTION
   setShowEmpFilter(false);
 };
-      // 🔄 LIVE ATTENDANCE AUTO REFRESH (30 sec)
+      // 🔄 LIVE ATTENDANCE AUTO REFRESH (30 sec) - Trigger immediate refresh on component mount
   useEffect(() => {
+    if (user?.email) {
+      // Immediate refresh when component mounts or user changes
+      refreshAttendanceStatus();
+    }
+    
     const interval = setInterval(() => {
       if (user?.email) {
         refreshAttendanceStatus();
@@ -111,42 +116,71 @@ const formatTime = (timeStr) => {
   }, [user]);
       const refreshAttendanceStatus = async () => {
     try {
-      const data = await fetchHomeData(user.email);
-      setHomeData(data);
+      // Always try to fetch fresh attendance data immediately
+      const userId = user.id || user._id || user.employeeId || user.empId;
       
-      // If todayAttendance is not in homeData, fetch it separately
-      if (!data.todayAttendance || !data.todayAttendance.checkIn) {
-        try {
-          const userId = user.id || user._id || user.employeeId || user.empId;
-          const attendanceData = await getMyAttendance(userId);
-          
-          // Find today's attendance record
-          const today = new Date().toLocaleDateString("en-CA"); // YYYY-MM-DD format
-          const todayRecord = Array.isArray(attendanceData) 
-            ? attendanceData.find(r => r.date === today)
-            : Array.isArray(attendanceData?.data)
-            ? attendanceData.data.find(r => r.date === today)
-            : null;
-          
-          if (todayRecord) {
-            setHomeData(prev => ({
-              ...prev,
-              todayAttendance: {
-                status: todayRecord.status || (todayRecord.checkIn ? "Checked In" : "Not Checked In"),
-                checkIn: todayRecord.checkIn,
-                checkOut: todayRecord.checkOut,
-                date: todayRecord.date,
-                tos: todayRecord.tos,
-                attendanceType: todayRecord.attendanceType || todayRecord.type
-              }
-            }));
-          }
-        } catch (err) {
-          console.error("Failed to fetch today's attendance:", err);
-        }
+      // Fetch both homeData and attendance data in parallel for faster loading
+      const [homeDataResult, attendanceDataResult] = await Promise.allSettled([
+        fetchHomeData(user.email),
+        getMyAttendance(userId)
+      ]);
+      
+      // Find today's attendance record
+      const today = new Date().toLocaleDateString("en-CA"); // YYYY-MM-DD format
+      
+      let todayRecord = null;
+      
+      // First, try to get today's record from attendance API
+      if (attendanceDataResult.status === 'fulfilled') {
+        const attendanceData = attendanceDataResult.value;
+        todayRecord = Array.isArray(attendanceData) 
+          ? attendanceData.find(r => r.date === today)
+          : Array.isArray(attendanceData?.data)
+          ? attendanceData.data.find(r => r.date === today)
+          : null;
       }
+      
+      // Update home data with fresh attendance info
+      if (homeDataResult.status === 'fulfilled') {
+        const freshHomeData = homeDataResult.value;
+        
+        // Prefer todayRecord from attendance API over homeData
+        const finalTodayAttendance = todayRecord ? {
+          status: todayRecord.status || (todayRecord.checkIn && todayRecord.checkIn !== "-" ? "Checked In" : "Not Checked In"),
+          checkIn: todayRecord.checkIn,
+          checkOut: todayRecord.checkOut,
+          date: todayRecord.date,
+          tos: todayRecord.tos,
+          attendanceType: todayRecord.attendanceType || todayRecord.type
+        } : freshHomeData.todayAttendance;
+        
+        setHomeData({
+          ...freshHomeData,
+          todayAttendance: finalTodayAttendance
+        });
+        
+        console.log("✅ Attendance refreshed:", finalTodayAttendance);
+      } else if (todayRecord) {
+        // Fallback: update only today's attendance if homeData failed
+        const updatedTodayAttendance = {
+          status: todayRecord.status || (todayRecord.checkIn && todayRecord.checkIn !== "-" ? "Checked In" : "Not Checked In"),
+          checkIn: todayRecord.checkIn,
+          checkOut: todayRecord.checkOut,
+          date: todayRecord.date,
+          tos: todayRecord.tos,
+          attendanceType: todayRecord.attendanceType || todayRecord.type
+        };
+        
+        setHomeData(prev => ({
+          ...prev,
+          todayAttendance: updatedTodayAttendance
+        }));
+        
+        console.log("✅ Attendance refreshed (fallback):", updatedTodayAttendance);
+      }
+      
     } catch (err) {
-      console.error("Refresh failed", err);
+      console.error("Attendance refresh failed:", err);
     }
   };
       const [showEventsPopup, setShowEventsPopup] = useState(false);
@@ -360,18 +394,77 @@ const formatTime = (timeStr) => {
           let notifications = [];
 
           if (userRole === 'admin') {
-            // Admin notifications: missed check-ins, forgot checkouts
-            notifications = [
-              { id: 1, type: 'warning', message: 'John Doe missed check-in yesterday', badge: 1, link: '/attendance' },
-              { id: 2, type: 'info', message: 'Payroll processed for April 2026', badge: 0, link: '/payroll' },
-              { id: 3, type: 'warning', message: '3 employees forgot to checkout', badge: 3, link: '/attendance' },
-            ];
+            // ✅ Fetch real attendance data to find checkout-missing employees
+            try {
+              const attendanceRes = await axios.get(
+                `${import.meta.env.VITE_API_BASE_URL}/api/attendance/all`
+              );
+
+              const attendanceData = Array.isArray(attendanceRes.data)
+                ? attendanceRes.data
+                : Array.isArray(attendanceRes.data?.data)
+                ? attendanceRes.data.data
+                : [];
+
+              // Find employees who checked in but not checked out
+              const checkoutMissing = attendanceData.filter(
+                (record) =>
+                  record.checkIn &&
+                  record.checkIn !== "-" &&
+                  (!record.checkOut || record.checkOut === "-")
+              );
+
+              // Create one notification per employee with missing checkout
+              // De-duplicate by employee name so same person across multiple dates shows once
+              const seenNames = new Set();
+              const checkoutNotifications = [];
+
+              checkoutMissing.forEach((record, idx) => {
+                const name = record.name || record.employeeName || "Employee";
+                const empId = record.empId || record.employeeId || "";
+
+                // Use name as dedup key (same employee, multiple missing days → one notification)
+                if (!seenNames.has(name)) {
+                  seenNames.add(name);
+                  checkoutNotifications.push({
+                    id: `checkout-missing-${empId || idx}`,
+                    type: "warning",
+                    message: `${name} - Not checked out`,
+                    badge: 1,
+                    link: "/attendance",
+                    employeeId: empId,
+                    employeeName: name,
+                  });
+                }
+              });
+
+              notifications.push(...checkoutNotifications);
+
+              // Add other admin notifications
+              notifications.push({
+                id: "admin-payroll",
+                type: "info",
+                message: "Payroll processed for April 2026",
+                badge: 0,
+                link: "/payroll",
+              });
+            } catch (err) {
+              console.error("Failed to fetch attendance for notifications:", err);
+              // Fallback to static notification
+              notifications.push({
+                id: "admin-checkout-fallback",
+                type: "warning",
+                message: "Some employees forgot to checkout",
+                badge: 1,
+                link: "/attendance",
+              });
+            }
           } else {
             // Employee/Manager notifications: payroll, insurance, reimbursements
             notifications = [
-              { id: 1, type: 'success', message: 'Payroll credited for April 2026', badge: 0, link: '/payroll' },
-              { id: 2, type: 'info', message: 'Insurance claim approved', badge: 0, link: '/insurance-claim' },
-              { id: 3, type: 'pending', message: 'Reimbursement request pending', badge: 1, link: '/reimbursement' },
+              { id: 'emp-1', type: 'success', message: 'Payroll credited for April 2026', badge: 0, link: '/payroll' },
+              { id: 'emp-2', type: 'info', message: 'Insurance claim approved', badge: 0, link: '/insurance-claim' },
+              { id: 'emp-3', type: 'pending', message: 'Reimbursement request pending', badge: 1, link: '/reimbursement' },
             ];
           }
 
@@ -479,37 +572,44 @@ useEffect(() => {
 
             // ✅ If todayAttendance is not in homeData, fetch it separately from attendance API
             if (!data.todayAttendance || !data.todayAttendance.checkIn) {
+              console.log("🔄 Fetching today's attendance separately...");
               try {
                 const userId = user.id || user._id || user.employeeId || user.empId;
                 const attendanceData = await getMyAttendance(userId);
                 
                 // Find today's attendance record
                 const today = new Date().toLocaleDateString("en-CA"); // YYYY-MM-DD format
+                
                 const todayRecord = Array.isArray(attendanceData) 
                   ? attendanceData.find(r => r.date === today)
                   : Array.isArray(attendanceData?.data)
                   ? attendanceData.data.find(r => r.date === today)
                   : null;
                 
-                console.log("📅 Today's date:", today);
-                console.log("📋 Today's attendance record:", todayRecord);
+                console.log("📅 Today's record found:", todayRecord);
                 
                 if (todayRecord) {
+                  const updatedTodayAttendance = {
+                    status: todayRecord.status || (todayRecord.checkIn && todayRecord.checkIn !== "-" ? "Checked In" : "Not Checked In"),
+                    checkIn: todayRecord.checkIn,
+                    checkOut: todayRecord.checkOut,
+                    date: todayRecord.date,
+                    tos: todayRecord.tos,
+                    attendanceType: todayRecord.attendanceType || todayRecord.type
+                  };
+                  
                   setHomeData(prev => ({
                     ...prev,
-                    todayAttendance: {
-                      status: todayRecord.status || (todayRecord.checkIn ? "Checked In" : "Not Checked In"),
-                      checkIn: todayRecord.checkIn,
-                      checkOut: todayRecord.checkOut,
-                      date: todayRecord.date,
-                      tos: todayRecord.tos,
-                      attendanceType: todayRecord.attendanceType || todayRecord.type
-                    }
+                    todayAttendance: updatedTodayAttendance
                   }));
+                  
+                  console.log("✅ Updated today's attendance:", updatedTodayAttendance);
                 }
               } catch (err) {
                 console.error("Failed to fetch today's attendance:", err);
               }
+            } else {
+              console.log("✅ Today's attendance from homeData:", data.todayAttendance);
             }
 
             // ✅ Set attendance percentage from backend stats (works for ALL roles)
@@ -652,7 +752,7 @@ useEffect(() => {
         fetchEvents();
       }, []);
 
-      // Fetch notifications
+      // Fetch notifications from backend and merge with system notifications
       useEffect(() => {
         const fetchNotifications = async () => {
           try {
@@ -669,11 +769,22 @@ useEffect(() => {
                   time: n.time || n.createdAt || new Date().toLocaleTimeString(),
                   read: n.read || false,
                   type: n.type || "info",
-                  link: n.link || null, // Link to navigate when clicked
+                  link: n.link || null,
+                  badge: n.badge || 0,
                 }))
               : [];
             
             setNotifications(notifs);
+
+            // Merge real DB notifications into systemNotifications (prepend to existing)
+            if (notifs.length > 0) {
+              setSystemNotifications(prev => {
+                // avoid duplicates by id
+                const existingIds = new Set(prev.map(n => n.id));
+                const newOnes = notifs.filter(n => !existingIds.has(n.id));
+                return [...newOnes, ...prev];
+              });
+            }
           } catch (err) {
             console.error("Notifications fetch error:", err);
             setNotifications([]);
@@ -1138,6 +1249,31 @@ useEffect(() => {
           onChange={(e) => setFilterText(e.target.value)}
         />
 
+        {/* Select All */}
+        {(() => {
+          const visibleVals = getVisibleUniqueValues("fullName").filter((v) =>
+            String(v).toLowerCase().includes(filterText.toLowerCase())
+          );
+          const allSelected = visibleVals.length > 0 && visibleVals.every((v) => filters.fullName?.includes(v));
+          return (
+            <label style={{ fontWeight: 700, padding: "4px 0", display: "flex", alignItems: "center", gap: 6, borderBottom: "1px solid #e5e7eb", marginBottom: 4 }}>
+              <input
+                type="checkbox"
+                checked={allSelected}
+                onChange={(e) => {
+                  setFilters((prev) => ({
+                    ...prev,
+                    fullName: e.target.checked
+                      ? [...new Set([...(prev.fullName || []), ...visibleVals])]
+                      : (prev.fullName || []).filter((v) => !visibleVals.includes(v)),
+                  }));
+                }}
+              />
+              Select All
+            </label>
+          );
+        })()}
+
         {/* Checkbox List */}
 <div className="filter-checkbox-list">
  {getVisibleUniqueValues("fullName")
@@ -1205,6 +1341,31 @@ useEffect(() => {
           value={filterText}
           onChange={(e) => setFilterText(e.target.value)}
         />
+
+        {/* Select All */}
+        {(() => {
+          const visibleVals = getVisibleUniqueValues("department").filter((v) =>
+            String(v).toLowerCase().includes(filterText.toLowerCase())
+          );
+          const allSelected = visibleVals.length > 0 && visibleVals.every((v) => filters.department?.includes(v));
+          return (
+            <label style={{ fontWeight: 700, padding: "4px 0", display: "flex", alignItems: "center", gap: 6, borderBottom: "1px solid #e5e7eb", marginBottom: 4 }}>
+              <input
+                type="checkbox"
+                checked={allSelected}
+                onChange={(e) => {
+                  setFilters((prev) => ({
+                    ...prev,
+                    department: e.target.checked
+                      ? [...new Set([...(prev.department || []), ...visibleVals])]
+                      : (prev.department || []).filter((v) => !visibleVals.includes(v)),
+                  }));
+                }}
+              />
+              Select All
+            </label>
+          );
+        })()}
 
         {/* Checkbox List */}
      <div className="filter-checkbox-list">
@@ -1277,6 +1438,31 @@ onChange={(e) => {
           onChange={(e) => setFilterText(e.target.value)}
         />
 
+        {/* Select All */}
+        {(() => {
+          const visibleVals = getVisibleUniqueValues("designation").filter((v) =>
+            String(v).toLowerCase().includes(filterText.toLowerCase())
+          );
+          const allSelected = visibleVals.length > 0 && visibleVals.every((v) => filters.designation?.includes(v));
+          return (
+            <label style={{ fontWeight: 700, padding: "4px 0", display: "flex", alignItems: "center", gap: 6, borderBottom: "1px solid #e5e7eb", marginBottom: 4 }}>
+              <input
+                type="checkbox"
+                checked={allSelected}
+                onChange={(e) => {
+                  setFilters((prev) => ({
+                    ...prev,
+                    designation: e.target.checked
+                      ? [...new Set([...(prev.designation || []), ...visibleVals])]
+                      : (prev.designation || []).filter((v) => !visibleVals.includes(v)),
+                  }));
+                }}
+              />
+              Select All
+            </label>
+          );
+        })()}
+
         {/* Checkbox List */}
         {getVisibleUniqueValues("designation")
           .filter((value) =>
@@ -1344,6 +1530,31 @@ onChange={(e) => {
           value={filterText}
           onChange={(e) => setFilterText(e.target.value)}
         />
+
+        {/* Select All */}
+        {(() => {
+          const visibleVals = getVisibleUniqueValues("status").filter((v) =>
+            String(v).toLowerCase().includes(filterText.toLowerCase())
+          );
+          const allSelected = visibleVals.length > 0 && visibleVals.every((v) => filters.status?.includes(v));
+          return (
+            <label style={{ fontWeight: 700, padding: "4px 0", display: "flex", alignItems: "center", gap: 6, borderBottom: "1px solid #e5e7eb", marginBottom: 4 }}>
+              <input
+                type="checkbox"
+                checked={allSelected}
+                onChange={(e) => {
+                  setFilters((prev) => ({
+                    ...prev,
+                    status: e.target.checked
+                      ? [...new Set([...(prev.status || []), ...visibleVals])]
+                      : (prev.status || []).filter((v) => !visibleVals.includes(v)),
+                  }));
+                }}
+              />
+              Select All
+            </label>
+          );
+        })()}
 
         {/* Checkbox List */}
         {getVisibleUniqueValues("status")
@@ -1591,7 +1802,10 @@ onChange={(e) => {
                 <div className="check-buttons">
                   <div>
                     <p>Check-In</p>
-                    <h2>Not checked in</h2>
+                    <h2>{homeData?.todayAttendance?.checkIn ? 
+                        formatTime(homeData?.todayAttendance?.checkIn) : 
+                        "Not checked in"}
+                    </h2>
                   <button
     className="check-btn"
   onClick={async () => {
@@ -1650,30 +1864,47 @@ onChange={(e) => {
           
                   <div>
                     <p>Check-Out</p>
-                    <h2>Not checked out</h2>
+                    <h2>{homeData?.todayAttendance?.checkOut ? 
+                        formatTime(homeData?.todayAttendance?.checkOut) : 
+                        "Not checked out"}
+                    </h2>
                   <button
     className="check-btn red-btn"
   onClick={async () => {
     try {
+      const currentTime = new Date().toLocaleTimeString();
+      
       const res = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/attendance/checkout`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-      
           message: `${user?.name} checked out`,
-      type: "info",
-      link: "/attendance"
+          type: "info",
+          link: "/attendance"
         }),
       });
 
-    if (res.ok) {
-    alert("Check-out successful");
-    await refreshAttendanceStatus(); // 🔄 LIVE UPDATE
-  } else {
-    alert("Check-out failed");
-  }
+      if (res.ok) {
+        // ✅ Immediately update UI with current checkout time
+        setHomeData(prev => ({
+          ...prev,
+          todayAttendance: {
+            ...prev?.todayAttendance,
+            checkOut: currentTime,
+            checkOutTime: currentTime,
+            status: "Checked Out"
+          }
+        }));
+        
+        alert("Check-out successful");
+        
+        // 🔄 Then fetch fresh data from server
+        await refreshAttendanceStatus();
+      } else {
+        alert("Check-out failed");
+      }
     } catch (err) {
       console.error(err);
       alert("Error during check-out");
@@ -1999,13 +2230,20 @@ onChange={(e) => {
     key={notification.id}
     className={`notify ${notification.type}`}
     onClick={() => {
+      // ✅ Mark as read so it disappears after clicking
       setReadNotifications((prev) => [
-      ...prev,
-      notification.id,
-    ]);
-      navigate(notification.link, {
-        state: { focus: notification.focus }
-      });
+        ...prev,
+        notification.id,
+      ]);
+      
+      if (notification.link) {
+        // ✅ Pass employee name in state so Attendance page can auto-filter
+        const navigationState = notification.employeeName
+          ? { filterEmployee: notification.employeeName, employeeName: notification.employeeName }
+          : null;
+        
+        navigate(notification.link, navigationState ? { state: navigationState } : {});
+      }
     }}
     style={{ cursor: "pointer", position: "relative" }}
   >
@@ -2013,8 +2251,7 @@ onChange={(e) => {
       {notification.message}
     </span>
 
-    {notification.badge > 0 &&
-      !readNotifications.includes(notification.id) && (
+    {notification.badge > 0 && (
         <span className="notification-badge">
           {notification.badge}
         </span>

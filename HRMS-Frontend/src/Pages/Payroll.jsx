@@ -1,4 +1,4 @@
-import { toast, ToastContainer } from "react-toastify";
+﻿import { toast, ToastContainer } from "react-toastify";
 import html2canvas from "html2canvas";
 import jsPDF from "jspdf";
 
@@ -14,7 +14,7 @@ import { useContext } from "react";
 import { AuthContext } from "../Context/Authcontext";
 
 
-/* COMPONENTS — UNCHANGED */
+/* COMPONENTS */
 import PayrollHeader from "../Pages/Payroll/PayrollHeader";
 import PayrollStats from "../Pages/Payroll/PayrollStats";
 import PayrollToolbar from "../Pages/Payroll/PayrollToolbar";
@@ -22,6 +22,7 @@ import PayrollTable from "../Pages/Payroll/PayrollTable";
 import PayrollProfileCard from "../Pages/Payroll/PayrollProfileCard";
 import PayrollFooter from "../Pages/Payroll/PayrollFooter";
 import ViewPayslipModal from "../Pages/Payroll/ViewPayslipModal";
+import SalaryProcessTracker from "../Pages/Payroll/SalaryProcessTracker";
 import { getPayrollData } from "../api/payrollApi";
 import { getAllEmployees } from "../api/employeeApi";
 /* DATA */
@@ -32,8 +33,8 @@ import { processAllPayroll } from "../api/payrollApi";
 const Payroll = () => {
   const { refreshKey } = useContext(PayrollContext);
   const { user } = useContext(AuthContext);
-   const navigate = useNavigate();   // ✅ ADD HERE
-   const location = useLocation();
+  const navigate = useNavigate();
+  const location = useLocation();
 
   const [openPayslip, setOpenPayslip] = useState(false);
   const [selectedPayslip, setSelectedPayslip] = useState(null);
@@ -42,13 +43,13 @@ const Payroll = () => {
   const [search, setSearch] = useState("");
   const [employees, setEmployees] = useState([]);
   const [fromMonth, setFromMonth] = useState("");
-const [toMonth, setToMonth] = useState("");
-const [sortType, setSortType] = useState("");
-const [columnFilters, setColumnFilters] = useState({});
-const [currentPage, setCurrentPage] = useState(1);
-const rowsPerPage = 6;
+  const [toMonth, setToMonth] = useState("");
+  const [sortType, setSortType] = useState("");
+  const [columnFilters, setColumnFilters] = useState({});
+  const [currentPage, setCurrentPage] = useState(1);
+  const rowsPerPage = 6;
 
-const [prevData, setPrevData] = useState(null); // ✅ change [] → null
+  const [prevData, setPrevData] = useState(null);
 
 const fetchPayroll = async () => {
   try {
@@ -58,7 +59,7 @@ const fetchPayroll = async () => {
       ? res.data
       : [];
 
-    console.log("🔥 PAYROLL:", payrollData);
+    console.log("PAYROLL:", payrollData);
 
     // salary credited toast
     if (prevData) {
@@ -72,18 +73,16 @@ const fetchPayroll = async () => {
           old?.salaryStatus !== "CREDITED"
         ) {
           toast.success(
-            `${item.empName || item.fullName} salary credited successfully 🎉`
+            `${item.empName || item.fullName} salary credited successfully`
           );
         }
       });
     }
 
     setPrevData(payrollData);
-
-    // ✅ IMPORTANT
     setData(payrollData);
 
-    // ✅ restore selected employee
+    // restore selected employee
     const saved = localStorage.getItem("selectedEmployee");
 
     if (saved) {
@@ -103,37 +102,32 @@ const fetchPayroll = async () => {
     setData([]);
   }
 };
+
 useEffect(() => {
   fetchPayroll();
-}, [location.state?.refresh]); // ✅ Refetch when returning from UpdatePayroll
+}, [location.state?.refresh]);
 
 useEffect(() => {
   console.log("PAYROLL DATA:", data);
 }, [data]);
+
 useEffect(() => {
   const saved = localStorage.getItem("selectedEmployee");
   if (saved) {
     setActiveEmployee(JSON.parse(saved));
   }
 }, []);
+
 useEffect(() => {
   getAllEmployees()
     .then(res => {
-      console.log("🔥 EMPLOYEE API RESPONSE:", res);
-      // getAllEmployees() returns response.data directly — already the array
       const empData = Array.isArray(res) ? res : (Array.isArray(res?.data) ? res.data : []);
       setEmployees(empData);
-      console.log("📊 EMPLOYEE DATA SET:", empData);
     })
     .catch(err => console.error("Employee fetch error", err));
-}, [location.state?.refresh]); // ✅ Re-fetch employees on refresh
+}, [location.state?.refresh]);
 
-
-
-
-
- useEffect(() => {
-  // ✅ If admin login → show admin's own record first
+useEffect(() => {
   if (user && data.length > 0 && !activeEmployee) {
     const adminRecord = data.find(
       (emp) =>
@@ -147,14 +141,6 @@ useEffect(() => {
   }
 }, [user, data]);
 
- 
-useEffect(() => {
-  console.log("🔥 CURRENT USER:", user);
-  console.log("📊 PAYROLL DATA:", data);
-  console.log("📍 ENRICHED DATA:", enrichedData);
-  console.log("📌 ROLE-BASED DATA:", roleBasedData);
-}, [user, data]);
-
 useEffect(() => {
   const timer = setTimeout(() => {
     setCurrentPage(1);
@@ -163,11 +149,11 @@ useEffect(() => {
   return () => clearTimeout(timer);
 }, [search]);
 
-
 useEffect(() => {
   setCurrentPage(1);
 }, [search, fromMonth, toMonth, sortType]);
-// ✅ ENRICH PAYROLL DATA
+
+// ENRICH PAYROLL DATA
 const enrichedData = data.map((pay) => {
 
   const emp = employees?.find(
@@ -195,8 +181,7 @@ const enrichedData = data.map((pay) => {
   };
 });
 
-
-// ✅ ROLE BASED FILTER
+// ROLE BASED FILTER
 let roleBasedData = [...enrichedData];
 
 if (user?.role === "employee") {
@@ -232,8 +217,7 @@ if (user?.role === "employee") {
   });
 }
 
-
-// ✅ SEARCH FILTER
+// SEARCH FILTER
 const filteredData = roleBasedData.filter((emp) => {
 
   const searchText = search?.toLowerCase() || "";
@@ -254,8 +238,7 @@ const filteredData = roleBasedData.filter((emp) => {
   );
 });
 
-
-// ✅ SORT DATA
+// SORT DATA
 let sortedData = [...filteredData];
 
 if (sortType === "high") {
@@ -275,8 +258,6 @@ if (sortType === "high") {
   );
 
 } else {
-
-  // latest updated first
   sortedData.sort(
     (a, b) =>
       (b.updatedAt || 0) -
@@ -284,50 +265,41 @@ if (sortType === "high") {
   );
 }
 
+// ✅ KPI CALCULATIONS — only employees who have actual salary data (gross > 0)
+const activePayrollData = roleBasedData.filter(
+  (emp) => (emp.gross || emp.grossPay || emp.salary || 0) > 0
+);
 
-// ✅ KPI CALCULATIONS
-const totalEmployees = roleBasedData.length;
+const totalEmployees = activePayrollData.length;
 
-const totalPayroll = roleBasedData.reduce(
+const totalPayroll = activePayrollData.reduce(
   (sum, emp) =>
     sum + (emp.gross || emp.grossPay || emp.salary || 0),
   0
 );
 
-const totalDeductions = roleBasedData.reduce(
+// totalDeductions is always a positive number (no minus sign)
+const totalDeductions = activePayrollData.reduce(
   (sum, emp) =>
     sum +
-    ((emp.tax || 0) +
-      (emp.pf || 0) +
-      (emp.insurance || 0)),
+    Math.abs((emp.tax || 0) + (emp.pf || 0) + (emp.insurance || 0)),
   0
 );
 
-const totalNetPay = roleBasedData.reduce(
+const totalNetPay = activePayrollData.reduce(
   (sum, emp) =>
     sum + (emp.net || emp.netPay || 0),
   0
 );
 
-
-// ✅ PAGINATION
+// PAGINATION
 const indexOfLast = currentPage * rowsPerPage;
+const indexOfFirst = indexOfLast - rowsPerPage;
+const paginatedData = sortedData.slice(indexOfFirst, indexOfLast);
 
-const indexOfFirst =
-  indexOfLast - rowsPerPage;
+// TOTAL PAGES
+const totalPages = Math.ceil(sortedData.length / rowsPerPage);
 
-const paginatedData = sortedData.slice(
-  indexOfFirst,
-  indexOfLast
-);
-
-
-// ✅ TOTAL PAGES
-const totalPages = Math.ceil(
-  sortedData.length / rowsPerPage
-);
-    
-   
 
   const handleViewPayslip = (record) => {
     setSelectedPayslip(record);
@@ -336,17 +308,16 @@ const totalPages = Math.ceil(
 
 const handleProfileView = (record) => {
   setActiveEmployee({ ...record });
-
-  // ✅ ADD THIS
   localStorage.setItem("selectedEmployee", JSON.stringify(record));
 };
 
 const handleEditPayroll = (record) => {
-   console.log("Edit clicked:", record);
+  console.log("Edit clicked:", record);
   navigate("/update-payroll", {
     state: { employee: record }
   });
 };
+
 const handleDownloadPayslip = async () => {
   const element = document.getElementById("payslip");
 
@@ -356,25 +327,19 @@ const handleDownloadPayslip = async () => {
   }
 
   const canvas = await html2canvas(element, { scale: 2 });
-
   const imgData = canvas.toDataURL("image/png");
-
   const pdf = new jsPDF("p", "mm", "a4");
-
-  const imgWidth = 210; // A4 width
+  const imgWidth = 210;
   const imgHeight = (canvas.height * imgWidth) / canvas.width;
-
   pdf.addImage(imgData, "PNG", 0, 0, imgWidth, imgHeight);
-
   pdf.save("Payslip.pdf");
 };
 
 const handleProcessPayroll = async (record) => {
   try {
-   const empId = record.employeeId || record.empId;
-await processPayroll(empId);
+    const empId = record.employeeId || record.empId;
+    await processPayroll(empId);
 
-    // wait + refresh again
     setTimeout(async () => {
       await fetchPayroll();
     }, 2500);
@@ -386,24 +351,22 @@ await processPayroll(empId);
 
 const handleProcessAll = async () => {
   try {
-    await processAllPayroll();   // ✅ USE THIS
-
-    await fetchPayroll();        // ✅ refresh UI
-
+    await processAllPayroll();
+    await fetchPayroll();
   } catch (err) {
     console.error("Batch process error", err);
   }
 };
+
 const handleProcessSingle = async (empId) => {
   try {
     await axios.put(`/api/payroll/process/${empId}`);
-
-    await fetchPayroll();   // ✅ AUTO REFRESH
-
+    await fetchPayroll();
   } catch (err) {
     console.error(err);
   }
 };
+
 const handleStatusChange = async (record, newStatus) => {
   try {
     console.log("FULL RECORD:", record);
@@ -415,7 +378,6 @@ const handleStatusChange = async (record, newStatus) => {
         record.employee?.employeeId;
 
       console.log("FINAL ID SENT:", empId);
-
       await processPayroll(empId);
     }
 
@@ -425,10 +387,8 @@ const handleStatusChange = async (record, newStatus) => {
     console.error(err);
   }
 };
-const handleExport = () => {
-  console.log("Export clicked", filteredData);
 
-  // simple CSV export (basic)
+const handleExport = () => {
   const csv = filteredData.map(emp =>
     `${emp.fullName},${emp.department},${emp.salary || emp.grossPay || 0}`
   );
@@ -445,58 +405,61 @@ const handleExport = () => {
 
 
   return (
-    /* ⭐ PAGE CONTAINER — SAME AS PROFILE */
     <div className="page-wrapper">
-        <ToastContainer position="top-right" autoClose={2000} />
+      <ToastContainer position="top-right" autoClose={2000} />
       <div className="page-container">
 
         <PayrollHeader />
-        
-       <PayrollStats
-  totalEmployees={totalEmployees}
-  totalPayroll={totalPayroll}
-  totalDeductions={totalDeductions}
-  totalNetPay={totalNetPay}
-/>
+
+        <PayrollStats
+          totalEmployees={totalEmployees}
+          totalPayroll={totalPayroll}
+          totalDeductions={totalDeductions}
+          totalNetPay={totalNetPay}
+        />
 
         <div className="payroll-content">
           {/* LEFT */}
           <div className="payroll-left">
             <PayrollToolbar
-            
-  search={search}
-  setSearch={setSearch}
-  fromMonth={fromMonth}
-  setFromMonth={setFromMonth}
-  toMonth={toMonth}
-  setToMonth={setToMonth}
-   sortType={sortType}
-  setSortType={setSortType}
-  columnFilters={columnFilters}
-  setColumnFilters={setColumnFilters}
-   onExport={handleExport}   // ✅ ADD THIS
-  onUpdatePayroll={user?.role === "admin" || user?.role === "hr" ? () => navigate("/update-payroll") : undefined}
-    onProcessAll={user?.role === "admin" || user?.role === "hr" ? handleProcessAll : undefined}
-/>
+              search={search}
+              setSearch={setSearch}
+              fromMonth={fromMonth}
+              setFromMonth={setFromMonth}
+              toMonth={toMonth}
+              setToMonth={setToMonth}
+              sortType={sortType}
+              setSortType={setSortType}
+              columnFilters={columnFilters}
+              setColumnFilters={setColumnFilters}
+              onExport={handleExport}
+              onUpdatePayroll={user?.role === "admin" || user?.role === "hr" ? () => navigate("/update-payroll") : undefined}
+              onProcessAll={user?.role === "admin" || user?.role === "hr" ? handleProcessAll : undefined}
+            />
+
+            {/* ✅ SALARY PROCESS TRACKER — shown after toolbar for admin/hr/finance */}
+            {(user?.role === "admin" || user?.role === "hr" || user?.role === "finance") && (
+              <SalaryProcessTracker role={user?.role} />
+            )}
 
             <PayrollTable
-  data={paginatedData}
-  onViewPayslip={handleViewPayslip}
-  onProfileView={handleProfileView}
-    onDownloadPayslip={handleDownloadPayslip}   // ✅ ADD THIS
- onEditPayroll={user?.role === "admin" || user?.role === "hr" ? handleEditPayroll : undefined}
-onProcessPayroll={user?.role === "admin" || user?.role === "hr" ? handleProcessPayroll : undefined}
-onProcessAll={user?.role === "admin" || user?.role === "hr" ? handleProcessAll : undefined}
-onStatusChange={user?.role === "admin" || user?.role === "hr" ? handleStatusChange : undefined}
-columnFilters={columnFilters}
-setColumnFilters={setColumnFilters}
-/>
+              data={paginatedData}
+              onViewPayslip={handleViewPayslip}
+              onProfileView={handleProfileView}
+              onDownloadPayslip={handleDownloadPayslip}
+              onEditPayroll={user?.role === "admin" || user?.role === "hr" ? handleEditPayroll : undefined}
+              onProcessPayroll={user?.role === "admin" || user?.role === "hr" ? handleProcessPayroll : undefined}
+              onProcessAll={user?.role === "admin" || user?.role === "hr" ? handleProcessAll : undefined}
+              onStatusChange={user?.role === "admin" || user?.role === "hr" ? handleStatusChange : undefined}
+              columnFilters={columnFilters}
+              setColumnFilters={setColumnFilters}
+            />
 
-            <PayrollFooter 
-  currentPage={currentPage}
-  setCurrentPage={setCurrentPage}
-  totalPages={totalPages}
-/>
+            <PayrollFooter
+              currentPage={currentPage}
+              setCurrentPage={setCurrentPage}
+              totalPages={totalPages}
+            />
           </div>
 
           {/* RIGHT */}

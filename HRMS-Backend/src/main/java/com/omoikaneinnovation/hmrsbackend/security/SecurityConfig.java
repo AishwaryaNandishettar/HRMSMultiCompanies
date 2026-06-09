@@ -141,6 +141,7 @@ public CorsConfigurationSource corsConfigurationSource() {
 .requestMatchers("/api/departments/**").permitAll()
 .requestMatchers("/api/events/**").permitAll()
 .requestMatchers("/api/notifications/**").permitAll()
+.requestMatchers("/api/diagnostic/**").permitAll()
 .requestMatchers("/api/helpdesk/**").authenticated()
 
 // 🔥 ADD THIS HERE

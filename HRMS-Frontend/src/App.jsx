@@ -7,6 +7,7 @@ import {
 } from "react-router-dom";
 import { CallProvider } from "./Context/CallContext";
 import { AuthProvider } from "./Context/Authcontext";
+import { UserProvider } from "./Context/UserContext"; // ✅ NEW: Role-based access
 import GlobalCallNotification from "./Components/GlobalCallNotification";
 
 import { AuthContext } from "./Context/Authcontext";

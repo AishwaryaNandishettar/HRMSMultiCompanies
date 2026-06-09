@@ -326,17 +326,15 @@ setLeaves(
 ),// 🔥 FORCE STRING
               
               employeeName: formData.employeeName,
+              employeeEmail: user?.email || "",          // ✅ employee's own email
               leaveType: formData.leaveType,
               startDate: formData.fromDate,
               endDate: formData.toDate,
               reason: formData.comments,
-              // ✅ ADD THESE 2 LINES ONLY
-     // ✅ MAKE SURE THESE ARE NOT UNDEFINED
-  department: user?.department || user?.dept,
-  reportingManager: user?.reportingManager || user?.manager,
-   // ✅ ADD THIS
- // ✅ ONLY THIS (REMOVE others)
-  managerEmail: user?.managerEmail   // MUST BE CORRECT
+              department: user?.department || user?.dept,
+              reportingManager: user?.reportingManager || user?.manager,
+              managerEmail: formData.manager || user?.managerEmail,  // from form input
+              ccEmail: formData.cc || ""                 // ✅ CC email from form
 
             };
 
