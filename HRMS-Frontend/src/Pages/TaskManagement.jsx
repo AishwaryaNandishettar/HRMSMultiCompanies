@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import "./Task.css";
 import api from "../api/axios";
-import { getTasks, createTaskApi } from "../api/taskApi";
+import { getTasks, createTaskApi, getMyTasks, updateProgressApi } from "../api/taskApi";
 import * as XLSX from "xlsx";
 import { saveAs } from "file-saver";
 export default function Task() {
@@ -97,22 +97,29 @@ useEffect(() => {
 
 const loadTasks = async () => {
   try {
-    const response = await getTasks();
+    const userRole = localStorage.getItem("role")?.toLowerCase() || "employee";
+    
+    let response;
+    
+    // Use different API based on role
+    if (userRole === "employee") {
+      // Employees get only their assigned tasks
+      response = await getMyTasks();
+      console.log("EMPLOYEE - MY TASKS:", response.data);
+    } else {
+      // Admin and Manager get all tasks (backend filters for manager)
+      response = await getTasks();
+      console.log("ADMIN/MANAGER - ALL TASKS:", response.data);
+    }
 
-    console.log(
-      "TASK COUNT:",
-      response.data.length
-    );
-
-    console.log(
-      "TASK DATA:",
-      response.data
-    );
+    console.log("TASK COUNT:", response.data.length);
+    console.log("TASK DATA:", response.data);
 
     setTaskData(response.data);
 
   } catch (error) {
-    console.error(error);
+    console.error("Load Tasks Error:", error);
+    setTaskData([]);
   }
 };
 
@@ -385,12 +392,26 @@ const assignTask = async () => {
   }
 
   try {
+    // Find the selected employee to get their email
+    const selectedEmployee = employees.find(
+      (emp) => emp.fullName === taskForm.assignedTo
+    );
+    
+    if (!selectedEmployee) {
+      alert("Employee not found");
+      return;
+    }
+
     const payload = {
       title: taskForm.task,
       assigneeName: taskForm.assignedTo,
+      assignee: selectedEmployee.email, // Add employee email
+      assigneeId: selectedEmployee.employeeId || selectedEmployee.id,
       priority: taskForm.priority,
       dueDate: taskForm.dueDate,
     };
+
+    console.log("Creating task with payload:", payload);
 
     await createTaskApi(payload);
 
@@ -403,33 +424,92 @@ const assignTask = async () => {
       dueDate: "",
     });
 
+    alert("Task assigned successfully!");
+
   } catch (err) {
     console.error("Task Create Error", err);
     alert("Failed to assign task");
   }
 };
 
-const handleUpload = (e, task) => {
+const handleUpload = async (e, task) => {
   const file = e.target.files?.[0];
 
   if (!file) return;
 
+  // Store file in local state immediately for UI feedback
   setUploadedFiles((prev) => ({
     ...prev,
     [task.id]: file,
   }));
 
-  console.log("Uploaded:", file.name, "for task:", task.id);
-};
-
-const handleView = (task) => {
-  if (task.attachmentUrl) {
-    window.open(task.attachmentUrl, "_blank");
-  } else {
-    alert("No file uploaded");
+  try {
+    console.log("Uploading file:", file.name, "for task:", task.id);
+    
+    // Create FormData
+    const formData = new FormData();
+    formData.append("file", file);
+    
+    // Try to upload file to server
+    const response = await api.post("/api/files/upload", formData, {
+      headers: {
+        "Content-Type": "multipart/form-data",
+      },
+    });
+    
+    console.log("File upload response:", response.data);
+    
+    // Update task with attachment URL
+    const fileUrl = response.data.fileUrl || response.data.url || `/uploads/${file.name}`;
+    
+    await api.put(`/api/tasks/${task.id}`, {
+      attachmentUrl: fileUrl,
+      attachmentName: file.name,
+    });
+    
+    // Reload tasks to show updated attachment
+    await loadTasks();
+    
+    alert("File uploaded successfully!");
+    
+  } catch (error) {
+    console.error("File upload error:", error);
+    
+    // If backend endpoint not ready, still allow local file selection
+    if (error.response?.status === 404) {
+      console.warn("Backend upload endpoint not ready. File stored locally for now.");
+      alert(`File "${file.name}" selected. Upload endpoint will be available after backend restart.`);
+    } else {
+      alert("Failed to upload file to server. File is selected locally.");
+    }
   }
 };
+const handleView = (task) => {
+  // File uploaded and saved in backend
+  if (task.attachmentUrl) {
+    let fileUrl = task.attachmentUrl;
 
+    // Handle relative URLs
+   if (!fileUrl.startsWith("http")) {
+  fileUrl = `http://localhost:8082${fileUrl}`;
+}
+    window.open(fileUrl, "_blank");
+    return;
+  }
+
+  // File selected locally but not yet stored in backend
+  if (uploadedFiles[task.id]) {
+    const file = uploadedFiles[task.id];
+
+    const blobUrl = URL.createObjectURL(file);
+
+    window.open(blobUrl, "_blank");
+
+    return;
+  }
+
+  alert("No file uploaded for this task");
+};
 
   return (
 
@@ -927,7 +1007,36 @@ const handleView = (task) => {
 
               </div>
 
-              {t.progress}%
+              {/* Editable Progress Input for Employees */}
+              {role === "employee" ? (
+                <input
+                  type="number"
+                  min="0"
+                  max="100"
+                  value={t.progress}
+                  onChange={async (e) => {
+                    const newProgress = parseInt(e.target.value) || 0;
+                    if (newProgress >= 0 && newProgress <= 100) {
+                      try {
+                        await updateProgressApi(t.id, newProgress);
+                        await loadTasks(); // Reload to show updated progress
+                      } catch (err) {
+                        console.error("Progress update error:", err);
+                        alert("Failed to update progress");
+                      }
+                    }
+                  }}
+                  style={{
+                    width: "50px",
+                    marginLeft: "8px",
+                    padding: "4px",
+                    border: "1px solid #ddd",
+                    borderRadius: "4px"
+                  }}
+                />
+              ) : (
+                <span style={{ marginLeft: "8px" }}>{t.progress}%</span>
+              )}
 
             </td>
 
@@ -958,9 +1067,23 @@ const handleView = (task) => {
 <button
   className="taskPage-uploadBtn"
   onClick={() => document.getElementById(`file-${t.id}`).click()}
+  style={{
+    background: uploadedFiles[t.id] || t.attachmentUrl ? "#28a745" : "#007bff",
+    color: "white",
+    padding: "6px 12px",
+    border: "none",
+    borderRadius: "4px",
+    cursor: "pointer"
+  }}
 >
-  Upload
+  {uploadedFiles[t.id] || t.attachmentUrl ? "✓ Uploaded" : "Upload"}
 </button>
+
+{uploadedFiles[t.id] && (
+  <div style={{ fontSize: "11px", marginTop: "4px", color: "#666" }}>
+    {uploadedFiles[t.id].name}
+  </div>
+)}
 
             </td>
 
@@ -970,9 +1093,12 @@ const handleView = (task) => {
 
             <td>
 
-              <button
+            <button
   className="taskPage-actionBtn"
-  onClick={() => handleView(t)}
+  onClick={() => {
+    console.log("TASK DATA:", t);
+    handleView(t);
+  }}
 >
   View
 </button>
