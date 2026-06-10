@@ -16,6 +16,7 @@
     import java.time.Duration;
     import java.time.LocalDate;
     import java.time.LocalTime;
+    import java.time.ZoneId;
     import java.util.List;
     import java.util.Optional;
     import java.util.stream.Collectors;
@@ -76,7 +77,9 @@ private RestTemplate restTemplate;
             Attendance attendance = new Attendance();
             attendance.setUserId(normalizedUserId);
             attendance.setDate(date);
-            attendance.setCheckIn(LocalTime.now().toString());
+         attendance.setCheckIn(
+    LocalTime.now(ZoneId.of("Asia/Kolkata")).toString()
+);
 
             // Set additional fields from payload
             if (payload != null) {
@@ -149,7 +152,8 @@ private RestTemplate restTemplate;
                 return "Check-in not found";
             }
 
-            String checkOutTime = LocalTime.now().toString();
+            String checkOutTime =
+    LocalTime.now(ZoneId.of("Asia/Kolkata")).toString();
             attendance.setCheckOut(checkOutTime);
 
             LocalTime in = LocalTime.parse(attendance.getCheckIn());

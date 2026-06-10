@@ -1816,12 +1816,13 @@ onChange={(e) => {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          userId: String(
-    user?.employeeId ||
-    user?.empId ||
-    user?.id ||
-    ""
-  ).trim(),
+        userId: String(
+  user?.id ||
+  user?._id ||
+  user?.employeeId ||
+  user?.empId ||
+  ""
+).trim(),
 
   empId:
     (user?.role === "admin" || user?.role === "ADMIN")
@@ -1847,6 +1848,19 @@ onChange={(e) => {
       });
 
   if (res.ok) {
+      const currentTime = new Date().toLocaleTimeString("en-GB", {
+    hour12: false,
+  });
+    setHomeData(prev => ({
+    ...prev,
+    todayAttendance: {
+      ...prev?.todayAttendance,
+      checkIn: currentTime,
+      checkInTime: currentTime,
+      status: "Pending Approval"
+    }
+  }));
+
     alert("Check-in successful");
     await refreshAttendanceStatus(); // 🔄 LIVE UPDATE
   } else {
@@ -1872,18 +1886,27 @@ onChange={(e) => {
     className="check-btn red-btn"
   onClick={async () => {
     try {
-      const currentTime = new Date().toLocaleTimeString();
+    const currentTime = new Date().toLocaleTimeString("en-GB", {
+  hour12: false,
+});
       
       const res = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/attendance/checkout`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({
-          message: `${user?.name} checked out`,
-          type: "info",
-          link: "/attendance"
-        }),
+      body: JSON.stringify({
+  userId: String(
+    user?.id ||
+    user?._id ||
+    user?.employeeId ||
+    user?.empId ||
+    ""
+  ).trim(),
+  message: `${user?.name} checked out`,
+  type: "info",
+  link: "/attendance"
+})
       });
 
       if (res.ok) {

@@ -210,7 +210,9 @@ export default function Attendance() {
 
     navigator.geolocation.getCurrentPosition(
       async (pos) => {
-        const time = new Date().toLocaleTimeString();
+        const time = new Date().toLocaleTimeString("en-GB", {
+  hour12: false,
+});
         const hour = new Date().getHours();
 
         try {
@@ -282,7 +284,9 @@ name:
 
     navigator.geolocation.getCurrentPosition(
       async (pos) => {
-        const time = new Date().toLocaleTimeString();
+       const time = new Date().toLocaleTimeString("en-GB", {
+  hour12: false,
+});
 
         try {
           await apiCheckOut({
@@ -334,7 +338,9 @@ name:
       return;
     }
 
-    const time = new Date().toLocaleTimeString();
+  const time = new Date().toLocaleTimeString("en-GB", {
+  hour12: false,
+});
     const hour = new Date().getHours();
 
     try {
