@@ -2093,111 +2093,16 @@ onChange={(e) => {
               <div className="scrollable-box payroll-scroll">
                 <table className="emp-table">
                 <thead>
-    {payrollActiveFilter && (
-      <div className="filter-popup">
-        {getPayrollUniqueValues(payrollActiveFilter).map((value) => (
-          <label key={value}>
-            <input
-              type="checkbox"
-              checked={
-                payrollFilters[payrollActiveFilter]?.includes(value) || false
-              }
-              onChange={(e) => {
-                setPayrollFilters((prev) => ({
-                  ...prev,
-                  [payrollActiveFilter]: e.target.checked
-                    ? [...(prev[payrollActiveFilter] || []), value]
-                    : (prev[payrollActiveFilter] || []).filter(
-                        (v) => v !== value
-                      ),
-                }));
-              }}
-            />
-            {value}
-          </label>
-        ))}
-      </div>
-    )}
 
-    <tr>
-      <th>
-        <div
-          className="header-filter"
-          onClick={() =>
-            
-            setPayrollActiveFilter(
-              payrollActiveFilter === "employee"
-                ? null
-                : "employee"
-            )
-          }
-        >
-          Employee Name <span>▼</span>
-        </div>
-      </th>
 
-      <th>
-        <div
-          className="header-filter"
-          onClick={() =>
-            setPayrollActiveFilter(
-              payrollActiveFilter === "month"
-                ? null
-                : "month"
-            )
-          }
-        >
-          Month <span>▼</span>
-        </div>
-      </th>
-
-      <th>
-        <div
-          className="header-filter"
-          onClick={() =>
-            setPayrollActiveFilter(
-              payrollActiveFilter === "gross"
-                ? null
-                : "gross"
-            )
-          }
-        >
-          Gross <span>▼</span>
-        </div>
-      </th>
-
-      <th>
-        <div
-          className="header-filter"
-          onClick={() =>
-            setPayrollActiveFilter(
-              payrollActiveFilter === "deductions"
-                ? null
-                : "deductions"
-            )
-          }
-        >
-          Deductions <span>▼</span>
-        </div>
-      </th>
-
-      <th>
-        <div
-          className="header-filter"
-          onClick={() =>
-            setPayrollActiveFilter(
-              payrollActiveFilter === "net"
-                ? null
-                : "net"
-            )
-          }
-        >
-          Net Pay <span>▼</span>
-        </div>
-      </th>
-
-      <th>Action</th>
-    </tr>
+   <tr>
+  <th>Employee Name</th>
+  <th>Month</th>
+  <th>Gross</th>
+  <th>Deductions</th>
+  <th>Net Pay</th>
+  <th>Action</th>
+</tr>
   </thead>
                   <tbody>
                   {last3MonthsPayroll

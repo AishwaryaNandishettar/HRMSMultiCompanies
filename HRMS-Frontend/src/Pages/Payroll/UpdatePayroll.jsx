@@ -329,6 +329,7 @@ ifsc: d.ifsc || "",
   });
 
   try {
+    console.log("SAVING PAYROLL:", payload);
     await createPayrollBatch(payload);
     alert("✅ Payroll Saved Successfully!");
     navigate("/payroll", { state: { refresh: Date.now() } });
@@ -447,7 +448,7 @@ ifsc: d.ifsc || "",
         
         const existing = payrollMap[emp.employeeId] || {};
 
-        const empId = emp.employeeId || emp.id || emp.empId;
+       const empId = String(getEmpId(emp));
         if (!empId) return; // skip invalid
 
         initial[empId] = {

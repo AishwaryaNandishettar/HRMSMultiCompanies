@@ -213,11 +213,13 @@ public ResponseEntity<?> sendOfferLetter(
 
         return ResponseEntity.ok("Email sent");
 
-    } catch (Exception e) {
+    } 
+   catch (Exception e) {
+    e.printStackTrace();
 
-        return ResponseEntity
-                .badRequest()
-                .body(e.getMessage());
-    }
+    return ResponseEntity
+            .badRequest()
+            .body("ERROR: " + e.getMessage());
+}
 }
 }

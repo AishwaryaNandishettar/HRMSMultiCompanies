@@ -83,6 +83,9 @@ export default function TimesheetManager() {
   const [showExportMenu, setShowExportMenu] = useState(false);
   const exportRef = useRef();
 
+
+  const today = new Date().toISOString().split("T")[0];
+const currentMonth = today.substring(0, 7);
   // Dual calendar for from/to month selection
   const [fromMonth, setFromMonth] = useState(
     new Date().toISOString().slice(0, 7)
@@ -211,8 +214,23 @@ export default function TimesheetManager() {
     // admin sees all) — no additional role-based client filtering needed here.
 
     // KPI FILTER
-    if (kpiFilter === "PRESENT") return r.present > 0;
-    if (kpiFilter === "ABSENT") return r.lop > 0;
+ if (kpiFilter === "PRESENT") {
+  return (
+    r.month === currentMonth &&
+    Number(r.present) > 0
+  );
+}
+
+if (kpiFilter === "ABSENT") {
+  return (
+    r.month === currentMonth &&
+    (
+      Number(r.lop) > 0 ||
+      r.status === "Absent" ||
+      r.status === "On Leave"
+    )
+  );
+}
     if (kpiFilter === "EMPLOYEES") return true;
 
     return matchesFilter;
@@ -283,9 +301,19 @@ export default function TimesheetManager() {
   };
 
   /* KPI */
-  const totalEmp = records.length;
-  const totalPresent = records.reduce((a, b) => a + (b.present || 0), 0);
-  const totalLOP = records.reduce((a, b) => a + (b.lop || 0), 0);
+ const currentMonthRecords = records.filter(
+  (r) => r.month === currentMonth
+);
+
+const totalEmp = currentMonthRecords.length;
+
+const totalPresent = currentMonthRecords.filter(
+  (r) => Number(r.present) > 0
+).length;
+
+const totalLOP = currentMonthRecords.filter(
+  (r) => Number(r.lop) > 0 || r.status === "On Leave"
+).length;
   const avgHours =
     records.length > 0
       ? (
