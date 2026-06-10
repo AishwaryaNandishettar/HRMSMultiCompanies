@@ -204,6 +204,12 @@ public ResponseEntity<?> sendOfferLetter(
 
     try {
 
+ System.out.println("========== OFFER LETTER ==========");
+        System.out.println("TO: " + to);
+        System.out.println("SUBJECT: " + subject);
+        System.out.println("NAME: " + candidateName);
+        System.out.println("FILE: " + file.getOriginalFilename());
+        System.out.println("SIZE: " + file.getSize());
         mailService.sendOfferLetter(
                 to,
                 subject,
@@ -215,11 +221,16 @@ public ResponseEntity<?> sendOfferLetter(
 
     } 
    catch (Exception e) {
-    e.printStackTrace();
 
-    return ResponseEntity
-            .badRequest()
-            .body("ERROR: " + e.getMessage());
+        e.printStackTrace();
+
+        return ResponseEntity.badRequest().body(
+            "ERROR: " +
+            e.getClass().getName() +
+            " | " +
+            e.getMessage()
+        );
+
 }
 }
 }
