@@ -335,7 +335,10 @@ export async function replacePlaceholdersInPdf(originalArrayBuffer, form) {
 
     console.log("No replacements made, trying advanced PDF processing...");
     // ── Strategy B: find real text positions and overlay ──
-    return await overlayRealTextInPdf(workingBuffer, form);
+ return await overlayRealTextInPdf(
+  workingBuffer.slice(0),
+  form
+);
 
   } catch (err) {
     console.error("[pdfUtils] replacePlaceholdersInPdf error:", err);
@@ -366,12 +369,23 @@ async function overlayRealTextInPdf(originalArrayBuffer, form) {
     const pdfjsLib = await getPdfjs();
 
     // ✅ CREATE SAFE COPY
-  const safeBuffer = originalArrayBuffer.slice(0);
+ const safeBuffer =
+  originalArrayBuffer instanceof Uint8Array
+    ? originalArrayBuffer.slice().buffer.slice(0)
+    : originalArrayBuffer.slice(0);
 
     // ✅ USE SAFE COPY
-    const pdfJsDoc = await pdfjsLib
-      .getDocument({ data: new Uint8Array(safeBuffer) })
-      .promise;
+const sourceBytes =
+  originalArrayBuffer instanceof Uint8Array
+    ? originalArrayBuffer
+    : new Uint8Array(originalArrayBuffer);
+
+const pdfBytes = new Uint8Array(sourceBytes); // deep copy
+
+const pdfJsBytes = new Uint8Array(pdfBytes);
+const pdfJsDoc = await pdfjsLib.getDocument({
+  data: pdfJsBytes
+}).promise;
 
     // Collect text items per page
     const pageTextItems = [];
