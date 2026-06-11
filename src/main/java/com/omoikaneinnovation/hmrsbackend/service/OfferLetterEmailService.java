@@ -41,6 +41,13 @@ public class OfferLetterEmailService {
                 new ByteArrayResource(file.getBytes())
         );
 
-        mailSender.send(message);
+        try {
+    mailSender.send(message);
+    System.out.println("EMAIL SENT SUCCESSFULLY");
+} catch (Exception e) {
+    System.out.println("EMAIL FAILED");
+    e.printStackTrace();
+    throw e;
+}
     }
 }

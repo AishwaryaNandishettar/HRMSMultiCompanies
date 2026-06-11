@@ -985,7 +985,7 @@ useEffect(() => {
     value={totalEmployees}
     icon={<FaUsers />}
     color="blue"
-    onClick={() => navigate("/employees")}
+    onClick={() => navigate("/employee-card")}
   />
   <KpiCard 
     title="Pending Leaves" 

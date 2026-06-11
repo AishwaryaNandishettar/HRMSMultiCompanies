@@ -71,6 +71,7 @@
             <artifactId>spring-boot-starter-mail</artifactId>
         </dependency>
 
+
         <!-- ================= THYMELEAF ================= -->
         <dependency>
             <groupId>org.springframework.boot</groupId>

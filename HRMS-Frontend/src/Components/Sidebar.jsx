@@ -152,6 +152,21 @@ const handleMenuClick = () => {
   </NavLink>
 </li>
 
+  {/* ADMIN ONLY */}
+{role === "admin" && (
+  <>
+    <li>
+      <NavLink  to="/employee-card"
+  className={({ isActive }) =>
+    `${styles.navLink} ${
+      isActive ? styles.activeLink : ""
+    }`
+  }
+>
+        <FaIdBadge />
+        {isOpen && <span>Employee Directory</span>}
+      </NavLink>
+    </li>
         <li>
           <NavLink  to="/workchat"
   className={({ isActive }) =>
@@ -277,21 +292,7 @@ const handleMenuClick = () => {
           </NavLink>
         </li>
 
-       {/* ADMIN ONLY */}
-{role === "admin" && (
-  <>
-    <li>
-      <NavLink  to="/employee-card"
-  className={({ isActive }) =>
-    `${styles.navLink} ${
-      isActive ? styles.activeLink : ""
-    }`
-  }
->
-        <FaIdBadge />
-        {isOpen && <span>Employee Directory</span>}
-      </NavLink>
-    </li>
+     
 
     <li>
       <NavLink  to="/report"

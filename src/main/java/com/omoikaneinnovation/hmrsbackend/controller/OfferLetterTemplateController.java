@@ -204,6 +204,11 @@ public ResponseEntity<?> sendOfferLetter(
 
     try {
 
+        // ✅ CHECK EMPTY FILE
+        if (file == null || file.isEmpty()) {
+            throw new RuntimeException("Uploaded PDF is empty");
+        }
+
  System.out.println("========== OFFER LETTER ==========");
         System.out.println("TO: " + to);
         System.out.println("SUBJECT: " + subject);
@@ -220,17 +225,17 @@ public ResponseEntity<?> sendOfferLetter(
         return ResponseEntity.ok("Email sent");
 
     } 
-   catch (Exception e) {
+ catch (Exception e) {
 
         e.printStackTrace();
 
-        return ResponseEntity.badRequest().body(
-            "ERROR: " +
-            e.getClass().getName() +
-            " | " +
-            e.getMessage()
-        );
+        Map<String,Object> error = new HashMap<>();
+        error.put("type", e.getClass().getName());
+        error.put("message", e.getMessage());
 
-}
+        return ResponseEntity
+                .status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body(error);
+    }
 }
 }
