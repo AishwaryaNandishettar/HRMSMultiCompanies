@@ -191,10 +191,16 @@ export default function Attendance() {
 
   
   /* ================= CHECK IN ================= */
-  const handleCheckIn = async () => {
-    const userId =
-      loggedUser.id || loggedUser._id || loggedUser.employeeId || loggedUser.empId;
+ const handleCheckIn = async () => {
 
+  const day = new Date(selectedDate).getDay(); // 0=Sunday, 6=Saturday
+  if (day === 0 || day === 6) {
+    alert("Today is Weekly Off. Check-In is not allowed.");
+    return;
+  }
+
+  const userId =
+    loggedUser.id || loggedUser._id || loggedUser.employeeId || loggedUser.empId;
     // Check if already checked in for selected date
     const existingRecord = records.find(
       (r) =>
@@ -322,8 +328,15 @@ name:
   };
 
   /* ================= WORK FROM HOME ================= */
-  const handleWorkFromHome = async () => {
-    const userId =
+ const handleWorkFromHome = async () => {
+
+  const day = new Date(selectedDate).getDay(); // 0=Sunday, 6=Saturday
+  if (day === 0 || day === 6) {
+    alert("Today is Weekly Off. Attendance marking is not allowed.");
+    return;
+  }
+
+  const userId =
       loggedUser.id || loggedUser._id || loggedUser.employeeId || loggedUser.empId;
 
     const existingRecord = records.find(
@@ -579,6 +592,7 @@ name:
     { key: "attendanceType", label: "TYPE" },
   ];
 
+  const isWeeklyOff = [0, 6].includes(new Date(selectedDate).getDay());
   /* ================= RENDER ================= */
   return (
    <div className={styles.attendanceContainer}>
@@ -655,13 +669,21 @@ name:
           )}
 
           <>
-            <button className={styles.checkin} onClick={handleCheckIn}>
+          <button
+  className={styles.checkin}
+  onClick={handleCheckIn}
+  disabled={isWeeklyOff}
+>
               Check In
             </button>
             <button className={styles.checkout} onClick={handleCheckOut}>
               Check Out
             </button>
-            <button className={styles.wfh} onClick={handleWorkFromHome}>
+          <button
+  className={styles.wfh}
+  onClick={handleWorkFromHome}
+  disabled={isWeeklyOff}
+>
               Work From Home
             </button>
           </>

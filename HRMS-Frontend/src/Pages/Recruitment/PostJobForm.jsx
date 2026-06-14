@@ -57,6 +57,13 @@ const PostJobForm = ({ onClose, onSuccess, editData }) => {
     <form className="postjob-card" onSubmit={handleSubmit}>
 
       <div className="postjob-header">
+        <button
+  type="button"
+  className="close-btn"
+  onClick={onClose}
+>
+  ✕
+</button>
         <h2>Post Job Details</h2>
         <p>Enter structured job information</p>
       </div>

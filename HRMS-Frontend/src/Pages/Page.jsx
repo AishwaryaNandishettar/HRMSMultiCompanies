@@ -2,8 +2,7 @@
 import React, { useState, useContext, useEffect, useRef } from "react";
 import { AuthContext } from "../Context/Authcontext";
 import "./InsuranceClaim.css";
-import { createClaim, getClaims, updateClaimStatus, updateApprovedAmount,saveEmployeeInsurance,
-  saveNominee } from "../api/insuranceApi";
+import { createClaim, getClaims, updateClaimStatus, updateApprovedAmount } from "../api/insuranceApi";
 import jsPDF from "jspdf";
 
 const InsuranceClaim = () => {
@@ -41,85 +40,6 @@ useEffect(() => {
   const [filterText, setFilterText] = useState("");
   const popupRef = useRef();
   const [claims, setClaims] = useState([]);
-const [insuranceDetails, setInsuranceDetails] = useState({
-  insurancePlan: "Silver Plan",
-  coverageAmount: "",
-  monthlyPremium: "",
-  policyStart: "",
-  policyEnd: "",
-  status: "Active"
-});
-const handleInsuranceUpdate = async () => {
-  try {
-    const payload = {
-      employeeCode: user?.employeeCode,
-      department: user?.department,
-      companyId: user?.companyId,
-
-      insurancePlan: insuranceDetails.insurancePlan,
-      coverageAmount: Number(
-        insuranceDetails.coverageAmount
-      ),
-      monthlyPremium: Number(
-        insuranceDetails.monthlyPremium
-      ),
-
-      policyStartDate:
-        insuranceDetails.policyStart,
-
-      policyEndDate:
-        insuranceDetails.policyEnd,
-
-      status: insuranceDetails.status
-    };
-
-    await saveEmployeeInsurance(payload);
-
-    alert("Insurance details saved");
-  } catch (err) {
-    console.error(err);
-    alert("Failed to save insurance");
-  }
-};
-const [nominee, setNominee] = useState({
-  nomineeName:"",
-  relationship:"Spouse",
-  share:"",
-  mobile:""
-});
-
-const [nominees,setNominees] = useState([]);
-const handleSaveNominee = async () => {
-  try {
-    const payload = {
-      employeeCode: user?.employeeCode,
-      nomineeName: nominee.nomineeName,
-      relationship: nominee.relationship,
-      share: Number(nominee.share),
-      mobile: nominee.mobile
-    };
-
-    const savedNominee =
-      await saveNominee(payload);
-
-    setNominees([
-      ...nominees,
-      savedNominee
-    ]);
-
-    setNominee({
-      nomineeName: "",
-      relationship: "Spouse",
-      share: "",
-      mobile: ""
-    });
-
-    alert("Nominee saved");
-  } catch (err) {
-    console.error(err);
-    alert("Failed to save nominee");
-  }
-};
 
 const policyData = {
   policyNo: "GMC-2026-001245",
@@ -539,13 +459,12 @@ return String(value ?? "")
 
   <div className="form-grid">
 
-   <input
-  type="text"
-  name="employeeCode"
-  value={formData.employeeCode}
-  onChange={handleInput}
-  placeholder="Employee Code"
-/>
+    <input
+      type="text"
+      value={user?.employeeCode}
+      readOnly
+      placeholder="Employee Code"
+    />
 
     <input
       type="text"
@@ -588,12 +507,9 @@ return String(value ?? "")
 
   </div>
 
-<button
-  className="save-btn"
-  onClick={handleInsuranceUpdate}
->
-  Update Insurance
-</button>
+  <button className="save-btn">
+    Update Insurance
+  </button>
 
 </div>
 
@@ -602,64 +518,32 @@ return String(value ?? "")
   <h3>Nominee Details</h3>
 
   <div className="form-grid">
-<input
-  placeholder="Nominee Name"
-  value={nominee.nomineeName}
-  onChange={(e) =>
-    setNominee({
-      ...nominee,
-      nomineeName: e.target.value
-    })
-  }
-/>
 
-<select
-  value={nominee.relationship}
-  onChange={(e) =>
-    setNominee({
-      ...nominee,
-      relationship: e.target.value
-    })
-  }
->
-  <option>Spouse</option>
-  <option>Father</option>
-  <option>Mother</option>
-  <option>Son</option>
-  <option>Daughter</option>
-</select>
+    <input placeholder="Nominee Name" />
 
-<input
-  type="number"
-  placeholder="Nominee Share %"
-  value={nominee.share}
-  onChange={(e) =>
-    setNominee({
-      ...nominee,
-      share: e.target.value
-    })
-  }
-/>
+    <select>
+      <option>Spouse</option>
+      <option>Father</option>
+      <option>Mother</option>
+      <option>Son</option>
+      <option>Daughter</option>
+    </select>
 
-<input
-  type="tel"
-  placeholder="Mobile Number"
-  value={nominee.mobile}
-  onChange={(e) =>
-    setNominee({
-      ...nominee,
-      mobile: e.target.value
-    })
-  }
-/>
+    <input
+      type="number"
+      placeholder="Nominee Share %"
+    />
+
+    <input
+      type="tel"
+      placeholder="Mobile Number"
+    />
+
   </div>
 
-<button
-  className="save-btn"
-  onClick={handleSaveNominee}
->
-  Save Nominee
-</button>
+  <button className="save-btn">
+    Save Nominee
+  </button>
 
 </div>
 <div className="renewal-card">
@@ -840,14 +724,21 @@ return String(value ?? "")
       </tr>
     </thead>
 
-  {nominees.map((n,index)=>(
-  <tr key={index}>
-    <td>{n.nomineeName}</td>
-    <td>{n.relationship}</td>
-    <td>-</td>
-    <td>Active</td>
-  </tr>
-))}
+    <tbody>
+      <tr>
+        <td>Priya Kumar</td>
+        <td>Spouse</td>
+        <td>32</td>
+        <td>Active</td>
+      </tr>
+
+      <tr>
+        <td>Arjun Kumar</td>
+        <td>Son</td>
+        <td>8</td>
+        <td>Active</td>
+      </tr>
+    </tbody>
 
   </table>
 
@@ -1089,6 +980,7 @@ return String(value ?? "")
 
       {/* TABLE */}
       <div className="table-wrapper">
+        
 <div className="grid-table">
 
   {/* HEADER */}

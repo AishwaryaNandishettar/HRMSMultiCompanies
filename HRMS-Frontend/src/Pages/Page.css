@@ -1493,29 +1493,3 @@
 .download-card-btn:hover{
   opacity:0.9;
 }
-.dependents-table {
-  width: 100%;
-  border-collapse: collapse;
-  margin-top: 10px;
-}
-
-.dependents-table th,
-.dependents-table td {
-  border: 1px solid #d6dbe5;
-  padding: 12px 16px;
-  text-align: center;
-}
-
-.dependents-table th {
-  background: #173b7a;
-  color: #fff;
-  font-weight: 600;
-}
-
-.dependents-table tbody tr:nth-child(even) {
-  background: #f8faff;
-}
-
-.dependents-table tbody tr:hover {
-  background: #eef4ff;
-}

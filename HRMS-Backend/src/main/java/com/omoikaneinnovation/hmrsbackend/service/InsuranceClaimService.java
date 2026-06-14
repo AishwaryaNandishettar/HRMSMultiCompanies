@@ -7,22 +7,37 @@ import com.omoikaneinnovation.hmrsbackend.repository.InsuranceClaimRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import java.util.List;
+import com.omoikaneinnovation.hmrsbackend.model.InsuranceNominee;
+import com.omoikaneinnovation.hmrsbackend.repository.InsuranceNomineeRepository;
+import com.omoikaneinnovation.hmrsbackend.model.InsuranceEmployee;
+import com.omoikaneinnovation.hmrsbackend.model.InsuranceDependent;
 
+import com.omoikaneinnovation.hmrsbackend.repository.InsuranceEmployeeRepository;
+import com.omoikaneinnovation.hmrsbackend.repository.InsuranceDependentRepository;
 @Service
 public class InsuranceClaimService {
 
     private final InsuranceClaimRepository repo;
     private final InsurancePolicyRepository policyRepo;
     private final SimpMessagingTemplate messagingTemplate;
+    private final InsuranceEmployeeRepository insuranceDetailsRepository;
+private final InsuranceNomineeRepository nomineeRepository;
+private final InsuranceDependentRepository dependentRepository;
 
     public InsuranceClaimService(
             InsuranceClaimRepository repo,
             InsurancePolicyRepository policyRepo,
-            SimpMessagingTemplate messagingTemplate
+            SimpMessagingTemplate messagingTemplate,
+             InsuranceEmployeeRepository insuranceDetailsRepository,
+      InsuranceNomineeRepository nomineeRepository,
+        InsuranceDependentRepository dependentRepository
     ) {
         this.repo = repo;
         this.policyRepo = policyRepo;
          this.messagingTemplate = messagingTemplate;
+          this.insuranceDetailsRepository = insuranceDetailsRepository;
+ this.nomineeRepository = nomineeRepository;
+    this.dependentRepository = dependentRepository;
     }
 
     public InsuranceClaim createClaim(InsuranceClaim claim) {
@@ -91,5 +106,27 @@ claim.setStatus(InsuranceClaim.Status.valueOf(formatted));
     InsuranceClaim claim = repo.findById(id).orElseThrow();
     claim.setApprovedAmount(amount);
     return repo.save(claim);
+}
+
+public InsuranceEmployee saveEmployeeDetails(
+         InsuranceEmployee details){
+
+    return insuranceDetailsRepository.save(details);
+}
+public InsuranceNominee saveNominee(
+        InsuranceNominee nominee) {
+
+    return nomineeRepository.save(nominee);
+}
+
+public List<InsuranceDependent> getDependents(
+        String employeeCode) {
+
+    return dependentRepository
+            .findByEmployeeCode(employeeCode);
+}
+
+public String renewPolicy(String employeeCode) {
+    return "Policy renewed successfully";
 }
 }

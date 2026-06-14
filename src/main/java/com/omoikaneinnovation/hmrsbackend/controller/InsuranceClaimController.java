@@ -7,7 +7,9 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.http.MediaType;
 import org.springframework.web.multipart.MultipartFile;
 import java.util.List;
-
+    import com.omoikaneinnovation.hmrsbackend.model.InsuranceDetails;
+import com.omoikaneinnovation.hmrsbackend.model.Nominee;
+import com.omoikaneinnovation.hmrsbackend.model.Dependent;
 @RestController
 @RequestMapping("/api/insurance")
 @CrossOrigin(originPatterns = {"http://localhost:*", "https://*.ngrok-free.dev"})
@@ -17,6 +19,8 @@ public class InsuranceClaimController {
 
     public InsuranceClaimController(InsuranceClaimService service){
         this.service = service;
+                System.out.println("InsuranceClaimController Loaded");
+
     }
 
   @PostMapping("/create")
@@ -44,4 +48,25 @@ public InsuranceClaim updateAmount(@PathVariable String id, @RequestParam double
     return service.updateApprovedAmount(id, amount);
 }
 
+@PostMapping("/employee-details")
+public InsuranceDetails saveEmployeeDetails(
+        @RequestBody InsuranceDetails details) {
+ System.out.println("EMPLOYEE DETAILS API HIT");
+    return service.saveInsuranceDetails(details);
+}
+
+@PostMapping("/nominee")
+public Nominee saveNominee(
+        @RequestBody Nominee nominee) {
+
+    return service.saveNominee(nominee);
+}
+
+
+@PostMapping("/renew/{employeeCode}")
+public String renewPolicy(
+        @PathVariable String employeeCode) {
+
+    return service.renewPolicy(employeeCode);
+}
 }

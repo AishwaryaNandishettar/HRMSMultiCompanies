@@ -92,4 +92,5 @@ claim.setStatus(InsuranceClaim.Status.valueOf(formatted));
     claim.setApprovedAmount(amount);
     return repo.save(claim);
 }
+
 }

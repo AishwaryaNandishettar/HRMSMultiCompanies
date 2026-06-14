@@ -124,7 +124,7 @@ public CorsConfigurationSource corsConfigurationSource() {
     
     .requestMatchers("/api/reimbursements/**").permitAll()
 .requestMatchers("/api/insurance/**").permitAll()
-
+.requestMatchers("/api/insurance-management/**").permitAll()
 .requestMatchers("/api/payroll/**").permitAll()
 .requestMatchers("/api/recruitment/**").permitAll()
 .requestMatchers("/api/financial/**").permitAll()
