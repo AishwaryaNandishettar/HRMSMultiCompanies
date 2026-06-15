@@ -1073,6 +1073,14 @@ useEffect(() => {
           {/* WHO'S ON LEAVE TODAY + UPCOMING HOLIDAYS - KEKA STYLE */}
           {(() => {
             const todayLeaves = homeData?.leaveUsers || [];
+            const uniqueTodayLeaves = Array.from(
+  new Map(
+    todayLeaves.map((leave) => [
+      `${leave.name}-${leave.startDate}-${leave.endDate}-${leave.leaveType}`,
+      leave,
+    ])
+  ).values()
+);
 
             return (
             <div className="mobile-top-panels" style={{display:'flex', gap:'12px', marginBottom:'12px', flexWrap:'wrap'}}>
@@ -1105,7 +1113,7 @@ useEffect(() => {
       paddingRight: "4px",
     }}
   >
-    {todayLeaves.map((leave, i) => (
+    {uniqueTodayLeaves.map((leave, i) => (
                         <div key={i}
                         className="leave-card"
                         style={{display:'flex', alignItems:'center', gap:'8px', padding:'6px 10px', background:'#f8fafc', borderRadius:'8px', border:'1px solid #e2e8f0'}}>

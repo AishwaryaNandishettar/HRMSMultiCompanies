@@ -506,7 +506,9 @@
 }
 .table-scroll {
   max-height: 420px;   /* shows ~5–6 rows */
-  overflow-y: auto;
+   overflow-x: auto;
+  overflow-y: visible;
+  position: relative;
   border: 1px solid #e5e7eb;
 }
 .employee-table thead th {
@@ -521,6 +523,9 @@
   background: #e2f3ff;
 }
 
+.employee-table th {
+  position: relative;
+}
 .employee-table thead th {
   background: #0d3b66 !important;
   color: white !important;
@@ -528,6 +533,28 @@
   text-transform: uppercase;
   font-size: 13px;
   border-bottom: none;
+}
+.excel-filter-popup {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  z-index: 9999;
+
+  width: 220px;
+  background: #fff;
+
+  border: 1px solid #dcdcdc;
+  border-radius: 6px;
+
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+
+  display: flex;
+  flex-direction: column;
+}
+.filter-list {
+  max-height: 220px;
+  overflow-y: auto;
+  overflow-x: hidden;
 }
 /* =========================================
    TABLE GRID LINES
@@ -550,6 +577,9 @@
 
 .employee-table thead th {
   border-top: 1px solid #1e4f85;
+   position: sticky;
+  top: 0;
+  z-index: 10;
 }
 
 /* prevent double dark borders on sticky columns */
@@ -998,4 +1028,19 @@
 .filter-list {
   max-height: 180px;
   overflow-y: auto;
+}
+/* Profile column center */
+.employee-table th:first-child,
+.employee-table td:first-child {
+  text-align: center;
+  vertical-align: middle;
+}
+
+.profile-pic {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  object-fit: cover;
+  display: block;
+  margin: 0 auto; /* centers image */
 }

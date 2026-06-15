@@ -39,8 +39,13 @@ export const fetchAllEmployees = async () => {
 };
 
 // ✅ UPDATE EMPLOYEE
-export const updateEmployee = async (employeeId, employeeData) => {
-  const response = await api.put(`/api/employee/update/${employeeId}`, employeeData);
-  console.log("🔍 updateEmployee API response:", response);
+
+
+export const updateEmployee = async (id, data) => {
+  const response = await api.put(
+    `/api/employee/update/${id}`,
+    data
+  );
+
   return response.data;
 };

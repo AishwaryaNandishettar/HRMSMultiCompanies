@@ -129,9 +129,20 @@
                 userRepository.save(user);
             }
         }
-        if (dto.getEmail() != null && !dto.getEmail().trim().isEmpty()) {
-            employee.setEmail(dto.getEmail());
-        }
+      if (dto.getEmail() != null && !dto.getEmail().trim().isEmpty()) {
+
+    String oldEmail = employee.getEmail();
+
+    Optional<User> userOpt = userRepository.findByEmail(oldEmail);
+
+    employee.setEmail(dto.getEmail());
+
+    if (userOpt.isPresent()) {
+        User user = userOpt.get();
+        user.setEmail(dto.getEmail());
+        userRepository.save(user);
+    }
+}
 
         // Statutory / bank fields (allow empty string to clear a value)
         if (dto.getBankAccountNumber() != null) employee.setBankAccountNumber(dto.getBankAccountNumber());

@@ -1519,3 +1519,47 @@
 .dependents-table tbody tr:hover {
   background: #eef4ff;
 }
+.renewal-card {
+  background: #fff;
+  border-radius: 12px;
+  padding: 20px;
+  margin: 20px 0;
+  text-align: center; /* Centers heading */
+}
+
+.renewal-card h3 {
+  margin-bottom: 20px;
+}
+
+.renewal-grid {
+  display: flex;
+  justify-content: center; /* Move items to center */
+  align-items: center;
+  gap: 50px;
+  flex-wrap: wrap;
+}
+
+.renewal-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-width: 180px;
+}
+
+.renewal-item label {
+  font-size: 14px;
+  color: #666;
+  margin-bottom: 6px;
+}
+
+.renewal-item span {
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.active-tag {
+  background: #28a745;
+  color: white;
+  padding: 6px 14px;
+  border-radius: 20px;
+}

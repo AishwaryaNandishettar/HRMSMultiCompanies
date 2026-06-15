@@ -348,6 +348,7 @@ const totalPresent = new Set(
 const totalLOP = todayAttendance.filter(
   (r) =>
     r.status === "Absent" ||
+    r.status === "Late" ||   // ✅ ADD THIS
     !r.checkIn ||
     r.checkIn === "-"
 ).length;

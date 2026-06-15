@@ -179,22 +179,20 @@ const [sortConfig, setSortConfig] = useState({
   key: "",
   direction: ""
 });
- const getUnique = (key) => {
+const getUnique = (key) => {
   return [
     ...new Set(
       claims
-        .map((r) => {
-          const value =
-  r?.[key] ??
-  r?.[normalizeKey(key)] ??
-  "";
-          return value ?? "";
-        })
-        .filter((v) => v !== null && v !== undefined && v !== "")
+        .map((row) => row?.[key])
+        .filter(
+          (value) =>
+            value !== null &&
+            value !== undefined &&
+            String(value).trim() !== ""
+        )
     )
   ];
 };
-
 const handleCheckboxChange = (column, value) => {
   setSelectedFilterValues((prev) => {
     const current = prev[column] || [];
@@ -493,6 +491,12 @@ return String(value ?? "")
   .includes(String(filters[key]).toLowerCase());
   });
 });
+
+console.log("Claims:", claims);
+console.log(
+  "Departments:",
+  claims.map(c => c.department)
+);
   return (
     <div className="insurance-container">
       <h2>Insurance Claim Management</h2>
@@ -1116,17 +1120,17 @@ return String(value ?? "")
         <input
           type="checkbox"
           checked={
-            (selectedFilterValues["id"] || []).length ===
-            getUnique("id").length
+            (selectedFilterValues["employeeCode"] || []).length ===
+            getUnique("employeeCode").length
           }
           onChange={() =>
-            handleSelectAll("id", getUnique("id"))
+            handleSelectAll("id", getUnique("employeeCode"))
           }
         />
         (Select All)
       </label>
 
-      {getUnique("id")
+      {getUnique("employeeCode")
         .filter((v) =>
           String(v)
             .toLowerCase()
@@ -1140,11 +1144,11 @@ return String(value ?? "")
             <input
               type="checkbox"
               checked={
-                selectedFilterValues["id"]?.includes(val) ||
+                selectedFilterValues["employeeCode"]?.includes(val)||
                 false
               }
               onChange={() =>
-                handleCheckboxChange("id", val)
+                handleCheckboxChange("employeeCode", val)
               }
             />
             {val || "Empty"}
@@ -1155,7 +1159,7 @@ return String(value ?? "")
     <div className="excel-filter-footer">
       <button
         className="excel-ok-btn"
-        onClick={() => applyExcelFilter("id")}
+        onClick={() => applyExcelFilter("employeeCode")}
       >
         OK
       </button>
@@ -1163,7 +1167,7 @@ return String(value ?? "")
       <button
         className="excel-cancel-btn"
         onClick={() => {
-          clearExcelFilter("id");
+          clearExcelFilter("employeeCode");
           setActiveFilter(null);
         }}
       >
@@ -1172,7 +1176,9 @@ return String(value ?? "")
     </div>
 
   </div>
+      
 )}
+
     </div>
     
     <div className="cell sticky col-2 table-header-cell" onClick={() => { setActiveFilter("employeeName"); setFilterText(""); }}>
@@ -1262,18 +1268,84 @@ return String(value ?? "")
     
     <div className="cell table-header-cell department-header" onClick={() => { setActiveFilter("department"); setFilterText(""); }}>
       <span className="header-label">Department ⏷</span>
-      {activeFilter === "department" && (
-        <div className="filter-popup" ref={popupRef}>
-          <input type="text" placeholder="Search..." value={filterText} onChange={(e) => setFilterText(e.target.value)} />
-          <div className="filter-list">
-            {getUnique("department").filter((v) => String(v).toLowerCase().includes(filterText.toLowerCase())).map((val, i) => (
-              <div key={i} onClick={() => { setFilters({ ...filters, department: val }); setActiveFilter(null); setFilterText(""); }}>
-                {val || "Empty"}
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
+    {activeFilter === "department" && (
+  <div className="excel-filter-popup" ref={popupRef}>
+    <input
+      type="text"
+      placeholder="Search"
+      value={filterText}
+      onChange={(e) => setFilterText(e.target.value)}
+      className="excel-filter-search"
+    />
+
+    <div className="excel-checkbox-list">
+      <label className="excel-checkbox-item">
+        <input
+          type="checkbox"
+          checked={
+            (selectedFilterValues["department"] || []).length ===
+            getUnique("department").length
+          }
+          onChange={() =>
+            handleSelectAll(
+              "department",
+              getUnique("department")
+            )
+          }
+        />
+        (Select All)
+      </label>
+
+      {getUnique("department")
+        .filter((v) =>
+          String(v)
+            .toLowerCase()
+            .includes(filterText.toLowerCase())
+        )
+        .map((val, i) => (
+          <label
+            key={i}
+            className="excel-checkbox-item"
+          >
+            <input
+              type="checkbox"
+              checked={
+                selectedFilterValues["department"]?.includes(
+                  String(val)
+                ) || false
+              }
+              onChange={() =>
+                handleCheckboxChange(
+                  "department",
+                  String(val)
+                )
+              }
+            />
+            {val || "Empty"}
+          </label>
+        ))}
+    </div>
+
+    <div className="excel-filter-footer">
+      <button
+        className="excel-ok-btn"
+        onClick={() => applyExcelFilter("department")}
+      >
+        OK
+      </button>
+
+      <button
+        className="excel-cancel-btn"
+        onClick={() => {
+          clearExcelFilter("department");
+          setActiveFilter(null);
+        }}
+      >
+        Cancel
+      </button>
+    </div>
+  </div>
+)}
     </div>
     
     {[
@@ -1388,7 +1460,7 @@ return String(value ?? "")
     {filteredClaims.map((c) => (
       <div className="grid-row" key={c.id}>
 
-        <div className="cell sticky col-1">{c.id}</div>
+       <div className="cell sticky col-1">{c.employeeCode}</div>
         <div className="cell sticky col-2">{c.employeeName}</div>
         <div className="cell">{c.department || 'N/A'}</div>
         <div className="cell">{c.managerName}</div>

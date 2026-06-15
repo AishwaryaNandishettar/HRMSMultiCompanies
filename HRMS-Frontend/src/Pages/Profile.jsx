@@ -525,7 +525,7 @@ const getDesignation = () => {
 const compensationColumns = [
   { key: "employeeId", label: "Emp ID" },
   { key: "empName", label: "Employee Name" },
-  { key: "dob", label: "DOB" },
+ 
   { key: "joiningDate", label: "DOJ" },
   { key: "tenure", label: "Tenure" },
   { key: "ctc", label: "CTC" },
@@ -1458,67 +1458,6 @@ useEffect(() => {
 </th>
    
 
-    <th className={styles.filterHeader}>
-      DOB
-     <span
-  className={styles.filterIcon}
-   onClick={(e) => {
-    e.stopPropagation();
-    setActiveFilter(
-      activeFilter === "dob"
-        ? null
-        : "dob"
-    )
-  }}
->
-  ▼
-</span>
-{activeFilter === "dob" && (
-    <div
-       ref={popupRef}
-      className={styles.popup}
-    >
-      <input
-        className={styles.excelSearch}
-        placeholder="Search"
-      />
-
-     <div className={styles.excelList}>
-  <label className={styles.excelItem}>
-    <input type="checkbox" />
-    Select All
-  </label>
-
-  {Array.isArray(allEmployees) &&
-    allEmployees.map((emp, index) => (
-      <label
-        key={index}
-        className={styles.excelItem}
-      >
-        <input type="checkbox" />
-        {emp.employeeId || emp.id}
-      </label>
-    ))}
-</div>
-
-      <div className={styles.excelActions}>
-       <div className={styles.excelActions}>
-  <button
-    onClick={() => setActiveFilter(null)}
-  >
-    OK
-  </button>
-
-  <button
-    onClick={() => setActiveFilter(null)}
-  >
-    Cancel
-  </button>
-</div>
-      </div>
-    </div>
-  )}
-</th>
 
     <th className={styles.filterHeader}>
       DOJ
@@ -2029,7 +1968,7 @@ filteredEmployees.map((emp, i) => (
        <td>{emp.employeeId || emp.id}</td>
        
       <td>{emp.empName || emp.name || emp.fullName || "N/A"}</td>
-        <td>{emp.dob}</td>
+       
         <td>{emp.joiningDate}</td>
         <td>{emp.tenure}</td>
        

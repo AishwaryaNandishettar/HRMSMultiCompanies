@@ -221,18 +221,7 @@ const handleMenuClick = () => {
       </NavLink>
     </li>
 
-    <li>
-      <NavLink  to="/invite"
-  className={({ isActive }) =>
-    `${styles.navLink} ${
-      isActive ? styles.activeLink : ""
-    }`
-  }
->
-        <FaUserTie />
-        {isOpen && <span>Invite Employee</span>}
-      </NavLink>
-    </li>
+  
   </>
 )}
 

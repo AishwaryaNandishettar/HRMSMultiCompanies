@@ -8,68 +8,6 @@ import { getAllEmployees, updateEmployee } from "../api/employeeApi";
 import "./Employeedirectory.css";
 import InviteEmployee from "../Components/InviteEmployee";
 import api from "../api/axios";
-const sampleEmployees = [
-  {
-    id: "EMP001",
-    name: "Raj Kumar",
-    designation: "Software Developer",
-    department: "IT",
-    location: "Bangalore",
-    email: "raj@example.com",
-    manager: "Nilesh B",
-    managerEmail: "nilesh@company.com",
-    doj: "2020-05-10",
-    dob: "1995-06-22",
-    status: "Active",
-    exitDate: "-",
-    image: "https://i.pravatar.cc/150?img=1",
-  },
-  {
-    id: "EMP002",
-    name: "Priya Sharma",
-    designation: "HR Manager",
-    department: "Human Resources",
-    location: "Mumbai",
-    email: "priya@example.com",
-    manager: "Sujata M",
-    managerEmail: "sujata@company.com",
-    doj: "2019-08-25",
-    dob: "1990-02-15",
-    status: "Active",
-    exitDate: "-",
-    image: "https://i.pravatar.cc/150?img=2",
-  },
-  {
-    id: "EMP003",
-    name: "Amit Singh",
-    designation: "UI/UX Designer",
-    department: "Design",
-    location: "Delhi",
-    email: "amit@example.com",
-    manager: "Raj K",
-    managerEmail: "raj.k@company.com",
-    doj: "2021-03-15",
-    dob: "1997-11-03",
-    status: "Resigned",
-    exitDate: "2024-09-10",
-    image: "https://i.pravatar.cc/150?img=3",
-  },
-  {
-    id: "EMP004",
-    name: "Riya Patel",
-    designation: "Finance Analyst",
-    department: "Finance",
-    location: "Hyderabad",
-    email: "riya@example.com",
-    manager: "Shreya P",
-    managerEmail: "shreya@company.com",
-    doj: "2018-12-02",
-    dob: "1996-09-12",
-    status: "Serving Notice",
-    exitDate: "2025-02-20",
-    image: "https://i.pravatar.cc/150?img=4",
-  },
-];
 
 
 function formatDateForCompare(d) {
@@ -101,6 +39,7 @@ export default function EmployeeDirectory() {
 const [tempPassword, setTempPassword] = useState("");
 
 
+
 const [employees, setEmployees] = useState([]);
 const [activeFilter, setActiveFilter] = useState(null);
 const [filterText, setFilterText] = useState("");
@@ -112,7 +51,7 @@ const [showUpdateModal, setShowUpdateModal] = useState(false);
 const [updateTarget, setUpdateTarget] = useState(null); // the employee being edited
 const [updateForm, setUpdateForm] = useState({});
 const [updateSaving, setUpdateSaving] = useState(false);
-
+const [selectedImage, setSelectedImage] = useState(null);
 // ── Bulk Invite state ──
 const [showBulkInvite, setShowBulkInvite] = useState(false);
 const [bulkInviteList, setBulkInviteList] = useState([]);
@@ -145,6 +84,12 @@ const fileInputRef = useRef();
   useEffect(() => {
   fetchEmployees();
 }, []);
+
+useEffect(() => {
+  if (location.state?.refresh) {
+    fetchEmployees();
+  }
+}, [location.state]);
 
 useEffect(() => {
   fetchEmployees();
@@ -409,6 +354,7 @@ if (!matchesColumnFilters) return false;
   // ── Open update modal pre-filled with employee data ──
   const openUpdateModal = (emp) => {
     setUpdateTarget(emp);
+     setSelectedImage(null);
     setUpdateForm({
       fullName:             emp.fullName             || "",
       department:           emp.department           || "",
@@ -449,10 +395,33 @@ if (!matchesColumnFilters) return false;
         throw new Error("Employee ID not found in employee data");
       }
       
-      await updateEmployee(idToUse, updateForm);
-      alert("✅ Employee updated successfully!");
-      setShowUpdateModal(false);
-      fetchEmployees(); // refresh table
+      const formData = new FormData();
+
+Object.keys(updateForm).forEach((key) => {
+  formData.append(key, updateForm[key]);
+});
+
+if (selectedImage) {
+  formData.append("image", selectedImage);
+}
+
+const updatedEmployee = await updateEmployee(idToUse, formData);
+
+setEmployees((prev) =>
+  prev.map((emp) =>
+    emp.employeeId === idToUse
+      ? {
+          ...emp,
+          ...updatedEmployee,
+        }
+      : emp
+  )
+);
+
+alert("✅ Employee updated successfully!");
+setShowUpdateModal(false);
+
+await fetchEmployees();
     } catch (err) {
       console.error("Update failed:", err);
       console.error("Error details:", {
@@ -549,22 +518,27 @@ console.log("BULK LIST:", list);
       setUploadSaving(false);
     }
   };
+const downloadSampleTemplate = () => {
+  const headers = [
+    "fullName",
+    "email",
+    "department",
+    "designation",
+    "location",
+    "manager",
+    "managerEmail",
+    "dob",
+    "doj"
+  ];
 
-  const downloadSampleTemplate = () => {
-    const sample = [
-      {
-        fullName: "John Doe", email: "john@example.com", department: "IT",
-        designation: "Developer", location: "Bangalore",
-        manager: "Jane Smith", managerEmail: "jane@example.com",
-        dob: "1995-06-15", doj: "2024-01-10"
-      }
-    ];
-    const ws = XLSX.utils.json_to_sheet(sample);
-    const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, "Employees");
-    XLSX.writeFile(wb, "Employee_Upload_Template.xlsx");
-  };
+  // Create empty sheet but force headers only
+  const ws = XLSX.utils.json_to_sheet([], { header: headers });
 
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, "Employees");
+
+  XLSX.writeFile(wb, "Employee_Upload_Template.xlsx");
+};
 const removeRow = (index) => {
   const updated = uploadRows.filter((_, i) => i !== index);
 
@@ -827,7 +801,70 @@ const getAvatarColor = (name) => {
 
             {/* Modal Body */}
             <div style={{ padding: "24px 28px", overflowY: "auto" }}>
+                 
+                 {/* Modal Body */}
+<div style={{ padding: "24px 28px", overflowY: "auto" }}>
 
+  {/* PROFILE PHOTO */}
+{/* PROFILE PHOTO */}
+<div
+  style={{
+    marginBottom: "20px",
+    textAlign: "center",
+    position: "relative",
+    display: "inline-block",
+    width: "120px",
+    margin: "0 auto"
+  }}
+>
+  <img
+    src={
+      selectedImage
+        ? URL.createObjectURL(selectedImage)
+        : updateTarget?.image ||
+          `https://ui-avatars.com/api/?name=${encodeURIComponent(
+            updateTarget?.fullName || ""
+          )}`
+    }
+    alt="Profile"
+    style={{
+      width: "100px",
+      height: "100px",
+      borderRadius: "50%",
+      objectFit: "cover",
+      border: "2px solid #ddd"
+    }}
+  />
+
+  {/* Hidden file input */}
+  <input
+    id="profileUpload"
+    type="file"
+    accept="image/*"
+    style={{ display: "none" }}
+    onChange={(e) => setSelectedImage(e.target.files[0])}
+  />
+
+  {/* Edit button */}
+  <label
+    htmlFor="profileUpload"
+    style={{
+      position: "absolute",
+      bottom: "0",
+      right: "0",
+      background: "#2563eb",
+      color: "#fff",
+      padding: "6px 10px",
+      borderRadius: "20px",
+      cursor: "pointer",
+      fontSize: "12px",
+      fontWeight: "600"
+    }}
+  >
+    ✎ Edit
+  </label>
+</div>
+</div>
               {/* Section: Basic Info */}
               <div style={{ marginBottom: 20 }}>
                 <div style={{
@@ -1098,7 +1135,7 @@ const getAvatarColor = (name) => {
 
       {/* Employee Table */}
       <div className="table-wrapper">
-        <div className="table-scroll">
+       
   <table className="employee-table">
           <thead>
             <tr className="table-head">
@@ -1785,22 +1822,22 @@ const getAvatarColor = (name) => {
               filteredEmployees.map((emp, index) => (
                 <tr key={`${emp.employeeId}-${emp.email}-${index}`}>
                   <td>
-               <img
-  src={
-    emp.image && emp.image !== ""
-      ? emp.image
-      : `https://ui-avatars.com/api/?name=${encodeURIComponent(emp.fullName)}&background=${getAvatarColor(emp.fullName)}&color=fff`
-  }
+            <img
+ src={
+  localStorage.getItem(`employee-image-${emp.employeeId}`) ||
+  emp.image ||
+  `https://ui-avatars.com/api/?name=${encodeURIComponent(
+    emp.fullName
+  )}&background=${getAvatarColor(emp.fullName)}&color=fff`
+}
   alt={emp.fullName}
   className="profile-pic"
-  style={{ cursor: user?.role === "admin" ? "pointer" : "default" }}
-  onClick={() => {
-    if (user?.role === "admin") {
-     navigate("/employee-profile", {
-  state: { employee: emp }
-});
-    }
-  }}
+  style={{ cursor: "pointer" }}
+  onClick={() =>
+    navigate("/employee-profile", {
+      state: { employee: emp }
+    })
+  }
 />
                   </td>
                   <td>{emp.fullName}</td> 
@@ -1873,6 +1910,6 @@ const getAvatarColor = (name) => {
         
         
       </div>
-    </div>
+    
   );
 }

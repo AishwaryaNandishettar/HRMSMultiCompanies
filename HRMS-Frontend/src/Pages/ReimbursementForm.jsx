@@ -115,7 +115,7 @@ useEffect(() => {
  
 
 useEffect(() => {
-  if (form.claimType === "ACCOMMODATION" || form.claimType === "MEDICAL" || form.claimType==="others") {
+  if (form.claimType === "ACCOMMODATION" || form.claimType === "MEDICAL" || form.claimType==="OTHERS") {
     setForm((prev) => ({
       ...prev,
       hospitalName: "",
@@ -682,7 +682,7 @@ const filteredData = requests.filter((r) => {
        <thead>
   <tr>
     {[
-      { label: "Employee ID", key: "id" },
+    { label: "Employee ID", key: "empCode" },
       { label: "Employee Name", key: "empName" },
       { label: "Claim Type", key: "claimType" },
      { label: "Submitted Date", key: "submittedDate" },
@@ -799,7 +799,7 @@ const filteredData = requests.filter((r) => {
         <tbody>
           {filteredData.map(r => (
             <tr key={r.id}>
-              <td>{r.id}</td>
+            <td>{r.empCode ?? "-"}</td>
                <td>{r.empName ?? ""}</td>
                  <td>{r.claimType}</td>
                 {/* ✅ NEW FIELD */}
@@ -848,9 +848,13 @@ const filteredData = requests.filter((r) => {
    <td>
   {r.files && r.files.length > 0 ? (
     r.files.map((file, i) => {
-      const fileUrl = file.startsWith("http")
-        ? file
-        : `http://localhost:8082/${file}`;
+     const BACKEND_URL =
+  import.meta.env.VITE_API_BASE_URL ||
+  "http://localhost:8082";
+
+const fileUrl = file.startsWith("http")
+  ? file
+  : `${BACKEND_URL}/${file}`;
 
       return (
         <div key={i}>

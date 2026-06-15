@@ -21,6 +21,9 @@ const EmployeeProfile = () => {
   }
   // ✅ keep original data intact
   const [editMode, setEditMode] = useState(false);
+ const [selectedImage, setSelectedImage] = useState(
+  localStorage.getItem(`employee-image-${emp.employeeId}`) || null
+);
   const [activeTab, setActiveTab] = useState("overview");
 const role = localStorage.getItem("role");
   const [formData, setFormData] = useState({
@@ -36,6 +39,24 @@ const role = localStorage.getItem("role");
     });
   };
 
+ const handleProfileImageChange = (e) => {
+  const file = e.target.files?.[0];
+
+  if (!file) return;
+
+  const reader = new FileReader();
+
+  reader.onloadend = () => {
+    setSelectedImage(reader.result);
+
+    localStorage.setItem(
+      `employee-image-${formData.employeeId}`,
+      reader.result
+    );
+  };
+
+  reader.readAsDataURL(file);
+};
   const handleEdit = () => setEditMode(true);
 
   const handleCancel = () => {
@@ -51,12 +72,17 @@ const role = localStorage.getItem("role");
 
 const handleSave = async () => {
   try {
-    await updateEmployee(formData.employeeId, formData);
+    const payload = {
+      ...formData,
+      profileImage: selectedImage,
+    };
+
+    await updateEmployee(formData.employeeId, payload);
 
     alert("Saved successfully ✅");
     setEditMode(false);
 
-    navigate(-1); // go back AFTER saving
+    navigate(-1);
   } catch (err) {
     console.error("Save error:", err);
     alert("Save failed ❌");
@@ -78,11 +104,32 @@ const handleSave = async () => {
         <h2 className="emp-title">👤 Employee Profile</h2>
           
           <div className="emp-header">
+<div className="profile-image-wrapper">
   <img
-    src="https://randomuser.me/api/portraits/men/32.jpg"
+    src={
+      selectedImage ||
+      "https://randomuser.me/api/portraits/men/32.jpg"
+    }
     alt="avatar"
     className="emp-avatar"
   />
+
+  {editMode && (
+    <>
+      <input
+        type="file"
+        id="profileUpload"
+        accept="image/*"
+        style={{ display: "none" }}
+        onChange={handleProfileImageChange}
+      />
+
+      <label htmlFor="profileUpload" className="editImageBtn">
+        ✎ Edit
+      </label>
+    </>
+  )}
+</div>
   <div>
   
     <h3>{formData.fullName || "Employee Name"}</h3>

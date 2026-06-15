@@ -83,7 +83,7 @@ export default function ChatSidebar({
       ...u,
       type: "USER",
       id: u.email,
-      name: u.name,
+     name: u.name || u.email?.split("@")[0],
       pinned: u.pinned || false
     }));
   }, [users]);
