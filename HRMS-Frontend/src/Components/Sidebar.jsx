@@ -167,74 +167,13 @@ const handleMenuClick = () => {
         {isOpen && <span>Employee Directory</span>}
       </NavLink>
     </li>
-        <li>
-          <NavLink  to="/workchat"
-  className={({ isActive }) =>
-    `${styles.navLink} ${
-      isActive ? styles.activeLink : ""
-    }`
-  }
->
-            <FaComments />
-            {isOpen && <span>Work Chat</span>}
-          </NavLink>
-        </li>
-
-        {/* ✅ NEW: TASKS */}
-        <li>
-          <NavLink  to="/tasks"
-  className={({ isActive }) =>
-    `${styles.navLink} ${
-      isActive ? styles.activeLink : ""
-    }`
-  }
->
-            <FaTasks />
-            {isOpen && <span>Tasks</span>}
-          </NavLink>
-        </li>
-
-<li>
-  <NavLink  to="/helpdesk"
-  className={({ isActive }) =>
-    `${styles.navLink} ${
-      isActive ? styles.activeLink : ""
-    }`
-  }
->
-    <FaComments />
-    {isOpen && <span>Helpdesk</span>}
-  </NavLink>
-</li>
+      
         {/* ✅ PERFORMANCE (All users can view performance) */}
-        <li>
-          <NavLink  to="/performance"
-  className={({ isActive }) =>
-    `${styles.navLink} ${
-      isActive ? styles.activeLink : ""
-    }`
-  }
->
-            <FaChartLine />
-            {isOpen && <span>Performance</span>}
-          </NavLink>
-        </li>
+       
 
-        {/* PAYROLL */}
-        {(role === "employee" || role === "manager" || role === "admin") && (
-          <li>
-            <NavLink  to="/payroll"
-  className={({ isActive }) =>
-    `${styles.navLink} ${
-      isActive ? styles.activeLink : ""
-    }`
-  }
->
-              <FaMoneyBillWave />
-              {isOpen && <span>Payroll</span>}
-            </NavLink>
-          </li>
-        )}
+      
+        
+        
 
 
 
@@ -254,45 +193,7 @@ const handleMenuClick = () => {
   </li>
 )}
         {/* COMMON */}
-        <li>
-          <NavLink  to="/insurance-claim"
-  className={({ isActive }) =>
-    `${styles.navLink} ${
-      isActive ? styles.activeLink : ""
-    }`
-  }
->
-            <FaShieldAlt />
-            {isOpen && <span>Insurance Claim</span>}
-          </NavLink>
-        </li>
-
-<li>
-  <NavLink  to="/personal-insurance"
-  className={({ isActive }) =>
-    `${styles.navLink} ${
-      isActive ? styles.activeLink : ""
-    }`
-  }
->
-    <FaShieldAlt />
-    {isOpen && <span>Personal Insurance Claim</span>}
-  </NavLink>
-</li>
-        <li>
-          <NavLink  to="/reimbursement"
-  className={({ isActive }) =>
-    `${styles.navLink} ${
-      isActive ? styles.activeLink : ""
-    }`
-  }
->
-            <FaWallet />
-            {isOpen && <span>Reimbursement</span>}
-          </NavLink>
-        </li>
-
-     
+       
 
     <li>
       <NavLink  to="/report"
@@ -363,6 +264,110 @@ const handleMenuClick = () => {
         {isOpen && <span>CIBIL Check</span>}
       </NavLink>
     </li>
+
+  <li>
+          <NavLink  to="/workchat"
+  className={({ isActive }) =>
+    `${styles.navLink} ${
+      isActive ? styles.activeLink : ""
+    }`
+  }
+>
+            <FaComments />
+            {isOpen && <span>Work Chat</span>}
+          </NavLink>
+        </li>
+
+        {/* ✅ NEW: TASKS */}
+        <li>
+          <NavLink  to="/tasks"
+  className={({ isActive }) =>
+    `${styles.navLink} ${
+      isActive ? styles.activeLink : ""
+    }`
+  }
+>
+            <FaTasks />
+            {isOpen && <span>Tasks</span>}
+          </NavLink>
+        </li>
+
+<li>
+  <NavLink  to="/helpdesk"
+  className={({ isActive }) =>
+    `${styles.navLink} ${
+      isActive ? styles.activeLink : ""
+    }`
+  }
+>
+    <FaComments />
+    {isOpen && <span>Helpdesk</span>}
+  </NavLink>
+</li>
+ <li>
+          <NavLink  to="/performance"
+  className={({ isActive }) =>
+    `${styles.navLink} ${
+      isActive ? styles.activeLink : ""
+    }`
+  }
+>
+            <FaChartLine />
+            {isOpen && <span>Performance</span>}
+          </NavLink>
+        </li>
+  <li>
+            <NavLink  to="/payroll"
+  className={({ isActive }) =>
+    `${styles.navLink} ${
+      isActive ? styles.activeLink : ""
+    }`
+  }
+>
+              <FaMoneyBillWave />
+              {isOpen && <span>Payroll</span>}
+            </NavLink>
+          </li>
+
+ <li>
+          <NavLink  to="/insurance-claim"
+  className={({ isActive }) =>
+    `${styles.navLink} ${
+      isActive ? styles.activeLink : ""
+    }`
+  }
+>
+            <FaShieldAlt />
+            {isOpen && <span>Insurance Claim</span>}
+          </NavLink>
+        </li>
+
+<li>
+  <NavLink  to="/personal-insurance"
+  className={({ isActive }) =>
+    `${styles.navLink} ${
+      isActive ? styles.activeLink : ""
+    }`
+  }
+>
+    <FaShieldAlt />
+    {isOpen && <span>Personal Insurance Claim</span>}
+  </NavLink>
+</li>
+        <li>
+          <NavLink  to="/reimbursement"
+  className={({ isActive }) =>
+    `${styles.navLink} ${
+      isActive ? styles.activeLink : ""
+    }`
+  }
+>
+            <FaWallet />
+            {isOpen && <span>Reimbursement</span>}
+          </NavLink>
+        </li>
+
+     
 
     <li>
       <NavLink  to="/loan-application"

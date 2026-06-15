@@ -93,14 +93,27 @@ public class TimesheetService {   // ✅ FIXED NAME
                 
                 if (userOpt.isPresent()) {
                     User u = userOpt.get();
-                    
+                    System.out.println("User Name = " + u.getName());
+System.out.println("Employee ID = " + u.getEmployeeId());
+System.out.println("Email = " + u.getEmail());
                     // ✅ FIX: Set proper employee ID (NEVER MongoDB ObjectId or email)
-                    String empId = u.getEmployeeId();
-                    if (empId == null || empId.isBlank()) {
-                        // If no employeeId set, generate a placeholder but DON'T use MongoDB _id
-                        empId = "EMP-" + u.getEmail().substring(0, Math.min(5, u.getEmail().indexOf("@")));
-                    }
-                    obj.setEmpId(empId);
+                  // First try employeeId from User table
+String empId = u.getEmployeeId();
+
+// If missing, use attendance empId
+if ((empId == null || empId.isBlank())
+        && r.getEmpId() != null
+        && !r.getEmpId().isBlank()) {
+
+    empId = r.getEmpId();
+}
+
+// Last fallback
+if (empId == null || empId.isBlank()) {
+    empId = "-";
+}
+
+obj.setEmpId(empId);
 
                     // ✅ FIX: Set display name from User.employeeName (updated name)
                     String name = u.getName(); // This is User.employeeName field

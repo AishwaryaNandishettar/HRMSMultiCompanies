@@ -1,10 +1,12 @@
 package com.omoikaneinnovation.hmrsbackend.model;
 import lombok.*;
 import lombok.Data;
+import org.springframework.data.mongodb.core.mapping.Document;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
+@Document(collection = "timesheet")
 public class TimesheetSummary {
 
     private String empId;

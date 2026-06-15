@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useRef } from "react";
 import styles from "./Timesheet.module.css";
 import { getTimesheet, approveTimesheet, submitTimesheet } from "../api/timesheetApi";
-
+import { getAllAttendance } from "../api/attendanceApi";
 /* ── Export helpers ── */
 const exportToCSV = (data, cols, filename) => {
   const header = cols.map((c) => c.label).join(",");
@@ -68,12 +68,32 @@ export default function TimesheetManager() {
   const [role, setRole] = useState(normalizeRole(loggedUser?.role));
 
   const [records, setRecords] = useState([]);
+  const [todayAttendance, setTodayAttendance] = useState([]);
   const [activeFilter, setActiveFilter] = useState(null);
   const [filterText, setFilterText] = useState("");
   const [filters, setFilters] = useState({});
   const popupRef = useRef();
   const [kpiFilter, setKpiFilter] = useState("ALL");
 
+useEffect(() => {
+  const loadAttendance = async () => {
+    try {
+      const data = await getAllAttendance();
+
+      const today = new Date().toLocaleDateString("en-CA");
+
+      const todayData = data.filter(
+        (r) => r.date === today
+      );
+
+      setTodayAttendance(todayData);
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  loadAttendance();
+}, []);
   const [rejectPopup, setRejectPopup] = useState({
     visible: false,
     empId: null,
@@ -111,12 +131,28 @@ const currentMonth = today.substring(0, 7);
         const grouped = {};
 
         res.forEach((r) => {
-          const key = r.empId + "_" + (r.month || fromMonth);
+          const empId =
+  r.empId ||
+  r.employeeId ||
+  r.employeeCode ||
+  "-";
+
+const key = empId + "_" + (r.month || fromMonth);
 
           if (!grouped[key]) {
             grouped[key] = {
-              empId: r.empId || "-",
-              empName: r.empName || r.name || r.employeeName || "-",
+           empId:
+  r.empId ||
+  r.employeeId ||
+  r.employeeCode ||
+  "-",
+
+empName:
+  r.empName ||
+  r.employeeName ||
+  r.name ||
+  r.fullName ||
+  "-",
               department: r.department || "-",
               reportingManager: r.reportingManager || "-",
               month: r.month || fromMonth,
@@ -137,7 +173,7 @@ const currentMonth = today.substring(0, 7);
           // Backend already aggregates counts — use them directly
           grouped[key].present = r.present || grouped[key].present;
           grouped[key].leave = r.leave || grouped[key].leave;
-          grouped[key].lop = r.lop || grouped[key].lop;
+         grouped[key].lop = r.absent || r.lop || grouped[key].lop;
           grouped[key].halfDay = r.halfDay || grouped[key].halfDay;
           grouped[key].late = r.late || grouped[key].late;
           grouped[key].wfh = r.wfh || grouped[key].wfh;
@@ -153,7 +189,7 @@ const currentMonth = today.substring(0, 7);
 
           // HR SUMMARY
           const workingDays = g.present + g.wfh + g.field;
-          const absentDays = g.lop;
+        const absentDays = Number(g.lop || 0);
           const payableDays = workingDays + g.leave + g.halfDay * 0.5;
 
           const attendancePercent =
@@ -177,6 +213,7 @@ const currentMonth = today.substring(0, 7);
     };
 
     load();
+
   }, [fromMonth]);
 
   /* CLOSE POPUP */
@@ -222,14 +259,7 @@ const currentMonth = today.substring(0, 7);
 }
 
 if (kpiFilter === "ABSENT") {
-  return (
-    r.month === currentMonth &&
-    (
-      Number(r.lop) > 0 ||
-      r.status === "Absent" ||
-      r.status === "On Leave"
-    )
-  );
+  return Number(r.absentDays || r.lop || 0) > 0;
 }
     if (kpiFilter === "EMPLOYEES") return true;
 
@@ -305,15 +335,24 @@ if (kpiFilter === "ABSENT") {
   (r) => r.month === currentMonth
 );
 
-const totalEmp = currentMonthRecords.length;
+const totalEmp = new Set(
+  records.map((r) => r.empId)
+).size;
 
-const totalPresent = currentMonthRecords.filter(
-  (r) => Number(r.present) > 0
+const totalPresent = new Set(
+  todayAttendance
+    .filter((r) => r.checkIn && r.checkIn !== "-")
+    .map((r) => r.empId)
+).size;
+
+const totalLOP = todayAttendance.filter(
+  (r) =>
+    r.status === "Absent" ||
+    !r.checkIn ||
+    r.checkIn === "-"
 ).length;
 
-const totalLOP = currentMonthRecords.filter(
-  (r) => Number(r.lop) > 0 || r.status === "On Leave"
-).length;
+
   const avgHours =
     records.length > 0
       ? (
@@ -330,7 +369,7 @@ const totalLOP = currentMonthRecords.filter(
     { key: "month", label: "MONTH" },
     { key: "present", label: "PRESENT" },
     { key: "leave", label: "LEAVE" },
-    { key: "lop", label: "LOP" },
+ { key: "absentDays", label: "ABSENT" },
     { key: "halfDay", label: "HALF DAY" },
     { key: "late", label: "LATE" },
     { key: "wfh", label: "WFH" },
@@ -345,6 +384,8 @@ const totalLOP = currentMonthRecords.filter(
     ...(role !== ROLE_MGR ? [{ key: "status", label: "STATUS" }] : []),
   ];
 
+  console.log("Records:", records);
+console.log("LOP Total:", totalLOP);
   return (
     <div className={styles.container}>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "12px" }}>
@@ -441,17 +482,17 @@ const totalLOP = currentMonthRecords.filter(
         >
           Present: {totalPresent}
         </div>
+<div
+  className={styles.kpiRed}
+  onClick={() => setKpiFilter(kpiFilter === "ABSENT" ? "ALL" : "ABSENT")}
+  style={{
+    cursor: "pointer",
+    border: kpiFilter === "ABSENT" ? "3px solid #dc3545" : "none",
+  }}
+>
+  Absent: {totalLOP}
+</div>
 
-        <div
-          className={styles.kpiRed}
-          onClick={() => setKpiFilter(kpiFilter === "ABSENT" ? "ALL" : "ABSENT")}
-          style={{
-            cursor: "pointer",
-            border: kpiFilter === "ABSENT" ? "3px solid #dc3545" : "none",
-          }}
-        >
-          Absent: {totalLOP}
-        </div>
 
         {role !== ROLE_EMP && (
           <div
