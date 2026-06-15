@@ -126,7 +126,5 @@ public List<InsuranceDependent> getDependents(
             .findByEmployeeCode(employeeCode);
 }
 
-public String renewPolicy(String employeeCode) {
-    return "Policy renewed successfully";
-}
+
 }
