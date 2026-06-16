@@ -423,7 +423,8 @@ body {
 }
 .table-container {
   max-height: 400px;
-  overflow-y: auto;
+    overflow-x: auto;
+  overflow-y: visible;
 }
 .leave-header {
   display: flex;
@@ -642,11 +643,15 @@ body {
 
   border-radius: 2px;
 
-  z-index: 99999;
+  z-index: 99999 !important;
 
   padding: 8px;
 
   color: #111;
+  
+  /* ✅ Ensure it's visible above all elements */
+  isolation: isolate;
+  pointer-events: auto;
 }
 
 /* INPUT */
@@ -724,9 +729,10 @@ body {
 }
 
 /* =========================================================
-   TABLE WRAPPER - SCROLLABLE WITH FROZEN COLUMNS
+   TABLE WRAPPER - SCROLLABLE WITH PROPER FILTER VISIBILITY
 ========================================================= */
-.leave-tableWrap {
+.leave-tableWrap,
+.table-container {
   width: 100%;
   height: calc(100vh - 280px);
   max-height: 500px;
@@ -741,22 +747,26 @@ body {
 }
 
 /* Scrollbar styling */
-.leave-tableWrap::-webkit-scrollbar {
+.leave-tableWrap::-webkit-scrollbar,
+.table-container::-webkit-scrollbar {
   height: 12px;
   width: 12px;
 }
 
-.leave-tableWrap::-webkit-scrollbar-track {
+.leave-tableWrap::-webkit-scrollbar-track,
+.table-container::-webkit-scrollbar-track {
   background: #f1f1f1;
   border-radius: 6px;
 }
 
-.leave-tableWrap::-webkit-scrollbar-thumb {
+.leave-tableWrap::-webkit-scrollbar-thumb,
+.table-container::-webkit-scrollbar-thumb {
   background: #888;
   border-radius: 6px;
 }
 
-.leave-tableWrap::-webkit-scrollbar-thumb:hover {
+.leave-tableWrap::-webkit-scrollbar-thumb:hover,
+.table-container::-webkit-scrollbar-thumb:hover {
   background: #555;
 }
 
@@ -967,6 +977,7 @@ body {
 .leave-table thead th {
   position: sticky;
   top: 0;
+   z-index: 100;
   overflow: visible !important;
 }
 
@@ -1283,9 +1294,8 @@ body {
 }
 
 /* =========================================================
-   STICKY HEADER ONLY FIX
+   STICKY HEADER WITH PROPER OVERFLOW FOR FILTERS
 ========================================================= */
-
 .leave-table thead th {
   position: sticky !important;
   top: 0 !important;
@@ -1295,7 +1305,7 @@ body {
 
   z-index: 400 !important;
 
-  overflow: visible !important;
+  overflow: visible !important; /* ✅ CRITICAL - Allows filter popup to show */
 }
 
 /* FIRST COLUMN HEADER */
@@ -1536,4 +1546,28 @@ body {
 .status-box:nth-child(4) h4,
 .status-box:nth-child(4) strong {
   color: #fff !important;
+}
+.leave-filter-th {
+  position: relative;
+  overflow: visible !important;
+}
+.header-filter-popup {
+  position: absolute;
+  top: 100%;
+  left: 0;
+
+  width: 260px;
+  background: #fff;
+
+  border: 1px solid #dcdcdc;
+  border-radius: 8px;
+
+  box-shadow: 0 8px 24px rgba(0,0,0,0.15);
+
+  z-index: 99999;
+}
+.leave-table thead,
+.leave-table tr,
+.leave-table th {
+  overflow: visible !important;
 }

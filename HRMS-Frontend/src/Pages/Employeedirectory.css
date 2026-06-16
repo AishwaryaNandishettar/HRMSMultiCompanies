@@ -1044,3 +1044,87 @@
   display: block;
   margin: 0 auto; /* centers image */
 }
+/* ===== BULK UPLOAD TABLE ONLY ===== */
+.directory-container .table-wrapper .table-scroll .employee-table {
+    table-layout: auto;
+    min-width: max-content;
+}
+
+/* Only Bulk Upload inputs */
+.directory-container .table-wrapper .table-scroll .employee-table td .bulk-input {
+    width: 100%;
+    min-width: 140px;
+    max-width: 220px;
+
+    box-sizing: border-box;
+    padding: 6px 8px;
+
+    border: 1px solid #d1d5db;
+    border-radius: 4px;
+
+    font-size: 13px;
+}
+
+/* Employee Name */
+.directory-container .table-wrapper .table-scroll .employee-table
+th:nth-child(1),
+.directory-container .table-wrapper .table-scroll .employee-table
+td:nth-child(1) {
+    min-width: 180px;
+}
+
+/* Employee ID */
+.directory-container .table-wrapper .table-scroll .employee-table
+th:nth-child(2),
+.directory-container .table-wrapper .table-scroll .employee-table
+td:nth-child(2) {
+    min-width: 160px;
+}
+
+/* Email */
+.directory-container .table-wrapper .table-scroll .employee-table
+th:nth-child(3),
+.directory-container .table-wrapper .table-scroll .employee-table
+td:nth-child(3) {
+    min-width: 220px;
+}
+
+/* Department */
+.directory-container .table-wrapper .table-scroll .employee-table
+th:nth-child(5),
+.directory-container .table-wrapper .table-scroll .employee-table
+td:nth-child(5) {
+    min-width: 180px;
+}
+
+/* Keep horizontal scrolling */
+.directory-container .table-wrapper .table-scroll {
+    overflow-x: auto;
+    overflow-y: auto;
+}
+.bulk-upload-page .employee-table td .bulk-input {
+    width: 100%;
+    min-width: 140px;
+    max-width: 220px;
+    box-sizing: border-box;
+}
+
+.bulk-upload-page .employee-table th:nth-child(1),
+.bulk-upload-page .employee-table td:nth-child(1) {
+    min-width: 180px;
+}
+
+.bulk-upload-page .employee-table th:nth-child(2),
+.bulk-upload-page .employee-table td:nth-child(2) {
+    min-width: 160px;
+}
+
+.bulk-upload-page .employee-table th:nth-child(3),
+.bulk-upload-page .employee-table td:nth-child(3) {
+    min-width: 220px;
+}
+
+.bulk-upload-page .employee-table th:nth-child(5),
+.bulk-upload-page .employee-table td:nth-child(5) {
+    min-width: 180px;
+}

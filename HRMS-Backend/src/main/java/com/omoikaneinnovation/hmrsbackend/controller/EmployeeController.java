@@ -117,7 +117,7 @@ public class EmployeeController {
 
             List<Employee> employees =
                     employeeService.getAllEmployees(companyId);
-
+System.out.println("Employees found: " + employees.size());
             return ResponseEntity.ok(employees);
 
         } catch (Exception e) {

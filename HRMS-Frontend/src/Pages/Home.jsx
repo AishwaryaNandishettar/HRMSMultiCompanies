@@ -1195,17 +1195,23 @@ useEffect(() => {
                       placeholder="Search employee..."
                     />
                   </div>
+<select
+  className="emp-select"
+  value={filters.department?.[0] || "All"}
+  onChange={(e) => {
+    const value = e.target.value;
 
-                  <select
-                    className="emp-select"
-                    value={dept}
-                    onChange={(e) => setDept(e.target.value)}
-                  >
-                    <option>All</option>
-                    <option>HR</option>
-                    <option>IT</option>
-                    <option>Sales</option>
-                  </select>
+    setFilters((prev) => ({
+      ...prev,
+      department: value === "All" ? [] : [value]
+    }));
+  }}
+>
+  <option value="All">All</option>
+  <option value="HR">HR</option>
+  <option value="IT">IT</option>
+  <option value="Sales">Sales</option>
+</select>
 
                   {(search || Object.keys(filters).some(key => filters[key] && filters[key].length > 0)) && (
                     <button
@@ -1620,15 +1626,13 @@ onChange={(e) => {
       const active =
         (emp.status || "").toUpperCase() === "ACTIVE";
 
-      const matchesSearch =
-        (emp.fullName || "")
-          .toLowerCase()
-          .includes(search.toLowerCase()) ||
+     const q = search.toLowerCase().trim();
 
-        (emp.employeeId || "")
-          .toString()
-          .toLowerCase()
-          .includes(search.toLowerCase());
+const matchesSearch =
+  (emp.fullName || "").toLowerCase().includes(q) ||
+  (emp.employeeId || "").toString().toLowerCase().includes(q) ||
+  (emp.designation || "").toLowerCase().startsWith(q) ||
+  (emp.department || "").toLowerCase().startsWith(q);
 
       const matchesHeaderFilters = Object.keys(filters).every((key) => {
         if (!filters[key] || filters[key].length === 0) return true;

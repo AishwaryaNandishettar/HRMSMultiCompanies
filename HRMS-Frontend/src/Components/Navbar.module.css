@@ -1,7 +1,7 @@
 /* MAIN CONTAINER */
 
 .navbarContainer {
-  height: 50px;
+  height: 42px;
   background-color: rgb(21, 210, 223);
   display: flex;
   justify-content: space-between;

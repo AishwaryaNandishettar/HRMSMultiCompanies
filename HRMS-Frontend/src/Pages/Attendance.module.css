@@ -868,3 +868,123 @@ button {
   white-space: nowrap;
   font-size: 13px;
 }
+@media screen and (max-width: 768px) {
+
+  /* FORCE PROPER STICKY CONTEXT */
+  .tableWrapper {
+    position: relative !important;
+    overflow-x: auto !important;
+  }
+
+  .table {
+    border-collapse: separate !important;
+    border-spacing: 0 !important;
+  }
+
+  /* =========================
+     FIX COLUMN 1 (EMP ID)
+  ========================= */
+  .table th:nth-child(1),
+  .table td:nth-child(1) {
+    position: sticky !important;
+    left: 0 !important;
+    z-index: 100 !important;
+    background: #fff !important;
+  }
+
+  /* =========================
+     FIX COLUMN 2 (EMP NAME)
+  ========================= */
+  .table th:nth-child(2),
+  .table td:nth-child(2) {
+    position: sticky !important;
+    left: 90px !important; /* MUST match column 1 width */
+    z-index: 99 !important;
+    background: #fff !important;
+  }
+
+  /* =========================
+     FIX HEADER ABOVE EVERYTHING
+  ========================= */
+  .table thead th {
+    position: sticky !important;
+    top: 0 !important;
+    z-index: 999 !important;
+    background: #173b7a !important;
+  }
+
+  /* IMPORTANT: override ANY earlier z-index conflicts */
+  .table thead th:nth-child(1) { z-index: 1000 !important; }
+  .table thead th:nth-child(2) { z-index: 999 !important; }
+
+  
+}
+@media screen and (max-width: 768px) {
+
+  /* ===== FORCE CLEAN STACKING CONTEXT ===== */
+  .tableWrapper {
+    position: relative !important;
+    overflow: auto !important;
+  }
+
+  .table {
+    border-collapse: separate !important;
+    border-spacing: 0 !important;
+  }
+
+  /* =========================
+     HEADER MUST ALWAYS STAY TOP
+  ========================= */
+  .table thead th {
+    position: sticky !important;
+    top: 0 !important;
+    z-index: 10000 !important;   /* 🔥 IMPORTANT */
+    background: #173b7a !important;
+  }
+
+  /* =========================
+     COLUMN 1 (EMP ID)
+  ========================= */
+  .table th:nth-child(1),
+  .table td:nth-child(1) {
+    position: sticky !important;
+    left: 0 !important;
+    z-index: 9000 !important;   /* 🔥 LOWER THAN HEADER BUT HIGH */
+    background: #fff !important;
+  }
+
+  .table thead th:nth-child(1) {
+    z-index: 11000 !important;  /* HEADER + COLUMN INTERSECTION */
+  }
+
+  /* =========================
+     COLUMN 2 (EMP NAME)
+  ========================= */
+  .table th:nth-child(2),
+  .table td:nth-child(2) {
+    position: sticky !important;
+    left: 90px !important;
+    z-index: 8000 !important;
+    background: #fff !important;
+  }
+
+  .table thead th:nth-child(2) {
+    z-index: 10900 !important;
+  }
+
+  /* =========================
+     PREVENT HEADER/ROW BLEEDING
+  ========================= */
+  .table th,
+  .table td {
+    white-space: nowrap !important;
+  }
+
+  /* =========================
+     FORCE BACKGROUND CONSISTENCY
+  ========================= */
+  .table tbody td:nth-child(1),
+  .table tbody td:nth-child(2) {
+    background: #fff !important;
+  }
+}

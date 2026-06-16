@@ -1,78 +1,114 @@
-.postjob-card {
-  background: #fff;
-  padding: 30px 20px 20px 20px; /* increased top padding */
-  border-radius: 12px;
-  box-shadow: 0 6px 18px rgba(0,0,0,0.08);
 
-  max-width: 700px;
-  width: 90%;
-
-  max-height: 85vh;
-  overflow-y: auto;
- /* IMPORTANT */
-  margin: 20px auto !important;
-  top: 10px;
-  z-index: 99999;
-  position: relative;
-}
+/* ===== MODAL OVERLAY ===== */
 .modal-overlay {
   position: fixed;
   inset: 0;
-
-  background: rgba(0,0,0,0.5);
-
+  
   display: flex;
   justify-content: center;
-  align-items: flex-start;
+  align-items: center;
 
-  overflow-y: auto;
+  padding: 20px;
 
-  padding-top: 60px;
-
-  z-index: 999999;
+  background: rgba(0,0,0,0.55);
 }
+
+.postjob-card {
+  background: #fff;
+  width: 700px;
+  max-width: 90vw;
+  height: 85vh;
+  max-height: 85vh;
+
+  border-radius: 20px;
+
+  position: relative;
+  display: flex;
+  flex-direction: column;
+isolation: isolate;
+  transform: translateZ(0);
+  box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+
+  overflow: clip; /* instead of hidden */
+}
+
+.postjob-actions {
+  flex-shrink: 0;
+}
+
+.postjob-header {
+  flex-shrink: 0;
+}
+/* ===== CLOSE BUTTON ===== */
 .close-btn {
   position: absolute;
   top: 12px;
   right: 12px;
-
   width: 32px;
   height: 32px;
-
   border: none;
   border-radius: 50%;
-
   background: #ef4444;
   color: white;
   cursor: pointer;
-
   font-size: 18px;
   font-weight: bold;
+  z-index: 1000;
+  transition: background 0.2s ease;
+}
 
-  z-index: 999999;
+.close-btn:hover {
+  background: #dc2626;
+}
+
+/* ===== HEADER ===== */
+.postjob-header {
+  position: sticky;
+  top: 0;
+  background: #fff;
+  z-index: 10;
+  padding: 14px 16px;
+  border-bottom: 1px solid #eee;
+ border-top-left-radius: 20px;
+  border-top-right-radius: 20px;
+  
 }
 
 .postjob-header h2 {
-  margin: 0;
+  margin: 0 35px 0 0;
+  font-size: 18px; /* Reduced font size */
 }
 
 .postjob-header p {
-  font-size: 12px;
+  font-size: 11px; /* Reduced font size */
   color: #666;
-  margin-top: 4px;
+  margin-top: 3px;
+}
+/* ===== GRID/FORM FIELDS ===== */
+.postjob-grid {
+  flex: 1;
+  overflow-y: auto;
+  min-height: 0;
+  padding: 18px;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  box-sizing: border-box;
 }
 
-.postjob-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 15px;
-  margin-top: 15px;
+
+.postjob-grid::-webkit-scrollbar-track {
+  background: #f8f9fa;
+  border-radius: 2px;
 }
-.close-btn {
-  position: absolute;
-  top: 15px;
-  right: 15px;
-  z-index: 4000;
+
+.postjob-grid::-webkit-scrollbar-thumb {
+  background: #adb5bd;
+  border-radius: 2px;
+}
+
+.postjob-grid::-webkit-scrollbar-thumb:hover {
+  background: #6c757d;
 }
 
 .field {
@@ -87,55 +123,151 @@
 }
 
 .field input,
+.field select,
 .field textarea {
-  padding: 10px;
+  width: 100%;
+  padding: 8px; /* Reduced padding */
   border: 1px solid #ddd;
-  border-radius: 8px;
-  font-size: 13px;
+  border-radius: 7px; /* Slightly smaller radius */
+  font-size: 12px; /* Reduced font size */
+  box-sizing: border-box;
 }
 
 .field textarea {
-  min-height: 90px;
+  min-height: 70px; /* Reduced height */
 }
 
 .field.full {
   grid-column: span 2;
 }
 
-/* JSON PREVIEW (IMPORTANT PART FOR "PAYSLIP FEEL") */
+/* ===== JSON PREVIEW ===== */
 .postjob-preview {
-  margin-top: 15px;
+  margin: 0 14px 10px 14px; /* Reduced margins */
   background: #0f172a;
   color: #e2e8f0;
-  padding: 12px;
-  border-radius: 10px;
-  font-size: 12px;
+  padding: 8px; /* Reduced padding */
+  border-radius: 8px;
+  font-size: 10px; /* Reduced font size */
   overflow-x: auto;
+  max-height: 100px; /* Reduced height */
+}
+
+.postjob-preview h4 {
+  margin: 0 0 5px 0;
+  font-size: 11px; /* Reduced font size */
+  color: #94a3b8;
 }
 
 .postjob-preview pre {
   margin: 0;
+  font-size: 9px; /* Reduced font size */
 }
 
-/* ACTION BUTTONS */
+.postjob-preview {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.postjob-preview::-webkit-scrollbar {
+  display: none;
+}
+
+.postjob-preview::-webkit-scrollbar-track {
+  background: #1e293b;
+  border-radius: 2px;
+}
+
+.postjob-preview::-webkit-scrollbar-thumb {
+  background: #475569;
+  border-radius: 2px;
+}
+
+.postjob-preview::-webkit-scrollbar-thumb:hover {
+  background: #64748b;
+}
+
+/* ===== ACTION BUTTONS ===== */
 .postjob-actions {
+  position: sticky;
+  bottom: 0;
+  background: #fff;
+  padding: 10px 14px;
+  border-top: 1px solid #eee;
   display: flex;
   justify-content: flex-end;
-  gap: 10px;
-  margin-top: 15px;
+  gap: 8px;
+ border-bottom-left-radius: 20px;
+  border-bottom-right-radius: 20px;
+ 
 }
 
 .postjob-actions .primary {
   background: #2563eb;
   color: white;
-  padding: 8px 14px;
+  padding: 8px 16px; /* Reduced padding */
   border: none;
-  border-radius: 8px;
+  border-radius: 7px; /* Slightly smaller radius */
+  font-size: 12px; /* Reduced font size */
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+
+.postjob-actions .primary:hover {
+  background: #1d4ed8;
 }
 
 .postjob-actions .secondary {
   background: #e5e7eb;
-  padding: 8px 14px;
+  color: #374151;
+  padding: 8px 16px; /* Reduced padding */
   border: none;
-  border-radius: 8px;
+  border-radius: 7px; /* Slightly smaller radius */
+  font-size: 12px; /* Reduced font size */
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+
+.postjob-actions .secondary:hover {
+  background: #d1d5db;
+}
+
+/* ===== RESPONSIVE ===== */
+@media (max-width: 768px) {
+  .postjob-card {
+    width: 100vw;
+    height: 100vh;
+    max-height: 100vh;
+    border-radius: 20px; /* Keep consistent border radius */
+  }
+
+  .postjob-grid {
+    grid-template-columns: 1fr;
+    padding: 15px;
+  }
+
+  .modal-overlay {
+    padding: 0;
+  }
+
+  .postjob-actions {
+    position: sticky;
+  }
+}
+.postjob-grid::-webkit-scrollbar {
+  width: 5px;
+}
+
+.postjob-grid::-webkit-scrollbar-track {
+  background: transparent;
+  margin: 20px 0;
+}
+
+.postjob-grid::-webkit-scrollbar-thumb {
+  background: #9e9e9e;
+  border-radius: 999px;
+}
+
+.postjob-grid::-webkit-scrollbar-thumb:hover {
+  background: #7d7d7d;
 }

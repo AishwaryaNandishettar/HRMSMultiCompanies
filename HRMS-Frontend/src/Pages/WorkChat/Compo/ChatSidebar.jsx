@@ -9,44 +9,14 @@ import {
 } from "react-icons/fa";
 
 import "./ChatSidebar.css";
+import { getEmployeeProfileImage, getInitials, generateAvatarColor } from "../../../utils/profileImageHelper";
 
 /* =========================
    AVATAR HELPERS
 ========================= */
 
-const getInitials = (name) => {
-  if (!name) return "??";
-
-  const words = name.trim().split(" ").filter(Boolean);
-
-  if (words.length === 1) return words[0].substring(0, 2).toUpperCase();
-
-  return (words[0][0] + words[1][0]).toUpperCase();
-};
-
-const getAvatarColor = (text) => {
-  if (!text) return "#6b7280";
-
-  const colors = [
-    "#2563eb",
-    "#7c3aed",
-    "#059669",
-    "#ea580c",
-    "#db2777",
-    "#0ea5e9",
-    "#16a34a",
-    "#9333ea",
-    "#f59e0b",
-  ];
-
-  let hash = 0;
-
-  for (let i = 0; i < text.length; i++) {
-    hash = text.charCodeAt(i) + ((hash << 5) - hash);
-  }
-
-  return colors[Math.abs(hash) % colors.length];
-};
+// Use centralized getInitials from helper
+const getAvatarColor = generateAvatarColor; // Alias for consistency
 
 /* =========================
    TIME FORMAT
@@ -249,15 +219,35 @@ function ChatItem({ chat, selectedChat, onClick, unreadCount = 0 }) {
     selectedChat?.id === chat.id;
 
   const hasUnread = unreadCount > 0;
+  
+  // Get actual profile image (prioritizes localStorage, then backend, then avatar)
+  const profileImage = getEmployeeProfileImage({
+    employeeId: chat.employeeId || chat.id,
+    email: chat.email,
+    fullName: chat.name,
+    name: chat.name,
+    image: chat.image || chat.profileImage
+  });
 
   return (
     <div
       className={`chat-user${isActive ? " active" : ""}${hasUnread ? " has-unread" : ""}`}
       onClick={() => onClick(chat)}
     >
-      {/* AVATAR */}
-      <div className="avatar" style={{ background: getAvatarColor(chat.name) }}>
-        {getInitials(chat.name)}
+      {/* AVATAR - Now shows actual profile picture */}
+      <div className="avatar-image-wrapper">
+        <img 
+          src={profileImage}
+          alt={chat.name}
+          className="avatar-image"
+          style={{ 
+            width: "40px", 
+            height: "40px", 
+            borderRadius: "50%", 
+            objectFit: "cover",
+            border: "2px solid #e5e7eb"
+          }}
+        />
         {/* Online dot for 1-on-1 chats */}
         {chat.type === "USER" && (
           <span className={`status-dot ${chat.online ? "online" : "offline"}`} />

@@ -2,6 +2,7 @@ import React, { useEffect, useState, useRef } from "react";
 import styles from "./Timesheet.module.css";
 import { getTimesheet, approveTimesheet, submitTimesheet } from "../api/timesheetApi";
 import { getAllAttendance } from "../api/attendanceApi";
+import { getAllLeaves } from "../api/leaveApi";
 /* ── Export helpers ── */
 const exportToCSV = (data, cols, filename) => {
   const header = cols.map((c) => c.label).join(",");
@@ -69,6 +70,7 @@ export default function TimesheetManager() {
 
   const [records, setRecords] = useState([]);
   const [todayAttendance, setTodayAttendance] = useState([]);
+  const [todayLeaves, setTodayLeaves] = useState([]);
   const [activeFilter, setActiveFilter] = useState(null);
   const [filterText, setFilterText] = useState("");
   const [filters, setFilters] = useState({});
@@ -76,23 +78,34 @@ export default function TimesheetManager() {
   const [kpiFilter, setKpiFilter] = useState("ALL");
 
 useEffect(() => {
-  const loadAttendance = async () => {
+  const loadAttendanceAndLeaves = async () => {
     try {
-      const data = await getAllAttendance();
-
-      const today = new Date().toLocaleDateString("en-CA");
-
-      const todayData = data.filter(
-        (r) => r.date === today
-      );
-
+      // Load attendance data
+      const attendanceData = await getAllAttendance();
+      const today = new Date().toISOString().split("T")[0];
+      const todayData = attendanceData.filter((r) => r.date === today);
       setTodayAttendance(todayData);
+
+      // Load leave data
+      const leaveData = await getAllLeaves();
+      const todayStr = new Date().toISOString().split("T")[0];
+      
+      // Filter leaves that are active today
+      const activeTodayLeaves = leaveData.filter((leave) => {
+        if (leave.status !== "Approved") return false;
+        const start = new Date(leave.startDate);
+        const end = new Date(leave.endDate);
+        const today = new Date(todayStr);
+        return today >= start && today <= end;
+      });
+      
+      setTodayLeaves(activeTodayLeaves);
     } catch (err) {
       console.error(err);
     }
   };
 
-  loadAttendance();
+  loadAttendanceAndLeaves();
 }, []);
   const [rejectPopup, setRejectPopup] = useState({
     visible: false,
@@ -259,7 +272,29 @@ empName:
 }
 
 if (kpiFilter === "ABSENT") {
-  return Number(r.absentDays || r.lop || 0) > 0;
+  console.log("Today Attendance:", todayAttendance);
+console.log("Today Leaves:", todayLeaves);
+console.log("Filtered Record:", r.empId);
+  // Show records where employee is absent today OR on leave today OR has LOP/absent days
+const isAbsentToday = todayAttendance.some((att) => {
+  const attendanceId =
+    att.empId ||
+    att.employeeId ||
+    att.employeeCode;
+
+  return (
+    String(attendanceId) === String(r.empId) &&
+    (!att.checkIn || att.checkIn === "-")
+  );
+});
+ const isOnLeaveToday = todayLeaves.some(
+  (leave) =>
+    String(leave.userId || "") === String(r.empId) ||
+    String(leave.employeeId || "") === String(r.empId) ||
+    String(leave.email || "") === String(r.empId)
+);
+  const hasAbsentDays = Number(r.absentDays || r.lop || 0) > 0;
+  return isAbsentToday || isOnLeaveToday || hasAbsentDays;
 }
     if (kpiFilter === "EMPLOYEES") return true;
 
@@ -346,12 +381,8 @@ const totalPresent = new Set(
 ).size;
 
 const totalLOP = todayAttendance.filter(
-  (r) =>
-    r.status === "Absent" ||
-    r.status === "Late" ||   // ✅ ADD THIS
-    !r.checkIn ||
-    r.checkIn === "-"
-).length;
+  (r) => !r.checkIn || r.checkIn === "-"
+).length + todayLeaves.length;
 
 
   const avgHours =

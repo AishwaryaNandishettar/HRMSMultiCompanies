@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { saveLeavePolicy } from "../../api/leaveApi";
 
 const LeavePolicy = () => {
   const [policy, setPolicy] = useState({
@@ -6,6 +7,20 @@ const LeavePolicy = () => {
     carry: "",
   });
 
+  const handleSave = async () => {
+  try {
+    const payload = {
+      monthly: policy.monthly,
+      carry: policy.carry
+    };
+
+    await saveLeavePolicy(payload);
+
+    alert("Policy saved successfully!");
+  } catch (err) {
+    console.error(err);
+  }
+};
   return (
     <div className="settings-section">
       <h3>Leave Policy</h3>
@@ -30,7 +45,9 @@ const LeavePolicy = () => {
         />
       </div>
 
-      <button className="save-btn">Save</button>
+     <button className="save-btn" onClick={handleSave}>
+  Save
+</button>
     </div>
   );
 };

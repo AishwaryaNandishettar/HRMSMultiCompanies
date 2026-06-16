@@ -46,4 +46,9 @@ public LeaveRequest updateStatus(
 ) {
     return leaveService.updateLeaveStatusById(id, status);
 }
+@PostMapping("/policy/save")
+public String savePolicy(@RequestBody Map<String, Object> policy) {
+    System.out.println("Policy received: " + policy);
+    return "Policy saved";
+}
 }

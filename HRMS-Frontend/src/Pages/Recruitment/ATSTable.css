@@ -5,7 +5,7 @@
 
 /* ── Page wrapper ── */
 .ats-wrapper {
-  padding: 20px 28px;
+  padding: 16px 24px; /* Reduced from 20px 28px */
   background: #f5f7fb;
   min-height: 100vh;
   font-family: "Inter", system-ui, -apple-system, sans-serif;
@@ -17,96 +17,87 @@
 .ats-header {
   display: flex;
   align-items: center;
-  gap: 14px;
-  margin-bottom: 22px;
+  gap: 12px;
+  margin-bottom: 18px; /* Reduced from 22px */
 }
 
 .ats-back-btn {
   background: #fff;
   border: 1px solid #e5e7eb;
-  padding: 7px 14px;
+  padding: 6px 12px; /* Reduced from 7px 14px */
   border-radius: 7px;
   cursor: pointer;
   color: #374151;
-  font-size: 13px;
+  font-size: 12px; /* Reduced from 13px */
   font-weight: 500;
   transition: background 0.15s;
 }
 .ats-back-btn:hover { background: #f3f4f6; }
 
 .ats-title {
-  font-size: 22px;
+  font-size: 20px; /* Reduced from 22px */
   font-weight: 700;
   color: #1e3a5f;
   margin: 0;
 }
-
-/* ── KPI cards row — same size as Recruitment dashboard stat-cards ── */
+/* KPI ROW */
 .ats-kpi-row {
-  display: flex;
-  gap: 16px;
-  margin-bottom: 20px;
-  flex-wrap: wrap;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 16px;
+    margin: 20px 0;
 }
 
+/* KPI CARD */
 .ats-kpi-card {
-  flex: 0 1 auto;
-  width: 300px;
-  height: 78px;
+    min-height: 88px;
+    padding: 18px 20px;
 
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 12px 16px;
-  border-radius: 14px;
-  color: #fff;
-  border: none;
-  box-shadow: 0 12px 28px rgba(0,0,0,0.18);
-  transition: transform 0.25s ease, box-shadow 0.25s ease;
-  cursor: default;
-  
+    border-radius: 14px;
+
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+
+    box-shadow: 0 6px 18px rgba(0,0,0,0.08);
+
+    color: #fff;
+
+    transition: transform 0.2s ease;
 }
 
 .ats-kpi-card:hover {
-  transform: translateY(-3px);
-  box-shadow: 0 16px 36px rgba(0,0,0,0.22);
-}
-.ats-kpi-card {
-  height: 78px;
-  padding: 10px 16px;
-  display: flex;
-  align-items: flex-start;   /* instead of center */
-  justify-content: space-between;
+    transform: translateY(-2px);
 }
 
+/* LEFT CONTENT */
 .ats-kpi-left {
-  display: flex;
-  flex-direction: column;
-  justify-content: flex-start;
-  align-items: flex-start;
-  gap: 4px;                 /* same as first image */
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
 }
 
+/* LABEL */
 .ats-kpi-label {
-  font-size: 11px;
-  font-weight: 600;
-  line-height: 1;
-  margin: 0;
+    font-size: 13px;
+    font-weight: 500;
+    opacity: 0.9;
+    margin-bottom: 6px;
 }
 
+/* VALUE */
 .ats-kpi-value {
-  font-size: 34px;
-  font-weight: 700;
-  line-height: 1;
-  margin: 0;
+    font-size: 28px;
+    font-weight: 700;
+    line-height: 1;
 }
 
 /* ── Toolbar: search + export ── */
 .ats-toolbar {
   display: flex;
   align-items: center;
-  gap: 12px;
-  margin-bottom: 16px;
+  gap: 10px; /* Reduced from 12px */
+  margin-bottom: 14px; /* Reduced from 16px */
 }
 
 .ats-search-wrap {
@@ -114,26 +105,26 @@
   align-items: center;
   background: #fff;
   border: 1px solid #d1d5db;
-  border-radius: 8px;
-  padding: 0 12px;
+  border-radius: 7px; /* Reduced from 8px */
+  padding: 0 10px; /* Reduced from 12px */
   flex: 1;
-  max-width: 340px;
+  max-width: 300px; /* Reduced from 340px */
   box-shadow: 0 1px 4px rgba(0,0,0,0.05);
   transition: border-color 0.15s;
 }
 .ats-search-wrap:focus-within { border-color: #2563eb; }
 
 .ats-search-icon {
-  font-size: 14px;
-  margin-right: 8px;
+  font-size: 13px; /* Reduced from 14px */
+  margin-right: 6px; /* Reduced from 8px */
   color: #9ca3af;
 }
 
 .ats-search {
   border: none;
   outline: none;
-  padding: 9px 0;
-  font-size: 14px;
+  padding: 8px 0; /* Reduced from 9px */
+  font-size: 13px; /* Reduced from 14px */
   width: 100%;
   background: transparent;
   color: #111827;
@@ -143,14 +134,14 @@
   background: linear-gradient(135deg, #2563eb, #1d4ed8);
   color: #fff;
   border: none;
-  padding: 9px 18px;
-  border-radius: 8px;
-  font-size: 14px;
+  padding: 8px 16px; /* Reduced from 9px 18px */
+  border-radius: 7px; /* Reduced from 8px */
+  font-size: 13px; /* Reduced from 14px */
   font-weight: 600;
   cursor: pointer;
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 5px; /* Reduced from 6px */
   box-shadow: 0 3px 10px rgba(37,99,235,0.3);
   transition: background 0.15s, transform 0.1s;
 }
@@ -162,28 +153,28 @@
 /* ── Table wrapper — sticky header scroll ── */
 .ats-table-wrapper {
   width: 100%;
-  height: calc(100vh - 340px);
-  min-height: 260px;
+  height: calc(100vh - 320px); /* Reduced from 340px */
+  min-height: 240px; /* Reduced from 260px */
   overflow-x: auto;
   overflow-y: auto;
-  border-radius: 10px;
+  border-radius: 8px; /* Reduced from 10px */
   border: 1px solid #e5e7eb;
   background: #fff;
   isolation: isolate;
   overscroll-behavior: contain;
 }
 
-.ats-table-wrapper::-webkit-scrollbar { width: 8px; height: 8px; }
-.ats-table-wrapper::-webkit-scrollbar-track { background: #f1f1f1; border-radius: 6px; }
-.ats-table-wrapper::-webkit-scrollbar-thumb { background: #9ca3af; border-radius: 6px; }
+.ats-table-wrapper::-webkit-scrollbar { width: 6px; height: 6px; } /* Reduced from 8px */
+.ats-table-wrapper::-webkit-scrollbar-track { background: #f1f1f1; border-radius: 3px; } /* Reduced from 6px */
+.ats-table-wrapper::-webkit-scrollbar-thumb { background: #9ca3af; border-radius: 3px; } /* Reduced from 6px */
 .ats-table-wrapper::-webkit-scrollbar-thumb:hover { background: #6b7280; }
 
 /* ── Table ── */
 .ats-table {
   width: 100%;
-  min-width: 700px;
+  min-width: 650px; /* Reduced from 700px */
   border-collapse: collapse;
-  font-size: 14px;
+  font-size: 13px; /* Reduced from 14px */
 }
 
 /* ── Sticky frozen header ── */
@@ -194,7 +185,7 @@
   background: #1e3a5f;
   color: #fff;
   font-weight: 700;
-  padding: 12px 14px;
+  padding: 10px 12px; /* Reduced from 12px 14px */
   text-align: left;
   white-space: nowrap;
   border-right: 1px solid rgba(255,255,255,0.2);
@@ -209,7 +200,7 @@
 .ats-table tbody tr:hover td { background: #eff6ff !important; }
 
 .ats-table tbody td {
-  padding: 11px 14px;
+  padding: 9px 12px; /* Reduced from 11px 14px */
   color: #374151;
   border-right: 1px solid #e5e7eb;
   background-clip: padding-box;
@@ -330,3 +321,8 @@
   margin-top: 8px;
 }
 .export-modal .cancel-btn:hover { background: #e5e7eb; }
+:root {
+  --kpi-width: 260px;
+  --kpi-height: 82px;
+  --kpi-radius: 14px;
+}

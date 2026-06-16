@@ -338,3 +338,58 @@
   background:#374151;
   color:white;
 }
+.recruitment-table {
+    width: 100%;
+    table-layout: fixed;
+    border-collapse: collapse;
+}.recruitment-table th,
+.recruitment-table td {
+    padding: 12px 10px;
+    vertical-align: middle;
+    line-height: 1.4;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+.recruitment-table th:nth-child(1),
+.recruitment-table td:nth-child(1) {
+    width: 70px;
+}
+.recruitment-table th:nth-child(4),
+.recruitment-table td:nth-child(4) {
+    width: 140px;
+}
+.recruitment-table th:nth-child(6),
+.recruitment-table td:nth-child(6) {
+    width: 110px;
+}
+.pipeline-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 28px;
+    padding: 4px 10px;
+    line-height: 1;
+}
+.recruitment-table th:last-child,
+.recruitment-table td:last-child {
+    width: 70px;
+    text-align: center;
+}
+.recruitment-table td {
+    box-sizing: border-box;
+}
+
+.candidate-cell,
+.recruiter-cell {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    min-width: 0;
+}
+
+.candidate-cell span {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}

@@ -1109,6 +1109,7 @@
   }
 
 }
+
 /* =========================================================
    COMPENSATION TABLE - MATCHING TIMESHEET STYLE
    First 3 columns frozen: EMP ID, EMP NAME, DOB
@@ -1280,29 +1281,13 @@
   box-shadow: 2px 0 4px -1px rgba(0,0,0,0.1);
 }
 
-/* FROZEN COLUMN 3 - DOB (STICKY LEFT) */
+/* Column 3 (DOJ) scrolls normally */
 .compensationTableWrapper .table th:nth-child(3),
 .compensationTableWrapper .table td:nth-child(3) {
-  position: sticky;
-  left: 360px;
-  width: 160px;
   min-width: 160px;
+  width: 160px;
   max-width: 160px;
-  z-index: 300;
-  background: white;
 }
-
-.compensationTableWrapper .table thead th:nth-child(3) {
-  z-index: 500;
-  background: #0d3b66 !important;
-  box-shadow: 2px 0 5px rgba(0,0,0,0.15);
-}
-
-.compensationTableWrapper .table tbody td:nth-child(3) {
-  background: #fff;
-  box-shadow: 2px 0 4px -1px rgba(0,0,0,0.1);
-}
-
 /* SCROLLABLE COLUMNS (4 onwards) - DOJ, etc. */
 .compensationTableWrapper .table th:nth-child(n+4),
 .compensationTableWrapper .table td:nth-child(n+4) {

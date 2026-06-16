@@ -94,54 +94,56 @@ const fetchEmployees = async () => {
     reader.readAsBinaryString(file);
   };
 
-  const handleBulkUploadSave = async () => {
-    try {
-      setUploadSaving(true);
+ const handleBulkUploadSave = async () => {
+  try {
+    setUploadSaving(true);
 
-      await api.post("/api/employee/bulk-upload", uploadRows);
+    const res = await api.post("/api/employee/bulk-upload", uploadRows);
 
-      alert("Employees Uploaded Successfully");
-    } catch (err) {
-      console.error(err);
+    console.log("BULK SAVE RESPONSE:", res.data);
 
-      alert("Upload Failed");
-    } finally {
-      setUploadSaving(false);
-    }
-  };
+    await fetchEmployees(); // refresh immediately
+
+    alert("Employees Uploaded Successfully");
+  } catch (err) {
+    console.error(err);
+    alert("Upload Failed");
+  } finally {
+    setUploadSaving(false);
+  }
+};
 
   const downloadSampleTemplate = () => {
-    const sample = [
-      {
-        fullName: "Raj Kumar",
-        employeeId: "EMP001",
-        email: "raj@gmail.com",
-        phone: "9876543210",
+const sample = [
+  {
+    fullName: "",
+    employeeId: "",
+    email: "",
+    phone: "",
 
-        department: "IT",
-        designation: "Developer",
-        location: "Bangalore",
-        manager: "Nilesh",
+    department: "",
+    designation: "",
+    location: "",
+    manager: "",
 
-        dob: "1995-05-10",
-        doj: "2025-01-10",
+    dob: "",
+    doj: "",
 
-        bankAccountNumber: "123456789",
-        ifsc: "SBIN000123",
+    bankAccountNumber: "",
+    ifsc: "",
 
-        uan: "100200300",
-        pf: "PF123",
-        esic: "ESIC123",
+    uan: "",
+    pf: "",
+    esic: "",
 
-        previousCompany: "Infosys",
-        previousDesignation: "Software Engineer",
-        totalExperience: "3",
+    previousCompany: "",
+    previousDesignation: "",
+    totalExperience: "",
 
-        aadhaar: "123412341234",
-        pan: "ABCDE1234F",
-      },
-    ];
-
+    aadhaar: "",
+    pan: "",
+  },
+];
     const ws = XLSX.utils.json_to_sheet(sample);
 
     const wb = XLSX.utils.book_new();
@@ -165,7 +167,7 @@ const removeRow = (index) => {
   setUploadRows(updated);
 };
   return (
-    <div className="directory-container">
+  <div className="directory-container bulk-upload-page">
       <div className="directory-header">
         <h2>Bulk Employee Upload</h2>
 

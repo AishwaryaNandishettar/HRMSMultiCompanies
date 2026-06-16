@@ -21,9 +21,18 @@ const EmployeeProfile = () => {
   }
   // ✅ keep original data intact
   const [editMode, setEditMode] = useState(false);
- const [selectedImage, setSelectedImage] = useState(
-  localStorage.getItem(`employee-image-${emp.employeeId}`) || null
-);
+ const [selectedImage, setSelectedImage] = useState(() => {
+  // Check localStorage with the employee's ID
+  const localImage = localStorage.getItem(`employee-image-${emp.employeeId}`);
+  if (localImage) return localImage;
+  
+  // Check with email as fallback
+  const emailImage = localStorage.getItem(`employee-image-${emp.email}`);
+  if (emailImage) return emailImage;
+  
+  // Use backend image if available
+  return emp.image || null;
+});
   const [activeTab, setActiveTab] = useState("overview");
 const role = localStorage.getItem("role");
   const [formData, setFormData] = useState({
@@ -78,6 +87,15 @@ const handleSave = async () => {
     };
 
     await updateEmployee(formData.employeeId, payload);
+    
+    // Save image to localStorage with multiple keys for compatibility
+    if (selectedImage) {
+      localStorage.setItem(`employee-image-${formData.employeeId}`, selectedImage);
+      
+      if (emp.email) {
+        localStorage.setItem(`employee-image-${emp.email}`, selectedImage);
+      }
+    }
 
     alert("Saved successfully ✅");
     setEditMode(false);

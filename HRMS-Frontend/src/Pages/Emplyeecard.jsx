@@ -558,6 +558,21 @@ const getAvatarColor = (name) => {
 
   return colors[Math.abs(hash) % colors.length];
 };
+
+// ✅ Get profile image prioritizing localStorage (updated profiles)
+const getEmployeeProfileImage = (emp) => {
+  const localStorageImage = localStorage.getItem(`employee-image-${emp.employeeId}`);
+  
+  if (localStorageImage) {
+    return localStorageImage;
+  }
+  
+  if (emp.image) {
+    return emp.image;
+  }
+  
+  return `https://ui-avatars.com/api/?name=${encodeURIComponent(emp.fullName || emp.name || "")}&background=${getAvatarColor(emp.fullName || emp.name)}&color=fff&size=128`;
+};
   return (
     <div className="directory-container">
       {/* Top Add Employee button */}
@@ -821,10 +836,7 @@ const getAvatarColor = (name) => {
     src={
       selectedImage
         ? URL.createObjectURL(selectedImage)
-        : updateTarget?.image ||
-          `https://ui-avatars.com/api/?name=${encodeURIComponent(
-            updateTarget?.fullName || ""
-          )}`
+        : getEmployeeProfileImage(updateTarget)
     }
     alt="Profile"
     style={{
@@ -1823,13 +1835,7 @@ const getAvatarColor = (name) => {
                 <tr key={`${emp.employeeId}-${emp.email}-${index}`}>
                   <td>
             <img
- src={
-  localStorage.getItem(`employee-image-${emp.employeeId}`) ||
-  emp.image ||
-  `https://ui-avatars.com/api/?name=${encodeURIComponent(
-    emp.fullName
-  )}&background=${getAvatarColor(emp.fullName)}&color=fff`
-}
+src={getEmployeeProfileImage(emp)}
   alt={emp.fullName}
   className="profile-pic"
   style={{ cursor: "pointer" }}

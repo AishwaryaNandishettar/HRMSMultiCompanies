@@ -7,6 +7,7 @@
     import { getAllEmployees } from "../api/employeeApi";
     import { updateJobDetails } from "../api/profileApi";
     import { submitResignation, getResignationsByEmployee, updateResignationStatus, getAllResignations, getResignationsForApproval, getAllResignationsByManager, getResignationsForHRApproval, approveResignation, rejectResignation } from "../api/resignationApi";
+    import { getEmployeeProfileImage } from "../utils/profileImageHelper";
 
     export default function ProfileView() {
       const popupRef = useRef(null);
@@ -25,9 +26,23 @@ const [tempFilterValues, setTempFilterValues] = useState({});
       const [showJobModal, setShowJobModal] = useState(false);
       const [earlyRelease, setEarlyRelease] = useState(false);
 const [calculatedLwd, setCalculatedLwd] = useState("");
-      const [profileImage, setProfileImage] = useState(
-  localStorage.getItem("profileImage") || ""
-);
+      const [profileImage, setProfileImage] = useState(() => {
+  // Try to get from localStorage first
+  const empId = localStorage.getItem("empId");
+  const email = user?.email || localStorage.getItem("email");
+  
+  if (empId) {
+    const localImage = localStorage.getItem(`employee-image-${empId}`);
+    if (localImage) return localImage;
+  }
+  
+  if (email) {
+    const localImage = localStorage.getItem(`employee-image-${email}`);
+    if (localImage) return localImage;
+  }
+  
+  return localStorage.getItem("profileImage") || "";
+});
   const [jobEdit, setJobEdit] = useState(() => {
   const saved = localStorage.getItem("jobEdit");
   return saved
@@ -613,7 +628,15 @@ useEffect(() => {
               <div className={styles.profileCard}>
              <div className={styles.imageWrapper}>
   <img
-    src={profileImage || "https://randomuser.me/api/portraits/men/32.jpg"}
+    src={
+      profileImage || 
+      getEmployeeProfileImage({
+        employeeId: employee.id,
+        email: employee.email,
+        fullName: employee.name,
+        name: employee.name
+      })
+    }
     alt="profile"
     className={styles.profileImage}
   />
@@ -631,7 +654,18 @@ useEffect(() => {
       const reader = new FileReader();
       reader.onload = () => {
         setProfileImage(reader.result);
+        // Save to both old key and new key pattern for compatibility
         localStorage.setItem("profileImage", reader.result);
+        
+        const empId = employee.id || localStorage.getItem("empId");
+        const email = employee.email || user?.email || localStorage.getItem("email");
+        
+        if (empId) {
+          localStorage.setItem(`employee-image-${empId}`, reader.result);
+        }
+        if (email) {
+          localStorage.setItem(`employee-image-${email}`, reader.result);
+        }
       };
       reader.readAsDataURL(file);
     }}

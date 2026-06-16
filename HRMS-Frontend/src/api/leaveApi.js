@@ -35,3 +35,12 @@ export const getAllLeaves = () => {
 // Update Leave Status
 export const updateLeaveStatus = (id, status) =>
   api.put(`/api/leave/${id}/status?status=${status}`);
+
+
+// Get Leave Policy
+export const getLeavePolicy = () => {
+  return api.get("/api/leave/policy");
+};
+export const saveLeavePolicy = (data) => {
+  return api.post("/api/leave/policy/save", data);
+};
