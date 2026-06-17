@@ -3,33 +3,47 @@
 .modal-overlay {
   position: fixed;
   inset: 0;
-  
+  padding: 20px;
+
   display: flex;
   justify-content: center;
   align-items: center;
 
-  padding: 20px;
-
-  background: rgba(0,0,0,0.55);
+  overflow: hidden;
+}
+.modal-content {
+  background: transparent;
+ 
+  overflow: hidden;
 }
 
+
+
+
+
+
+
+
 .postjob-card {
+  width: 100%;
+  max-width: 700px;
+ 
+  max-height: 90vh;
+ border-radius: 0;
   background: #fff;
-  width: 700px;
-  max-width: 90vw;
-  height: 85vh;
-  max-height: 85vh;
 
-  border-radius: 20px;
+  
 
-  position: relative;
   display: flex;
   flex-direction: column;
-isolation: isolate;
-  transform: translateZ(0);
-  box-shadow: 0 10px 30px rgba(0,0,0,0.2);
 
-  overflow: clip; /* instead of hidden */
+  overflow: visible;
+
+  position: relative;
+
+  box-shadow:
+    0 20px 40px rgba(0,0,0,.08),
+    0 10px 20px rgba(0,0,0,.05);
 }
 
 .postjob-actions {
@@ -69,8 +83,8 @@ isolation: isolate;
   z-index: 10;
   padding: 14px 16px;
   border-bottom: 1px solid #eee;
- border-top-left-radius: 20px;
-  border-top-right-radius: 20px;
+  border-top-left-radius: 0;
+  border-top-right-radius: 0;
   
 }
 
@@ -86,10 +100,10 @@ isolation: isolate;
 }
 /* ===== GRID/FORM FIELDS ===== */
 .postjob-grid {
-  flex: 1;
-  overflow-y: auto;
-  min-height: 0;
-  padding: 18px;
+  flex: unset;
+  overflow: visible;
+  min-height: auto;
+  padding-right: 12px;
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 12px;
@@ -97,19 +111,10 @@ isolation: isolate;
 }
 
 
-.postjob-grid::-webkit-scrollbar-track {
-  background: #f8f9fa;
-  border-radius: 2px;
-}
 
-.postjob-grid::-webkit-scrollbar-thumb {
-  background: #adb5bd;
-  border-radius: 2px;
-}
 
-.postjob-grid::-webkit-scrollbar-thumb:hover {
-  background: #6c757d;
-}
+
+
 
 .field {
   display: flex;
@@ -128,7 +133,7 @@ isolation: isolate;
   width: 100%;
   padding: 8px; /* Reduced padding */
   border: 1px solid #ddd;
-  border-radius: 7px; /* Slightly smaller radius */
+  border-radius: 0; /* Slightly smaller radius */
   font-size: 12px; /* Reduced font size */
   box-sizing: border-box;
 }
@@ -147,7 +152,7 @@ isolation: isolate;
   background: #0f172a;
   color: #e2e8f0;
   padding: 8px; /* Reduced padding */
-  border-radius: 8px;
+  border-radius: 0;
   font-size: 10px; /* Reduced font size */
   overflow-x: auto;
   max-height: 100px; /* Reduced height */
@@ -169,24 +174,6 @@ isolation: isolate;
   -ms-overflow-style: none;
 }
 
-.postjob-preview::-webkit-scrollbar {
-  display: none;
-}
-
-.postjob-preview::-webkit-scrollbar-track {
-  background: #1e293b;
-  border-radius: 2px;
-}
-
-.postjob-preview::-webkit-scrollbar-thumb {
-  background: #475569;
-  border-radius: 2px;
-}
-
-.postjob-preview::-webkit-scrollbar-thumb:hover {
-  background: #64748b;
-}
-
 /* ===== ACTION BUTTONS ===== */
 .postjob-actions {
   position: sticky;
@@ -197,8 +184,8 @@ isolation: isolate;
   display: flex;
   justify-content: flex-end;
   gap: 8px;
- border-bottom-left-radius: 20px;
-  border-bottom-right-radius: 20px;
+ border-bottom-left-radius: 0;
+  border-bottom-right-radius: 0;
  
 }
 
@@ -207,7 +194,7 @@ isolation: isolate;
   color: white;
   padding: 8px 16px; /* Reduced padding */
   border: none;
-  border-radius: 7px; /* Slightly smaller radius */
+  border-radius: 0; /* Slightly smaller radius */
   font-size: 12px; /* Reduced font size */
   cursor: pointer;
   transition: background 0.2s ease;
@@ -222,7 +209,7 @@ isolation: isolate;
   color: #374151;
   padding: 8px 16px; /* Reduced padding */
   border: none;
-  border-radius: 7px; /* Slightly smaller radius */
+  border-radius: 0; /* Slightly smaller radius */
   font-size: 12px; /* Reduced font size */
   cursor: pointer;
   transition: background 0.2s ease;
@@ -238,13 +225,19 @@ isolation: isolate;
     width: 100vw;
     height: 100vh;
     max-height: 100vh;
-    border-radius: 20px; /* Keep consistent border radius */
+    border-radius: 0; /* Keep consistent border radius */
   }
 
-  .postjob-grid {
-    grid-template-columns: 1fr;
-    padding: 15px;
-  }
+ .postjob-grid {
+  flex: unset;
+  overflow: visible;
+  min-height: auto;
+  padding-right: 12px;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  box-sizing: border-box;
+}
 
   .modal-overlay {
     padding: 0;
@@ -253,21 +246,4 @@ isolation: isolate;
   .postjob-actions {
     position: sticky;
   }
-}
-.postjob-grid::-webkit-scrollbar {
-  width: 5px;
-}
-
-.postjob-grid::-webkit-scrollbar-track {
-  background: transparent;
-  margin: 20px 0;
-}
-
-.postjob-grid::-webkit-scrollbar-thumb {
-  background: #9e9e9e;
-  border-radius: 999px;
-}
-
-.postjob-grid::-webkit-scrollbar-thumb:hover {
-  background: #7d7d7d;
 }
