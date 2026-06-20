@@ -7,6 +7,7 @@ const EmployeeProfile = () => {
     const navigate = useNavigate();
   const { state } = useLocation();
   const emp = state?.employee;
+  console.log("PROFILE EMPLOYEE DATA", emp);
 
    // ✅ ADD HERE (RIGHT PLACE)
   if (!emp) {

@@ -10,6 +10,7 @@ import {
   checkOut as apiCheckOut,
 } from "../api/attendanceApi";
 
+import { getAllEmployees } from "../api/employeeApi";
 /* ================= FORMAT TIME TO HH:MM:SS (display only) ================= */
 const formatTime = (timeStr) => {
   if (!timeStr || timeStr === "-") return timeStr;
@@ -133,7 +134,7 @@ export default function Attendance() {
           managerEmail: r.managerEmail || r.managerId || "-",
           reportingManager:
             r.reportingManager || r.managerName || r.managerEmail || "-",
-          tos: r.tos || "-",
+        
           date: r.date || "-",
           checkIn: r.checkIn || "-",
           checkOut: r.checkOut || "-",
@@ -144,9 +145,75 @@ export default function Attendance() {
           status: r.status || "Pending Approval",
           attendanceType: r.attendanceType || r.type || "Office",
         }));
+// Fetch all employees
+const employees = await getAllEmployees();
 
-      console.log("✅ Processed attendance data:", data.length, "records");
-      setRecords(data);
+const attendanceDates = new Set(
+  data.map(
+    (r) =>
+      `${String(r.userId).trim().toLowerCase()}_${r.date}`
+  )
+);
+
+const absentRecords = [];
+
+employees.forEach((emp) => {
+  const day = new Date(selectedDate).getDay();
+
+  // Skip weekends
+  if (day === 0 || day === 6) return;
+
+ const employeeUserId = emp.id || emp._id;
+
+const key = `${employeeUserId}_${selectedDate}`;
+
+  if (!attendanceDates.has(key)) {
+    absentRecords.push({
+     userId: employeeUserId,
+      empId: emp.employeeId || "-",
+      name: emp.fullName || "-",
+      department: emp.department || "-",
+      reportingManager:
+  emp.reportingManager ||
+  emp.managerName ||
+  emp.managerEmail ||
+  "-",
+      date: selectedDate,
+
+      checkIn: "-",
+      checkOut: "-",
+      locationIn: "-",
+      locationOut: "-",
+
+      late: "-",
+      earlyLeave: "-",
+
+      status: "Absent",
+      attendanceType: "-",
+    });
+  }
+});
+    const finalData = [
+  ...data,
+  ...absentRecords.filter(
+    (absent) =>
+      !data.some(
+        (att) =>
+          String(att.userId).trim().toLowerCase() ===
+            String(absent.userId).trim().toLowerCase() &&
+          att.date === absent.date
+      )
+  ),
+];
+
+console.log(
+  "✅ Processed attendance data:",
+  finalData.length,
+  "records"
+);
+
+setRecords(finalData);
+      
       
       // Log sample record for debugging
       if (data.length > 0) {
@@ -178,7 +245,7 @@ export default function Attendance() {
   useEffect(() => {
     console.log("🚀 Attendance component mounted, fetching records immediately...");
     fetchRecords();
-  }, []);
+}, [selectedDate]);
 
   // Live auto-refresh every 30 seconds
   useEffect(() => {
@@ -247,7 +314,7 @@ name:
               loggedUser.managerName || loggedUser.managerEmail || "-",
             managerId: loggedUser.managerId || "-",
             managerEmail: loggedUser.managerEmail || loggedUser.email || "-",
-            tos: loggedUser.tos || "-",
+           
             attendanceType: "Office",
             status: "Pending Approval",
             late: hour > 9 ? "Yes" : "No",
@@ -382,7 +449,7 @@ name:
           loggedUser.managerName || loggedUser.managerEmail || "-",
         managerId: loggedUser.managerId || "-",
         managerEmail: loggedUser.managerEmail || loggedUser.email || "-",
-        tos: loggedUser.tos || "-",
+       
         attendanceType: "Work From Home",
         status: "Pending Approval",
         late: hour > 9 ? "Yes" : "No",
@@ -502,7 +569,7 @@ name:
       "LATE",
       "EARLY",
       "STATUS",
-      "TOS",
+    
       "TYPE",
     ];
 
@@ -520,7 +587,7 @@ name:
       r.late,
       r.earlyLeave,
       r.status,
-      r.tos,
+    
       r.attendanceType,
     ]);
 
@@ -588,7 +655,7 @@ name:
     { key: "late", label: "LATE" },
     { key: "earlyLeave", label: "EARLY" },
     { key: "status", label: "STATUS" },
-    { key: "tos", label: "TOS" },
+   
     { key: "attendanceType", label: "TYPE" },
   ];
 
@@ -891,8 +958,8 @@ name:
                   <td>{formatTime(r.checkIn)}</td>
                   <td>{r.checkOut && r.checkOut !== "-" ? formatTime(r.checkOut) : "-"}</td>
                   <td>{calculateHours(r.checkIn, r.checkOut)}</td>
-                  <td>{r.locationIn}</td>
-                  <td>{r.locationOut}</td>
+                 <td>{r.locationIn || "-"}</td>
+<td>{r.locationOut || "-"}</td>
                   <td>{r.late}</td>
                   <td>{r.earlyLeave}</td>
                   <td>
@@ -918,7 +985,7 @@ name:
                       {r.status}
                     </span>
                   </td>
-                  <td>{r.tos}</td>
+                
                   <td>{r.attendanceType || "Office"}</td>
                 </tr>
               ))

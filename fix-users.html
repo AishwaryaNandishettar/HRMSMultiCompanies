@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Fix User Data</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+        }
+        .fix-button {
+            background: #4CAF50;
+            color: white;
+            padding: 15px 30px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 10px 5px;
+        }
+        .fix-button:hover {
+            background: #45a049;
+        }
+        .delete-button {
+            background: #f44336;
+        }
+        .delete-button:hover {
+            background: #da190b;
+        }
+        .result {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 5px;
+            display: none;
+        }
+        .success { background: #d4edda; color: #155724; display: block; }
+        .error { background: #f8d7da; color: #721c24; display: block; }
+        h2 { color: #333; }
+        .user-card {
+            background: #f5f5f5;
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 5px;
+        }
+    </style>
+</head>
+<body>
+    <h1>🔧 Fix User Data in MongoDB</h1>
+    <p>Click the buttons below to fix the data for each user:</p>
+
+    <div class="user-card">
+        <h2>1. Fix Aishwarya (Admin) ⭐</h2>
+        <p><strong>Current Issue:</strong> Designation showing as "Trainee" in profile</p>
+        <p><strong>Will Fix To:</strong> Designation: "Admin", Employee ID: "2920"</p>
+        <button class="fix-button" onclick="fixUser('Aishwarya@company.com', 'Aishwarya', 'Admin', '2920')">
+            Fix Aishwarya Designation
+        </button>
+    </div>
+
+    <div class="user-card">
+        <h2>2. Delete Adhviti Record ❌</h2>
+        <p><strong>Issue:</strong> Old "Adhviti" record causing confusion</p>
+        <p><strong>Action:</strong> Delete this employee record from database</p>
+        <button class="fix-button delete-button" onclick="deleteEmployee('adhviti@gmail.com')">
+            Delete Adhviti Record
+        </button>
+    </div>
+
+    <div class="user-card">
+        <h2>3. Fix Lata's Profile</h2>
+        <p><strong>Will Fix To:</strong> Name: "Lata Benakop", Employee ID: "IT-EMP-0041"</p>
+        <button class="fix-button" onclick="fixUser('lata.b@omoikaneinnovations.com', 'Lata Benakop', 'Software Developer', 'IT-EMP-0041')">
+            Fix Lata
+        </button>
+    </div>
+
+    <div class="user-card">
+        <h2>4. Fix All Issues at Once</h2>
+        <button class="fix-button" onclick="fixAllUsers()">Fix All + Delete Adhviti</button>
+    </div>
+
+    <div id="result" class="result"></div>
+
+    <script>
+        const FIX_URL = 'http://localhost:8082/api/employee/fix-user-data';
+        const DELETE_URL = 'http://localhost:8082/api/employee/delete';
+
+        async function fixUser(email, name, designation, employeeId) {
+            const resultDiv = document.getElementById('result');
+            resultDiv.textContent = `Fixing ${name}...`;
+            resultDiv.className = 'result';
+            resultDiv.style.display = 'block';
+
+            try {
+                const response = await fetch(FIX_URL, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        email: email,
+                        name: name,
+                        designation: designation,
+                        employeeId: employeeId
+                    })
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    resultDiv.textContent = `✅ SUCCESS: ${data.message}`;
+                    resultDiv.className = 'result success';
+                } else {
+                    resultDiv.textContent = `❌ ERROR: ${data.error || 'Failed to fix user data'}`;
+                    resultDiv.className = 'result error';
+                }
+            } catch (error) {
+                resultDiv.textContent = `❌ ERROR: ${error.message}. Make sure backend is running on port 8082.`;
+                resultDiv.className = 'result error';
+            }
+        }
+
+        async function deleteEmployee(email) {
+            const resultDiv = document.getElementById('result');
+            if (!confirm(`Are you sure you want to DELETE the employee record for ${email}?`)) {
+                return;
+            }
+
+            resultDiv.textContent = 'Deleting employee record...';
+            resultDiv.className = 'result';
+            resultDiv.style.display = 'block';
+
+            try {
+                const response = await fetch(`${DELETE_URL}?email=${encodeURIComponent(email)}`, {
+                    method: 'DELETE',
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    resultDiv.textContent = `✅ SUCCESS: Employee deleted`;
+                    resultDiv.className = 'result success';
+                } else {
+                    resultDiv.textContent = `❌ ERROR: ${data.error || 'Failed to delete employee'}`;
+                    resultDiv.className = 'result error';
+                }
+            } catch (error) {
+                resultDiv.textContent = `❌ ERROR: ${error.message}`;
+                resultDiv.className = 'result error';
+            }
+        }
+
+        async function fixAllUsers() {
+            const resultDiv = document.getElementById('result');
+            resultDiv.textContent = 'Fixing all users and deleting Adhviti...';
+            resultDiv.className = 'result';
+            resultDiv.style.display = 'block';
+
+            const fixes = [
+                { email: 'Aishwarya@company.com', name: 'Aishwarya', designation: 'Admin', employeeId: '2920' },
+                { email: 'lata.b@omoikaneinnovations.com', name: 'Lata Benakop', designation: 'Software Developer', employeeId: 'IT-EMP-0041' }
+            ];
+
+            let successCount = 0;
+            let errors = [];
+
+            // Fix users
+            for (const user of fixes) {
+                try {
+                    const response = await fetch(FIX_URL, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify(user)
+                    });
+
+                    if (response.ok) {
+                        successCount++;
+                    } else {
+                        const data = await response.json();
+                        errors.push(`${user.email}: ${data.error}`);
+                    }
+                } catch (error) {
+                    errors.push(`${user.email}: ${error.message}`);
+                }
+            }
+
+            // Delete Adhviti
+            try {
+                const response = await fetch(`${DELETE_URL}?email=adhviti@gmail.com`, {
+                    method: 'DELETE',
+                });
+
+                if (response.ok) {
+                    successCount++;
+                } else {
+                    errors.push('Failed to delete Adhviti');
+                }
+            } catch (error) {
+                errors.push(`Delete Adhviti: ${error.message}`);
+            }
+
+            if (errors.length === 0) {
+                resultDiv.textContent = `✅ SUCCESS: Fixed ${successCount} items! Refresh your browser to see changes.`;
+                resultDiv.className = 'result success';
+            } else {
+                resultDiv.textContent = `⚠️ Partial Success: Fixed ${successCount} items. Errors:\n${errors.join('\n')}`;
+                resultDiv.className = 'result error';
+            }
+        }
+    </script>
+</body>
+</html>

@@ -51,28 +51,18 @@ const [insuranceDetails, setInsuranceDetails] = useState({
 });
 const handleInsuranceUpdate = async () => {
   try {
-    const payload = {
-      employeeCode: user?.employeeCode,
-      department: user?.department,
-      companyId: user?.companyId,
+const payload = {
+  employeeCode: insuranceDetails.employeeCode,
+  department: user?.department,
+  companyId: user?.companyId,
 
-      insurancePlan: insuranceDetails.insurancePlan,
-      coverageAmount: Number(
-        insuranceDetails.coverageAmount
-      ),
-      monthlyPremium: Number(
-        insuranceDetails.monthlyPremium
-      ),
-
-      policyStartDate:
-        insuranceDetails.policyStart,
-
-      policyEndDate:
-        insuranceDetails.policyEnd,
-
-      status: insuranceDetails.status
-    };
-
+  insurancePlan: insuranceDetails.insurancePlan,
+  coverageAmount: Number(insuranceDetails.coverageAmount),
+  monthlyPremium: Number(insuranceDetails.monthlyPremium),
+  policyStartDate: insuranceDetails.policyStart,
+  policyEndDate: insuranceDetails.policyEnd,
+  status: insuranceDetails.status
+};
     await saveEmployeeInsurance(payload);
 
     alert("Insurance details saved");
@@ -316,15 +306,14 @@ const sortColumn = (key, direction) => {
 
   const exportToCSV = () => {
     const header = [
-      "ID,Name,EmpCode,Type,Date,Days,Amount,Approved,Status"
+     "EmployeeID,Name,Type,Date,Days,Amount,Approved,Status"
     ];
 
     const rows = filteredClaims.map(c =>
-      [
-        c.id,
-        c.employeeName,
-        c.employeeCode,
-        c.claimType,
+   [
+  c.employeeCode,
+  c.employeeName,
+  c.claimType,
         c.fromDate,
         c.admittedDays,
         c.amount,
@@ -445,12 +434,59 @@ const sortColumn = (key, direction) => {
   };
   const normalizeKey = (key) => key?.toLowerCase();
 
+console.log("Logged Employee Code:", user?.employeeCode);
 
+claims.forEach((c) => {
+  console.log(
+    "Claim Employee Code:",
+    c.employeeCode,
+    "Match:",
+    user?.employeeCode === c.employeeCode
+  );
+});
+
+console.log("ROLE =", role);
+console.log("USER CODE =", user?.employeeCode);
+
+claims.forEach((c) => {
+  console.log(
+    "CLAIM CODE =", c.employeeCode,
+    "MATCH =", String(c.employeeCode).trim().toLowerCase() ===
+              String(user?.employeeCode).trim().toLowerCase()
+  );
+});
 
   const filteredClaims = claims.filter((claim) => {
   // ROLE FILTER
- if (role === ROLE_EMP && user?.employeeCode !== claim.employeeCode) {
-  return false;
+if (role === ROLE_EMP) {
+
+  const userCode =
+    user?.employeeCode ||
+    user?.empCode ||
+    user?.employeeId ||
+    user?.id ||
+    "";
+
+  const claimCode =
+    claim?.employeeCode ||
+    claim?.empCode ||
+    claim?.employeeId ||
+    "";
+
+  console.log("Insurance Employee Filter", {
+    userCode,
+    claimCode,
+    match:
+      String(userCode).trim().toLowerCase() ===
+      String(claimCode).trim().toLowerCase()
+  });
+
+  if (
+    String(userCode).trim().toLowerCase() !==
+    String(claimCode).trim().toLowerCase()
+  ) {
+    return false;
+  }
 }
 
   if (role === ROLE_ADMIN) {
@@ -543,11 +579,16 @@ console.log(
 
   <div className="form-grid">
 
-   <input
+  <input
   type="text"
   name="employeeCode"
-  value={formData.employeeCode}
-  onChange={handleInput}
+  value={insuranceDetails.employeeCode}
+  onChange={(e) =>
+    setInsuranceDetails({
+      ...insuranceDetails,
+      employeeCode: e.target.value
+    })
+  }
   placeholder="Employee Code"
 />
 
@@ -664,48 +705,6 @@ console.log(
 >
   Save Nominee
 </button>
-
-</div>
-<div className="renewal-card">
-
-  <h3>Policy Renewal & Upgrade</h3>
-
-  <div className="renewal-grid">
-
-    <div className="renewal-item">
-      <label>Current Plan</label>
-      <span>Gold Plan</span>
-    </div>
-
-    <div className="renewal-item">
-      <label>Expiry Date</label>
-      <span>31-Dec-2026</span>
-    </div>
-
-    <div className="renewal-item">
-      <label>Status</label>
-      <span className="active-tag">
-        Active
-      </span>
-    </div>
-
-  </div>
-
-  <div className="renewal-actions">
-
-    <button className="renew-btn">
-      Renew Policy
-    </button>
-
-    <button className="upgrade-btn">
-      Upgrade Plan
-    </button>
-
-    <button className="change-btn">
-      Change Provider
-    </button>
-
-  </div>
 
 </div>
 
@@ -1350,7 +1349,7 @@ console.log(
     
     {[
       { label: "Reporting Manager", key: "managerName" },
-      { label: "Emp Code", key: "employeeCode" },
+    
       { label: "Claim Type", key: "claimType" },
       { label: "Claim Raised Date", key: "fromDate" },
       { label: "Claim Settled Date", key: "claimSettledDate" },
@@ -1464,7 +1463,7 @@ console.log(
         <div className="cell sticky col-2">{c.employeeName}</div>
         <div className="cell">{c.department || 'N/A'}</div>
         <div className="cell">{c.managerName}</div>
-        <div className="cell">{c.employeeCode}</div>
+      
         <div className="cell">{c.claimType}</div>
         <div className="cell">{c.fromDate}</div>
         <div className="cell">{c.claimSettledDate}</div>

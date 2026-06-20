@@ -77,8 +77,15 @@ public class TimesheetService {   // ✅ FIXED NAME
         Map<String, TimesheetSummary> map = new HashMap<>();
 
         for (Attendance r : data) {
+            System.out.println(
+    "Attendance userId = " + r.getUserId()
+);
 
-            String key = r.getUserId() + "_" + month;
+System.out.println(
+    "Attendance empId = " + r.getEmpId()
+);
+
+            String key = r.getEmpId() + "_" + month;
 
             map.putIfAbsent(key, new TimesheetSummary());
             TimesheetSummary obj = map.get(key);
@@ -86,10 +93,14 @@ public class TimesheetService {   // ✅ FIXED NAME
             // Enrich with user info (empId, name, department, reportingManager)
             if (obj.getEmpId() == null) {
                 // Try to find user by email first, then by MongoDB _id
-                Optional<User> userOpt = userRepo.findByEmail(r.getUserId());
-                if (userOpt.isEmpty()) {
-                    userOpt = userRepo.findById(r.getUserId());
-                }
+               Optional<User> userOpt = userRepo.findByEmployeeId(r.getEmpId());
+               if (userOpt.isEmpty()) {
+    userOpt = userRepo.findByEmail(r.getUserId());
+}
+
+if (userOpt.isEmpty()) {
+    userOpt = userRepo.findById(r.getUserId());
+}
                 
                 if (userOpt.isPresent()) {
                     User u = userOpt.get();
@@ -100,13 +111,17 @@ System.out.println("Email = " + u.getEmail());
                   // First try employeeId from User table
 String empId = u.getEmployeeId();
 
-// If missing, use attendance empId
-if ((empId == null || empId.isBlank())
-        && r.getEmpId() != null
-        && !r.getEmpId().isBlank()) {
-
-    empId = r.getEmpId();
+if (empId == null || empId.isBlank()) {
+    empId = "-";
 }
+System.out.println("=================================");
+System.out.println("Attendance UserId : " + r.getUserId());
+System.out.println("Attendance EmpId  : " + r.getEmpId());
+System.out.println("User EmployeeId   : " + u.getEmployeeId());
+System.out.println("Final EmpId       : " + empId);
+System.out.println("=================================");
+
+obj.setEmpId(empId);
 
 // Last fallback
 if (empId == null || empId.isBlank()) {

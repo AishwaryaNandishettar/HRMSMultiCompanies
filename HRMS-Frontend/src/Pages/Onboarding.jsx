@@ -4,7 +4,7 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import "./Onboarding.css";
-
+import { addBGVRecord } from "../Pages/BGV";
 import { submitOnboarding } from "../Services/api"; // adjust path
 import InviteEmployee from "../Components/InviteEmployee";
 
@@ -458,6 +458,7 @@ export default function Onboarding() {
     bgvStatus: "PENDING",
   };
 
+  console.log(payload);
  try {
   // ✅ MongoDB save
  await submitOnboarding({
@@ -524,14 +525,21 @@ export default function Onboarding() {
     submittedAt: new Date().toISOString(),
     bgvStatus: "Pending",
   });
-
+console.log("Saving BGV Record:", existing);
   localStorage.setItem("bgv_records", JSON.stringify(existing));
 
   alert("Onboarding submitted successfully ✅");
   navigate("/BGV");
 
 } catch (error) {
-  console.error("FULL ERROR:", error.response || error);
+  console.error(error);
+
+  if (error.response) {
+    console.log(error.response.data);
+    alert(error.response.data.message || "Submission failed");
+  } else {
+    alert(error.message);
+  }
 }
  };
   const sectionHeader = (id, title, subtitle) => (

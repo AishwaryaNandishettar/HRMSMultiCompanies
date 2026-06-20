@@ -40,11 +40,32 @@ export const fetchAllEmployees = async () => {
 
 // ✅ UPDATE EMPLOYEE
 
-
 export const updateEmployee = async (id, data) => {
+  // If data is FormData, convert it to JSON object
+  let jsonData = {};
+  
+  if (data instanceof FormData) {
+    // Convert FormData to JSON
+    for (let [key, value] of data.entries()) {
+      jsonData[key] = value;
+    }
+  } else {
+    jsonData = data;
+  }
+
+  console.log("🔧 Sending update request:", {
+    id,
+    data: jsonData
+  });
+
   const response = await api.put(
     `/api/employee/update/${id}`,
-    data
+    jsonData,
+    {
+      headers: {
+        "Content-Type": "application/json",
+      },
+    }
   );
 
   return response.data;

@@ -137,6 +137,222 @@ System.out.println("Employees found: " + employees.size());
     }
 
     /* =========================================================
+       GET CURRENT USER'S PROFILE
+       ========================================================= */
+    @GetMapping("/me")
+    public ResponseEntity<?> getMyProfile(Principal principal) {
+        try {
+            if (principal == null) {
+                return ResponseEntity.status(401)
+                        .body(Map.of("error", "Not authenticated"));
+            }
+
+            String email = principal.getName();
+            System.out.println("🔍 Fetching profile for email: " + email);
+
+            // Try Employee collection first
+            Employee employee = employeeRepository.findByEmail(email)
+                    .orElse(null);
+
+            // Also get User data
+            User user = userRepository.findByEmail(email)
+                    .orElse(null);
+
+            if (user == null && employee == null) {
+                return ResponseEntity.status(404)
+                        .body(Map.of("error", "Profile not found for: " + email));
+            }
+
+            // If Employee exists, return it (it has more complete data)
+            if (employee != null) {
+                System.out.println("✅ Found in Employee collection:");
+                System.out.println("   - Name: " + employee.getFullName());
+                System.out.println("   - Email: " + employee.getEmail());
+                System.out.println("   - Employee ID: " + employee.getEmployeeId());
+                System.out.println("   - Designation: " + employee.getDesignation());
+                return ResponseEntity.ok(employee);
+            }
+
+            // Fallback to User collection
+            System.out.println("✅ Found in User collection:");
+            System.out.println("   - Name: " + user.getName());
+            System.out.println("   - Email: " + user.getEmail());
+            System.out.println("   - Employee ID: " + user.getEmployeeId());
+            System.out.println("   - Designation: " + user.getDesignation());
+            System.out.println("   - Role: " + user.getRole());
+
+            // Return User data formatted as employee profile using HashMap
+            Map<String, String> profileMap = new java.util.HashMap<>();
+            profileMap.put("email", user.getEmail() != null ? user.getEmail() : "");
+            profileMap.put("name", user.getName() != null ? user.getName() : "");
+            profileMap.put("fullName", user.getName() != null ? user.getName() : "");
+            profileMap.put("empName", user.getName() != null ? user.getName() : "");
+            profileMap.put("employeeId", user.getEmployeeId() != null ? user.getEmployeeId() : "N/A");
+            profileMap.put("department", user.getDepartment() != null ? user.getDepartment() : "");
+            profileMap.put("designation", user.getDesignation() != null ? user.getDesignation() : "");
+            profileMap.put("joiningDate", user.getJoiningDate() != null ? user.getJoiningDate() : "");
+            profileMap.put("location", user.getLocation() != null ? user.getLocation() : "");
+            profileMap.put("phone", user.getPhone() != null ? user.getPhone() : "");
+            profileMap.put("role", user.getRole() != null ? user.getRole() : "");
+            profileMap.put("managerName", user.getManagerName() != null ? user.getManagerName() : "");
+            profileMap.put("hrName", user.getHrName() != null ? user.getHrName() : "");
+            profileMap.put("pf", user.getPf() != null ? user.getPf() : "");
+            profileMap.put("uan", user.getUan() != null ? user.getUan() : "");
+            profileMap.put("esic", user.getEsic() != null ? user.getEsic() : "");
+            profileMap.put("totalExp", user.getTotalExp() != null ? user.getTotalExp() : "");
+            profileMap.put("currentExp", user.getCurrentExp() != null ? user.getCurrentExp() : "");
+            profileMap.put("employmentType", user.getEmploymentType() != null ? user.getEmploymentType() : "Full-Time");
+
+            return ResponseEntity.ok(profileMap);
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.status(500)
+                    .body(Map.of("error", "Failed to fetch profile: " + e.getMessage()));
+        }
+    }
+
+    /* =========================================================
+       UPDATE PERSONAL INFORMATION
+       ========================================================= */
+    @PutMapping("/update-personal")
+    public ResponseEntity<?> updatePersonalInfo(
+            @RequestBody Map<String, String> updates,
+            Principal principal
+    ) {
+        try {
+            if (principal == null) {
+                return ResponseEntity.status(401)
+                        .body(Map.of("error", "Not authenticated"));
+            }
+
+            String email = principal.getName();
+            System.out.println("🔄 Updating personal info for: " + email);
+
+            // Get User
+            User user = userRepository.findByEmail(email)
+                    .orElseThrow(() -> new RuntimeException("User not found"));
+
+            // Get Employee (if exists)
+            Employee employee = employeeRepository.findByEmail(email)
+                    .orElse(null);
+
+            // Update User fields
+            if (updates.containsKey("name")) {
+                user.setName(updates.get("name"));
+                System.out.println("   - Updated name: " + updates.get("name"));
+            }
+            if (updates.containsKey("phone")) user.setPhone(updates.get("phone"));
+            if (updates.containsKey("designation")) user.setDesignation(updates.get("designation"));
+            if (updates.containsKey("department")) user.setDepartment(updates.get("department"));
+
+            userRepository.save(user);
+
+            // Update Employee fields if exists
+            if (employee != null) {
+                if (updates.containsKey("name")) {
+                    employee.setFullName(updates.get("name"));
+                }
+                if (updates.containsKey("designation")) {
+                    employee.setDesignation(updates.get("designation"));
+                }
+                if (updates.containsKey("department")) {
+                    employee.setDepartment(updates.get("department"));
+                }
+                employeeRepository.save(employee);
+            }
+
+            System.out.println("✅ Personal info updated successfully");
+            return ResponseEntity.ok(Map.of("message", "Updated successfully"));
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.status(500)
+                    .body(Map.of("error", "Failed to update: " + e.getMessage()));
+        }
+    }
+
+    /* =========================================================
+       FIX USER DATA - ADMIN ONLY
+       ========================================================= */
+    @PostMapping("/fix-user-data")
+    public ResponseEntity<?> fixUserData(
+            @RequestBody Map<String, String> request
+    ) {
+        try {
+            String email = request.get("email");
+            String correctName = request.get("name");
+            String correctDesignation = request.get("designation");
+            String correctEmployeeId = request.get("employeeId");
+
+            System.out.println("🔧 Fixing data for: " + email);
+
+            // Update User
+            User user = userRepository.findByEmail(email).orElse(null);
+            if (user != null) {
+                if (correctName != null) user.setName(correctName);
+                if (correctDesignation != null) user.setDesignation(correctDesignation);
+                if (correctEmployeeId != null) user.setEmployeeId(correctEmployeeId);
+                userRepository.save(user);
+                System.out.println("✅ User updated");
+            }
+
+            // Update Employee
+            Employee employee = employeeRepository.findByEmail(email).orElse(null);
+            if (employee != null) {
+                if (correctName != null) employee.setFullName(correctName);
+                if (correctDesignation != null) employee.setDesignation(correctDesignation);
+                if (correctEmployeeId != null) employee.setEmployeeId(correctEmployeeId);
+                employeeRepository.save(employee);
+                System.out.println("✅ Employee updated");
+            }
+
+            return ResponseEntity.ok(Map.of("message", "Data fixed successfully for " + email));
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.status(500)
+                    .body(Map.of("error", "Failed: " + e.getMessage()));
+        }
+    }
+
+    /* =========================================================
+       DELETE EMPLOYEE BY EMAIL
+       ========================================================= */
+    @DeleteMapping("/delete")
+    public ResponseEntity<?> deleteEmployee(@RequestParam String email) {
+        try {
+            System.out.println("🗑️ Deleting employee with email: " + email);
+
+            // Delete from Employee collection
+            Employee employee = employeeRepository.findByEmail(email).orElse(null);
+            if (employee != null) {
+                employeeRepository.delete(employee);
+                System.out.println("✅ Deleted from Employee collection");
+            }
+
+            // Delete from User collection
+            User user = userRepository.findByEmail(email).orElse(null);
+            if (user != null) {
+                userRepository.delete(user);
+                System.out.println("✅ Deleted from User collection");
+            }
+
+            if (employee == null && user == null) {
+                return ResponseEntity.status(404)
+                        .body(Map.of("error", "No employee found with email: " + email));
+            }
+
+            return ResponseEntity.ok(Map.of("message", "Employee deleted successfully: " + email));
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.status(500)
+                    .body(Map.of("error", "Failed to delete: " + e.getMessage()));
+        }
+    }
+
+    /* =========================================================
        GET EMPLOYEES AS USERS
        ========================================================= */
     @GetMapping("/as-users")

@@ -406,6 +406,8 @@ if (selectedImage) {
 }
 
 const updatedEmployee = await updateEmployee(idToUse, formData);
+console.log(formData instanceof FormData);
+console.log(idToUse);
 
 setEmployees((prev) =>
   prev.map((emp) =>
@@ -561,17 +563,50 @@ const getAvatarColor = (name) => {
 
 // ✅ Get profile image prioritizing localStorage (updated profiles)
 const getEmployeeProfileImage = (emp) => {
-  const localStorageImage = localStorage.getItem(`employee-image-${emp.employeeId}`);
-  
-  if (localStorageImage) {
-    return localStorageImage;
-  }
-  
+  console.log(
+    "Employee:",
+    emp.fullName,
+    "EmployeeId:",
+    emp.employeeId,
+    "ID:",
+    emp.id,
+    "Email:",
+    emp.email
+  );
+  // Always prefer DB image
   if (emp.image) {
     return emp.image;
   }
-  
-  return `https://ui-avatars.com/api/?name=${encodeURIComponent(emp.fullName || emp.name || "")}&background=${getAvatarColor(emp.fullName || emp.name)}&color=fff&size=128`;
+
+  if (emp.profileImage) {
+    return emp.profileImage;
+  }
+
+  // ✅ FIX: Try multiple key variations to match Profile.jsx
+  const localStorageImage =
+    localStorage.getItem(`employee-image-${emp.employeeId}`) ||
+    localStorage.getItem(`employee-image-${emp.id}`) ||  // ✅ ADD THIS - matches Profile.jsx
+    localStorage.getItem(`employee-image-${emp.email}`) ||
+    localStorage.getItem("profileImage"); // ✅ ADD THIS - fallback for current user
+
+  if (localStorageImage) {
+    console.log("✅ Found image in localStorage for", emp.fullName);
+    return localStorageImage;
+  }
+
+  // Check database fields
+  if (emp.image || emp.profileImage) {
+    console.log("✅ Found image in database for", emp.fullName);
+    return emp.image || emp.profileImage;
+  }
+
+  // Fallback to avatar API
+  console.log("⚠️ No image found, using avatar API for", emp.fullName);
+  return `https://ui-avatars.com/api/?name=${encodeURIComponent(
+    emp.fullName || emp.name || ""
+  )}&background=${getAvatarColor(
+    emp.fullName || emp.name
+  )}&color=fff&size=128`;
 };
   return (
     <div className="directory-container">
@@ -928,12 +963,12 @@ const getEmployeeProfileImage = (emp) => {
                         outline: "none", cursor: "pointer"
                       }}
                     >
-                      <option value="">Select Status</option>
-                      <option value="ACTIVE">ACTIVE</option>
-                      <option value="INVITED">INVITED</option>
-                      <option value="SERVING NOTICE">SERVING NOTICE</option>
-                      <option value="RESIGNED">RESIGNED</option>
-                      <option value="DISABLED">DISABLED</option>
+                     <option value="ACTIVE">ACTIVE</option>
+<option value="INACTIVE">INACTIVE</option>
+<option value="INVITED">INVITED</option>
+<option value="SERVING NOTICE">SERVING NOTICE</option>
+<option value="RESIGNED">RESIGNED</option>
+<option value="DISABLED">DISABLED</option>
                     </select>
                   </div>
                 </div>
@@ -1627,36 +1662,81 @@ const getEmployeeProfileImage = (emp) => {
   </div>
 )}
 </th>
-            <th>
+<th>
   <div className="th-header">
     Reporting Manager
     <span onClick={() => setActiveFilter("employeereportingmanager")}>⏷</span>
   </div>
 
   {activeFilter === "employeereportingmanager" && (
-    <div ref={popupRef} className="popup">
+    <div ref={popupRef} className="excel-filter-popup">
+
       <input
-        placeholder="Search..."
+        type="text"
+        placeholder="Search"
         value={filterText}
         onChange={(e) => setFilterText(e.target.value)}
+        className="filter-search"
       />
 
-      <div className="list">
-        {suggestions.map((s) => (
-          <div
-            key={s}
-            onClick={() => {
-              setColumnFilters({
-  ...columnFilters,
-  employeereportingmanager: s,
-});
-              setActiveFilter(null);
-              setFilterText("");
-            }}
-          >
-            {s}
-          </div>
+      <div className="filter-list">
+
+        <label className="filter-item">
+          <input
+            type="checkbox"
+            checked={
+              (tempSelections.employeereportingmanager || []).length ===
+              suggestions.length
+            }
+            onChange={(e) =>
+              setTempSelections({
+                ...tempSelections,
+                employeereportingmanager: e.target.checked
+                  ? suggestions
+                  : [],
+              })
+            }
+          />
+          (Select All)
+        </label>
+
+        {suggestions.map((item) => (
+          <label key={item} className="filter-item">
+            <input
+              type="checkbox"
+              checked={
+                (tempSelections.employeereportingmanager || []).includes(item)
+              }
+              onChange={() =>
+                handleCheckboxChange(
+                  "employeereportingmanager",
+                  item
+                )
+              }
+            />
+            {item}
+          </label>
         ))}
+      </div>
+
+      <div className="filter-footer">
+        <button
+          onClick={() => {
+            setColumnFilters({
+              ...columnFilters,
+              employeereportingmanager:
+                (tempSelections.employeereportingmanager || []).join("|"),
+            });
+
+            setActiveFilter(null);
+          }}
+        >
+          OK
+        </button>
+
+        <button onClick={() => setActiveFilter(null)}>
+          Cancel
+        </button>
       </div>
     </div>
   )}
@@ -1668,29 +1748,69 @@ const getEmployeeProfileImage = (emp) => {
   </div>
 
   {activeFilter === "employeeDOB" && (
-    <div ref={popupRef} className="popup">
+    <div ref={popupRef} className="excel-filter-popup">
+
       <input
-        placeholder="Search..."
+        type="text"
+        placeholder="Search"
         value={filterText}
         onChange={(e) => setFilterText(e.target.value)}
+        className="filter-search"
       />
 
-      <div className="list">
-        {suggestions.map((s) => (
-          <div
-            key={s}
-            onClick={() => {
-              setColumnFilters({
-                ...columnFilters,
-                employeeDOB: s,
-              });
-              setActiveFilter(null);
-              setFilterText("");
-            }}
-          >
-            {s}
-          </div>
+      <div className="filter-list">
+
+        <label className="filter-item">
+          <input
+            type="checkbox"
+            checked={
+              (tempSelections.employeeDOB || []).length ===
+              suggestions.length
+            }
+            onChange={(e) =>
+              setTempSelections({
+                ...tempSelections,
+                employeeDOB: e.target.checked ? suggestions : [],
+              })
+            }
+          />
+          (Select All)
+        </label>
+
+        {suggestions.map((item) => (
+          <label key={item} className="filter-item">
+            <input
+              type="checkbox"
+              checked={
+                (tempSelections.employeeDOB || []).includes(item)
+              }
+              onChange={() =>
+                handleCheckboxChange("employeeDOB", item)
+              }
+            />
+            {item}
+          </label>
         ))}
+      </div>
+
+      <div className="filter-footer">
+        <button
+          onClick={() => {
+            setColumnFilters({
+              ...columnFilters,
+              employeeDOB:
+                (tempSelections.employeeDOB || []).join("|"),
+            });
+
+            setActiveFilter(null);
+          }}
+        >
+          OK
+        </button>
+
+        <button onClick={() => setActiveFilter(null)}>
+          Cancel
+        </button>
       </div>
     </div>
   )}
@@ -1763,36 +1883,78 @@ const getEmployeeProfileImage = (emp) => {
     </div>
   )}
 </th>
-              <th>
+<th>
   <div className="th-header">
     Status
     <span onClick={() => setActiveFilter("employeestatus")}>⏷</span>
   </div>
 
   {activeFilter === "employeestatus" && (
-    <div ref={popupRef} className="popup">
+    <div ref={popupRef} className="excel-filter-popup">
+
       <input
-        placeholder="Search..."
+        type="text"
+        placeholder="Search"
         value={filterText}
         onChange={(e) => setFilterText(e.target.value)}
+        className="filter-search"
       />
 
-      <div className="list">
-        {suggestions.map((s) => (
-          <div
-            key={s}
-            onClick={() => {
-              setColumnFilters({
-                ...columnFilters,
-                employeestatus: s,
-              });
-              setActiveFilter(null);
-              setFilterText("");
-            }}
-          >
-            {s}
-          </div>
+      <div className="filter-list">
+
+        <label className="filter-item">
+          <input
+            type="checkbox"
+            checked={
+              (tempSelections.employeestatus || []).length ===
+              suggestions.length
+            }
+            onChange={(e) =>
+              setTempSelections({
+                ...tempSelections,
+                employeestatus: e.target.checked
+                  ? suggestions
+                  : [],
+              })
+            }
+          />
+          (Select All)
+        </label>
+
+        {suggestions.map((item) => (
+          <label key={item} className="filter-item">
+            <input
+              type="checkbox"
+              checked={
+                (tempSelections.employeestatus || []).includes(item)
+              }
+              onChange={() =>
+                handleCheckboxChange("employeestatus", item)
+              }
+            />
+            {item}
+          </label>
         ))}
+      </div>
+
+      <div className="filter-footer">
+        <button
+          onClick={() => {
+            setColumnFilters({
+              ...columnFilters,
+              employeestatus:
+                (tempSelections.employeestatus || []).join("|"),
+            });
+
+            setActiveFilter(null);
+          }}
+        >
+          OK
+        </button>
+
+        <button onClick={() => setActiveFilter(null)}>
+          Cancel
+        </button>
       </div>
     </div>
   )}
@@ -1833,19 +1995,33 @@ const getEmployeeProfileImage = (emp) => {
             ) : (
               filteredEmployees.map((emp, index) => (
                 <tr key={`${emp.employeeId}-${emp.email}-${index}`}>
-                  <td>
-            <img
-src={getEmployeeProfileImage(emp)}
-  alt={emp.fullName}
-  className="profile-pic"
-  style={{ cursor: "pointer" }}
-  onClick={() =>
-    navigate("/employee-profile", {
-      state: { employee: emp }
-    })
-  }
-/>
-                  </td>
+                <td>
+  {getEmployeeProfileImage(emp) ? (
+    <img
+      src={getEmployeeProfileImage(emp)}
+      alt={emp.fullName}
+      className="profile-pic"
+      style={{ cursor: "pointer" }}
+      onClick={() =>
+        navigate("/employee-profile", {
+          state: { employee: emp },
+        })
+      }
+    />
+  ) : (
+    <div
+      className="employee-initials"
+      style={{ cursor: "pointer" }}
+      onClick={() =>
+        navigate("/employee-profile", {
+          state: { employee: emp },
+        })
+      }
+    >
+      {emp.fullName?.charAt(0)}
+    </div>
+  )}
+</td>
                   <td>{emp.fullName}</td> 
                   <td>{emp.employeeId}</td>
                   <td>{emp.department}</td>
@@ -1862,11 +2038,13 @@ src={getEmployeeProfileImage(emp)}
                   <td>
                     <span
                       className={`status ${
-                        (emp.status || "").toUpperCase() === "ACTIVE"
-                          ? "active"
-                          : (emp.status || "").toUpperCase() === "SERVING NOTICE"
-                          ? "notice"
-                          : "resigned"
+                      (emp.status || "").toUpperCase() === "ACTIVE"
+  ? "active"
+  : (emp.status || "").toUpperCase() === "INACTIVE"
+  ? "inactive"
+  : (emp.status || "").toUpperCase() === "SERVING NOTICE"
+  ? "notice"
+  : "resigned"
                       }`}
                     >
                       {emp.status}

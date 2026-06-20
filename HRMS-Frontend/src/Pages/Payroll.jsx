@@ -119,6 +119,11 @@ useEffect(() => {
 }, []);
 
 useEffect(() => {
+  console.log("User:", user);
+  console.log("Active Employee:", activeEmployee);
+}, [user, activeEmployee]);
+
+useEffect(() => {
   getAllEmployees()
     .then(res => {
       const empData = Array.isArray(res) ? res : (Array.isArray(res?.data) ? res.data : []);
@@ -181,6 +186,19 @@ const enrichedData = data.map((pay) => {
   };
 });
 
+const adminExists = enrichedData.some(
+  e =>
+    String(e.employeeId) ===
+    String(user?.empId || user?.employeeId)
+);
+
+if (
+  (user?.role === "admin" || user?.role === "hr") &&
+  activeEmployee &&
+  !adminExists
+) {
+  enrichedData.unshift(activeEmployee);
+}
 // ROLE BASED FILTER
 let roleBasedData = [...enrichedData];
 
@@ -216,7 +234,16 @@ if (user?.role === "employee") {
     );
   });
 }
-
+console.log("Logged User:", user);
+console.log("Role Based Data:", roleBasedData);
+console.log(
+  "Admin Record:",
+  roleBasedData.find(
+    e =>
+      String(e.employeeId) ===
+      String(user?.empId || user?.employeeId)
+  )
+);
 // SEARCH FILTER
 const filteredData = roleBasedData.filter((emp) => {
 

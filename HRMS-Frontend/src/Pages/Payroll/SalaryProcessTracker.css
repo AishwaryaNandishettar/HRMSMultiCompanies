@@ -6,7 +6,7 @@
 .spt-wrapper {
   background: #ffffff;
   border-radius: 14px;
-  padding: 18px 22px 20px;
+  padding: 12px 18px 12px;
   margin-bottom: 14px;
   box-shadow: 0 4px 18px rgba(0, 0, 0, 0.07);
   border: 1px solid #e9ecf0;
@@ -19,7 +19,7 @@
   align-items: flex-start;
   flex-wrap: wrap;
   gap: 10px;
-  margin-bottom: 14px;
+  margin-bottom: 8px;
 }
 
 .spt-title-block {
@@ -89,7 +89,7 @@
   height: 6px;
   background: #e5e7eb;
   border-radius: 99px;
-  margin-bottom: 20px;
+  margin-bottom: 10px;
   overflow: hidden;
 }
 
@@ -115,7 +115,7 @@
   flex-direction: column;
   align-items: center;
   flex: 1;
-  min-width: 80px;
+  min-width: 65px;
   position: relative;
   text-align: center;
 }
@@ -139,13 +139,13 @@
 
 /* ── Circle ── */
 .spt-circle {
-  width: 34px;
-  height: 34px;
+  width: 30px;
+  height: 30px;
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 13px;
+  font-size: 12px;
   font-weight: 700;
   z-index: 1;
   position: relative;
@@ -186,7 +186,7 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  margin-top: 8px;
+  margin-top: 4px;
   gap: 2px;
 }
 
@@ -195,7 +195,7 @@
 }
 
 .spt-stage-label {
-  font-size: 10.5px;
+  font-size: 9px;
   font-weight: 500;
   color: #374151;
   line-height: 1.3;

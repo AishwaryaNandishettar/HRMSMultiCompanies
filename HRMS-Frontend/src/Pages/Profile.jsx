@@ -4,7 +4,7 @@
     import { fetchMyProfile } from "../api/profileApi";
     import { useContext } from "react";
     import { AuthContext } from "../Context/Authcontext";
-    import { getAllEmployees } from "../api/employeeApi";
+    import { getAllEmployees, updateEmployee } from "../api/employeeApi";
     import { updateJobDetails } from "../api/profileApi";
     import { submitResignation, getResignationsByEmployee, updateResignationStatus, getAllResignations, getResignationsForApproval, getAllResignationsByManager, getResignationsForHRApproval, approveResignation, rejectResignation } from "../api/resignationApi";
     import { getEmployeeProfileImage } from "../utils/profileImageHelper";
@@ -43,28 +43,23 @@ const [calculatedLwd, setCalculatedLwd] = useState("");
   
   return localStorage.getItem("profileImage") || "";
 });
-  const [jobEdit, setJobEdit] = useState(() => {
-  const saved = localStorage.getItem("jobEdit");
-  return saved
-    ? JSON.parse(saved)
-    : {
-        designation: "",
-        department: "",
-        joiningDate: "",
-        totalExp: "",
-        currentExp: "",
-        employmentType: "Full-Time",
-        location: "Bangalore",
-        manager: "",
-        hr: "",
-        pf: "",
-        uan: "",
-        esic: "",
-        pfMemberId: "",
-        designationChanged: "",
-        designationChangedDate: "",
-      };
-});
+  const [jobEdit, setJobEdit] = useState({
+    designation: "",
+    department: "",
+    joiningDate: "",
+    totalExp: "",
+    currentExp: "",
+    employmentType: "Full-Time",
+    location: "Bangalore",
+    manager: "",
+    hr: "",
+    pf: "",
+    uan: "",
+    esic: "",
+    pfMemberId: "",
+    designationChanged: "",
+    designationChangedDate: "",
+  });
       
 
       /* ================= EXIT MODULE STATE ================= */
@@ -97,14 +92,7 @@ const [calculatedLwd, setCalculatedLwd] = useState("");
 });
 const [searchTo, setSearchTo] = useState("");
 const [searchCc, setSearchCc] = useState("");
-// ✅ Use allEmployees instead of hardcoded users
-const users = [
-  { id: 1, name: "Padmanabh", email: "Padmanabh@omoi.com" },
-  { id: 2, name: "Shambuling", email: "Shambuling@omoi.com" },
-  { id: 3, name: "Aishwarya", email: "Aishwarya@company.com" },
-  { id: 4, name: "Mahesh", email: "mahesh@gmail.com" },
-  { id: 5, name: "Adhviti", email: "adhviti@gmail.com" }
-];
+// ✅ Use allEmployees from backend instead of hardcoded users
     const [skills, setSkills] = useState([]);
     const [profileData, setProfileData] = useState(null);
     
@@ -119,6 +107,18 @@ const Chip = ({ user, onRemove }) => (
 
     const role = (localStorage.getItem("role") || "").toUpperCase(); 
     console.log("role:", role);
+
+// ✅ NEW: Clear old localStorage data on component mount
+useEffect(() => {
+  // Clear old cached data that might have "Adhviti" or wrong employee info
+  const keysToRemove = ['personalEdit', 'jobEdit'];
+  keysToRemove.forEach(key => {
+    if (localStorage.getItem(key)) {
+      console.log(`🧹 Removing old localStorage key: ${key}`);
+      localStorage.removeItem(key);
+    }
+  });
+}, []); // Run once on mount
 
 useEffect(() => {
   const loadEmployees = async () => {
@@ -395,28 +395,20 @@ useEffect(() => {
 
 
       const employee = {
- name: (() => {
-  // Get actual name based on logged-in user
-  if (user?.email === "Aishwarya@company.com") return "Aishwarya";
-  if (user?.email === "mahesh@gmail.com") return "Mahesh";
-  if (user?.email === "padmanabh@omoi.com") return "Padmanabh";
-  if (user?.email === "adhviti@gmail.com") return "Adhviti";
-  
-  return profileData?.name ||
-    profileData?.empName ||
-    profileData?.fullName ||
-    user?.name ||
-    "N/A";
-})(),
+ name: profileData?.fullName ||
+       profileData?.empName ||
+       profileData?.name ||
+       user?.name ||
+       "N/A",
 
  id:
-  profileData?.employeeId ??
-  user?.employeeId ??
-  empId ??
+  profileData?.employeeId ||
+  user?.employeeId ||
+  empId ||
   "N/A",
 
   phone: profileData?.phone || "N/A",
-  email: user?.email || profileData?.email || "N/A",
+  email: profileData?.email || user?.email || "N/A",
 
   dob: profileData?.dob || "",
   fatherName: profileData?.fatherName || "",
@@ -439,22 +431,28 @@ useEffect(() => {
   currentExp: profileData?.currentExp || "N/A",
 };
 
+  // ✅ NEW: Update jobEdit when profileData changes (from backend)
   useEffect(() => {
-    const saved = localStorage.getItem("jobEdit");
-    if (!saved && employee && profileData) {  // ✅ ONLY if no saved data
+    if (profileData) {
       setJobEdit({
-        designation: employee.designation,
-        department: employee.department,
-        joiningDate: employee.joiningDate,
-        totalExp: employee.totalExp,
-        currentExp: employee.currentExp,
-        employmentType: "Full-Time",
-        location: "Bangalore",
+        designation: profileData?.designation || "",
+        department: profileData?.department || "",
+        joiningDate: profileData?.joiningDate || "",
+        totalExp: profileData?.totalExp || "",
+        currentExp: profileData?.currentExp || "",
+        employmentType: profileData?.employmentType || "Full-Time",
+        location: profileData?.location || "Bangalore",
         manager: profileData?.managerName || "",
-        hr: profileData?.hrName || ""
+        hr: profileData?.hrName || "",
+        pf: profileData?.pf || "",
+        uan: profileData?.uan || "",
+        esic: profileData?.esic || "",
+        pfMemberId: profileData?.pfMemberId || "",
+        designationChanged: profileData?.designationChanged || "",
+        designationChangedDate: profileData?.designationChangedDate || "",
       });
     }
-  }, []); // ✅ only runs once
+  }, [profileData]);
 
     const refreshProfile = async () => {
     const data = await fetchMyProfile();
@@ -463,15 +461,15 @@ useEffect(() => {
 
    const reporting = [
   {
-    name: profileData?.reportingManager || "Padmanabh",
+    name: profileData?.reportingManager || profileData?.managerName || "N/A",
     role: "Reporting Manager"
   },
   {
-    name: profileData?.reportingHead || "Shambuling",
+    name: profileData?.reportingHead || "N/A",
     role: "Reporting Head"
   },
   {
-    name: profileData?.hrName || "Vishnuvardhan",
+    name: profileData?.hrName || "N/A",
     role: "HR Business Partner"
   }
 ];
@@ -498,22 +496,44 @@ useEffect(() => {
     link.click();
   };
 
- const [personalEdit, setPersonalEdit] = useState(() => {
-  const saved = localStorage.getItem("personalEdit");
-  return saved
-    ? JSON.parse(saved)
-    : {
-        ...employee,
-        
-        city: "",
-        district: "",
-        state: "",
-        pincode: "",
-         address: "", // ✅ ADD THIS
-         bankAccountNumber: "",
-         ifsc: "",
-      };
+ const [personalEdit, setPersonalEdit] = useState({
+  name: "",
+  dob: "",
+  email: "",
+  phone: "",
+  fatherName: "",
+  motherName: "",
+  bloodGroup: "",
+  city: "",
+  district: "",
+  state: "",
+  pincode: "",
+  address: "",
+  bankAccountNumber: "",
+  ifsc: "",
 });
+
+// ✅ NEW: Update personalEdit when profileData changes (from backend)
+useEffect(() => {
+  if (profileData) {
+    setPersonalEdit({
+      name: profileData?.fullName || profileData?.empName || profileData?.name || "",
+      dob: profileData?.dob || "",
+      email: profileData?.email || "",
+      phone: profileData?.phone || "",
+      fatherName: profileData?.fatherName || "",
+      motherName: profileData?.motherName || "",
+      bloodGroup: profileData?.bloodGroup || "",
+      city: profileData?.city || "",
+      district: profileData?.district || "",
+      state: profileData?.state || "",
+      pincode: profileData?.pincode || "",
+      address: profileData?.address || profileData?.permanentAddress || profileData?.currentAddress || "",
+      bankAccountNumber: profileData?.bankAccountNumber || "",
+      ifsc: profileData?.ifsc || "",
+    });
+  }
+}, [profileData]);
 
 const bgvRecords = JSON.parse(localStorage.getItem("bgv_records")) || [];
 
@@ -531,6 +551,11 @@ const documents = [
 ];
 
 const getDesignation = () => {
+  // Use actual designation from profile data, fallback to role-based
+  if (profileData?.designation) return profileData.designation;
+  if (employee.designation && employee.designation !== "N/A") return employee.designation;
+  
+  // Fallback based on role
   if (role === "ADMIN") return "HR Manager / CEO";
   if (role === "MANAGER") return "Engineering Manager";
   return "Software Developer";
@@ -658,14 +683,25 @@ useEffect(() => {
         localStorage.setItem("profileImage", reader.result);
         
         const empId = employee.id || localStorage.getItem("empId");
+        const employeeId = profileData?.employeeId || user?.employeeId;
         const email = employee.email || user?.email || localStorage.getItem("email");
         
+        // ✅ FIX: Save with multiple key variations for compatibility
         if (empId) {
           localStorage.setItem(`employee-image-${empId}`, reader.result);
+        }
+        if (employeeId && employeeId !== empId) {
+          localStorage.setItem(`employee-image-${employeeId}`, reader.result);
         }
         if (email) {
           localStorage.setItem(`employee-image-${email}`, reader.result);
         }
+        
+        console.log("✅ Profile image saved with keys:", {
+          empId: `employee-image-${empId}`,
+          employeeId: `employee-image-${employeeId}`,
+          email: `employee-image-${email}`
+        });
       };
       reader.readAsDataURL(file);
     }}
@@ -898,10 +934,43 @@ useEffect(() => {
         <div className={styles.modalActions}>
           <button
             className={styles.saveBtn}
-            onClick={() => {
-  localStorage.setItem("personalEdit", JSON.stringify(personalEdit)); // ✅ SAVE
-  setShowEditModal(false);
-}}
+            onClick={async () => {
+              try {
+                // ✅ SAVE TO BACKEND instead of localStorage
+                const employeeId = employee.id || localStorage.getItem("empId");
+                if (!employeeId) {
+                  alert("❌ Employee ID not found");
+                  return;
+                }
+
+                // Update via backend API
+                await updateEmployee(employeeId, {
+                  fullName: personalEdit.name,
+                  dob: personalEdit.dob,
+                  email: personalEdit.email,
+                  phone: personalEdit.phone,
+                  fatherName: personalEdit.fatherName,
+                  motherName: personalEdit.motherName,
+                  bloodGroup: personalEdit.bloodGroup,
+                  city: personalEdit.city,
+                  district: personalEdit.district,
+                  state: personalEdit.state,
+                  pincode: personalEdit.pincode,
+                  address: personalEdit.address,
+                  bankAccountNumber: personalEdit.bankAccountNumber,
+                  ifsc: personalEdit.ifsc,
+                });
+
+                // Refresh profile data from backend
+                await refreshProfile();
+                
+                alert("✅ Personal information updated successfully!");
+                setShowEditModal(false);
+              } catch (error) {
+                console.error("❌ Failed to update personal info:", error);
+                alert("❌ Failed to update: " + (error.message || "Unknown error"));
+              }
+            }}
           >
             Save
           </button>
@@ -909,14 +978,25 @@ useEffect(() => {
     <button
   className={styles.cancelBtn}
   onClick={() => {
-    const saved = localStorage.getItem("personalEdit");
-
-    if (saved) {
-      setPersonalEdit(JSON.parse(saved)); // ✅ FIXED
-    } else {
-      setPersonalEdit(employee); // fallback
+    // ✅ RESET to original profileData (from backend)
+    if (profileData) {
+      setPersonalEdit({
+        name: profileData?.fullName || profileData?.empName || profileData?.name || "",
+        dob: profileData?.dob || "",
+        email: profileData?.email || "",
+        phone: profileData?.phone || "",
+        fatherName: profileData?.fatherName || "",
+        motherName: profileData?.motherName || "",
+        bloodGroup: profileData?.bloodGroup || "",
+        city: profileData?.city || "",
+        district: profileData?.district || "",
+        state: profileData?.state || "",
+        pincode: profileData?.pincode || "",
+        address: profileData?.address || "",
+        bankAccountNumber: profileData?.bankAccountNumber || "",
+        ifsc: profileData?.ifsc || "",
+      });
     }
-
     setShowEditModal(false);
   }}
 >
@@ -1050,20 +1130,7 @@ useEffect(() => {
         hr:             response?.hrName         || jobEdit.hr,
       });
 
-      localStorage.setItem("jobEdit", JSON.stringify({
-        designation:    response?.designation    || jobEdit.designation,
-        department:     response?.department     || jobEdit.department,
-        joiningDate:    response?.joiningDate    || jobEdit.joiningDate,
-        totalExp:       response?.totalExp       || jobEdit.totalExp,
-        currentExp:     response?.currentExp     || jobEdit.currentExp,
-        pf:             response?.pf             || jobEdit.pf,
-        uan:            response?.uan            || jobEdit.uan,
-        esic:           response?.esic           || jobEdit.esic,
-        employmentType: response?.employmentType || jobEdit.employmentType,
-        location:       response?.location       || jobEdit.location,
-        manager:        response?.managerName    || jobEdit.manager,
-        hr:             response?.hrName         || jobEdit.hr,
-      }));
+      // ✅ Refresh profile data from backend (no need for localStorage)
       await refreshProfile();
 
       alert("Job details updated successfully ✅");
@@ -1081,28 +1148,26 @@ useEffect(() => {
          <button
   className={styles.cancelBtn}
  onClick={() => {
-  const saved = localStorage.getItem("jobEdit");
-
-  if (saved) {
-    setJobEdit(JSON.parse(saved));
-  } else {
-    // ✅ fallback to original profile data
+  // ✅ RESET to original profileData (from backend)
+  if (profileData) {
     setJobEdit({
-      designation: employee.designation,
-      department: employee.department,
-      joiningDate: employee.joiningDate,
-      totalExp: employee.totalExp,
-      currentExp: employee.currentExp,
-      employmentType: "Full-Time",
-      location: "Bangalore",
+      designation: profileData?.designation || "",
+      department: profileData?.department || "",
+      joiningDate: profileData?.joiningDate || "",
+      totalExp: profileData?.totalExp || "",
+      currentExp: profileData?.currentExp || "",
+      employmentType: profileData?.employmentType || "Full-Time",
+      location: profileData?.location || "Bangalore",
       manager: profileData?.managerName || "",
       hr: profileData?.hrName || "",
-      pf: "",
-      uan: "",
-      esic: ""
+      pf: profileData?.pf || "",
+      uan: profileData?.uan || "",
+      esic: profileData?.esic || "",
+      pfMemberId: profileData?.pfMemberId || "",
+      designationChanged: profileData?.designationChanged || "",
+      designationChangedDate: profileData?.designationChangedDate || "",
     });
   }
-
   setShowJobModal(false);
 }}
 >

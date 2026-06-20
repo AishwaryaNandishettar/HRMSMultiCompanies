@@ -70,6 +70,37 @@ export default function TimesheetManager() {
 
   const [records, setRecords] = useState([]);
   const [todayAttendance, setTodayAttendance] = useState([]);
+
+const presentEmployeeIds = new Set(
+  todayAttendance
+    .filter(att => att.checkIn && att.checkIn !== "-")
+    .map(att =>
+      String(
+        att.empId ||
+        att.employeeId ||
+        att.employeeCode
+      ).trim()
+    )
+);
+console.log(
+  "Attendance IDs:",
+  [...presentEmployeeIds]
+);
+
+console.log(
+  "Timesheet IDs:",
+  records.map(r => String(r.empId).trim())
+);
+
+const allEmployeeIds = new Set(
+  records.map(r => String(r.empId).trim())
+);
+
+const absentEmployeeIds = new Set(
+  [...allEmployeeIds].filter(
+    id => !presentEmployeeIds.has(id)
+  )
+);
   const [todayLeaves, setTodayLeaves] = useState([]);
   const [activeFilter, setActiveFilter] = useState(null);
   const [filterText, setFilterText] = useState("");
@@ -82,6 +113,7 @@ useEffect(() => {
     try {
       // Load attendance data
       const attendanceData = await getAllAttendance();
+      console.table(attendanceData);
       const today = new Date().toISOString().split("T")[0];
       const todayData = attendanceData.filter((r) => r.date === today);
       setTodayAttendance(todayData);
@@ -135,6 +167,7 @@ const currentMonth = today.substring(0, 7);
   useEffect(() => {
     const load = async () => {
       const res = await getTimesheet(fromMonth);
+      
 
       if (!res || res.length === 0) {
         // No data from backend — show empty table for all roles
@@ -144,21 +177,25 @@ const currentMonth = today.substring(0, 7);
         const grouped = {};
 
         res.forEach((r) => {
-          const empId =
+       const empId = String(
   r.empId ||
+  r.employeeId?.empId ||
   r.employeeId ||
   r.employeeCode ||
-  "-";
+  ""
+).trim();
 
 const key = empId + "_" + (r.month || fromMonth);
 
           if (!grouped[key]) {
             grouped[key] = {
-           empId:
+         empId: String(
   r.empId ||
+  r.employeeId?.empId ||
   r.employeeId ||
   r.employeeCode ||
-  "-",
+  ""
+).trim(),
 
 empName:
   r.empName ||
@@ -222,6 +259,15 @@ empName:
         });
 
         setRecords(mapped);
+      console.log("Mapped Records");
+console.table(mapped);
+
+console.log("Attendance IDs");
+
+console.table([...presentEmployeeIds]);
+
+console.log("Timesheet IDs");
+console.table(records.map(r => String(r.empId).trim()));
       }
     };
 
@@ -245,61 +291,56 @@ empName:
 
   const getUnique = (col) => [...new Set(records.map((r) => r[col]))];
 
-  const filtered = records.filter((r) => {
-   const matchesFilter = Object.keys(filters).every((key) => {
-  if (!filters[key]) return true;
+console.log("Attendance Records", todayAttendance);
+console.log("Timesheet Records", records);
 
-  // checkbox multi select filter
-  if (Array.isArray(filters[key])) {
-    return filters[key].includes(r[key]);
+console.log(
+  "Present Employee IDs",
+  [...presentEmployeeIds]
+);
+
+console.log(
+  "Timesheet Employee IDs",
+  records.map(r => String(r.empId).trim())
+);
+ 
+
+
+const filtered = records.filter((r) => {
+
+  const attendance = todayAttendance.find(att =>
+      String(att.empId || att.employeeId).trim() ===
+      String(r.empId).trim()
+  );
+
+  switch (kpiFilter) {
+
+    case "PRESENT":
+      return attendance && attendance.checkIn && attendance.checkIn !== "-";
+
+    case "ABSENT":
+      return !attendance || !attendance.checkIn || attendance.checkIn === "-";
+
+    case "EMPLOYEES":
+      return true;
+
+    default:
+      return true;
   }
 
-  return r[key] === filters[key];
 });
-
-    if (filters.fromMonth && r.month < filters.fromMonth) return false;
-    if (filters.toMonth && r.month > filters.toMonth) return false;
-
     // Backend already scopes data by role (employee sees only own, manager sees own+team,
     // admin sees all) — no additional role-based client filtering needed here.
-
-    // KPI FILTER
- if (kpiFilter === "PRESENT") {
-  return (
-    r.month === currentMonth &&
-    Number(r.present) > 0
-  );
-}
-
-if (kpiFilter === "ABSENT") {
-  console.log("Today Attendance:", todayAttendance);
-console.log("Today Leaves:", todayLeaves);
-console.log("Filtered Record:", r.empId);
-  // Show records where employee is absent today OR on leave today OR has LOP/absent days
-const isAbsentToday = todayAttendance.some((att) => {
-  const attendanceId =
-    att.empId ||
-    att.employeeId ||
-    att.employeeCode;
-
-  return (
-    String(attendanceId) === String(r.empId) &&
-    (!att.checkIn || att.checkIn === "-")
-  );
-});
- const isOnLeaveToday = todayLeaves.some(
-  (leave) =>
-    String(leave.userId || "") === String(r.empId) ||
-    String(leave.employeeId || "") === String(r.empId) ||
-    String(leave.email || "") === String(r.empId)
+console.log(
+  "Attendance IDs",
+  [...presentEmployeeIds]
 );
-  const hasAbsentDays = Number(r.absentDays || r.lop || 0) > 0;
-  return isAbsentToday || isOnLeaveToday || hasAbsentDays;
-}
-    if (kpiFilter === "EMPLOYEES") return true;
 
-    return matchesFilter;
-  });
+console.log(
+  "Timesheet IDs",
+  records.map(r => String(r.empId))
+);
+
 
   const suggestions =
     activeFilter &&
@@ -345,6 +386,8 @@ const isAbsentToday = todayAttendance.some((att) => {
         alert("✅ Timesheet submitted successfully to MongoDB!");
         // Refresh the data
         const res = await getTimesheet(fromMonth);
+        console.log("TIMESHEET RESPONSE");
+console.table(res);
         if (res && res.length > 0) {
           setRecords(res);
         }
@@ -370,21 +413,19 @@ const isAbsentToday = todayAttendance.some((att) => {
   (r) => r.month === currentMonth
 );
 
-const totalEmp = new Set(
-  records.map((r) => r.empId)
-).size;
-
-const totalPresent = new Set(
-  todayAttendance
-    .filter((r) => r.checkIn && r.checkIn !== "-")
-    .map((r) => r.empId)
-).size;
-
-const totalLOP = todayAttendance.filter(
-  (r) => !r.checkIn || r.checkIn === "-"
-).length + todayLeaves.length;
 
 
+const totalPresent = todayAttendance.filter(
+    a => a.checkIn && a.checkIn !== "-"
+).length;
+
+const totalEmp = records.length;
+
+const totalLOP = totalEmp - totalPresent;
+
+console.log("Total Employees:", totalEmp);
+console.log("Present:", totalPresent);
+console.log("Absent KPI:", totalLOP);
   const avgHours =
     records.length > 0
       ? (
@@ -408,7 +449,7 @@ const totalLOP = todayAttendance.filter(
     { key: "field", label: "FIELD" },
     { key: "avgHours", label: "AVG HOURS" },
     { key: "workingDays", label: "WORKING DAYS" },
-    { key: "absentDays", label: "ABSENT DAYS" },
+   
     { key: "payableDays", label: "PAYABLE DAYS" },
     { key: "attendancePercent", label: "ATT %" },
     { key: "overtime", label: "OT HOURS" },
@@ -418,6 +459,14 @@ const totalLOP = todayAttendance.filter(
 
   console.log("Records:", records);
 console.log("LOP Total:", totalLOP);
+
+console.log("KPI Filter:", kpiFilter);
+console.log("Present IDs:", [...presentEmployeeIds]);
+console.log("Absent IDs:", [...absentEmployeeIds]);
+console.log(
+  "Filtered Employees:",
+  filtered.map(r => r.empId)
+);
   return (
     <div className={styles.container}>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "12px" }}>
@@ -768,7 +817,7 @@ console.log("LOP Total:", totalLOP);
             {filtered.map((r, i) => (
               <tr key={i}>
                 {cols.map((c) => (
-                  <td key={c.key}>
+                 <td key={`${c.key}-${c.label}`}>
                     {c.key === "status"
                       ? role === ROLE_EMP
                         ? r.status || "Pending"

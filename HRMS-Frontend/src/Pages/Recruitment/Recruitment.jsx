@@ -719,7 +719,7 @@ const handleSubmit = async (e) => {
 
 {showPostJob && (
   <div className="modal-overlay">
-    <div className="modal-content" style={{maxWidth: '520px', maxHeight: '85vh', overflowY: 'auto'}}>
+    <div className="modal-content" style={{maxWidth: '350px', maxHeight: '80vh', overflowY: 'auto',borderRadius: 0 }}>
 
       <h2>Post Job</h2>
 

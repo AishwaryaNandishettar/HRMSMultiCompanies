@@ -22,7 +22,12 @@ import {
   FaChevronLeft,
   FaChevronRight,
   FaTasks,          // ✅ ADDED
-  FaChartLine       // ✅ ADDED
+  FaChartLine ,      // ✅ ADDED
+   FaUserShield,      // ✅ BGV
+  FaHeartbeat,       // ✅ Insurance Claim
+  FaFileMedical ,     // ✅ Personal Insurance
+   FaBriefcase,   // ✅ Work Chat
+  FaHeadset     // ✅ Helpdesk
 } from "react-icons/fa";
 import { FiSettings } from "react-icons/fi";
 import styles from "./Sidebar.module.css"; // ✅ KEEP THIS
@@ -216,7 +221,7 @@ const handleMenuClick = () => {
     }`
   }
 >
-        <FaShieldAlt />
+       <FaUserShield />
         {isOpen && <span>BGV</span>}
       </NavLink>
     </li>
@@ -262,7 +267,7 @@ const handleMenuClick = () => {
     }`
   }
 >
-            <FaComments />
+           <FaComments />
             {isOpen && <span>Work Chat</span>}
           </NavLink>
         </li>
@@ -289,7 +294,7 @@ const handleMenuClick = () => {
     }`
   }
 >
-    <FaComments />
+    <FaBriefcase/>
     {isOpen && <span>Helpdesk</span>}
   </NavLink>
 </li>
@@ -326,7 +331,7 @@ const handleMenuClick = () => {
     }`
   }
 >
-            <FaShieldAlt />
+           <FaHeartbeat />
             {isOpen && <span>Insurance Claim</span>}
           </NavLink>
         </li>
@@ -339,7 +344,7 @@ const handleMenuClick = () => {
     }`
   }
 >
-    <FaShieldAlt />
+  <FaFileMedical />
     {isOpen && <span>Personal Insurance Claim</span>}
   </NavLink>
 </li>

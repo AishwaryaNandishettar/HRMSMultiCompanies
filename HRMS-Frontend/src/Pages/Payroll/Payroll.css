@@ -77,7 +77,7 @@
     ICONS INSIDE STATS
   ========================= */
   .stat-card .icon {
-    position: absolute;
+    position: fixed;;
     top: 10px;
     right: 15px;
     font-size: 28px;
@@ -109,6 +109,8 @@
     border-radius: var(--radius);
     box-shadow: var(--shadow);
     margin-bottom: 16px;
+     flex-wrap: wrap;
+  align-items: center;
   }
 
   .payroll-toolbar input,
@@ -1086,26 +1088,21 @@
   }
 
   /* ================= PAYROLL GRID ================= */
+.payroll-content {
+  display: flex;
+  gap: 20px;
+  align-items: flex-start;
+}
 
-  .payroll-content {
-    display: grid;
-    grid-template-columns: 3fr 1.2fr;
-    gap: 24px;
-    align-items: flex-start;
-    margin-top: 8px;
-  }
+.payroll-left {
+  flex: 1;
+  min-width: 0;
+}
 
-  /* LEFT SIDE */
-  .payroll-left {
-    min-width: 0; /* prevents overflow */
-  }
-
-  /* RIGHT SIDE PROFILE CARD */
-  .payroll-right {
-    position: sticky;
-    top: 20px;
-  }
-
+.payroll-right {
+  width: 280px;
+  flex-shrink: 0;
+}
   /* ================= RESPONSIVE ================= */
 
   @media (max-width: 1100px) {
@@ -2058,24 +2055,27 @@
   /* KPI CARDS */
   .kpi-row,
   .payroll-stats {
-    display: grid !important;
+    display: flex;
     grid-template-columns: 1fr !important;
-    gap: 10px !important;
+    gap: 15px !important;
   }
 
   .kpi-card,
   .stat-card {
     width: 100%;
     min-height: 72px;
+    min-width: 500px;
   }
 
   .kpi-title {
-    font-size: 13px !important;
+    font-size: 75px !important;
+    font-weight: 700;
   }
 
   .kpi-value {
-    font-size: 18px !important;
+    font-size: 50px !important;
     padding-left: 0 !important;
+    font-weight: 800px;
   }
 
   /* CONTENT */
@@ -2279,18 +2279,14 @@
   }
 
   /* SMALL BUTTON */
-  .payroll-header .btn-primary {
-    width: auto !important;
-    min-width: unset !important;
+ .payroll-header .btn-primary {
+  position: static !important;
 
-    padding: 6px 10px !important;
-    font-size: 10px !important;
+  padding: 10px 20px !important;
+  border-radius: 10px !important;
 
-    border-radius: 8px !important;
-
-    flex-shrink: 0;
-    white-space: nowrap;
-  }
+  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3) !important;
+}
 
   /* KPI GRID */
   .kpi-row,
@@ -2802,7 +2798,7 @@
 }
 /* Move whole right section down */
 .payroll-right {
-  padding-top: 70px !important;
+  padding-top: 0px !important;
 }
 
 /* ==========================================
@@ -2810,12 +2806,7 @@
    ========================================== */
 
 .payroll-header .btn-primary {
-  position: fixed !important;
-  
-  top: 190px !important;
-  right: 50px !important;
-  
-  z-index: 100 !important;
+
   
   padding: 10px 20px !important;
   border-radius: 10px !important;
@@ -2857,4 +2848,9 @@
 
 .payroll-right .profile-card .muted {
   margin-bottom: 16px !important;
+}
+.update-payroll-btn{
+  margin-left:auto;
+  white-space:nowrap;
+  flex-shrink:0;
 }

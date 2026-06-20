@@ -54,6 +54,7 @@ export default function BGV() {
   const loadData = () => {
     try {
       const data = JSON.parse(localStorage.getItem("bgv_records")) || [];
+      console.log("BGV Records:", data);
        console.log("Loaded BGV:", data);
       bgvRecords = data;
       setRecords([...data].reverse());
@@ -73,9 +74,17 @@ export default function BGV() {
     }
   };
 
+   const onFocus = () => {
+    loadData();
+  };
   window.addEventListener("storage", onStorage);
+   window.addEventListener("focus", onFocus);
 
-  return () => window.removeEventListener("storage", onStorage);
+return () => {
+  window.removeEventListener("storage", onStorage);
+  window.removeEventListener("focus", onFocus);
+};
+
 }, []);
 
   const applyFilters = () => {
@@ -96,7 +105,7 @@ export default function BGV() {
   };
 
   const filtered = applyFilters();
-
+console.log("Filtered Records:", filtered);
   const toggleExpand = (id) => setExpandedId((cur) => (cur === id ? null : id));
 
   const updateStatus = (id, newStatus) => {

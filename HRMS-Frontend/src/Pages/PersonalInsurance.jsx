@@ -140,6 +140,7 @@ export default function PersonalInsurance() {
           </div>
 
           <div>
+            <div className="profile-info"></div>
             <h3>Ankita paul</h3>
             <p>EMP-001245</p>
             <span className="active-badge">
