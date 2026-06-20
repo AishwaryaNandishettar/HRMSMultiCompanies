@@ -7,7 +7,7 @@
     import { getAllEmployees, updateEmployee } from "../api/employeeApi";
     import { updateJobDetails } from "../api/profileApi";
     import { submitResignation, getResignationsByEmployee, updateResignationStatus, getAllResignations, getResignationsForApproval, getAllResignationsByManager, getResignationsForHRApproval, approveResignation, rejectResignation } from "../api/resignationApi";
-    import { getProfileImage  } from "../Utils/profileImageHelper";
+    import { getEmployeeProfileImage } from "../Utils/profileImageHelper";
 
     export default function ProfileView() {
       const popupRef = useRef(null);
