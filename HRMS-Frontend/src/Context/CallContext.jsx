@@ -1,10 +1,10 @@
 import React, { createContext, useContext, useEffect, useState, useRef, useCallback } from 'react';
 import { AuthContext } from './Authcontext';
 import { connectSocket, sendCallSignal, subscribeToCallInfo } from '../api/socket';
-import TokenManager from '../Utils/tokenManager';
+import TokenManager from '../utils/tokenManager';
 import webrtcPeer from '../Services/webrtcPeer';
 import activeSpeaker from '../Services/activeSpeaker';
-import ringtoneManager from '../Utils/ringtone';
+import ringtoneManager from '../utils/ringtone';
 
 const CallContext = createContext();
 
