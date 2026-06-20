@@ -9,7 +9,7 @@ import {
 } from "react-icons/fa";
 
 import "./ChatSidebar.css";
-import { getEmployeeProfileImage, getInitials, generateAvatarColor } from "../../../utils/profileImageHelper";
+import { getEmployeeProfileImage, getInitials, generateAvatarColor } from "../../../Utils/profileImageHelper";
 
 /* =========================
    AVATAR HELPERS

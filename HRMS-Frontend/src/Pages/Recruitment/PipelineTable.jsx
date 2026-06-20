@@ -221,8 +221,7 @@ useEffect(() => {
           comments: j.comments || "-",
           avatar: "",
           recruiterImg: "",
-          // ✅ REAL: Map actual HR team members to their own records
-         phone: j.phone && j.phone.trim() !== "" ? j.phone : null,
+          
           stageClass:
             j.status === "Applied" ? "applied" :
             j.status === "Shortlisted" ? "shortlisted" :
