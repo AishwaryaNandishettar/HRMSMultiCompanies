@@ -38,7 +38,7 @@ const PayrollTable = ({ data, onViewPayslip, onProfileView , onEditPayroll, onDo
         setActiveFilter(null);
       }
     };
-     document.addEventListener("mousedown", handleClick);
+    document.addEventListener("click", handleClick);
 
     return () => {
       document.removeEventListener("mousedown", handleClick);
@@ -67,6 +67,8 @@ const PayrollTable = ({ data, onViewPayslip, onProfileView , onEditPayroll, onDo
   ========================= */
 
   const getUnique = (key) => {
+     console.log("Column:", key);
+    console.log("Data:", data);
     return [
       ...new Set(
         data.map((item) => {
@@ -196,11 +198,13 @@ return String(value) === String(filters[key]);
      FILTER SUGGESTIONS
   ========================= */
 
-  const suggestions =
-    activeFilter &&
-    getUnique(activeFilter).filter((v) =>
-      String(v).toLowerCase().includes(filterText.toLowerCase())
-    );
+ const suggestions = activeFilter
+  ? getUnique(activeFilter).filter((v) =>
+      String(v)
+        .toLowerCase()
+        .includes(filterText.toLowerCase())
+    )
+  : [];
 
   // ✅ GRAND TOTAL CALCULATION (based on table data only)
 const totalGross = data.reduce(
@@ -224,25 +228,38 @@ const totalNet = data.reduce(
         <thead>
           <tr>
             {columns.map((col) => (
-              <th key={col.key}>
+          
+<th key={col.key}>
                 <div className="payroll-header-filter">
                   <span>{col.label}</span>
 
-                  <span
-                    className="payroll-filter-icon"
-                    onClick={() =>
-                      setActiveFilter(
-                        activeFilter === col.key ? null : col.key
-                      )
-                    }
-                  >
-                    ⏷
-                  </span>
+<span
+  className="payroll-filter-icon"
+  onClick={(e) => {
+    e.stopPropagation();
+
+    if (activeFilter === col.key) {
+      setActiveFilter(null);
+    } else {
+      setFilterText("");
+      setActiveFilter(col.key);
+
+      setSelectedValues((prev) => ({
+        ...prev,
+        [col.key]: filters[col.key]
+          ? filters[col.key].split(",")
+          : [],
+      }));
+    }
+  }}
+>
+  ⏷
+</span>
                 </div>
 
                 {activeFilter === col.key && (
                   <div
-                    ref={popupRef}
+                   
                     className="payroll-filter-popup"
                   >
                     <input
@@ -258,10 +275,12 @@ const totalNet = data.reduce(
   <div className="payroll-filter-item">
    <input
   type="checkbox"
-  checked={
-    (selectedValues[col.key] || []).length ===
-    suggestions.length
-  }
+ checked={
+  suggestions.length > 0 &&
+  suggestions.every((v) =>
+    (selectedValues[col.key] || []).includes(v)
+  )
+}
   onChange={(e) => {
     if (e.target.checked) {
       setSelectedValues(prev => ({
@@ -312,12 +331,12 @@ const totalNet = data.reduce(
     <button
       className="payroll-ok-btn"
     onClick={() => {
-  setFilters(prev => ({
+  setFilters((prev) => ({
     ...prev,
-    [col.key]:
-      (selectedValues[col.key] || []).join(","),
+    [col.key]: (selectedValues[col.key] || []).join(","),
   }));
 
+  setFilterText("");
   setActiveFilter(null);
 }}
     >
@@ -326,10 +345,10 @@ const totalNet = data.reduce(
 
     <button
       className="payroll-cancel-btn"
-      onClick={() => {
-        setActiveFilter(null);
-        setFilterText("");
-      }}
+     onClick={() => {
+  setFilterText("");
+  setActiveFilter(null);
+}}
     >
       Cancel
     </button>

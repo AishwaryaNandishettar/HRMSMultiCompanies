@@ -70,7 +70,20 @@ public ResponseEntity<?> getAllEmployees(Principal principal) {
         String companyId = user.getCompanyId();
         System.out.println("✅ Fetching employees for company: " + companyId);
 
-        List<Employee> employees = employeeService.getAllEmployees(companyId);
+       List<Employee> employees;
+
+if ("MANAGER".equalsIgnoreCase(user.getRole())) {
+
+    employees = employeeService.getEmployeesByManager(
+            companyId,
+            user.getEmail()
+    );
+
+} else {
+
+    employees = employeeService.getAllEmployees(companyId);
+
+}
         System.out.println("✅ Found " + employees.size() + " employees");
 
         return ResponseEntity.ok(employees);

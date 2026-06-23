@@ -1563,3 +1563,16 @@
   padding: 6px 14px;
   border-radius: 20px;
 }
+/* Employee ID */
+.grid-header .col-1,
+.grid-row .col-1 {
+  min-width: 180px;
+  width: 180px;
+}
+
+/* Employee Name */
+.grid-header .col-2,
+.grid-row .col-2 {
+  min-width: 260px;
+  width: 260px;
+}

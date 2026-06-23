@@ -59,7 +59,7 @@ const JobTable = ({ jobs , setJobs}) => {
   const [search, setSearch] = useState("");
   
   const [openFilter, setOpenFilter] = useState(null);
-  
+   console.log("Searching:", search); // 👈 ADD HERE
   const [statusFilter, setStatusFilter] = useState("All");
   const [deptFilter, setDeptFilter] = useState("All");
   const [dateFilter, setDateFilter] = useState("All");
@@ -162,10 +162,11 @@ const handleSubmit = async (e) => {
   ];
 
   const filteredJobs = jobs.filter(job => {
+    const searchText = search.trim().toLowerCase();
     const matchesSearch =
-      `${job.jobTitle} ${job.department} ${job.status} ${job.postedDate}`
-        .toLowerCase()
-        .includes(search.toLowerCase());
+  `${job.jobTitle || ""} ${job.department || ""} ${job.status || ""} ${job.postedDate || ""}`
+    .toLowerCase()
+    .includes(search.trim().toLowerCase());
 
     const matchesStatus =
       statusFilter === "All" || job.status === statusFilter;
@@ -200,10 +201,14 @@ const handleSubmit = async (e) => {
           </div>
 
          <div className="sort">
-            <button className="sort-btn"> ⇅ Recent ▾</button>
+            <button className="sort-btn">⇅ Recent▾</button>
           </div>
-        <button className="post-btn" onClick={() => setShowPostJob(true)}>
-  + Post Job
+       <button
+  className="post-btn"
+  onClick={() => setShowPostJob(true)}
+  style={{ marginLeft: "0px" }}
+>
++ Post Job
 </button>
         </div>
 

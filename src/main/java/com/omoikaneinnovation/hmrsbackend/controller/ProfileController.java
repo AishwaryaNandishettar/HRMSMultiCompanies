@@ -30,6 +30,7 @@ public class ProfileController {
 
     @GetMapping("/me")
     public ResponseEntity<?> getMyProfile(@AuthenticationPrincipal UserDetails userDetails) {
+        System.out.println("🔥 PROFILE CONTROLLER HIT");
         if (userDetails == null) {
             return ResponseEntity.status(401).body("Unauthorized");
         }
@@ -44,6 +45,16 @@ public class ProfileController {
         
         // Get Employee data (which has the correct name)
         Employee employee = employeeRepository.findByEmail(email).orElse(null);
+        System.out.println("========== PROFILE DEBUG ==========");
+System.out.println("Employee Found : " + (employee != null));
+
+if (employee != null) {
+    System.out.println("Employee Name        : " + employee.getFullName());
+    System.out.println("Employee Manager     : " + employee.getManager());
+    System.out.println("Employee ManagerEmail: " + employee.getManagerEmail());
+}
+
+System.out.println("==================================");
         
         // Create merged profile response
         Map<String, Object> profile = new HashMap<>();
@@ -63,7 +74,34 @@ public class ProfileController {
         profile.put("joiningDate", user.getJoiningDate());
         profile.put("totalExp", user.getTotalExp());
         profile.put("currentExp", user.getCurrentExp());
-        profile.put("managerName", user.getManagerName());
+   String managerName = null;
+
+// Read manager from Employee Directory
+if (employee != null &&
+    employee.getManager() != null &&
+    !employee.getManager().trim().isEmpty()) {
+
+    managerName = employee.getManager();
+
+} else if (user.getManagerName() != null &&
+           !user.getManagerName().trim().isEmpty()) {
+
+    managerName = user.getManagerName();
+}
+// 👇 ADD HERE
+System.out.println("Employee Manager = " +
+        (employee != null ? employee.getManager() : "EMPLOYEE NULL"));
+
+System.out.println("User Manager Name = " + user.getManagerName());
+
+System.out.println("Final Manager Name = " + managerName);
+System.out.println("Manager Name  : " +
+        (employee != null ? employee.getManager() : "NULL"));
+
+System.out.println("Manager Email : " +
+        (employee != null ? employee.getManagerEmail() : "NULL"));
+profile.put("managerName", managerName);
+profile.put("reportingManager", managerName);
         profile.put("hrName", user.getHrName());
         profile.put("managerId", user.getManagerId());
         profile.put("companyId", user.getCompanyId());
@@ -92,7 +130,20 @@ public class ProfileController {
         
         System.out.println("✅ Profile API - User: " + user.getName() + ", Employee: " + (employee != null ? employee.getFullName() : "null"));
         System.out.println("✅ Returning name: " + profile.get("name"));
-        
+        System.out.println("========== PROFILE DEBUG ==========");
+System.out.println("Logged User Email : " + email);
+
+if (employee != null) {
+    System.out.println("Employee Found");
+    System.out.println("Employee Manager      : " + employee.getManager());
+    System.out.println("Employee ManagerEmail : " + employee.getManagerEmail());
+} else {
+    System.out.println("Employee NOT FOUND");
+}
+
+System.out.println("User ManagerName : " + user.getManagerName());
+System.out.println("Final Manager    : " + managerName);
+System.out.println("==================================");
         return ResponseEntity.ok(profile);
     }
 

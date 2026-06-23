@@ -2,10 +2,28 @@
 
   const API = `${import.meta.env.VITE_API_BASE_URL}/api/insurance`;
 
-  export const getClaims = async () => {
-    const res = await axios.get(`${API}/all`);
-    return res.data;
-  };
+ export const getClaims = async () => {
+  const res = await axios.get(`${API}/all`);
+
+  return res.data.map((c) => ({
+    id: c.id,
+
+    // 👇 normalize ALL possible backend variations
+    employeeName: c.employeeName || c.empName || c.name || "",
+    employeeCode: c.employeeCode || c.empCode || c.employeeId || "",
+    department: c.department || "",
+    managerName: c.managerName || "",
+
+    claimType: c.claimType || "",
+    fromDate: c.fromDate || "",
+    claimSettledDate: c.claimSettledDate || "",
+    admittedDays: c.admittedDays || 0,
+
+    amount: c.amount || 0,
+    approvedAmount: c.approvedAmount || 0,
+    status: c.status || ""
+  }));
+};
 
   export const createClaim = async (claim) => {
     const res = await axios.post(`${API}/create`, claim);

@@ -6,7 +6,7 @@
 .spt-wrapper {
   background: #ffffff;
   border-radius: 14px;
-  padding: 12px 18px 12px;
+  padding: 4px 2px;
   margin-bottom: 14px;
   box-shadow: 0 4px 18px rgba(0, 0, 0, 0.07);
   border: 1px solid #e9ecf0;
@@ -55,7 +55,7 @@
 /* ── Badges ── */
 .spt-badge {
   display: inline-block;
-  padding: 4px 12px;
+  padding:  12px;
   border-radius: 20px;
   font-size: 12px;
   font-weight: 600;
@@ -228,4 +228,87 @@
 .spt-stages::-webkit-scrollbar-thumb {
   background: #c4c4c4;
   border-radius: 4px;
+}
+.salary-process-card {
+  margin-bottom: 12px;
+  padding: 12px;
+}
+
+.process-step {
+  transform: scale(0.85);
+}
+.salary-process-card {
+  max-height: 180px;
+  overflow: hidden;
+}
+/* ===== COMPACT SALARY TRACKER ===== */
+
+.spt-wrapper {
+  padding: 8px 12px !important;
+  margin-bottom: 8px !important;
+}
+
+.spt-header {
+  margin-bottom: 6px !important;
+}
+
+.spt-title {
+  font-size: 14px !important;
+}
+
+.spt-sub {
+  font-size: 11px !important;
+}
+
+.spt-badge {
+  padding: 3px 8px !important;
+  font-size: 10px !important;
+}
+
+.spt-hint {
+  font-size: 10px !important;
+}
+
+.spt-bar-wrap {
+  height: 4px !important;
+  margin-bottom: 8px !important;
+}
+
+.spt-stage {
+  min-width: 55px !important;
+}
+
+.spt-circle {
+  width: 24px !important;
+  height: 24px !important;
+  font-size: 10px !important;
+}
+
+.spt-stage:not(:last-child)::after {
+  top: 12px !important;
+}
+
+.spt-stage-icon {
+  font-size: 11px !important;
+}
+
+.spt-stage-label {
+  font-size: 8px !important;
+  max-width: 55px !important;
+  line-height: 1.1 !important;
+}
+
+.spt-label-wrap {
+  margin-top: 2px !important;
+  gap: 1px !important;
+}
+
+.spt-check,
+.spt-num {
+  font-size: 10px !important;
+}
+.spt-wrapper {
+  transform: scale(0.92);
+  transform-origin: top left;
+  width: 108%;
 }

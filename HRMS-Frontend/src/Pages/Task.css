@@ -150,10 +150,11 @@
 
 .taskPage-tableWrapper {
   width: 100%;
-  height: calc(100vh - 320px);
+  height: calc(100vh - 150px);
   min-height: 300px;
 
-  overflow: auto;
+  overflow-x: auto;
+  overflow-y: visible;
   position: relative;
 
   background: #fff;
@@ -240,7 +241,8 @@
   width: 100%;
   height: 100%;
 
-  overflow: auto;
+  overflow-x: auto;
+  overflow-y: visible;
 
   position: relative;
 
@@ -625,19 +627,54 @@
   cursor: pointer;
   font-size: 12px;
 }
-
 .taskPage-filterPopup {
   position: absolute;
-  top: 45px;
+  top: 100%;
   left: 0;
-  background: white;
-  width: 220px;
+
+  width: 230px;
+  background: #fff;
+  border: 1px solid #d9d9d9;
   border-radius: 8px;
-  padding: 10px;
-  z-index: 9999;
-  box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+
+  z-index: 99999;
+
+  display: flex;
+  flex-direction: column;
+
+  max-height: 450px;   /* increased popup height */
+  overflow: hidden;
+
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
 }
 
+.taskPage-filterList {
+  flex: 1;
+
+  max-height: 340px;   /* scrolling area */
+  overflow-y: auto;
+
+  min-height: 0;
+
+  scrollbar-width: thin;
+}
+
+.taskPage-filterActions {
+  position: sticky;
+  bottom: 0;
+
+  background: #fff;
+
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+
+  padding: 10px;
+
+  border-top: 1px solid #e5e7eb;
+
+  z-index: 5;
+}
 .taskPage-filterPopup input {
   width: 100%;
   padding: 8px;
@@ -647,8 +684,19 @@
 }
 
 .taskPage-filterList {
-  max-height: 180px;
+  flex: 1;
   overflow-y: auto;
+
+  max-height: 320px;   /* increased */
+
+  padding-right: 4px;
+}
+.taskPage-table th {
+  overflow: visible !important;
+}
+
+.taskPage-table thead th {
+  overflow: visible !important;
 }
 
 .taskPage-filterList div {
@@ -841,7 +889,8 @@
 }
 
 .taskPage-tableContainer {
-  overflow: auto;
+  overflow-x: auto;
+  overflow-y: visible;
 }
 
 
@@ -1033,14 +1082,18 @@
   }
 
   /* ONLY TABLE AREA SCROLLS */
-  .taskPage-tableWrapper {
-    height: calc(100vh - 320px) !important;
-    overflow: auto !important;
+ .taskPage-tableWrapper {
+  height: 320px !important;
 
-    -webkit-overflow-scrolling: touch !important;
+  overflow-x: auto !important;
+  overflow-y: auto !important;
 
-    overscroll-behavior: contain !important;
-  }
+  -webkit-overflow-scrolling: touch !important;
+
+  overscroll-behavior: contain !important;
+
+  touch-action: pan-x pan-y !important;
+}
 
   .taskPage-tableContainer {
     width: 100% !important;
@@ -1084,7 +1137,7 @@
     height: 320px !important;
 
     overflow: auto !important;
-
+  overflow: visible !important;
     -webkit-overflow-scrolling: touch !important;
 
     overscroll-behavior: contain !important;
@@ -1348,4 +1401,232 @@
   margin-bottom: 8px !important;
   font-weight: 600;
   background: #f8fafc;
+}
+.taskPage-filterPopup {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  width: 230px;
+  background: #fff;
+  border: 1px solid #d9d9d9;
+  border-radius: 8px;
+  z-index: 9999;
+
+  display: flex;
+  flex-direction: column;
+
+  max-height: 350px;
+  overflow: visible;
+
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+}
+.taskPage-filterList {
+  flex: 1;
+  overflow-y: auto;
+  min-height: 0;
+  max-height: 220px;
+}
+
+.taskPage-filterActions {
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+
+  padding: 8px;
+
+  position: sticky;
+  bottom: 0;
+
+  background: #fff;
+  border-top: 1px solid #e5e7eb;
+
+  z-index: 10;
+}
+.taskPage-filterActions {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 10px;
+  border-top: 1px solid #e5e7eb;
+  background: #fff;
+}
+
+.taskPage-filterActions button {
+  flex: 1;
+  height: 34px;
+  border-radius: 6px;
+  cursor: pointer;
+}
+/* =========================================
+   FILTER POPUP SCROLL FIX
+========================================= */
+/* =========================================
+   FILTER POPUP FINAL FIX
+========================================= */
+
+.taskPage-filterPopup {
+  position: absolute !important;
+  top: 100% !important;
+  left: 0 !important;
+
+  width: 240px !important;
+
+  display: flex !important;
+  flex-direction: column !important;
+
+  max-height: 380px !important;
+
+  background: #fff !important;
+  border: 1px solid #d9d9d9 !important;
+  border-radius: 8px !important;
+
+  overflow: hidden !important;
+
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15) !important;
+
+  z-index: 999999 !important;
+}
+
+.taskPage-filterPopup input[type="text"] {
+  flex-shrink: 0 !important;
+  margin: 10px !important;
+}
+
+.taskPage-filterList {
+  flex: 1 1 auto !important;
+
+  min-height: 0 !important;
+
+  overflow-y: auto !important;
+  overflow-x: hidden !important;
+
+  padding: 0 10px !important;
+}
+
+.taskPage-filterActions {
+  flex-shrink: 0 !important;
+
+  display: flex !important;
+  justify-content: space-between !important;
+
+  gap: 8px !important;
+
+  padding: 10px !important;
+
+  background: #fff !important;
+
+  border-top: 1px solid #e5e7eb !important;
+}
+
+.taskPage-filterActions button {
+  flex: 1 !important;
+  height: 34px !important;
+}
+
+.acceptBtn {
+  background: #28a745;
+}
+
+.rejectBtn {
+  background: #dc3545;
+}
+
+.submitBtn {
+  background: #007bff;
+}
+
+.approveBtn {
+  background: #28a745;
+}
+
+.revertBtn {
+  background: #ff9800;
+}
+
+.taskStatusBadge {
+  background: #eef3ff;
+  color: #1f3b82;
+  padding: 4px 8px;
+  border-radius: 20px;
+  font-size: 11px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+/* Table wrapper */
+.taskPage-tableWrapper {
+  overflow: visible !important;
+}
+
+/* Table container */
+.taskPage-tableContainer {
+  overflow-x: auto;
+  overflow-y: visible !important;
+  position: relative;
+}
+
+/* Header cell */
+.taskPage-table th {
+  position: relative;
+}
+
+/* Filter popup */
+.taskPage-filterPopup {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  width: 260px;
+  max-height: 450px;
+  background: #fff;
+  border: 1px solid #dcdcdc;
+  border-radius: 8px;
+  box-shadow: 0 8px 20px rgba(0,0,0,0.15);
+  z-index: 99999;
+  padding: 10px;
+}
+
+/* Search */
+.taskPage-filterPopup input[type="text"] {
+  width: 100%;
+  padding: 8px;
+  margin-bottom: 10px;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  box-sizing: border-box;
+}
+
+/* List */
+.taskPage-filterList {
+  max-height: 280px;
+  overflow-y: auto;
+  border: 1px solid #eee;
+}
+
+/* Items */
+.taskPage-filterItem {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px;
+  cursor: pointer;
+}
+
+.taskPage-filterItem:hover {
+  background: #f5f5f5;
+}
+
+/* Footer buttons */
+.taskPage-filterActions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px solid #eee;
+}
+
+.taskPage-filterActions button {
+  padding: 6px 14px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
 }

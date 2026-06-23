@@ -186,4 +186,15 @@
         
         return saved;
     }
+    public List<Employee> getEmployeesByManager(String companyId, String managerEmail) {
+
+    List<Employee> employees =
+            employeeRepo.findByCompanyIdAndManagerEmail(companyId, managerEmail);
+
+    if (employees.isEmpty()) {
+        System.out.println("No employees found for manager : " + managerEmail);
+    }
+
+    return employees;
+}
     }

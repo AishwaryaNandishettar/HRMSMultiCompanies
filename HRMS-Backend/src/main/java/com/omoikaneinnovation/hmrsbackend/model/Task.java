@@ -36,7 +36,7 @@ public class Task {
     private String rejectReason;
 
     private Date dueDate;
-
+private String taskAction;
     @Builder.Default
     private List<String> history = new ArrayList<>();
 
@@ -44,4 +44,12 @@ public class Task {
     private Date updatedAt;
     private String attachmentUrl;
 private String attachmentName;
+
+public String getTaskAction() {
+    return taskAction;
+}
+
+public void setTaskAction(String taskAction) {
+    this.taskAction = taskAction;
+}
 }

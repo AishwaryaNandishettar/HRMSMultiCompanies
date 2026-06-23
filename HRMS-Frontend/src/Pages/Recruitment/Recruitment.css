@@ -17,7 +17,8 @@ body {
 
 .header {
   display: flex;
-  justify-content: space-between;
+ justify-content: flex-start;
+gap: 12px;
   align-items: center;
   margin-bottom: 14px;
 }
@@ -426,7 +427,7 @@ table thead th {
   display: flex;
   align-items: center;
   gap: 12px;
-  /* width: 100%; */
+  width: 65%; 
 }
 
 .column-filter {
@@ -439,19 +440,13 @@ table thead th {
   background: #f8fafc;
 }
 
+
+
 /* Search */
 .search-box {
-  height: 44px;
-  width : 100%;
   flex: 1;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  margin-bottom: 0;
-  background: linear-gradient(180deg, #f8fafc, #eef2f7);
-  border-radius: 10px;
-  padding: 8px 12px;
-  border: 1px solid #e5e7eb;
+  min-width: 0;
+  height: 50px; /* not 1000px */
 }
 
 .search-box input {
@@ -459,9 +454,17 @@ table thead th {
   background: transparent;
   outline: none;
   font-size: 14px;
-  width: 100%;
+
   margin-left: 8px;
 }
+
+
+
+
+
+
+
+
 
 /* Filters */
 .filters {
@@ -566,11 +569,7 @@ table thead th {
 
 /* Sort */
 .sort {
-  display: flex;
-  align-items: center;
-  /* gap: 6px;
-  font-size: 13px;
-  color: #6b7280; */
+  flex-shrink: 0;
 }
 
 .sort-btn {
@@ -590,12 +589,6 @@ table thead th {
   cursor: pointer;
 }
 
-/* BOTTOM ROW */
-.toolbar-bottom {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-}
 
 /* Chips */
 .chip {
@@ -1406,17 +1399,13 @@ body:has(.modal) .pipeline-card {
 }
 
 /* TOP ROW LAYOUT FIX */
-.toolbar-top {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  width: 100%;
-}
+
+
 
 
 
 /* ⭐ POST BUTTON PUSH RIGHT */
 .post-btn {
-  margin-left: auto;   /* 🔥 THIS IS THE MAGIC */
+  flex-shrink: 0;
   white-space: nowrap;
 }

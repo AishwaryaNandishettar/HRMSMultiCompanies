@@ -13,6 +13,7 @@ public interface UserRepository extends MongoRepository<User, String> {
     
     // ✅ Manager-employee relationship methods
     List<User> findByManagerEmail(String managerEmail);
+    List<User> findByRole(String role);
     
     // ✅ Case-insensitive email search
     @Query("{'email': {$regex: ?0, $options: 'i'}}")

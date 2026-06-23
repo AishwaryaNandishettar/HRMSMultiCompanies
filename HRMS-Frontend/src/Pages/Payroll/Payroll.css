@@ -139,8 +139,9 @@
     border-spacing: 0;
     background: var(--card-bg);
     border-radius: var(--radius);
-    overflow: hidden;
+    overflow: visible;
     box-shadow: var(--shadow);
+    table-layout: fixed;
   }
 
   .payroll-table thead {
@@ -340,7 +341,7 @@
     padding: 1px 18px;
     border-radius: 14px;
     cursor: pointer;
-    min-height: 70px;
+    min-height: 50px;
     border: none;
     transition: transform .25s ease, box-shadow .25s ease;
   }
@@ -425,7 +426,7 @@
     border-collapse: collapse;
     background: #fff;
     border-radius: 12px;
-    overflow: hidden;
+    overflow: visible;
     box-shadow: 0 4px 14px rgba(0,0,0,.08);
   }
 
@@ -1087,7 +1088,6 @@
     margin: auto;
   }
 
-  /* ================= PAYROLL GRID ================= */
 .payroll-content {
   display: flex;
   gap: 20px;
@@ -1095,13 +1095,35 @@
 }
 
 .payroll-left {
-  flex: 1;
+  flex: 4;
   min-width: 0;
 }
 
 .payroll-right {
+  flex: 1;
   width: 280px;
   flex-shrink: 0;
+}
+.payroll-left {
+  width: calc(100% - 280px);
+}
+
+.payroll-right {
+  width: 280px;
+}
+.profile-card {
+  position: sticky;
+  top: 20px;
+}
+.payroll-right {
+  position: sticky;
+  top: 20px;
+  align-self: flex-start;
+}
+
+.profile-card {
+  max-height: calc(100vh - 40px);
+  overflow-y: auto;
 }
   /* ================= RESPONSIVE ================= */
 
@@ -1185,6 +1207,7 @@
     border-radius: 6px;
   }
   .payroll-table-wrapper {
+    height: 500px;
     width: 100%;
     overflow-x: auto;
     overflow-y: hidden;
@@ -1340,7 +1363,7 @@
 
     max-width: 100%;
     max-height: 100%;
-
+     min-height: 500px;
     border-radius: 12px;
   }
 
@@ -1480,17 +1503,29 @@
   /* =========================================================
     FROZEN COLUMN 2 - EMP NAME (STICKY LEFT)
   ========================================================= */
+ .payroll-table th:nth-child(2),
+.payroll-table td:nth-child(2) {
+  position: sticky;
+  left: 90px;
+  min-width: 80px;
+  width: 80px;
+  max-width: 80px;
+  z-index: 101;
+  background: #fff;
+  border-right: 2px solid #cbd5e1;
+}
+.payroll-table th:nth-child(2),
+.payroll-table td:nth-child(2) {
+  width: 120px;
+  max-width: 120px;
+  min-width: 120px;
+}
   .payroll-table th:nth-child(2),
-  .payroll-table td:nth-child(2) {
-    position: sticky;
-    left: 140px;
-    width: 220px;
-    min-width: 220px;
-    max-width: 220px;
-    z-index: 300;
-    background: white;
-  }
-
+.payroll-table td:nth-child(2) {
+  min-width: 100px !important;
+  width: 100px !important;
+  max-width: 100px !important;
+}
   .payroll-table thead th:nth-child(2) {
     z-index: 500;
     background: #0d3b66 !important;
@@ -1506,10 +1541,15 @@
   ========================================================= */
   .payroll-table th:nth-child(n+3),
   .payroll-table td:nth-child(n+3) {
-    min-width: 160px;
-    width: 160px;
+    min-width: 130px;
+    width: 130px;
   }
-
+/* Deductions column */
+.payroll-table th:nth-child(5),
+.payroll-table td:nth-child(5) {
+  min-width: 100px;
+  width: 100px;
+}
   /* =========================================================
     MAINTAIN BACKGROUND ON HOVER FOR FROZEN COLUMNS
   ========================================================= */
@@ -1540,7 +1580,7 @@
   .payroll-table-container,
   .payroll-table-wrapper {
     width: 100%;
-    overflow: auto;
+    overflow-x: auto;
     border-radius: 12px;
     background: #fff;
     border: 1px solid #e5e7eb;
@@ -1551,7 +1591,7 @@
   ========================================================= */
   .payroll-table {
     width: max-content;
-    min-width: 100%;
+    min-width: 150%;
     border-collapse: separate;
     border-spacing: 0;
   }
@@ -1559,17 +1599,16 @@
   /* =========================================================
     COMMON CELLS
   ========================================================= */
-  .payroll-table th,
-  .payroll-table td {
-    padding: 12px 14px;
-    font-size: 13px;
+.payroll-table th,
+.payroll-table td{
+    padding: 6px 8px;
+    min-width: 60px;
+   max-width: none;
+width: auto;
     white-space: nowrap;
-    border-bottom: 1px solid #e5e7eb;
-    border-right: 1px solid #e5e7eb;
-    background: #fff;
-    text-align: center;
-  }
-
+    overflow: visible;
+    text-overflow: ellipsis;
+}
   /* remove extra right line */
   .payroll-table th:last-child,
   .payroll-table td:last-child {
@@ -1595,9 +1634,9 @@
   .payroll-table td:nth-child(1) {
     position: sticky;
     left: 0;
-    min-width: 90px;
-    width: 90px;
-    z-index: 101;
+    min-width: 70px;
+    width: 70px;
+    z-index: 70;
     background: #fff;
     border-right: 2px solid #cbd5e1;
   }
@@ -1610,17 +1649,19 @@
   /* =========================================================
     FROZEN COLUMN 2
   ========================================================= */
-  .payroll-table th:nth-child(2),
-  .payroll-table td:nth-child(2) {
-    position: sticky;
-    left: 90px;
-    min-width: 170px;
-    width: 170px;
-    z-index: 101;
-    background: #fff;
-    border-right: 2px solid #cbd5e1;
-  }
+ .payroll-table th:nth-child(2),
+.payroll-table td:nth-child(2) {
+  position: sticky;
+  left: 90px; /* match first column width */
+  min-width: 80px;
+  width: 80px;
+  max-width: 80px;
+  z-index: 101;
+  background: #fff;
+  border-right: 2px solid #cbd5e1;
+}
 
+  
   .payroll-table thead th:nth-child(2) {
     background: #163a70;
     z-index: 105;
@@ -1631,7 +1672,7 @@
   ========================================================= */
   .payroll-table th:nth-child(n+3),
   .payroll-table td:nth-child(n+3) {
-    min-width: 130px;
+    min-width: 80px;
   }
 
   /* =========================================================
@@ -1688,18 +1729,21 @@
     FILTER POPUP
   ========================================= */
 
-  .payroll-filter-popup {
-    position: absolute;
-    top: 42px;
-    left: 0;
-    width: 220px;
-    background: #ffffff;
-    border-radius: 10px;
-    border: 1px solid #dbe3f0;
-    box-shadow: 0 6px 18px rgba(0, 0, 0, 0.15);
-    padding: 10px;
-    z-index: 9999;
-  }
+.payroll-filter-popup {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  z-index: 99999 !important;
+
+  width: 240px;
+  max-height: 320px;
+
+  background: #fff;
+  border: 1px solid #ccc;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+
+  overflow: visible;
+}
 
   /* =========================================
     SEARCH INPUT
@@ -1791,7 +1835,7 @@
     .payroll-table-wrapper {
       width: 100%;
       overflow-x: auto !important;
-      overflow-y: hidden !important;
+      overflow-y: visible !important;
 
       -webkit-overflow-scrolling: touch;
 
@@ -1807,21 +1851,21 @@
     /* Reduce frozen column widths for mobile */
     .payroll-table th:nth-child(1),
     .payroll-table td:nth-child(1) {
-      min-width: 85px;
-      width: 85px;
+      min-width: 100px;
+      width: 100px;
     }
 
     .payroll-table th:nth-child(2),
     .payroll-table td:nth-child(2) {
-      left: 85px;
-      min-width: 150px;
-      width: 150px;
+      left: 20px;
+      min-width: 120px;
+      width: 120px;
     }
 
     /* 3rd column onwards */
     .payroll-table th:nth-child(n+3),
     .payroll-table td:nth-child(n+3) {
-      min-width: 130px;
+      min-width: 100px;
     }
 
     /* Toolbar responsive */
@@ -2063,7 +2107,7 @@
   .kpi-card,
   .stat-card {
     width: 100%;
-    min-height: 72px;
+    min-height: 50px;
     min-width: 500px;
   }
 
@@ -2148,6 +2192,8 @@
     font-size: 11px !important;
     padding: 10px 8px !important;
     white-space: nowrap !important;
+     position: relative;
+  overflow: visible !important;
   }
 
   .payroll-table td {
@@ -2853,4 +2899,183 @@
   margin-left:auto;
   white-space:nowrap;
   flex-shrink:0;
+}
+/* ===== COMPACT PAYROLL TABLE ===== */
+
+.payroll-table table,
+.payrollTable table,
+.table {
+  font-size: 12px !important;
+}
+
+.payroll-table th,
+.payroll-table td,
+.payrollTable th,
+.payrollTable td,
+.table th,
+.table td {
+  padding: 8px 10px !important;
+  white-space: nowrap;
+}
+
+.payroll-table th,
+.payrollTable th,
+.table th {
+  font-size: 12px !important;
+  font-weight: 600;
+}
+
+.payroll-table td,
+.payrollTable td,
+.table td {
+  font-size: 12px !important;
+}
+.payroll-table thead th,
+.payrollTable thead th,
+.table thead th {
+  position: sticky;
+  top: 0;
+  z-index: 20;
+}
+.payroll-table,
+.payrollTable,
+.tableWrap {
+  overflow-x: auto;
+  overflow-y: auto;
+  max-height: 500px;
+}
+
+.payroll-table-wrapper {
+  width: 100%;
+  height: calc(100vh - 280px);
+  max-height: 500px;
+  overflow: auto;
+  position: relative;
+  background: #fff;
+  border: 1px solid #ddd;
+  border-radius: 10px;
+
+  overscroll-behavior: contain;
+  isolation: isolate;
+}
+
+/* Scrollbar styling */
+.payroll-table-wrapper::-webkit-scrollbar {
+  height: 12px;
+  width: 12px;
+}
+
+.payroll-table-wrapper::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 6px;
+}
+
+.payroll-table-wrapper::-webkit-scrollbar-thumb {
+  background: #888;
+  border-radius: 6px;
+}
+
+.payroll-table-wrapper::-webkit-scrollbar-thumb:hover {
+  background: #555;
+}
+
+/* =========================================================
+   HEADER CELLS - STICKY AT TOP
+========================================================= */
+.payroll-table thead th {
+  position: sticky;
+  top: 0;
+  z-index: 200;
+  background: #0d3b66;
+  color: white;
+  padding: 12px 10px;
+  text-align: center;
+  font-size: 14px;
+  font-weight: 600;
+  white-space: nowrap;
+  border-right: 1px solid rgba(255,255,255,0.2);
+  border-bottom: 2px solid #16306d;
+  border-top: 1px solid rgba(255,255,255,0.2);
+}
+
+.payroll-table thead th:first-child {
+  border-left: 1px solid rgba(255,255,255,0.2);
+}
+
+/* =========================================================
+   FROZEN COLUMN 1 - EMP ID (STICKY LEFT)
+========================================================= */
+.payroll-table th:nth-child(1),
+.payroll-table td:nth-child(1) {
+  position: sticky;
+  left: 0;
+  width: 140px;
+  min-width: 140px;
+  max-width: 140px;
+  z-index: 300;
+  background: white;
+}
+
+.payroll-table thead th:nth-child(1) {
+  z-index: 500;
+  background: #0d3b66 !important;
+  box-shadow: 2px 0 5px rgba(0,0,0,0.15);
+}
+.payroll-table tbody td:nth-child(1) {
+  background: #fff;
+  box-shadow: 2px 0 4px -1px rgba(0,0,0,0.1);
+}
+
+/* =========================================================
+   FROZEN COLUMN 2 - EMP NAME (STICKY LEFT)
+========================================================= */
+.payroll-table th:nth-child(2),
+.payroll-table td:nth-child(2) {
+  position: sticky;
+  left: 140px;
+  width: 220px;
+  min-width: 220px;
+  max-width: 220px;
+  z-index: 300;
+  background: white;
+}
+
+.payroll-table thead th:nth-child(2) {
+  z-index: 500;
+  background: #0d3b66 !important;
+  box-shadow: 2px 0 5px rgba(0,0,0,0.15);
+}
+.payroll-table tbody td:nth-child(2) {
+  background: #fff;
+  box-shadow: 2px 0 4px -1px rgba(0,0,0,0.1);
+}
+
+/* =========================================================
+   SCROLLABLE COLUMNS (3 onwards) - DEPARTMENT, etc.
+========================================================= */
+.payroll-table th:nth-child(n+3),
+.payroll-table td:nth-child(n+3) {
+  min-width: 160px;
+  width: 160px;
+}
+
+/* =========================================================
+   MAINTAIN BACKGROUND ON HOVER FOR FROZEN COLUMNS
+========================================================= */
+.payroll-table tbody tr:hover td:nth-child(1),
+.payroll-table tbody tr:hover td:nth-child(2) {
+  background: #f8fdff;
+  box-shadow: 2px 0 4px -1px rgba(0, 0, 0, 0.1);
+}
+
+/* Department */
+.payroll-table th:nth-child(3),
+.payroll-table td:nth-child(3) {
+  width: 50px;
+}
+
+/* Gross Pay */
+.payroll-table th:nth-child(4),
+.payroll-table td:nth-child(4) {
+  width: 50px;
 }

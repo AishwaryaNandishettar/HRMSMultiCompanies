@@ -458,18 +458,19 @@ useEffect(() => {
     const data = await fetchMyProfile();
     setProfileData(data);
   };
-
+  
+console.log("PROFILE DATA =", profileData);
    const reporting = [
   {
-    name: profileData?.reportingManager || profileData?.managerName || "N/A",
+    name: profileData?.reportingManager || profileData?.managerName  ,
     role: "Reporting Manager"
   },
   {
-    name: profileData?.reportingHead || "N/A",
+    name: profileData?.reportingHead ,
     role: "Reporting Head"
   },
   {
-    name: profileData?.hrName || "N/A",
+    name: profileData?.hrName ,
     role: "HR Business Partner"
   }
 ];

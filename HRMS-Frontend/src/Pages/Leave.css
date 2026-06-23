@@ -1454,69 +1454,90 @@ body {
 /* ==========================================
    LEAVE KPI CARDS - SAME AS RECRUITMENT PAGE
 ========================================== */
-
+/* KPI Container */
 .status-bar {
-  display: flex;
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
   gap: 14px;
-  width: 100%;
-  justify-content: space-between;
-  flex-wrap: nowrap;
+  margin: 20px 0;
 }
 
+/* KPI Card */
 .status-box {
-  flex: 1;
-  min-height: 75px;
-
+  height: 88px;
+  border-radius: 14px;
+  padding: 18px 22px;
+  color: #fff;
+  cursor: pointer;
+  transition: all 0.25s ease;
   display: flex;
   flex-direction: column;
   justify-content: center;
-  align-items: center;
-
-  border-radius: 12px;
-  color: #fff;
-
-  box-shadow: 0 4px 12px rgba(0,0,0,0.08);
-
-  transition: all 0.25s ease;
-  position: relative;
-  overflow: hidden;
-
-   padding: 8px 12px;  /* was 12px */
+  box-shadow: 0 6px 18px rgba(0,0,0,0.12);
 }
 
+/* Hover */
 .status-box:hover {
   transform: translateY(-3px);
 }
 
+/* Title */
 .status-box h4 {
-  color: #fff !important;
-  font-size: 10px;
-  font-weight: 1000;
-  margin-bottom: 8px;
-}
-.status-box {
-  min-height: 70px;
-  padding: 8px 12px;
+  margin: 0;
+  font-size: 15px;
+  font-weight: 600;
+  color: #fff;
 }
 
-.status-box h4 {
-  margin-bottom: 2px;
-  font-size: 12px;
-}
-
+/* Count */
 .status-box strong {
-  font-size: 16px;
-}
-.status-box strong {
-  color: #fff !important;
-  font-size: 34px;
+  margin-top: 8px;
+  font-size: 38px;
   font-weight: 700;
+  color: #fff;
+   text-align: left;
+  padding-left: 6px;   /* adjust 6px-12px as needed */
+  display: block;
 }
-.fixed-btn {
-  margin-top: 20px !important;
+
+/* Active Card */
+.active-status-box {
+  outline: 3px solid #ffffff;
+  transform: scale(1.03);
 }
-.policy-btn {
-  margin-bottom: 15px;
+
+/* Colors same as Home Dashboard */
+.status-box:nth-child(1) {
+  background: linear-gradient(135deg,#2563eb,#3b82f6);
+}
+
+.status-box:nth-child(2) {
+  background: linear-gradient(135deg,#16a34a,#22c55e);
+}
+
+.status-box:nth-child(3) {
+  background: linear-gradient(135deg,#dc2626,#ef4444);
+}
+
+.status-box:nth-child(4) {
+  background: linear-gradient(135deg,#d4a800,#facc15);
+}
+
+.status-box:nth-child(5) {
+  background: linear-gradient(135deg,#6d9df5,#7fb0ff);
+}
+
+/* Responsive */
+@media (max-width: 1200px) {
+  .status-bar {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+@media (max-width: 768px) {
+  .status-bar {
+    grid-template-columns: repeat(2, 1fr);
+  }
 }
 /* MOBILE KPI FIX */
 @media screen and (max-width: 768px) {
@@ -1570,4 +1591,18 @@ body {
 .leave-table tr,
 .leave-table th {
   overflow: visible !important;
+}
+.status-box {
+  cursor: pointer;
+  transition: 0.2s;
+}
+
+.status-box:hover {
+  transform: translateY(-2px);
+}
+
+.active-status-box {
+  background: #2563eb;
+  color: #fff;
+  border: 2px solid #2563eb;
 }

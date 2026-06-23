@@ -31,9 +31,11 @@ const role =
 
 const [taskData, setTaskData] = useState([]);
 const [activeFilter, setActiveFilter] = useState(null);
+const [kpiFilter, setKpiFilter] = useState("all");
 const [filterText, setFilterText] = useState("");
 const [employees, setEmployees] = useState([]);
 const [uploadedFiles, setUploadedFiles] = useState({});
+const [openActionMenu, setOpenActionMenu] = useState(null);
 
 const [columnFilters, setColumnFilters] = useState({
   empid: [],
@@ -223,9 +225,9 @@ const renderFilterPopup = (key) => {
     </label>
   )}
 
-        {suggestions.length > 0 ? (
+      {filterSuggestions.length > 0 ? (
 
-          suggestions.map((s) => (
+         filterSuggestions.map((s) => (
 
             <label
               key={s}
@@ -409,6 +411,7 @@ const assignTask = async () => {
       assigneeId: selectedEmployee.employeeId || selectedEmployee.id,
       priority: taskForm.priority,
       dueDate: taskForm.dueDate,
+      taskAction: "Assigned", // NEW
     };
 
     console.log("Creating task with payload:", payload);
@@ -458,6 +461,8 @@ const handleUpload = async (e, task) => {
     });
     
     console.log("File upload response:", response.data);
+
+    
     
     // Update task with attachment URL
     const fileUrl = response.data.fileUrl || response.data.url || `/uploads/${file.name}`;
@@ -510,7 +515,27 @@ const handleView = (task) => {
 
   alert("No file uploaded for this task");
 };
+const updateTaskAction = async (taskId, action) => {
+  console.log("Task ID:", taskId);
+  console.log("Action:", action);
 
+  try {
+    const res = await api.put(`/api/tasks/${taskId}`, {
+      taskAction: action,
+    });
+ console.log("SERVER RESPONSE:", res.data);
+    console.log("UPDATED TASK =>", res.data);
+    console.log("TASK ACTION =>", res.data.taskAction);
+
+    alert("Updated Successfully");
+
+    await loadTasks();
+  } catch (err) {
+    console.log("FULL ERROR:", err);
+    console.log("STATUS:", err.response?.status);
+    console.log("DATA:", err.response?.data);
+  }
+};
   return (
 
     <div className="taskPage-container">
@@ -583,54 +608,71 @@ const handleView = (task) => {
       {/* =========================
           KPI CARDS
       ========================= */}
+<div className="taskPage-topCards">
 
-      <div className="taskPage-topCards">
+  <div
+    className="taskPage-card"
+    onClick={() => setKpiFilter("all")}
+    style={{ cursor: "pointer" }}
+  >
+    <h3>Total Tasks</h3>
+    <h1>{taskData.length}</h1>
+  </div>
 
-        <div className="taskPage-card">
-          <h3>Total Tasks</h3>
-          <h1>{taskData.length}</h1>
-        </div>
+  <div
+    className="taskPage-card"
+    onClick={() => setKpiFilter("completed")}
+    style={{ cursor: "pointer" }}
+  >
+    <h3>Completed</h3>
+    <h1>
+      {
+        taskData.filter(
+          (t) => Number(t.progress) === 100
+        ).length
+      }
+    </h1>
+  </div>
 
-        <div className="taskPage-card">
-          <h3>Completed</h3>
-          <h1>
-            {
-              taskData.filter(
-                (t) => t.status === "Completed"
-              ).length
-            }
-          </h1>
-        </div>
+  <div
+    className="taskPage-card"
+    onClick={() => setKpiFilter("progress")}
+    style={{ cursor: "pointer" }}
+  >
+    <h3>In Progress</h3>
+    <h1>
+      {
+        taskData.filter(
+          (t) =>
+            Number(t.progress) > 0 &&
+            Number(t.progress) < 100
+        ).length
+      }
+    </h1>
+  </div>
 
-        <div className="taskPage-card">
-          <h3>In Progress</h3>
-          <h1>
-            {
-              taskData.filter(
-                (t) => t.status === "In Progress"
-              ).length
-            }
-          </h1>
-        </div>
+  <div
+    className="taskPage-card"
+    onClick={() => setKpiFilter("pending")}
+    style={{ cursor: "pointer" }}
+  >
+    <h3>Pending</h3>
+    <h1>
+      {
+        taskData.filter(
+          (t) =>
+            Number(t.progress) === 0
+        ).length
+      }
+    </h1>
+  </div>
 
-        <div className="taskPage-card">
-          <h3>Pending</h3>
-          <h1>
-            {
-              taskData.filter(
-                (t) => t.approval === "Pending"
-              ).length
-            }
-          </h1>
-        </div>
-
-      </div>
-
+</div>
       {/* =========================
           ASSIGN TASK
       ========================= */}
 
-     {(role === "admin" || role === "manager") && (
+     {(role === "admin" || role === "manager" || role ==="employee") && (
 
         <div className="taskPage-assignCard">
 
@@ -760,7 +802,10 @@ const handleView = (task) => {
 
   <div className="taskPage-thHeader">
     Emp ID
-    <span onClick={() => setActiveFilter("empid")}>
+    <span onClick={() => {
+  setActiveFilter("empid");
+  setPopupFilterText("");
+}}>
       ⏷
     </span>
   </div>
@@ -927,6 +972,25 @@ const handleView = (task) => {
 {taskData
   .filter((t) => {
 
+    if (kpiFilter === "completed") {
+      return Number(t.progress) === 100;
+    }
+
+    if (kpiFilter === "progress") {
+      return (
+        Number(t.progress) > 0 &&
+        Number(t.progress) < 100
+      );
+    }
+
+    if (kpiFilter === "pending") {
+      return Number(t.progress) === 0;
+    }
+
+    return true;
+  })
+  .filter((t) => {
+
   return Object.keys(columnFilters).every((key) => {
 
     const selected =
@@ -993,52 +1057,54 @@ const handleView = (task) => {
             <td>{t.dueDate ? new Date(t.dueDate).toLocaleDateString("en-GB") : "-"}</td>
 
             <td>{t.department || t.dept || "HRMS"}</td>
+<td>
+  <div className="taskPage-progressBox">
+    <div
+      className="taskPage-progressFill"
+      style={{
+        width: `${t.progress}%`,
+      }}
+    />
+  </div>
 
-            <td>
+  {role === "employee" ? (
+    <input
+      type="number"
+      min="0"
+      max="100"
+      value={t.progress}
+      onChange={async (e) => {
+        const newProgress = parseInt(e.target.value) || 0;
 
-              <div className="taskPage-progressBox">
-
-                <div
-                  className="taskPage-progressFill"
-                  style={{
-                    width: `${t.progress}%`,
-                  }}
-                />
-
-              </div>
-
-              {/* Editable Progress Input for Employees */}
-              {role === "employee" ? (
-                <input
-                  type="number"
-                  min="0"
-                  max="100"
-                  value={t.progress}
-                  onChange={async (e) => {
-                    const newProgress = parseInt(e.target.value) || 0;
-                    if (newProgress >= 0 && newProgress <= 100) {
-                      try {
-                        await updateProgressApi(t.id, newProgress);
-                        await loadTasks(); // Reload to show updated progress
-                      } catch (err) {
-                        console.error("Progress update error:", err);
-                        alert("Failed to update progress");
-                      }
-                    }
-                  }}
-                  style={{
-                    width: "50px",
-                    marginLeft: "8px",
-                    padding: "4px",
-                    border: "1px solid #ddd",
-                    borderRadius: "4px"
-                  }}
-                />
-              ) : (
-                <span style={{ marginLeft: "8px" }}>{t.progress}%</span>
-              )}
-
-            </td>
+        if (newProgress >= 0 && newProgress <= 100) {
+          try {
+            await updateProgressApi(t.id, newProgress);
+            await loadTasks();
+          } catch (err) {
+            console.error("Progress update error:", err);
+            alert("Failed to update progress");
+          }
+        }
+      }}
+      style={{
+        width: "50px",
+        marginLeft: "8px",
+        padding: "4px",
+        border: "1px solid #ddd",
+        borderRadius: "4px",
+      }}
+    />
+  ) : (
+    <span
+      style={{
+        marginLeft: "8px",
+        fontWeight: "600",
+      }}
+    >
+      {t.progress}%
+    </span>
+  )}
+</td>
 
             <td>
 
@@ -1090,21 +1156,115 @@ const handleView = (task) => {
             <td>
               API Integration Pending
             </td>
+<td>
+  {role === "employee" ? (
+  !t.taskAction || t.taskAction === "Assigned" ? (
+    <div style={{ display: "flex", gap: "5px" }}>
+      <button
+        className="taskPage-actionBtn"
+        onClick={() =>
+          updateTaskAction(t.id || t._id, "Accepted")
+        }
+      >
+        Accept
+      </button>
 
-            <td>
-
-            <button
+      <button
+        className="taskPage-actionBtn"
+        style={{ background: "#dc3545" }}
+        onClick={() =>
+          updateTaskAction(t.id || t._id, "Rejected")
+        }
+      >
+        Reject
+      </button>
+    </div>
+  ) : (
+    <span
+      style={{
+        color:
+          t.taskAction === "Accepted"
+            ? "green"
+            : "red",
+        fontWeight: "600",
+      }}
+    >
+      {t.taskAction}
+    </span>
+  )
+) : (
+  <div
+    style={{
+      position: "relative",
+      display: "inline-block",
+    }}
+  >
+  <button
   className="taskPage-actionBtn"
-  onClick={() => {
-    console.log("TASK DATA:", t);
-    handleView(t);
-  }}
+  onClick={() =>
+    setOpenActionMenu(
+      openActionMenu === (t.id || t._id)
+        ? null
+        : (t.id || t._id)
+    )
+  }
 >
-  View
+  {t.taskAction || "Action"} ▼
 </button>
 
-            </td>
+    {openActionMenu === (t.id || t._id) && (
+      <div
+        style={{
+          position: "absolute",
+          top: "38px",
+          left: 0,
+          background: "#fff",
+          border: "1px solid #ddd",
+          borderRadius: "6px",
+          minWidth: "140px",
+          zIndex: 1000,
+          boxShadow:
+            "0 2px 8px rgba(0,0,0,0.15)",
+        }}
+      >
+        <div
+          style={{
+            padding: "10px",
+            cursor: "pointer",
+            borderBottom:
+              "1px solid #eee",
+          }}
+          onClick={() => {
+            updateTaskAction(
+              t.id || t._id,
+              "Withdrawn"
+            );
+            setOpenActionMenu(null);
+          }}
+        >
+          Withdrawn
+        </div>
 
+        <div
+          style={{
+            padding: "10px",
+            cursor: "pointer",
+          }}
+          onClick={() => {
+            updateTaskAction(
+              t.id || t._id,
+              "Extended"
+            );
+            setOpenActionMenu(null);
+          }}
+        >
+          Extended
+        </div>
+      </div>
+    )}
+  </div>
+)}
+</td>
           </tr>
 
         ))}

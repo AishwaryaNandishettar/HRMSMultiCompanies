@@ -3,6 +3,7 @@ import "./PersonalInsurance.css";
 
 export default function PersonalInsurance() {
   const [tab, setTab] = useState("dashboard");
+  const [activeKpi, setActiveKpi] = useState("all");
 
   const role = "Admin";
 
@@ -81,25 +82,34 @@ export default function PersonalInsurance() {
 
       <div className="stats-grid">
 
-        <div className="kpi-card green">
-          <h4>Active Policies</h4>
-          <h2>12</h2>
-        </div>
+      <div
+  className={`kpi-card green ${activeKpi === "policies" ? "active" : ""}`}
+  onClick={() => setActiveKpi("policies")}
+>
+  <h4>Active Policies</h4>
+  <h2>12</h2>
+</div>
 
         <div className="kpi-card blue">
           <h4>Total Coverage</h4>
           <h2>₹10L</h2>
         </div>
 
-        <div className="kpi-card orange">
-          <h4>Claims</h4>
-          <h2>04</h2>
-        </div>
+       <div
+  className={`kpi-card orange ${activeKpi === "claims" ? "active" : ""}`}
+  onClick={() => setActiveKpi("claims")}
+>
+  <h4>Claims</h4>
+  <h2>04</h2>
+</div>
 
-        <div className="kpi-card red">
-          <h4>Renewal Due</h4>
-          <h2>29 Days</h2>
-        </div>
+       <div
+  className={`kpi-card red ${activeKpi === "renewals" ? "active" : ""}`}
+  onClick={() => setActiveKpi("renewals")}
+>
+  <h4>Renewal Due</h4>
+  <h2>29 Days</h2>
+</div>
 
       </div>
 

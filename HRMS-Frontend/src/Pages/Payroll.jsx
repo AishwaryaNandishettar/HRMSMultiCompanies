@@ -107,6 +107,7 @@ useEffect(() => {
   fetchPayroll();
 }, [location.state?.refresh]);
 
+
 useEffect(() => {
   console.log("PAYROLL DATA:", data);
 }, [data]);

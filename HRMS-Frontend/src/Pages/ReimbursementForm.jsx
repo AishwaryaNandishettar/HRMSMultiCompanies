@@ -766,12 +766,16 @@ const filteredData = requests.filter((r) => {
 
     {/* FOOTER */}
     <div className="excel-filter-footer">
-      <button
-        className="excel-ok-btn"
-        onClick={() => setActiveFilter(null)}
-      >
-        OK
-      </button>
+     <button
+  type="button"
+  className="excel-ok-btn"
+  onClick={(e) => {
+    e.stopPropagation();
+    setActiveFilter(null);
+  }}
+>
+  OK
+</button>
 
       <button
         className="excel-cancel-btn"

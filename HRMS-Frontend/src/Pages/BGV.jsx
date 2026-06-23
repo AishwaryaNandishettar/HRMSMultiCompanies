@@ -2,6 +2,7 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom"; // ✅ ADD THIS
 import "./BGV.css";
+import { getAllOnboardingRecords } from "../api/onboardingApi";
 
 // In-memory + localStorage backed storage
 let bgvRecords = [];
@@ -51,18 +52,39 @@ export default function BGV() {
   const navigate = useNavigate(); // ✅ ADD THIS
 
  useEffect(() => {
-  const loadData = () => {
-    try {
-      const data = JSON.parse(localStorage.getItem("bgv_records")) || [];
-      console.log("BGV Records:", data);
-       console.log("Loaded BGV:", data);
-      bgvRecords = data;
-      setRecords([...data].reverse());
-    } catch (e) {
-      console.error("Error loading BGV records", e);
-      setRecords([]);
-    }
-  };
+  const loadData = async () => {
+  try {
+  const data = await getAllOnboardingRecords();
+
+console.log("Mongo Records:", data);
+
+const normalized = data.map((r) => ({
+  ...r,
+
+  fullName: r.fullName || r.personal?.fullName,
+  email: r.email || r.personal?.email,
+  phone: r.phone || r.personal?.phone,
+
+  employeeId: r.employeeId || r.job?.employeeId,
+  department: r.department || r.job?.department,
+  designation: r.designation || r.job?.designation,
+
+  dob: r.dob || r.personal?.dob,
+  joiningDate: r.joiningDate || r.job?.joiningDate,
+
+  bgvStatus: r.bgvStatus || r.status || "Pending",
+}));
+
+setRecords([...normalized].reverse());
+  } catch (e) {
+    console.error("Error loading BGV records", e);
+
+    const local =
+      JSON.parse(localStorage.getItem("bgv_records")) || [];
+
+    setRecords([...local].reverse());
+  }
+};
 
   loadData(); // ✅ load on mount
  

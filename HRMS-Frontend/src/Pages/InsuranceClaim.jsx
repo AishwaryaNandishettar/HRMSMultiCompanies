@@ -15,6 +15,15 @@ const InsuranceClaim = () => {
     fetchClaims();
   }, []);
 
+  useEffect(() => {
+  if (user?.employeeCode) {
+    setInsuranceDetails((prev) => ({
+      ...prev,
+      employeeCode: user.employeeCode
+    }));
+  }
+}, [user]);
+
 useEffect(() => {
   const handleClick = (e) => {
     if (popupRef.current && !popupRef.current.contains(e.target)) {
@@ -42,6 +51,8 @@ useEffect(() => {
   const popupRef = useRef();
   const [claims, setClaims] = useState([]);
 const [insuranceDetails, setInsuranceDetails] = useState({
+    employeeCode: "",      // ✅ add this
+
   insurancePlan: "Silver Plan",
   coverageAmount: "",
   monthlyPremium: "",
@@ -256,7 +267,7 @@ const sortColumn = (key, direction) => {
       if ((user.role || "").toLowerCase() === "employee") {
         setFormData(prev => ({
           ...prev,
-          employeeName: user?.email || "",
+          employeeName: user?.name || user?.fullName || user?.employeeName || "",
           employeeCode: user?.employeeCode || "",
           department: user?.department || ""
         }));
@@ -975,7 +986,11 @@ console.log(
           <form onSubmit={handleSubmit}>
             <div className="form-grid">
               <input name="employeeName" placeholder="Employee Name *" value={role === ROLE_EMP ? user?.email || "" : formData.employeeName} onChange={handleInput} required readOnly={role === ROLE_EMP} />
-              <input name="employeeCode" placeholder="Employee Code *" value={role === ROLE_EMP ? user?.employeeCode || "" : formData.employeeCode} onChange={handleInput} required readOnly={role === ROLE_EMP} />
+              <input name="employeeCode"
+               placeholder="Employee Code *" 
+               value={formData.employeeCode} 
+               onChange={handleInput} 
+               required  />
               <input name="department" placeholder="Department *" value={role === ROLE_EMP ? user?.department || "" : formData.department} onChange={handleInput} required readOnly={role === ROLE_EMP} />
               <select name="relationship" onChange={handleInput} required>
                 <option value="">Relationship *</option>

@@ -527,6 +527,11 @@ export default function Onboarding() {
   });
 console.log("Saving BGV Record:", existing);
   localStorage.setItem("bgv_records", JSON.stringify(existing));
+  window.dispatchEvent(
+  new StorageEvent("storage", {
+    key: "bgv_records",
+  })
+);
 
   alert("Onboarding submitted successfully ✅");
   navigate("/BGV");

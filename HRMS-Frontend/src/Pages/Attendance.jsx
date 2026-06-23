@@ -506,6 +506,14 @@ name:
 
   const filteredRecordsFinal = searchFiltered
   .filter((r) => {
+
+    if (focus === "present") {
+  return r.checkIn && r.checkIn !== "-";
+}
+
+if (focus === "absent") {
+  return r.status === "Absent";
+}
     // Date range filter
     if (fromDate || toDate) {
       const recordDate = new Date(r.date);

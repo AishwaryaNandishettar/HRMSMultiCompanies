@@ -1,4 +1,5 @@
 import React, { useEffect, useState, useRef } from "react";
+import { useNavigate } from "react-router-dom";
 import styles from "./Timesheet.module.css";
 import { getTimesheet, approveTimesheet, submitTimesheet } from "../api/timesheetApi";
 import { getAllAttendance } from "../api/attendanceApi";
@@ -63,6 +64,7 @@ const getLoggedUser = () => {
 };
 
 export default function TimesheetManager() {
+  const navigate = useNavigate();
   const loggedUser = getLoggedUser();
   const normalizeRole = (r) => (r || "").trim().toLowerCase();
 
@@ -112,11 +114,29 @@ useEffect(() => {
   const loadAttendanceAndLeaves = async () => {
     try {
       // Load attendance data
-      const attendanceData = await getAllAttendance();
-      console.table(attendanceData);
-      const today = new Date().toISOString().split("T")[0];
-      const todayData = attendanceData.filter((r) => r.date === today);
-      setTodayAttendance(todayData);
+   const attendanceData = await getAllAttendance();
+
+console.table(attendanceData);
+
+const today = new Date().toISOString().split("T")[0];
+
+const todayData = attendanceData.filter(
+  (r) => r.date === today
+);
+
+setTodayAttendance(todayData);
+
+console.log("Today's Date:", today);
+
+console.log("Attendance Data:");
+console.table(todayData);
+
+console.log(
+  "Present Count",
+  todayData.filter(
+    (a) => a.checkIn && a.checkIn !== "-"
+  ).length
+);
 
       // Load leave data
       const leaveData = await getAllLeaves();
@@ -418,7 +438,7 @@ console.table(res);
 const totalPresent = todayAttendance.filter(
     a => a.checkIn && a.checkIn !== "-"
 ).length;
-
+console.log("KPI Present Count:", totalPresent);
 const totalEmp = records.length;
 
 const totalLOP = totalEmp - totalPresent;
@@ -553,23 +573,27 @@ console.log(
 
       {/* KPI with click filtering */}
       <div className={styles.kpiRow}>
-        <div
-          className={styles.kpiGreen}
-          onClick={() => setKpiFilter(kpiFilter === "PRESENT" ? "ALL" : "PRESENT")}
-          style={{
-            cursor: "pointer",
-            border: kpiFilter === "PRESENT" ? "3px solid #28a745" : "none",
-          }}
-        >
+       <div
+  className={styles.kpiGreen}
+  onClick={() =>
+    navigate("/attendance", {
+      state: {
+        focus: "present"
+      }
+    })
+  }
+>
           Present: {totalPresent}
         </div>
 <div
   className={styles.kpiRed}
-  onClick={() => setKpiFilter(kpiFilter === "ABSENT" ? "ALL" : "ABSENT")}
-  style={{
-    cursor: "pointer",
-    border: kpiFilter === "ABSENT" ? "3px solid #dc3545" : "none",
-  }}
+  onClick={() =>
+    navigate("/attendance", {
+      state: {
+        focus: "absent"
+      }
+    })
+  }
 >
   Absent: {totalLOP}
 </div>

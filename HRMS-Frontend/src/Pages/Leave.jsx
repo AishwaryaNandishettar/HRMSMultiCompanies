@@ -650,14 +650,26 @@ const renderCheckboxFilter = (key) => {
 )}
 
             {/* Leave Balances */}
-            <div className="status-bar">
-              {Object.keys(balances).map((type, idx) => (
-                <div key={idx} className="status-box">
-                  <h4>{type}</h4>
-                  <strong>{balances[type]}</strong>
-                </div>
-              ))}
-            </div>
+           <div className="status-bar">
+  {Object.keys(balances).map((type, idx) => (
+    <div
+      key={idx}
+      className={`status-box ${
+        filters.leaveType === type ? "active-status-box" : ""
+      }`}
+      onClick={() =>
+        setFilters(prev => ({
+          ...prev,
+          leaveType: prev.leaveType === type ? "" : type
+        }))
+      }
+      style={{ cursor: "pointer" }}
+    >
+      <h4>{type}</h4>
+      <strong>{balances[type]}</strong>
+    </div>
+  ))}
+</div>
 
             {/* Apply Leave Button */}
            {/* Apply Leave Button */}

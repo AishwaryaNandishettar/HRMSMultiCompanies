@@ -1662,6 +1662,7 @@ const getEmployeeProfileImage = (emp) => {
   </div>
 )}
 </th>
+
 <th>
   <div className="th-header">
     Reporting Manager
