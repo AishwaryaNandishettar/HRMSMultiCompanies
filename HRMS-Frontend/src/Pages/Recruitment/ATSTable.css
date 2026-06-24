@@ -40,41 +40,53 @@
   color: #1e3a5f;
   margin: 0;
 }
+/* SAME AS PIPELINE PAGE */
+
 .ats-kpi-row {
   display: flex;
-  gap: 16px;
+  gap: 14px;
   margin-bottom: 20px;
-  flex-wrap: wrap;   /* allow cards to go next line */
-  justify-content: flex-start;
+  flex-wrap: nowrap;
+  width: 100%;
 }
 
 .ats-kpi-card {
-  width: 280px;
-  height: 88px;
-  min-width: 280px;
-  border-radius: 16px;
-  padding: 18px 20px;
+  flex: 1;
+
+  height: 60px;
+  border-radius: 12px;
+  padding: 16px 18px;
   color: #fff;
-  flex: 0 0 280px;
   box-sizing: border-box;
+
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+
+  box-shadow: 0 8px 24px rgba(0,0,0,0.12);
+  transition: all 0.25s ease;
 }
+
 .ats-kpi-card:hover {
-    transform: translateY(-2px);
+  transform: translateY(-2px);
 }
+
 .ats-kpi-left {
   display: flex;
   flex-direction: column;
+  gap: 4px;
 }
 
 .ats-kpi-label {
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 600;
 }
 
 .ats-kpi-value {
-  font-size: 18px;
+  font-size: 14px;
   font-weight: 700;
-  margin-top: 6px;
+  line-height: 1;
+  margin-top: 0;
 }
 /* ── Toolbar: search + export ── */
 .ats-toolbar {
@@ -305,8 +317,19 @@
   margin-top: 8px;
 }
 .export-modal .cancel-btn:hover { background: #e5e7eb; }
-:root {
-  --kpi-width: 260px;
-  --kpi-height: 82px;
-  --kpi-radius: 14px;
+
+/* Open Positions, Positions Filled, Interview Scheduled only */
+
+.open-positions .ats-kpi-row,
+.positions-filled .ats-kpi-row,
+.interview-scheduled .ats-kpi-row {
+  justify-content: flex-start;
+}
+
+.open-positions .ats-kpi-card,
+.positions-filled .ats-kpi-card,
+.interview-scheduled .ats-kpi-card {
+  flex: 0 0 50px;   /* reduce width */
+  max-width: 50px;
+  height: 80px;
 }

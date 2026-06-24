@@ -102,6 +102,7 @@ System.out.println("Manager Email : " +
         (employee != null ? employee.getManagerEmail() : "NULL"));
 profile.put("managerName", managerName);
 profile.put("reportingManager", managerName);
+System.out.println("PROFILE RESPONSE = " + profile);
         profile.put("hrName", user.getHrName());
         profile.put("managerId", user.getManagerId());
         profile.put("companyId", user.getCompanyId());

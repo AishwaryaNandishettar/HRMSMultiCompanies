@@ -146,7 +146,33 @@ export default function Attendance() {
           attendanceType: r.attendanceType || r.type || "Office",
         }));
 // Fetch all employees
-const employees = await getAllEmployees();
+let employees = await getAllEmployees();
+
+if (role === "employee") {
+  employees = employees.filter(
+    (emp) =>
+      String(emp.id || emp._id).trim() ===
+      String(
+        loggedUser.id ||
+        loggedUser._id
+      ).trim()
+  );
+}
+
+if (role === "manager") {
+  employees = employees.filter(
+    (emp) =>
+      String(
+        emp.managerEmail || ""
+      ).toLowerCase() ===
+        String(loggedUser.email || "").toLowerCase() ||
+      String(emp.id || emp._id).trim() ===
+        String(
+          loggedUser.id ||
+          loggedUser._id
+        ).trim()
+  );
+}
 
 const attendanceDates = new Set(
   data.map(
@@ -212,7 +238,40 @@ console.log(
   "records"
 );
 
-setRecords(finalData);
+let scopedData = finalData;
+
+if (role === "employee") {
+  const myUserId = String(
+    loggedUser.id || loggedUser._id
+  ).trim().toLowerCase();
+
+  scopedData = finalData.filter(
+    (r) =>
+      String(r.userId)
+        .trim()
+        .toLowerCase() === myUserId
+  );
+}
+
+if (role === "manager") {
+  scopedData = finalData.filter(
+    (r) =>
+      String(r.managerEmail || "")
+        .toLowerCase() ===
+        String(loggedUser.email || "")
+          .toLowerCase() ||
+      String(r.userId)
+        .trim()
+        .toLowerCase() ===
+        String(
+          loggedUser.id ||
+          loggedUser._id
+        )
+          .trim()
+          .toLowerCase()
+  );
+}
+setRecords(scopedData);
       
       
       // Log sample record for debugging

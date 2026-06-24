@@ -1,4 +1,5 @@
     import React, { useState, useEffect, useRef } from "react";
+    import { useLocation } from "react-router-dom";
     //import { getSkillsByEmployee, addSkill, updateManagerRating } from "../api/skillApi";
     import styles from "./Profile.module.css";
     import { fetchMyProfile } from "../api/profileApi";
@@ -10,6 +11,8 @@
     import { getEmployeeProfileImage } from "../Utils/profileImageHelper";
 
     export default function ProfileView() {
+      const location = useLocation();
+const profileEmployee = location.state?.employee;
       const popupRef = useRef(null);
       const { user } = useContext(AuthContext);
       const [status, setStatus] = useState("Available");
@@ -460,22 +463,39 @@ useEffect(() => {
   };
   
 console.log("PROFILE DATA =", profileData);
-   const reporting = [
+console.log("Reporting Manager:", profileData?.reportingManager);
+console.log("Manager Name:", profileData?.managerName);
+console.log("Manager Email:", profileData?.managerEmail);
+console.log("LOCATION EMPLOYEE =", location.state?.employee);
+console.log("PROFILE EMPLOYEE =", profileEmployee);
+console.log("REPORTING MANAGER =", selectedEmployee?.reportingManager);
+ const reporting = [
   {
-    name: profileData?.reportingManager || profileData?.managerName  ,
-    role: "Reporting Manager"
+    name:
+      profileEmployee?.reportingManager ||
+      profileEmployee?.managerName ||
+      profileEmployee?.managerEmail ||
+      profileData?.reportingManager ||
+      profileData?.managerName ||
+      profileData?.managerEmail ||
+      "-",
+    role: "Reporting Manager",
   },
   {
-    name: profileData?.reportingHead ,
-    role: "Reporting Head"
+    name:
+      profileEmployee?.reportingHead ||
+      profileData?.reportingHead ||
+      "-",
+    role: "Reporting Head",
   },
   {
-    name: profileData?.hrName ,
-    role: "HR Business Partner"
-  }
+    name:
+      profileEmployee?.hrName ||
+      profileData?.hrName ||
+      "-",
+    role: "HR Business Partner",
+  },
 ];
-
-
 
     const downloadPDF = (emp) => {
     const content = `

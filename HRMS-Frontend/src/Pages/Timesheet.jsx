@@ -325,29 +325,47 @@ console.log(
 );
  
 
-
 const filtered = records.filter((r) => {
-
-  const attendance = todayAttendance.find(att =>
+  const attendance = todayAttendance.find(
+    (att) =>
       String(att.empId || att.employeeId).trim() ===
       String(r.empId).trim()
   );
 
-  switch (kpiFilter) {
+  // KPI FILTER
+  let matchesKpi = true;
 
+  switch (kpiFilter) {
     case "PRESENT":
-      return attendance && attendance.checkIn && attendance.checkIn !== "-";
+      matchesKpi =
+        attendance &&
+        attendance.checkIn &&
+        attendance.checkIn !== "-";
+      break;
 
     case "ABSENT":
-      return !attendance || !attendance.checkIn || attendance.checkIn === "-";
+      matchesKpi =
+        !attendance ||
+        !attendance.checkIn ||
+        attendance.checkIn === "-";
+      break;
 
     case "EMPLOYEES":
-      return true;
+      matchesKpi = true;
+      break;
 
     default:
-      return true;
+      matchesKpi = true;
   }
 
+  if (!matchesKpi) return false;
+
+  // HEADER FILTERS
+  return Object.keys(filters).every((key) => {
+    if (!filters[key] || filters[key].length === 0) return true;
+
+    return filters[key].includes(r[key]);
+  });
 });
     // Backend already scopes data by role (employee sees only own, manager sees own+team,
     // admin sees all) — no additional role-based client filtering needed here.
@@ -702,9 +720,12 @@ console.log(
                     {c.key !== "status" && (
                      <span
   className={styles.filterIcon}
-  onClick={() =>
-    setActiveFilter(activeFilter === c.key ? null : c.key)
-  }
+ onClick={() => {
+  setFilterText("");
+  setActiveFilter(
+    activeFilter === c.key ? null : c.key
+  );
+}}
 >
   ▼
 </span>
@@ -761,7 +782,10 @@ console.log(
     <label className={styles.excelItem}>
       <input
         type="checkbox"
-        checked={!filters[c.key] || filters[c.key]?.length === suggestions.length}
+       checked={
+  suggestions.length > 0 &&
+  (filters[c.key] || suggestions).length === suggestions.length
+}
         onChange={(e) => {
           if (e.target.checked) {
             setFilters({
@@ -792,7 +816,9 @@ console.log(
               let updated = [...selectedValues];
 
               if (e.target.checked) {
-                updated.push(s);
+             if (!updated.includes(s)) {
+  updated.push(s);
+}
               } else {
                 updated = updated.filter((v) => v !== s);
               }

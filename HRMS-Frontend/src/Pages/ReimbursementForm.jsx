@@ -852,6 +852,7 @@ const filteredData = requests.filter((r) => {
    <td>
   {r.files && r.files.length > 0 ? (
     r.files.map((file, i) => {
+      
      const BACKEND_URL =
   import.meta.env.VITE_API_BASE_URL ||
   "http://localhost:8082";
@@ -859,6 +860,9 @@ const filteredData = requests.filter((r) => {
 const fileUrl = file.startsWith("http")
   ? file
   : `${BACKEND_URL}/${file}`;
+
+   console.log("File Path:", file);
+  console.log("Generated URL:", fileUrl);
 
       return (
         <div key={i}>

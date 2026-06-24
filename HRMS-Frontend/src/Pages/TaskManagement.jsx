@@ -13,6 +13,10 @@ export default function Task() {
 const role =
   localStorage.getItem("role")?.toLowerCase() || "employee";
 
+  const BACKEND_URL =
+  import.meta.env.VITE_API_BASE_URL ||
+  "http://localhost:8082";
+
   /* =========================
      TASK FORM
   ========================= */
@@ -465,7 +469,9 @@ const handleUpload = async (e, task) => {
     
     
     // Update task with attachment URL
-    const fileUrl = response.data.fileUrl || response.data.url || `/uploads/${file.name}`;
+    const fileUrl =
+  response.data.fileUrl ||
+  response.data.url;
     
     await api.put(`/api/tasks/${task.id}`, {
       attachmentUrl: fileUrl,
@@ -495,8 +501,8 @@ const handleView = (task) => {
     let fileUrl = task.attachmentUrl;
 
     // Handle relative URLs
-   if (!fileUrl.startsWith("http")) {
-  fileUrl = `http://localhost:8082${fileUrl}`;
+  if (!fileUrl.startsWith("http")) {
+  fileUrl = `${BACKEND_URL}${fileUrl}`;
 }
     window.open(fileUrl, "_blank");
     return;
@@ -1121,37 +1127,72 @@ const updateTaskAction = async (taskId, action) => {
 
             <td>{t.approval}</td>
 
-            <td>
+<td>
 
-            <input
-  type="file"
-  id={`file-${t.id}`}
-  style={{ display: "none" }}
-  onChange={(e) => handleUpload(e, t)}
-/>
+  {role === "employee" ? (
+    <>
+      <input
+        type="file"
+        id={`file-${t.id}`}
+        style={{ display: "none" }}
+        onChange={(e) => handleUpload(e, t)}
+      />
 
-<button
-  className="taskPage-uploadBtn"
-  onClick={() => document.getElementById(`file-${t.id}`).click()}
-  style={{
-    background: uploadedFiles[t.id] || t.attachmentUrl ? "#28a745" : "#007bff",
-    color: "white",
-    padding: "6px 12px",
-    border: "none",
-    borderRadius: "4px",
-    cursor: "pointer"
-  }}
->
-  {uploadedFiles[t.id] || t.attachmentUrl ? "✓ Uploaded" : "Upload"}
-</button>
+      <button
+        className="taskPage-uploadBtn"
+        onClick={() =>
+          document.getElementById(`file-${t.id}`).click()
+        }
+        style={{
+          background:
+            uploadedFiles[t.id] || t.attachmentUrl
+              ? "#28a745"
+              : "#007bff",
+          color: "white",
+          padding: "6px 12px",
+          border: "none",
+          borderRadius: "4px",
+          cursor: "pointer",
+        }}
+      >
+        {uploadedFiles[t.id] || t.attachmentUrl
+          ? "✓ Uploaded"
+          : "Upload"}
+      </button>
+    </>
+  ) : null}
 
-{uploadedFiles[t.id] && (
-  <div style={{ fontSize: "11px", marginTop: "4px", color: "#666" }}>
-    {uploadedFiles[t.id].name}
-  </div>
-)}
+  {t.attachmentUrl && (
+    <button
+      style={{
+        marginTop: "5px",
+        padding: "4px 8px",
+        background: "#17a2b8",
+        color: "#fff",
+        border: "none",
+        borderRadius: "4px",
+        cursor: "pointer",
+        display: "block",
+      }}
+      onClick={() => handleView(t)}
+    >
+      View File
+    </button>
+  )}
 
-            </td>
+  {uploadedFiles[t.id] && role === "employee" && (
+    <div
+      style={{
+        fontSize: "11px",
+        marginTop: "4px",
+        color: "#666",
+      }}
+    >
+      {uploadedFiles[t.id].name}
+    </div>
+  )}
+
+</td>
 
             <td>
               API Integration Pending
