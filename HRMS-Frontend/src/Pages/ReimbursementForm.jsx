@@ -53,6 +53,7 @@ const Reimbursement = () => {
   const [showForm, setShowForm] = useState(false);
 const [activeFilter, setActiveFilter] = useState(null);
 const [filterText, setFilterText] = useState("");
+const [selectedKpi, setSelectedKpi] = useState("");
 const popupRef = useRef();
 const getUnique = (key) => [
   ...new Set(requests.map((r) => r[key]))
@@ -265,46 +266,56 @@ console.log("Reimbursement API response:", response);
 // ================= FILTER =================
 const filteredData = requests.filter((r) => {
 
-  // EMPLOYEE → only own records
-  if (role === ROLE_EMP) {
-    const userCode = user?.empCode || user?.employeeId || user?.id || "";
-    const recordCode = r.empCode || r.employeeCode || r.employeeId || "";
-    
-    console.log("Employee filter check:", {
-      userRole: role,
-      userCode: userCode,
-      recordCode: recordCode,
-      recordEmpName: r.empName,
-      match: String(userCode).toLowerCase() === String(recordCode).toLowerCase()
-    });
-    
-    // Match by empCode or employeeId
-    if (String(userCode).toLowerCase() !== String(recordCode).toLowerCase()) {
+  // KPI Filter
+  if (selectedKpi) {
+    if (selectedKpi === "ALL") {
+      // show all
+    } else if (selectedKpi === "AMOUNT") {
+      // keep all rows
+    } else if (r.status !== selectedKpi) {
       return false;
     }
   }
 
-  // APPLY FILTERS FOR ALL ROLES
+  // EMPLOYEE → only own records
+  if (role === ROLE_EMP) {
+    const userCode =
+      user?.empCode || user?.employeeId || user?.id || "";
+
+    const recordCode =
+      r.empCode || r.employeeCode || r.employeeId || "";
+
+    if (
+      String(userCode).toLowerCase() !==
+      String(recordCode).toLowerCase()
+    ) {
+      return false;
+    }
+  }
+
   return Object.keys(filters).every((key) => {
+    if (
+      !filters[key] ||
+      (Array.isArray(filters[key]) &&
+        filters[key].length === 0)
+    )
+      return true;
 
-    // no filter selected
-    if (!filters[key] || (Array.isArray(filters[key]) && filters[key].length === 0)) return true;
-
-    // Array filter (from column header checkboxes)
     if (Array.isArray(filters[key])) {
-      return filters[key].some(v =>
-        String(r[key] || "").toLowerCase() === String(v).toLowerCase()
+      return filters[key].some(
+        (v) =>
+          String(r[key] || "").toLowerCase() ===
+          String(v).toLowerCase()
       );
     }
 
-    // String filter (from top bar inputs)
     return String(r[key] || "")
       .toLowerCase()
-      .includes(String(filters[key]).toLowerCase());
-
+      .includes(
+        String(filters[key]).toLowerCase()
+      );
   });
 });
-
   // ================= KPI =================
   const total = requests.length;
   const approved = requests.filter(r => r.status === STATUS_APPROVED).length;
@@ -318,11 +329,46 @@ const filteredData = requests.filter((r) => {
 
       {/* ================= KPI CARDS ================= */}
       <div className="claim-dashboard">
-        <div className="card total"><h4>Total</h4><p>{total}</p></div>
-        <div className="card approved"  style={{ color: "white" }}><h4>Approved</h4><p>{approved}</p></div>
-        <div className="card pending"><h4>Pending</h4><p>{pending}</p></div>
-        <div className="card rejected"><h4>Rejected</h4><p>{rejected}</p></div>
-        <div className="card amount"><h4>Total Amount</h4><p>₹{totalAmount}</p></div>
+      <div
+  className={`card total ${selectedKpi === "ALL" ? "active-kpi" : ""}`}
+  onClick={() => setSelectedKpi("ALL")}
+>
+  <h4>Total</h4>
+  <p>{total}</p>
+</div>
+
+<div
+  className={`card approved ${selectedKpi === STATUS_APPROVED ? "active-kpi" : ""}`}
+  style={{ color: "white", cursor: "pointer" }}
+  onClick={() => setSelectedKpi(STATUS_APPROVED)}
+>
+  <h4>Approved</h4>
+  <p>{approved}</p>
+</div>
+
+<div
+  className={`card pending ${selectedKpi === STATUS_PENDING ? "active-kpi" : ""}`}
+  onClick={() => setSelectedKpi(STATUS_PENDING)}
+>
+  <h4>Pending</h4>
+  <p>{pending}</p>
+</div>
+
+<div
+  className={`card rejected ${selectedKpi === STATUS_REJECTED ? "active-kpi" : ""}`}
+  onClick={() => setSelectedKpi(STATUS_REJECTED)}
+>
+  <h4>Rejected</h4>
+  <p>{rejected}</p>
+</div>
+
+<div
+  className={`card amount ${selectedKpi === "AMOUNT" ? "active-kpi" : ""}`}
+  onClick={() => setSelectedKpi("AMOUNT")}
+>
+  <h4>Total Amount</h4>
+  <p>₹{totalAmount}</p>
+</div>
       </div>
 
       {/* ================= ROLE SWITCH ================= */}
