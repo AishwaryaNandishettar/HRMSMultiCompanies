@@ -49,26 +49,44 @@
   /* =========================
     STATS
   ========================= */
-  .payroll-stats {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 18px;
-    margin-bottom: 12px;
-  }
+ .payroll-stats {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
+  margin-bottom: 16px;
+}
 
-  .stat-card {
-    padding: 5px;
-    border-radius: var(--radius);
-    box-shadow: var(--shadow);
-    color: var(--text-dark);
-    position: relative;
-    overflow: hidden;
-    transition: transform 0.2s;
-  }
+ .stat-card {
+  position: relative;
+  min-height: 88px;
+  border-radius: 14px;
+  padding: 18px 22px;
+  color: #fff;
+  overflow: hidden;
+  cursor: pointer;
 
-  .stat-card:hover {
-    transform: translateY(-5px);
-  }
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+
+  box-shadow: 0 4px 12px rgba(0,0,0,.12);
+  transition: all .25s ease;
+}
+
+.stat-card:hover {
+  transform: translateY(-3px);
+}
+.stat-card h4 {
+  margin: 0;
+  font-size: 13px;
+  font-weight: 600;
+  opacity: .95;
+}
+.stat-card p {
+  margin-top: 6px;
+  font-size: 22px;
+  font-weight: 700;
+}
 
   .stat-card p { font-size: 11px; margin-bottom: 6px; }
   .stat-card h3 { font-size: 20px; font-weight: 600; }
@@ -76,17 +94,45 @@
   /* =========================
     ICONS INSIDE STATS
   ========================= */
-  .stat-card .icon {
-    position: fixed;;
-    top: 10px;
-    right: 15px;
-    font-size: 28px;
-    opacity: 0.2;
-  }
+ .stat-icon {
+  position: absolute;
+  right: 20px;
+  bottom: 18px;
+  font-size: 24px;
+  opacity: .9;
+}
 
-  .stat-card.blue { background: var(--primary); color: #ffffff; }
-  .stat-card.red { background: var(--danger); color: #ffffff; }
-  .stat-card.green { background: var(--success); color: #ffffff; }
+ .stat-card.salary {
+  background: linear-gradient(
+    135deg,
+    #2563eb,
+    #4f8cff
+  );
+}
+
+.stat-card.deduction {
+  background: linear-gradient(
+    135deg,
+    #ef4444,
+    #ff3535
+  );
+}
+
+.stat-card.netpay {
+  background: linear-gradient(
+    135deg,
+    #22c55e,
+    #16a34a
+  );
+}
+
+.stat-card.employees {
+  background: linear-gradient(
+    135deg,
+    #f97316,
+    #ff8b2c
+  );
+}
 
   /* =========================
     MAIN LAYOUT

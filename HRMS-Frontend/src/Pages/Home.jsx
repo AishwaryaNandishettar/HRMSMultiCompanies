@@ -1769,11 +1769,29 @@ const matchesSearch =
   </div>
 
   <div className="attendance-info">
-    <div>
-      <strong>Status:</strong>{" "}
-      {homeData?.todayAttendance?.status || 
-       (homeData?.todayAttendance?.checkIn || homeData?.todayAttendance?.checkInTime ? "Checked In" : "Not Checked In")}
-    </div>
+  <div>
+  <strong>Status:</strong>{" "}
+  {(() => {
+    const today = new Date();
+    const dayName = today
+      .toLocaleDateString("en-US", { weekday: "long" })
+      .toUpperCase();
+
+    const isWeeklyOff = weeklyOffDays.includes(dayName);
+
+    if (isWeeklyOff) {
+      return "Weekly Off";
+    }
+
+    return (
+      homeData?.todayAttendance?.status ||
+      (homeData?.todayAttendance?.checkIn ||
+      homeData?.todayAttendance?.checkInTime
+        ? "Checked In"
+        : "Not Checked In")
+    );
+  })()}
+</div>
 
     <div>
       <strong>Check-In:</strong>{" "}

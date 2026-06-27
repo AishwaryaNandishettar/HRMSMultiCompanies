@@ -16,42 +16,62 @@
   font-family: Arial, sans-serif;
   box-shadow: 0 2px 10px rgba(0,0,0,0.1);
 }
-
 /* =========================================================
-   KPI ROW
+   KPI ROW - SAME AS HOME PAGE
 ========================================================= */
+
 .kpiRow {
   display: flex;
   gap: 12px;
   margin-bottom: 16px;
-  flex-wrap: wrap;
-  position: sticky;
-  top: 0;
-  z-index: 20;
-  background: #f5f7fb;
-  padding: 8px 0;
+  flex-wrap: nowrap;
+  width: 100%;
 }
 
 .kpiRow div {
   flex: 1;
-  padding: 12px;
-  border-radius: 8px;
-  color: white;
-  font-weight: 600;
+
+  height: 88px; /* same visual size as Home page */
+
+  border-radius: 12px;
+  color: #fff;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
   text-align: center;
+
+  font-size: 16px;
+  font-weight: 700;
+
+  padding: 16px 20px;
+
   cursor: pointer;
-  transition: transform 0.2s;
+  transition: all 0.25s ease;
+
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
 }
 
 .kpiRow div:hover {
   transform: translateY(-2px);
 }
 
-.kpiGreen { background: #28a745; }
-.kpiRed { background: #dc3545; }
-.kpiOrange { background: #f0ad4e; }
-.kpiBlue { background: #007bff; }
+.kpiGreen {
+  background: #28a745;
+}
 
+.kpiRed {
+  background: #dc3545;
+}
+
+.kpiOrange {
+  background: #ff7f27;
+}
+
+.kpiBlue {
+  background: #2f66e8;
+}
 /* =========================================================
    TABLE WRAPPER - SCROLLABLE WITH FROZEN COLUMNS
 ========================================================= */
@@ -1087,39 +1107,6 @@
     overflow-x: hidden !important;
   }
 
-  /* KPI ROW */
-
-  .kpiRow {
-    display: grid !important;
-
-    grid-template-columns: repeat(2, 1fr) !important;
-
-    gap: 8px !important;
-
-    width: 100% !important;
-
-    margin-bottom: 10px !important;
-
-    padding: 0 !important;
-
-    overflow: hidden !important;
-  }
-
-  .kpiRow div {
-    width: 100% !important;
-    min-width: unset !important;
-
-    padding: 10px 6px !important;
-
-    font-size: 11px !important;
-
-    border-radius: 6px !important;
-
-    box-sizing: border-box !important;
-
-    white-space: normal !important;
-  }
-
   /* TABLE WRAPPER */
 
 .tableWrap {
@@ -1259,34 +1246,36 @@
   }
 }
 /* =========================================================
-   KPI ROW
+   KPI ROW - SAME SIZE AS HOME PAGE
 ========================================================= */
+
 .kpiRow {
   display: flex;
-  gap: 10px;
-  margin-bottom: 10px;
+  gap: 12px;
+  margin-bottom: 16px;
   flex-wrap: nowrap;
-  background: transparent;
-  padding: 0;
 }
 
 .kpiRow div {
   flex: 1;
-  height: 70px;              /* same as Home page */
-  border-radius: 8px;
-  color: white;
-  font-weight: 600;
 
+  height: 88px;              /* Home page card height */
+  border-radius: 12px;
+
+  color: #fff;
+
+  cursor: pointer;
+  transition: transform 0.2s;
+
+  /* DO NOT CHANGE INSIDE CONTENT */
   display: flex;
   align-items: center;
+  font-size: 20px;
   justify-content: center;
 
-  text-align: center;
-  cursor: pointer;
+  padding: 0 16px;
 
-  transition: transform 0.2s;
-  padding: 0 12px;           /* remove large top/bottom padding */
-  font-size: 16px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.12);
 }
 
 .kpiRow div:hover {
@@ -1295,21 +1284,9 @@
 
 .kpiGreen { background: #28a745; }
 .kpiRed { background: #dc3545; }
-.kpiOrange { background: #f0ad4e; }
-.kpiBlue { background: #007bff; }
-.kpiRow div {
-  flex: 1;
-  height: 70px;
-  border-radius: 10px;
+.kpiOrange { background: #ff8a2a; }
+.kpiBlue { background: #2f66e8; }
 
-  display: flex;
-  align-items: center;
-  justify-content: center;
-
-  font-size: 15px;
-  font-weight: 600;
-  padding: 0 16px;
-}
 .excelItem {
   display: flex;
   align-items: center;

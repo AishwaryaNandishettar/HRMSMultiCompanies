@@ -604,3 +604,85 @@ flex-wrap:wrap;
   border-radius:8px;
   cursor:pointer;
 }
+/* =========================================
+   PERSONAL INSURANCE KPI CARDS
+   SAME AS TASK PAGE
+========================================= */
+
+.stats-grid{
+  display:grid;
+  grid-template-columns:repeat(4,1fr);
+  gap:12px;
+  margin-bottom:18px;
+}
+
+.kpi-card{
+  display:flex;
+  flex-direction:column;
+  justify-content:center;
+  align-items:flex-start;
+
+  height:88px !important;
+  min-height:88px !important;
+
+  padding:16px 24px !important;
+
+  border-radius:12px !important;
+  color:#fff !important;
+
+  box-shadow:0 4px 12px rgba(0,0,0,0.08);
+}
+
+/* KPI TITLE */
+.kpi-card h4{
+  margin:0 !important;
+
+  font-size:30px !important;
+  font-weight:700 !important;
+
+  color:#ffffff !important;
+
+  line-height:1.2;
+  text-align:left !important;
+
+  opacity:1 !important;
+}
+.kpi-card h4,
+.kpi-title{
+  color:#ffffff !important;
+  font-weight:700 !important;
+}
+/* KPI VALUE */
+
+.kpi-card h2{
+  margin:6px 0 0 0 !important;
+
+  font-size:28px !important;
+  font-weight:700 !important;
+
+  color:#fff !important;
+
+  line-height:1;
+
+  width:100% !important;      /* Important */
+  display:block !important;   /* Important */
+
+  text-align:right !important;
+}
+/* COLORS */
+
+.green{
+  background:linear-gradient(135deg,#22c55e,#16a34a) !important;
+}
+
+.blue{
+  background:linear-gradient(135deg,#2563eb,#3b82f6) !important;
+}
+
+.orange{
+  background:linear-gradient(135deg,#fb923c,#f97316) !important;
+}
+
+.red{
+  background:linear-gradient(135deg,#ef4444,#dc2626) !important;
+}

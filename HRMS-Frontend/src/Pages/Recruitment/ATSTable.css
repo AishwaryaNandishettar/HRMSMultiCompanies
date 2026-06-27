@@ -89,11 +89,13 @@
   margin-top: 0;
 }
 /* ── Toolbar: search + export ── */
+/* ── Toolbar: search left + export right ── */
 .ats-toolbar {
   display: flex;
   align-items: center;
-  gap: 10px; /* Reduced from 12px */
-  margin-bottom: 14px; /* Reduced from 16px */
+  justify-content: space-between;
+  margin-bottom: 14px;
+  width: 100%;
 }
 
 .ats-search-wrap {
@@ -101,12 +103,10 @@
   align-items: center;
   background: #fff;
   border: 1px solid #d1d5db;
-  border-radius: 7px; /* Reduced from 8px */
-  padding: 0 10px; /* Reduced from 12px */
-  flex: 1;
-  max-width: 300px; /* Reduced from 340px */
-  box-shadow: 0 1px 4px rgba(0,0,0,0.05);
-  transition: border-color 0.15s;
+  border-radius: 7px;
+  padding: 0 10px;
+  width: 300px;      /* fixed width */
+  flex: none;        /* prevent stretching */
 }
 .ats-search-wrap:focus-within { border-color: #2563eb; }
 
@@ -128,6 +128,7 @@
 
 .ats-export-btn {
   background: linear-gradient(135deg, #2563eb, #1d4ed8);
+   margin-left: auto; /* pushes button to right */
   color: #fff;
   border: none;
   padding: 8px 16px; /* Reduced from 9px 18px */
@@ -318,18 +319,26 @@
 }
 .export-modal .cancel-btn:hover { background: #e5e7eb; }
 
-/* Open Positions, Positions Filled, Interview Scheduled only */
 
-.open-positions .ats-kpi-row,
-.positions-filled .ats-kpi-row,
-.interview-scheduled .ats-kpi-row {
+/* Only Positions Filled & Interview Scheduled */
+.ats-kpi-row-two-cards {
+  display: flex !important;
+  gap: 14px;
+}
+
+/* Make cards same visual size as other KPI cards */
+.ats-kpi-row-two-cards .ats-kpi-card {
+  flex: 0 0 230px !important;
+  max-width: 230px !important;
+  min-width: 230px !important;
+}
+.open-positions-page .ats-kpi-row {
   justify-content: flex-start;
 }
 
-.open-positions .ats-kpi-card,
-.positions-filled .ats-kpi-card,
-.interview-scheduled .ats-kpi-card {
-  flex: 0 0 50px;   /* reduce width */
-  max-width: 50px;
-  height: 80px;
+.open-positions-page .ats-kpi-card {
+  flex: 0 0 230px !important;
+  width: 230px !important;
+  max-width: 230px !important;
+  min-width: 230px !important;
 }

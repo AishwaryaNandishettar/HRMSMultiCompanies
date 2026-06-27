@@ -167,9 +167,7 @@
             if (userOpt.isPresent()) {
                 User user = userOpt.get();
                 user.setManagerEmail(dto.getManagerEmail());
-                if (dto.getManager() != null) {
-                    user.setManagerName(dto.getManager());
-                }
+user.setManagerName(dto.getManager());
                 userRepository.save(user);
                 System.out.println("✅ Synced manager changes to User table for: " + employee.getEmail());
             } else {
@@ -186,13 +184,22 @@
         
         return saved;
     }
-    public List<Employee> getEmployeesByManager(String companyId, String managerEmail) {
+   public List<Employee> getEmployeesByManager(String companyId, String managerEmail) {
+
+    System.out.println("CompanyId = " + companyId);
+    System.out.println("Manager Email = " + managerEmail);
 
     List<Employee> employees =
             employeeRepo.findByCompanyIdAndManagerEmail(companyId, managerEmail);
 
-    if (employees.isEmpty()) {
-        System.out.println("No employees found for manager : " + managerEmail);
+    System.out.println("Employees found = " + employees.size());
+
+    for (Employee e : employees) {
+        System.out.println(
+            e.getFullName() + " -> " +
+            e.getManagerEmail() + " -> " +
+            e.getCompanyId()
+        );
     }
 
     return employees;

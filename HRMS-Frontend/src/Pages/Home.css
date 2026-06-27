@@ -586,43 +586,59 @@
     align-items: center;
     gap: 6px;
   }
-  /* KPI FIX */
   .kpi-card {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end; /* aligns value and icon on same baseline */
+}
 
-    height: 70px !important;      /* same as Task page */
-    padding: 8px 14px !important;
+.kpi-content {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  flex: 1;
+}
 
-    border-radius: 10px;
-    overflow: hidden;
-  }
+.kpi-value {
+  display: flex;
+  align-items: center;
+  line-height: 1;
+  margin-top: 4px;
+}
 
-  .kpi-content {
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-  }
-
+.kpi-icon {
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  align-self: flex-end;
+  font-size: 22px;
+  line-height: 1;
+  margin-bottom: 2px;
+}
+.kpi-icon {
+  position: relative;
+  top: -2px;
+}
+/* KPI icon vertical alignment fix */
+.kpi-icon {
+  position: relative !important;
+  top: -14px !important;
+}
   .kpi-title {
     font-size: 14px;
     margin: 0;
     color: #fff;
   }
 
-  .kpi-value {
-    font-size: 18px;
-    font-weight: 700;
-    color: #fff;
-    margin-top: 4px;
-    white-space: nowrap;
-  }
+  
 
   .kpi-icon {
     font-size: 22px;
     color: #fff;
   }
+  .kpi-icon svg {
+  display: block;
+}
   .kpi-card.orange {
     background: linear-gradient(135deg, #fb923c, #f97316);
   }

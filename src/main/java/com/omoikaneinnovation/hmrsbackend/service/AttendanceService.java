@@ -191,6 +191,9 @@ private RestTemplate restTemplate;
     }
 
     List<Attendance> records = attendanceRepo.findByUserIdIn(userIds);
+  records = records.stream()
+        .filter(a -> userIds.contains(a.getUserId()))
+        .collect(Collectors.toList());
 
     // Enrich each record with proper employee details
     return records.stream()

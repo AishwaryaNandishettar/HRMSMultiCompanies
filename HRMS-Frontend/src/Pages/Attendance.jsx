@@ -147,6 +147,13 @@ export default function Attendance() {
         }));
 // Fetch all employees
 let employees = await getAllEmployees();
+console.log(employees);
+// Create employee -> manager mapping
+const employeeMap = {};
+
+employees.forEach((emp) => {
+  employeeMap[String(emp.id || emp._id).trim()] = emp;
+});
 
 if (role === "employee") {
   employees = employees.filter(
@@ -158,19 +165,15 @@ if (role === "employee") {
       ).trim()
   );
 }
-
 if (role === "manager") {
   employees = employees.filter(
     (emp) =>
-      String(
-        emp.managerEmail || ""
-      ).toLowerCase() ===
-        String(loggedUser.email || "").toLowerCase() ||
-      String(emp.id || emp._id).trim() ===
-        String(
-          loggedUser.id ||
-          loggedUser._id
-        ).trim()
+      String(emp.managerEmail || "")
+        .trim()
+        .toLowerCase() ===
+      String(loggedUser.email || "")
+        .trim()
+        .toLowerCase()
   );
 }
 
@@ -199,6 +202,13 @@ const key = `${employeeUserId}_${selectedDate}`;
       empId: emp.employeeId || "-",
       name: emp.fullName || "-",
       department: emp.department || "-",
+
+         managerEmail:
+      emp.managerEmail ||
+      emp.reportingManager ||
+      emp.manager ||
+      "",
+
       reportingManager:
   emp.reportingManager ||
   emp.managerName ||
@@ -252,25 +262,28 @@ if (role === "employee") {
         .toLowerCase() === myUserId
   );
 }
-
 if (role === "manager") {
-  scopedData = finalData.filter(
-    (r) =>
+  scopedData = finalData.filter((r) => {
+    const isManagerEmployee =
       String(r.managerEmail || "")
+        .trim()
         .toLowerCase() ===
-        String(loggedUser.email || "")
-          .toLowerCase() ||
+      String(loggedUser.email || "")
+        .trim()
+        .toLowerCase();
+
+    const isSelf =
       String(r.userId)
         .trim()
         .toLowerCase() ===
-        String(
-          loggedUser.id ||
-          loggedUser._id
-        )
-          .trim()
-          .toLowerCase()
-  );
+      String(loggedUser.id || loggedUser._id)
+        .trim()
+        .toLowerCase();
+
+    return isManagerEmployee || isSelf;
+  });
 }
+
 setRecords(scopedData);
       
       
@@ -348,6 +361,20 @@ setRecords(scopedData);
         const hour = new Date().getHours();
 
         try {
+          // Get latest employee details
+const employees = await getAllEmployees();
+
+const latestEmployee = employees.find(
+  (emp) =>
+    String(emp.email).toLowerCase() ===
+    String(loggedUser.email).toLowerCase()
+);
+
+const latestManagerEmail =
+  latestEmployee?.managerEmail || loggedUser.managerEmail || "";
+
+const latestManagerName =
+  latestEmployee?.manager || loggedUser.managerName || "";
           await apiCheckIn({
             userId: String(userId).trim(),
           empId:
@@ -369,10 +396,11 @@ name:
             date: selectedDate,
             checkIn: time,
             locationIn: `${pos.coords.latitude.toFixed(4)}, ${pos.coords.longitude.toFixed(4)}`,
-            reportingManager:
-              loggedUser.managerName || loggedUser.managerEmail || "-",
+reportingManager:
+  latestManagerName || latestManagerEmail || "-",
             managerId: loggedUser.managerId || "-",
-            managerEmail: loggedUser.managerEmail || loggedUser.email || "-",
+           managerEmail:
+  latestManagerEmail,
            
             attendanceType: "Office",
             status: "Pending Approval",

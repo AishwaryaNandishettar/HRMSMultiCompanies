@@ -168,7 +168,14 @@ export default function ATSTable() {
 
             {/* ── KPI Cards ── */}
             {kpiCards.length > 0 && (
-                <div className="ats-kpi-row">
+               <div
+  className={`ats-kpi-row ${
+    type === "positions-filled" ||
+    type === "interview-scheduled"
+      ? "ats-kpi-row-two-cards"
+      : ""
+  }`}
+>
                     {kpiCards.map((card, i) => (
                         <div key={i} className="ats-kpi-card" style={{ background: `linear-gradient(135deg, ${card.color}dd, ${card.color})` }}>
                             <div className="ats-kpi-left">

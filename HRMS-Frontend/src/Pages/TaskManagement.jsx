@@ -413,6 +413,7 @@ const assignTask = async () => {
       assigneeName: taskForm.assignedTo,
       assignee: selectedEmployee.email, // Add employee email
       assigneeId: selectedEmployee.employeeId || selectedEmployee.id,
+      
       priority: taskForm.priority,
       dueDate: taskForm.dueDate,
       taskAction: "Assigned", // NEW

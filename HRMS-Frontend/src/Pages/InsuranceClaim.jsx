@@ -50,6 +50,7 @@ useEffect(() => {
   const [filterText, setFilterText] = useState("");
   const popupRef = useRef();
   const [claims, setClaims] = useState([]);
+  const [selectedKpi, setSelectedKpi] = useState("");
 const [insuranceDetails, setInsuranceDetails] = useState({
     employeeCode: "",      // ✅ add this
 
@@ -468,6 +469,29 @@ claims.forEach((c) => {
 });
 
   const filteredClaims = claims.filter((claim) => {
+    // KPI CARD FILTER
+if (selectedKpi === "APPROVED") {
+  if (
+    claim.status !== "INSURANCE_APPROVED" &&
+    claim.status !== "Settled"
+  ) {
+    return false;
+  }
+}
+
+if (selectedKpi === "PENDING") {
+  if (
+    !["Submitted", "MANAGER_APPROVED"].includes(claim.status)
+  ) {
+    return false;
+  }
+}
+
+if (selectedKpi === "REJECTED") {
+  if (claim.status !== "Rejected") {
+    return false;
+  }
+}
   // ROLE FILTER
 if (role === ROLE_EMP) {
 
@@ -556,33 +580,66 @@ console.log(
       <div className="claim-dashboard">
 
 
-        
-        <div className="card total">
-          <h4>Total Claims</h4>
-          <p>{claims.length}</p>
-        </div>
+<div className="card total" onClick={() => setSelectedKpi("TOTAL")}>
+  <h4>Total Claims</h4>
+  <p>{claims.length}</p>
+</div>
 
-        <div className="card approved" style={{ color: "white" }}>
-          <h4>Approved</h4>
-          <p>{claims.filter(c => c.status === "INSURANCE_APPROVED" || c.status === "Settled").length}</p>
-        </div>
+<div
+  className="card approved"
+  style={{ color: "white", cursor: "pointer" }}
+  onClick={() => setSelectedKpi("APPROVED")}
+>
+  <h4>Approved</h4>
+  <p>
+    {
+      claims.filter(
+        c =>
+          c.status === "INSURANCE_APPROVED" ||
+          c.status === "Settled"
+      ).length
+    }
+  </p>
+</div>
 
-        <div className="card pending">
-          <h4>Pending</h4>
-          <p>{claims.filter(c =>
-            ["Submitted", "MANAGER_APPROVED"].includes(c.status)
-          ).length}</p>
-        </div>
+<div
+  className="card pending"
+  style={{ cursor: "pointer" }}
+  onClick={() => setSelectedKpi("PENDING")}
+>
+  <h4>Pending</h4>
+  <p>
+    {
+      claims.filter(c =>
+        ["Submitted", "MANAGER_APPROVED"].includes(c.status)
+      ).length
+    }
+  </p>
+</div>
 
-        <div className="card rejected">
-          <h4>Rejected</h4>
-          <p>{claims.filter(c => c.status === "Rejected").length}</p>
-        </div>
+<div
+  className="card rejected"
+  style={{ cursor: "pointer" }}
+  onClick={() => setSelectedKpi("REJECTED")}
+>
+  <h4>Rejected</h4>
+  <p>
+    {
+      claims.filter(c => c.status === "Rejected").length
+    }
+  </p>
+</div>
 
-        <div className="card amount">
-          <h4>Total Amount</h4>
-          <p>₹{claims.reduce((acc, c) => acc + Number(c.amount || 0), 0)}</p>
-        </div>
+<div
+  className="card amount"
+  style={{ cursor: "pointer" }}
+  onClick={() => setSelectedKpi("AMOUNT")}
+>
+  <h4>Total Amount</h4>
+  <p>
+    ₹{claims.reduce((acc, c) => acc + Number(c.amount || 0), 0)}
+  </p>
+</div>
       </div>
 
 <div className="overview-card employee-insurance-card">
@@ -900,6 +957,14 @@ console.log(
 </div>
 
       <div style={{ display: "flex", justifyContent: "flex-end", gap: 10 }}>
+        {selectedKpi && (
+  <button
+    className="export-btn"
+    onClick={() => setSelectedKpi("")}
+  >
+    Show All Claims
+  </button>
+)}
         <button onClick={exportToCSV} className="export-btn">
           Export CSV
         </button>
