@@ -841,13 +841,12 @@ if (focus === "absent") {
             <button className={styles.checkout} onClick={handleCheckOut}>
               Check Out
             </button>
-          <button
+<button
   className={styles.wfh}
   onClick={handleWorkFromHome}
-  disabled={isWeeklyOff}
 >
-              Work From Home
-            </button>
+  Work From Home
+</button>
           </>
         </div>
       </div>

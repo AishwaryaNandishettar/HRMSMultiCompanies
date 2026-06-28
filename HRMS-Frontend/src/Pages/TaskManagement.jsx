@@ -505,6 +505,7 @@ const handleView = (task) => {
   if (!fileUrl.startsWith("http")) {
   fileUrl = `${BACKEND_URL}${fileUrl}`;
 }
+ console.log("Opening:", fileUrl); // <-- Add this
     window.open(fileUrl, "_blank");
     return;
   }
