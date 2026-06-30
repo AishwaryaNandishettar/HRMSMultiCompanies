@@ -4,6 +4,11 @@ import api from "../api/axios";
 import { getTasks, createTaskApi, getMyTasks, updateProgressApi } from "../api/taskApi";
 import * as XLSX from "xlsx";
 import { saveAs } from "file-saver";
+
+// Get backend URL from axios baseURL to ensure consistency
+const getBackendUrl = () => {
+  return api.defaults.baseURL || import.meta.env.VITE_API_BASE_URL || "http://localhost:8082";
+};
 export default function Task() {
 
   /* =========================
@@ -12,10 +17,6 @@ export default function Task() {
 
 const role =
   localStorage.getItem("role")?.toLowerCase() || "employee";
-
-  const BACKEND_URL =
-  import.meta.env.VITE_API_BASE_URL ||
-  "http://localhost:8082";
 
   /* =========================
      TASK FORM
@@ -120,6 +121,14 @@ const loadTasks = async () => {
 
     console.log("TASK COUNT:", response.data.length);
     console.log("TASK DATA:", response.data);
+    response.data.forEach(task => {
+  console.log(
+    "Task:",
+    task.title,
+    "Attachment:",
+    task.attachmentUrl
+  );
+});
 
     setTaskData(response.data);
 
@@ -501,11 +510,13 @@ const handleView = (task) => {
   if (task.attachmentUrl) {
     let fileUrl = task.attachmentUrl;
 
-    // Handle relative URLs
-  if (!fileUrl.startsWith("http")) {
-  fileUrl = `${BACKEND_URL}${fileUrl}`;
-}
- console.log("Opening:", fileUrl); // <-- Add this
+    // Handle relative URLs - prepend backend base URL
+    if (!fileUrl.startsWith("http")) {
+      const backendUrl = getBackendUrl();
+      fileUrl = `${backendUrl}${fileUrl}`;
+    }
+    
+    console.log("Opening:", fileUrl);
     window.open(fileUrl, "_blank");
     return;
   }
@@ -513,11 +524,8 @@ const handleView = (task) => {
   // File selected locally but not yet stored in backend
   if (uploadedFiles[task.id]) {
     const file = uploadedFiles[task.id];
-
     const blobUrl = URL.createObjectURL(file);
-
     window.open(blobUrl, "_blank");
-
     return;
   }
 

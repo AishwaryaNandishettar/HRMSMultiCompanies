@@ -25,7 +25,10 @@ const getLoggedUser = () => {
     const u =
       JSON.parse(localStorage.getItem("loggedUser")) ||
       JSON.parse(localStorage.getItem("user")) ||
+      
       {};
+      console.log(JSON.parse(localStorage.getItem("loggedUser")));
+console.log(JSON.parse(localStorage.getItem("user")));
     return {
       ...u,
       role: (u.role || "").toLowerCase(),

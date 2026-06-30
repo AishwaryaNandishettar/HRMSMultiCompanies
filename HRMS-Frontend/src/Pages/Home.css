@@ -586,6 +586,7 @@
     align-items: center;
     gap: 6px;
   }
+  
   .kpi-card {
   display: flex;
   justify-content: space-between;

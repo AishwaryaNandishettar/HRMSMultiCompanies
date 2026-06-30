@@ -169,8 +169,13 @@ private RestTemplate restTemplate;
 
      public List<AttendanceDTO> getManagerAttendance(String managerEmail) {
 
-    // Get all users under this manager
+    System.out.println("🔍 Manager Attendance Request - Manager Email: " + managerEmail);
+
+    // Get all users under this manager FROM THE USER TABLE (current assignments)
     List<User> team = userRepo.findByManagerEmail(managerEmail);
+    
+    System.out.println("👥 Found " + team.size() + " team members under manager: " + managerEmail);
+    team.forEach(u -> System.out.println("   - " + u.getName() + " (" + u.getEmail() + ") ID: " + u.getId()));
 
     List<String> userIds = new ArrayList<>();
     team.forEach(u -> userIds.add(u.getId()));
@@ -182,23 +187,39 @@ private RestTemplate restTemplate;
         String managerId = manager.getId();
         if (!userIds.contains(managerId)) {
             userIds.add(managerId);
+            System.out.println("✅ Added manager's own ID: " + managerId);
         }
     }
 
     // If no userIds found, return empty list
     if (userIds.isEmpty()) {
+        System.out.println("⚠️ No user IDs found for manager: " + managerEmail);
         return new ArrayList<>();
     }
 
+    // Fetch ALL attendance records for these users (regardless of what managerEmail is stored in attendance)
     List<Attendance> records = attendanceRepo.findByUserIdIn(userIds);
-  records = records.stream()
-        .filter(a -> userIds.contains(a.getUserId()))
-        .collect(Collectors.toList());
+    
+    System.out.println("📋 Found " + records.size() + " attendance records for team members");
 
-    // Enrich each record with proper employee details
+    // Enrich each record with CURRENT employee details from User table
     return records.stream()
             .map(att -> {
                 AttendanceDTO dto = enrichAttendance(att);
+                
+                // ✅ CRITICAL FIX: Override manager info with CURRENT manager from User table
+                Optional<User> userOpt = userRepo.findById(att.getUserId());
+                if (userOpt.isPresent()) {
+                    User user = userOpt.get();
+                    
+                    // Update manager information to reflect CURRENT assignment
+                    dto.setManagerEmail(user.getManagerEmail() != null ? user.getManagerEmail() : "-");
+                    dto.setManagerId(user.getManagerId() != null ? user.getManagerId() : "-");
+                    dto.setReportingManager(user.getManagerName() != null ? user.getManagerName() : 
+                        (user.getManagerEmail() != null ? user.getManagerEmail() : "-"));
+                    
+                    System.out.println("   ✓ Updated record for " + user.getName() + " - Manager: " + dto.getReportingManager());
+                }
                 
                 // If this is the manager's own record, ensure it has the manager's details
                 if (managerOpt.isPresent() && att.getUserId().equals(managerOpt.get().getId())) {
@@ -208,6 +229,8 @@ private RestTemplate restTemplate;
                     dto.setEmpId(manager.getEmployeeId() != null ? manager.getEmployeeId() : "MGR-" + manager.getId().substring(0, 6));
                     dto.setDepartment(manager.getDepartment() != null ? manager.getDepartment() : "Management");
                     dto.setReportingManager("-"); // Manager has no reporting manager
+                    
+                    System.out.println("   👤 Manager's own record: " + dto.getName());
                 }
                 
                 return dto;

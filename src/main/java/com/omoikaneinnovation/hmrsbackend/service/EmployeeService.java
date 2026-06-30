@@ -186,22 +186,31 @@ user.setManagerName(dto.getManager());
     }
    public List<Employee> getEmployeesByManager(String companyId, String managerEmail) {
 
-    System.out.println("CompanyId = " + companyId);
-    System.out.println("Manager Email = " + managerEmail);
+    System.out.println("========== MANAGER FILTER ==========");
+    System.out.println("Company = " + companyId);
+    System.out.println("Manager = " + managerEmail);
 
     List<Employee> employees =
             employeeRepo.findByCompanyIdAndManagerEmail(companyId, managerEmail);
 
-    System.out.println("Employees found = " + employees.size());
+    System.out.println("Found = " + employees.size());
 
-    for (Employee e : employees) {
+    employees.forEach(e ->
         System.out.println(
             e.getFullName() + " -> " +
-            e.getManagerEmail() + " -> " +
-            e.getCompanyId()
-        );
-    }
+            e.getManagerEmail()
+        )
+    );
+
+    // Add manager's own record
+    employeeRepo.findByEmail(managerEmail).ifPresent(manager -> {
+        boolean exists = employees.stream()
+                .anyMatch(e -> e.getEmail().equalsIgnoreCase(managerEmail));
+
+        if (!exists) {
+            employees.add(manager);
+        }
+    });
 
     return employees;
 }
-    }

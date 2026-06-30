@@ -215,7 +215,10 @@ User user = userRepository.findByEmail(email).orElseThrow();
             
             User user = userRepository.findByEmail(email)
                     .orElseThrow(() -> new RuntimeException("User not found with email: " + email));
-            
+            System.out.println("========== LOGIN USER ==========");
+System.out.println("Email : " + user.getEmail());
+System.out.println("Role  : " + user.getRole());
+System.out.println("Company : " + user.getCompanyId());
             String oldRole = user.getRole();
             user.setRole(newRole.toUpperCase());
             userRepository.save(user);

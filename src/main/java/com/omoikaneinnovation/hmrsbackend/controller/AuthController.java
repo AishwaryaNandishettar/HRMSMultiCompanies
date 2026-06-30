@@ -70,7 +70,27 @@ public class AuthController {
 
         System.out.println("Login successful for: " + user.getEmail());
 
+       // ✅ AUTO-DETECT MANAGER ROLE: Check if this person is a manager
        String role = user.getRole() != null ? user.getRole() : "EMPLOYEE";
+       
+       // Check if anyone reports to this user in the User collection
+       java.util.List<User> subordinatesInUsers = repo.findByManagerEmail(user.getEmail());
+       
+       // ✅ Also check if anyone reports to this user in the Employee collection
+       java.util.List<Employee> subordinatesInEmployees = employeeRepository.findByManagerEmail(user.getEmail());
+       
+       int totalSubordinates = subordinatesInUsers.size() + subordinatesInEmployees.size();
+       
+       if (totalSubordinates > 0 && !"admin".equalsIgnoreCase(role)) {
+           role = "MANAGER"; // Auto-promote to manager if they have reports
+           System.out.println("✅ Auto-detected MANAGER role for " + user.getEmail() + 
+               " (has " + totalSubordinates + " reports: " + 
+               subordinatesInUsers.size() + " in Users, " + 
+               subordinatesInEmployees.size() + " in Employees)");
+       } else {
+           System.out.println("ℹ️ User " + user.getEmail() + " remains as " + role + 
+               " (found " + totalSubordinates + " reports)");
+       }
 
 String token = jwtUtil.generateToken(
         user.getEmail(),
@@ -94,7 +114,7 @@ String token = jwtUtil.generateToken(
         res.empId = emp != null ? emp.getEmployeeId() : user.getEmployeeId();
         res.employeeId = emp != null ? emp.getEmployeeId() : user.getEmployeeId();
 
-        System.out.println("🔥 LOGIN RESPONSE: id=" + res.id + ", empId=" + res.empId + ", name=" + res.name);
+        System.out.println("🔥 LOGIN RESPONSE: id=" + res.id + ", empId=" + res.empId + ", name=" + res.name + ", role=" + res.role);
 
         return ResponseEntity.ok(res);
     }
