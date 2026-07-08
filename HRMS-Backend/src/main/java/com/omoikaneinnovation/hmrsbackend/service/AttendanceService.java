@@ -605,4 +605,119 @@ public void checkMissedCheckouts() {
 
         System.out.println("✅ [AutoMark] Done for " + today);
     }
+
+    /**
+     * Manager can edit attendance for their team members
+     * This allows managers to mark absent employees as present
+     */
+    public String managerEditAttendance(String userId, String date, String status, 
+                                        String checkIn, String checkOut, String managerEmail) {
+        
+        if (userId == null || date == null || managerEmail == null) {
+            return "Missing required fields: userId, date, or managerEmail";
+        }
+
+        // Verify that the manager has authority to edit this employee's attendance
+        Optional<User> employeeOpt = userRepo.findById(userId);
+        if (employeeOpt.isEmpty()) {
+            return "Employee not found";
+        }
+
+        User employee = employeeOpt.get();
+        
+        // Check if the manager is authorized (manager's email should match employee's managerEmail)
+        if (employee.getManagerEmail() == null || 
+            !employee.getManagerEmail().equalsIgnoreCase(managerEmail)) {
+            return "Unauthorized: You are not the reporting manager for this employee";
+        }
+
+        // Find or create attendance record
+        Attendance attendance = attendanceRepo.findByUserIdAndDate(userId, date);
+        
+        if (attendance == null) {
+            // Create new attendance record
+            attendance = new Attendance();
+            attendance.setUserId(userId);
+            attendance.setDate(date);
+            attendance.setEmpId(employee.getEmployeeId() != null ? employee.getEmployeeId() : "-");
+            attendance.setName(employee.getName() != null ? employee.getName() : "-");
+            attendance.setDepartment(employee.getDepartment() != null ? employee.getDepartment() : "-");
+            attendance.setReportingManager(employee.getManagerName() != null ? employee.getManagerName() : managerEmail);
+            attendance.setManagerEmail(managerEmail);
+            attendance.setManagerId(employee.getManagerId());
+        }
+
+        // Update status
+        if (status != null && !status.isEmpty()) {
+            attendance.setStatus(status);
+        }
+
+        // Update check-in time if provided
+        if (checkIn != null && !checkIn.isEmpty() && !checkIn.equals("-")) {
+            attendance.setCheckIn(checkIn);
+            // Set attendance type if marking present
+            if ("Present".equalsIgnoreCase(status) || "Half Day".equalsIgnoreCase(status)) {
+                if (attendance.getAttendanceType() == null || attendance.getAttendanceType().equals("-") || attendance.getAttendanceType().equals("Absent")) {
+                    attendance.setAttendanceType("Office");
+                }
+            }
+        }
+
+        // Update check-out time if provided
+        if (checkOut != null && !checkOut.isEmpty() && !checkOut.equals("-")) {
+            attendance.setCheckOut(checkOut);
+            
+            // Calculate worked minutes if both check-in and check-out are present
+            if (attendance.getCheckIn() != null && !attendance.getCheckIn().isEmpty() && !attendance.getCheckIn().equals("-")) {
+                try {
+                    LocalTime in = LocalTime.parse(attendance.getCheckIn());
+                    LocalTime out = LocalTime.parse(checkOut);
+                    int minutes = (int) Duration.between(in, out).toMinutes();
+                    attendance.setWorkedMinutes(minutes);
+                    
+                    // Auto-calculate status based on worked hours if not explicitly set
+                    if (status == null || status.isEmpty()) {
+                        if (minutes >= 480) { // 8 hours
+                            attendance.setStatus("Present");
+                        } else if (minutes >= 240) { // 4 hours
+                            attendance.setStatus("Half Day");
+                        } else {
+                            attendance.setStatus("Half Day");
+                        }
+                    }
+                } catch (Exception e) {
+                    System.out.println("Error calculating worked minutes: " + e.getMessage());
+                }
+            }
+        }
+
+        // Set location defaults if not present
+        if (attendance.getLocationIn() == null || attendance.getLocationIn().isEmpty()) {
+            attendance.setLocationIn("Manager Edited");
+        }
+        if (attendance.getLocationOut() == null || attendance.getLocationOut().isEmpty()) {
+            attendance.setLocationOut("Manager Edited");
+        }
+
+        // Set late status based on check-in time
+        if (attendance.getCheckIn() != null && !attendance.getCheckIn().isEmpty() && !attendance.getCheckIn().equals("-")) {
+            try {
+                int hour = Integer.parseInt(attendance.getCheckIn().split(":")[0]);
+                attendance.setLate(hour > 9 ? "Yes" : "No");
+            } catch (Exception e) {
+                attendance.setLate("No");
+            }
+        } else {
+            attendance.setLate("No");
+        }
+
+        // Set early leave status
+        if (attendance.getEarlyLeave() == null || attendance.getEarlyLeave().isEmpty()) {
+            attendance.setEarlyLeave("No");
+        }
+
+        attendanceRepo.save(attendance);
+        
+        return "Attendance updated successfully by manager";
+    }
     }

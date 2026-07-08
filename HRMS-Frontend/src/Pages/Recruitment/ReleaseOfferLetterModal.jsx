@@ -508,10 +508,15 @@ export default function ReleaseOfferLetterModal({ job, onClose }) {
 
   // ── SEND EMAIL ──
   const handleSendEmail = async () => {
+    console.log("🔵 handleSendEmail called");
+    
     if (!window.originalPdfBytes) {
-      setStatus({ type: "error", message: "No template loaded" }); 
+      console.log("❌ No PDF bytes available");
+      setStatus({ type: "error", message: "No template loaded. Please load a template first." }); 
       return;
     }
+
+    console.log("✅ PDF bytes available, showing email prompt");
 
     // ✅ Prompt user to enter recipient email address
     const recipientEmail = prompt(
@@ -519,8 +524,11 @@ export default function ReleaseOfferLetterModal({ job, onClose }) {
       form.candidateEmail || ""
     );
 
+    console.log("📧 Email entered:", recipientEmail);
+
     // User cancelled or entered empty email
     if (!recipientEmail || recipientEmail.trim() === "") {
+      console.log("⚠️ Email cancelled or empty");
       setStatus({ type: "info", message: "Email sending cancelled" });
       return;
     }
@@ -528,10 +536,12 @@ export default function ReleaseOfferLetterModal({ job, onClose }) {
     // Basic email validation
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(recipientEmail.trim())) {
+      console.log("❌ Invalid email format");
       setStatus({ type: "error", message: "Invalid email address format" });
       return;
     }
 
+    console.log("✅ Valid email, starting to send...");
     setStatus({ type: "info", message: "Sending email..." });
 
     try {
@@ -595,17 +605,23 @@ export default function ReleaseOfferLetterModal({ job, onClose }) {
         { type: "application/pdf" }
       );
 
+      console.log("📄 PDF file created:", file.name, "Size:", file.size);
+
       const emailFormData = new FormData();
       emailFormData.append("to", recipientEmail.trim());
       emailFormData.append("subject", `Offer Letter - ${form.position || "Position"}`);
       emailFormData.append("candidateName", candidateName);
       emailFormData.append("file", file);
 
-      console.log("Sending email to:", recipientEmail.trim());
+      console.log("📤 Sending email to:", recipientEmail.trim());
+      console.log("📤 Subject:", `Offer Letter - ${form.position || "Position"}`);
+      console.log("📤 Candidate:", candidateName);
 
       // ✅ Use axios instance — automatically picks up VITE_API_BASE_URL
       // so it works both on localhost and after Vercel deployment
-      await sendOfferLetterEmail(emailFormData);
+      const response = await sendOfferLetterEmail(emailFormData);
+      
+      console.log("✅ Email sent successfully! Response:", response);
 
       setStatus({ 
         type: "success", 
@@ -616,10 +632,28 @@ export default function ReleaseOfferLetterModal({ job, onClose }) {
       setForm(prev => ({ ...prev, candidateEmail: recipientEmail.trim() }));
 
     } catch (err) {
-      console.error("Email sending error:", err);
+      console.error("❌ Email sending error:", err);
+      console.error("Error details:", {
+        message: err.message,
+        response: err.response?.data,
+        status: err.response?.status
+      });
+      
+      let errorMessage = "Email sending failed: ";
+      
+      if (err.response?.data?.message) {
+        errorMessage += err.response.data.message;
+      } else if (err.response?.data) {
+        errorMessage += JSON.stringify(err.response.data);
+      } else if (err.message) {
+        errorMessage += err.message;
+      } else {
+        errorMessage += "Unknown error. Please check console for details.";
+      }
+      
       setStatus({ 
         type: "error", 
-        message: `Email sending failed: ${err.message || "Unknown error"}` 
+        message: errorMessage
       });
     }
   };

@@ -160,7 +160,7 @@ const [showNotif, setShowNotif] = useState(false);
              <Route
   path="/Recruitment"
   element={
-    <ProtectedRoute roles={["admin", "manager"]}>
+    <ProtectedRoute roles={["admin", "manager", "employee"]}>
       <RecruitmentDashboard />
     </ProtectedRoute>
   }
@@ -247,6 +247,7 @@ const [showNotif, setShowNotif] = useState(false);
               />
 
 <Route path="/join-meeting/:id" element={<JoinMeetingPage />} /> 
+              
               {/* MANAGER / ADMIN */}
               <Route
                 path="/payroll"

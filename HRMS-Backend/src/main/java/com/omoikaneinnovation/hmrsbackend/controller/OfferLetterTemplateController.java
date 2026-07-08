@@ -195,29 +195,49 @@ private OfferLetterEmailService mailService;
     }
 
     @PostMapping("/send-offer-letter")
-public ResponseEntity<?> sendOfferLetter(
-        @RequestParam("to") String to,
-        @RequestParam("subject") String subject,
-        @RequestParam("candidateName") String candidateName,
-        @RequestParam("file") MultipartFile file
-) {
+    public ResponseEntity<?> sendOfferLetter(
+            @RequestParam("to") String to,
+            @RequestParam("subject") String subject,
+            @RequestParam("candidateName") String candidateName,
+            @RequestParam("file") MultipartFile file
+    ) {
 
-    try {
+        try {
+            System.out.println("=== EMAIL SENDING REQUEST ===");
+            System.out.println("To: " + to);
+            System.out.println("Subject: " + subject);
+            System.out.println("Candidate: " + candidateName);
+            System.out.println("File: " + file.getOriginalFilename());
+            System.out.println("File Size: " + file.getSize() + " bytes");
+            System.out.println("=============================");
 
-        mailService.sendOfferLetter(
-                to,
-                subject,
-                candidateName,
-                file
-        );
+            mailService.sendOfferLetter(
+                    to,
+                    subject,
+                    candidateName,
+                    file
+            );
 
-        return ResponseEntity.ok("Email sent");
+            System.out.println("✅ Email sent successfully to: " + to);
+            
+            Map<String, String> response = new HashMap<>();
+            response.put("status", "success");
+            response.put("message", "Email sent successfully to " + to);
+            
+            return ResponseEntity.ok(response);
 
-    } catch (Exception e) {
+        } catch (Exception e) {
+            System.err.println("❌ EMAIL SENDING FAILED");
+            System.err.println("Error: " + e.getMessage());
+            e.printStackTrace();
 
-        return ResponseEntity
-                .badRequest()
-                .body(e.getMessage());
+            Map<String, String> errorResponse = new HashMap<>();
+            errorResponse.put("status", "error");
+            errorResponse.put("message", "Failed to send email: " + e.getMessage());
+            
+            return ResponseEntity
+                    .status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(errorResponse);
+        }
     }
-}
 }

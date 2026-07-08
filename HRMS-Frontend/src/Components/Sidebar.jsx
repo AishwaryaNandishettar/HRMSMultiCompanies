@@ -129,7 +129,7 @@ const handleMenuClick = () => {
 
  
       {/* RECRUITMENT */}
-{(role === "admin" || role === "manager") && (
+{(role === "admin" || role === "manager" || role === "employee") && (
   <li>
     <NavLink  to="/recruitment"
   className={({ isActive }) =>

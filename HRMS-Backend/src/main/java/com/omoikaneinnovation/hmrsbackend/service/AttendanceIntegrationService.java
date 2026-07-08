@@ -26,7 +26,7 @@ public class AttendanceIntegrationService {
      */
     public AttendanceSummary getMonthlyAttendance(String employeeId, String month) {
         try {
-            // Parse month (e.g., "May-2026" -> 2026-05)
+            // Parse month (e.g., "July-2026" -> 2026-07)
             String[] parts = month.split("-");
             String monthName = parts[0];
             int year = Integer.parseInt(parts[1]);
@@ -39,19 +39,32 @@ public class AttendanceIntegrationService {
             // Get all attendance records for this employee in this month
             List<Attendance> attendanceList = attendanceRepository.findByUserId(employeeId);
             
+            System.out.println("🔍 Searching attendance for employeeId: " + employeeId);
+            System.out.println("📅 Month: " + month + " (Year: " + year + ", Month: " + monthName + ")");
+            System.out.println("📋 Total attendance records found: " + attendanceList.size());
+            
             // Filter by month
             List<Attendance> monthlyAttendance = attendanceList.stream()
                 .filter(att -> {
                     if (att.getDate() == null) return false;
                     try {
                         LocalDate attDate = LocalDate.parse(att.getDate());
-                        return attDate.getYear() == year && 
+                        boolean matches = attDate.getYear() == year && 
                                attDate.getMonth().toString().equalsIgnoreCase(monthName);
+                        
+                        if (matches) {
+                            System.out.println("✅ Matched record: " + att.getDate() + " | CheckIn: " + att.getCheckIn());
+                        }
+                        
+                        return matches;
                     } catch (Exception e) {
+                        System.err.println("❌ Date parse error for: " + att.getDate());
                         return false;
                     }
                 })
                 .collect(Collectors.toList());
+            
+            System.out.println("📊 Monthly attendance records: " + monthlyAttendance.size());
             
             int presentDays = monthlyAttendance.size();
             int absentDays = totalWorkingDays - presentDays;

@@ -867,7 +867,7 @@ useEffect(() => {
 
           return matchesSearch;
         })
-        .slice(0, 5) // same records shown in table
+       
         .map((emp) => emp[key])
         .filter(Boolean)
     ),
@@ -1642,7 +1642,7 @@ const matchesSearch =
 
       return matchesSearch && matchesHeaderFilters;
     })
-    .slice(0, 5)
+   
     .map((emp, index) => (
         <tr key={emp.employeeId || index}>
           <td className="emp-cell">

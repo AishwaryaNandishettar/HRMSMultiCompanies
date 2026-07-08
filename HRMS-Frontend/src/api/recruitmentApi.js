@@ -127,3 +127,13 @@ export const toggleTemplateStatus = async (id) => {
   const res = await api.put(`/api/offer-templates-simple/toggle/${id}`);
   return res.data;
 };
+
+// =====================
+// JOB APPLICATION APIs
+// =====================
+
+// Apply for a job (Employee)
+export const applyForJob = async (jobId, applicationData) => {
+  const res = await api.post(`/api/jobs/apply/${jobId}`, applicationData);
+  return res.data;
+};

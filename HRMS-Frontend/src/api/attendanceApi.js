@@ -39,3 +39,9 @@ export const getAllAttendance = async () => {
   const res = await api.get("/api/attendance/all");
   return res.data;
 };
+
+/* ================= MANAGER EDIT ATTENDANCE ================= */
+export const managerEditAttendance = async (record) => {
+  return api.put("/api/attendance/manager-edit", record)
+    .then(res => res.data);
+};

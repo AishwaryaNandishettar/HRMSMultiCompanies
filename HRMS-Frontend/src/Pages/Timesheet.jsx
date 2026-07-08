@@ -492,7 +492,7 @@ console.log("Absent KPI:", totalLOP);
     { key: "attendancePercent", label: "ATT %" },
     { key: "overtime", label: "OT HOURS" },
     // Only show status for EMP & ADMIN
-    ...(role !== ROLE_MGR ? [{ key: "status", label: "STATUS" }] : []),
+    
   ];
 
   console.log("Records:", records);
@@ -909,6 +909,114 @@ console.log(
                 )}
               </tr>
             ))}
+
+            {/* GRAND TOTAL ROW */}
+            {filtered.length > 0 && (
+              <tr style={{
+                background: "#0d3b66",
+                color: "white",
+                fontWeight: "700"
+              }}>
+                {cols.map((c, index) => {
+                  // Calculate totals for numeric columns (from PRESENT onwards)
+                  const numericColumns = ["present", "leave", "absentDays", "halfDay", "late", "wfh", "field", "workingDays", "payableDays", "overtime"];
+                  
+                  if (index < 5) {
+                    // First 5 columns: show "GRAND TOTAL" in first column, empty in others
+                    return (
+                      <td key={c.key} style={{
+                        padding: "12px 8px",
+                        borderTop: "2px solid white",
+                        background: "#0d3b66",
+                        color: "white",
+                        fontWeight: "700",
+                        position: index < 2 ? "sticky" : "static",
+                        left: index === 0 ? "0" : index === 1 ? "140px" : "auto",
+                        zIndex: index < 2 ? 300 : "auto",
+                        boxShadow: index === 1 ? "2px 0 4px -1px rgba(0,0,0,0.1)" : "none"
+                      }}>
+                        {index === 0 ? "GRAND TOTAL" : ""}
+                      </td>
+                    );
+                  } else if (numericColumns.includes(c.key)) {
+                    // Numeric columns: calculate sum
+                    const total = filtered.reduce((sum, r) => {
+                      const value = parseFloat(r[c.key]) || 0;
+                      return sum + value;
+                    }, 0);
+                    
+                    return (
+                      <td key={c.key} style={{
+                        padding: "12px 8px",
+                        textAlign: "center",
+                        borderTop: "2px solid white",
+                        background: "#0d3b66",
+                        color: "white",
+                        fontWeight: "700"
+                      }}>
+                        {c.key === "avgHours" ? total.toFixed(2) : Math.round(total)}
+                      </td>
+                    );
+                  } else if (c.key === "avgHours") {
+                    // Average Hours: calculate average, not sum
+                    const totalHours = filtered.reduce((sum, r) => sum + (parseFloat(r.avgHours) || 0), 0);
+                    const avgHours = filtered.length > 0 ? (totalHours / filtered.length).toFixed(2) : "0.00";
+                    
+                    return (
+                      <td key={c.key} style={{
+                        padding: "12px 8px",
+                        textAlign: "center",
+                        borderTop: "2px solid white",
+                        background: "#0d3b66",
+                        color: "white",
+                        fontWeight: "700"
+                      }}>
+                        {avgHours}
+                      </td>
+                    );
+                  } else if (c.key === "attendancePercent") {
+                    // Attendance %: calculate average
+                    const totalPercent = filtered.reduce((sum, r) => sum + (parseFloat(r.attendancePercent) || 0), 0);
+                    const avgPercent = filtered.length > 0 ? (totalPercent / filtered.length).toFixed(1) : "0.0";
+                    
+                    return (
+                      <td key={c.key} style={{
+                        padding: "12px 8px",
+                        textAlign: "center",
+                        borderTop: "2px solid white",
+                        background: "#0d3b66",
+                        color: "white",
+                        fontWeight: "700"
+                      }}>
+                        {avgPercent}%
+                      </td>
+                    );
+                  } else {
+                    // Other columns: empty
+                    return (
+                      <td key={c.key} style={{
+                        padding: "12px 8px",
+                        borderTop: "2px solid white",
+                        background: "#0d3b66",
+                        color: "white",
+                        fontWeight: "700"
+                      }}>
+                      </td>
+                    );
+                  }
+                })}
+                {role === ROLE_MGR && (
+                  <td style={{
+                    padding: "12px 8px",
+                    borderTop: "2px solid white",
+                    background: "#0d3b66",
+                    color: "white",
+                    fontWeight: "700"
+                  }}>
+                  </td>
+                )}
+              </tr>
+            )}
           </tbody>
         </table>
       </div>

@@ -3,6 +3,7 @@ package com.omoikaneinnovation.hmrsbackend.controller;
 import com.omoikaneinnovation.hmrsbackend.model.Job;
 import com.omoikaneinnovation.hmrsbackend.service.JobService;
 import com.omoikaneinnovation.hmrsbackend.service.SmsService;
+import com.omoikaneinnovation.hmrsbackend.service.JobNotificationService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -15,23 +16,58 @@ import java.util.Map;
 public class JobController {
 
     private final JobService service;
-    private final SmsService smsService; // ✅ Add SMS service for testing
+    private final SmsService smsService;
+    private final JobNotificationService jobNotificationService; // ✅ NEW: Job notification service
 
-    public JobController(JobService service, SmsService smsService) {
+    public JobController(JobService service, SmsService smsService, JobNotificationService jobNotificationService) {
         this.service = service;
         this.smsService = smsService;
+        this.jobNotificationService = jobNotificationService;
     }
 
     // CREATE JOB
     @PostMapping("/create")
     public Job createJob(@RequestBody Job job) {
-        return service.createJob(job);
+        System.out.println("📝 Creating new job: " + job.getJobTitle());
+        
+        // Create the job
+        Job createdJob = service.createJob(job);
+        
+        // ✅ NEW: Send notification to all employees if job status is "Open"
+        if (createdJob != null && "Open".equalsIgnoreCase(createdJob.getStatus())) {
+            try {
+                System.out.println("📧 Triggering job notifications for: " + createdJob.getJobTitle());
+                jobNotificationService.notifyEmployeesAboutNewJob(createdJob);
+            } catch (Exception e) {
+                System.err.println("⚠️ Failed to send job notifications (job still created): " + e.getMessage());
+                // Don't fail the job creation if notifications fail
+            }
+        } else {
+            System.out.println("ℹ️ Job status is not 'Open', skipping notifications");
+        }
+        
+        return createdJob;
     }
 
     // GET ALL JOBS
     @GetMapping("/all")
     public List<Job> getAllJobs() {
         return service.getAllJobs();
+    }
+
+    // ✅ NEW: GET ONLY OPEN JOBS (for internal job board)
+    @GetMapping("/open")
+    public List<Job> getOpenJobs() {
+        System.out.println("📋 Fetching all open jobs for internal job board");
+        List<Job> allJobs = service.getAllJobs();
+        
+        // Filter only jobs with status "Open"
+        List<Job> openJobs = allJobs.stream()
+                .filter(job -> "Open".equalsIgnoreCase(job.getStatus()))
+                .toList();
+        
+        System.out.println("✅ Found " + openJobs.size() + " open positions");
+        return openJobs;
     }
 
     // UPDATE STATUS (simple)

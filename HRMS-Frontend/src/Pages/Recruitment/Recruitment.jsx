@@ -2,7 +2,7 @@ import "./Recruitment.css";
 import PipelineTable from "./PipelineTable";
 import React, { useState, useEffect, useContext } from "react";
 import { AuthContext } from "../../Context/Authcontext";
-import { createJob, getAllJobs, updateJobStatus, updateJob } from "../../api/recruitmentApi"; // adjust path
+import { createJob, getAllJobs, updateJobStatus, updateJob, applyForJob } from "../../api/recruitmentApi"; // adjust path
 import { Eye } from "lucide-react";
 import OfferLetterModal from "./OfferLetterModal";
 import ReleaseOfferLetterModal from "./ReleaseOfferLetterModal"; // ✅ ADDED BACK: For releasing offer letters
@@ -55,7 +55,7 @@ const FilterDropdown = ({ values, onSelect, onClose }) => {
   );
 };
 
-const JobTable = ({ jobs , setJobs}) => {
+const JobTable = ({ jobs , setJobs, isEmployee = false}) => {
   const [search, setSearch] = useState("");
   
   const [openFilter, setOpenFilter] = useState(null);
@@ -177,7 +177,10 @@ const handleSubmit = async (e) => {
     const matchesDate =
       dateFilter === "All" || job.postedDate === dateFilter;
 
-    return matchesSearch && matchesStatus && matchesDept && matchesDate;
+    // For employees, only show Open jobs
+    const matchesEmployeeView = !isEmployee || job.status === "Open";
+
+    return matchesSearch && matchesStatus && matchesDept && matchesDate && matchesEmployeeView;
   });
 
   return (
@@ -203,13 +206,15 @@ const handleSubmit = async (e) => {
          <div className="sort">
             <button className="sort-btn">⇅ Recent▾</button>
           </div>
-       <button
+       {!isEmployee && (
+         <button
   className="post-btn"
   onClick={() => setShowPostJob(true)}
   style={{ marginLeft: "0px" }}
 >
 + Post Job
 </button>
+       )}
         </div>
 
         
@@ -261,12 +266,13 @@ const handleSubmit = async (e) => {
                   )}
                 </div>
               </th>
-               <th>HR Action</th>
+               {!isEmployee && <th>HR Action</th>}
               <th>Applicants</th>
              <th>Posted</th>
             <th>Designation</th>
               <th>CTC</th>
-  <th>
+  {!isEmployee && (
+    <th>
                 <div className="th-wrap">
                   <span
                     className="filter-icon"
@@ -292,9 +298,11 @@ const handleSubmit = async (e) => {
                   )}
                 </div>
               </th>
+  )}
               
 <th>Job Description</th>
-<th>Offer Letter</th> 
+{!isEmployee && <th>Offer Letter</th>}
+{isEmployee && <th>Apply</th>}
             </tr>
           </thead>
 
@@ -327,7 +335,8 @@ const handleSubmit = async (e) => {
                  <td>{job.jobTitle}</td>
                   <td>{job.department}</td>
 
-                   {/* HR ACTION — PIPELINE DROPDOWN */}
+                   {/* HR ACTION — PIPELINE DROPDOWN (Admin/Manager Only) */}
+{!isEmployee && (
 <td>
   <select
     value={job.status}
@@ -388,6 +397,7 @@ const handleSubmit = async (e) => {
     </div>
   )}
 </td>
+)}
 
                   <td>{job.applicants}</td>
                   
@@ -396,7 +406,7 @@ const handleSubmit = async (e) => {
                   <td>{job.designation || "-"}</td>
                 <td>{job.ctc || "-"}</td>
 
-                <td>{job.status}</td> 
+                {!isEmployee && <td>{job.status}</td>}
                 
 {/* JOB DESCRIPTION */}
 <td>
@@ -409,7 +419,8 @@ const handleSubmit = async (e) => {
   </button>
 </td>
 
-{/* ✅ ADDED BACK: Release Offer Letter button in main table */}
+{/* ✅ ADDED BACK: Release Offer Letter button in main table (Admin/Manager Only) */}
+{!isEmployee && (
 <td onClick={(e) => e.stopPropagation()}>
   {job.status === 'Selected' && (
     <button
@@ -450,6 +461,49 @@ const handleSubmit = async (e) => {
     </button>
   )}
 </td>
+)}
+
+{/* Apply Button (Employee Only) */}
+{isEmployee && (
+<td>
+  <button
+    onClick={async () => {
+      try {
+        const confirmed = window.confirm(`Apply for ${job.jobTitle}?\n\nYour profile will be submitted to HR for review.`);
+        if (!confirmed) return;
+        
+        // Call API to apply for job
+        await applyForJob(job._id || job.id, {
+          // Application data can be extended here
+          jobTitle: job.jobTitle,
+          department: job.department,
+          appliedDate: new Date().toISOString()
+        });
+        
+        alert(`✅ Application submitted successfully!\n\nOur HR team will review your application for ${job.jobTitle} and contact you soon.`);
+      } catch (err) {
+        console.error("Application failed:", err);
+        alert("❌ Failed to submit application. Please try again or contact HR.");
+      }
+    }}
+    style={{
+      background: 'linear-gradient(135deg, #2563eb, #3b82f6)',
+      color: '#fff',
+      padding: '8px 16px',
+      borderRadius: '8px',
+      border: 'none',
+      cursor: 'pointer',
+      fontSize: '13px',
+      fontWeight: '600',
+      boxShadow: '0 2px 8px rgba(37, 99, 235, 0.3)',
+      transition: 'all 0.2s ease'
+    }}
+    title="Apply for this position"
+  >
+    📝 Apply Now
+  </button>
+</td>
+)}
 
                 </tr>
               );
@@ -1055,11 +1109,12 @@ export default function RecruitmentDashboard() {
   const navigate = useNavigate();
 const { user } = useContext(AuthContext);
 
-if (user?.role === "EMP") {
-  return null; // ❌ hides entire page for employee
-}
   const [jobs, setJobs] = useState([]);
   const [selectedCandidate, setSelectedCandidate] = useState(null);
+  
+  // Check if user is employee
+  const isEmployee = user?.role === "employee";
+  
   useEffect(() => {
   const fetchJobs = async () => {
     try {
@@ -1107,6 +1162,8 @@ const interviewJobs = jobs.filter(j => j.status === "Interview Stage");
         </div>
       </header>
 
+    {/* Stats (Admin/Manager Only) */}
+    {!isEmployee && (
     <section className="stats">
       <StatCard
   title="Open Positions"
@@ -1162,10 +1219,13 @@ const interviewJobs = jobs.filter(j => j.status === "Interview Stage");
   }
 />
     </section>
+    )}
 
 
       <section className="content">
-      <JobTable jobs={jobs} setJobs={setJobs} />
+      <JobTable jobs={jobs} setJobs={setJobs} isEmployee={isEmployee} />
+  {!isEmployee && (
+    <>
   <CandidatePipeline
   appliedCount={appliedCount}
   shortlistedCount={shortlistedCount}
@@ -1183,6 +1243,8 @@ const interviewJobs = jobs.filter(j => j.status === "Interview Stage");
   rejectedCount={rejectedCount}
   selectedCount={selectedCount}
 />
+    </>
+  )}
       </section>
       
       {selectedCandidate && (

@@ -8,6 +8,7 @@ import {
   getAllAttendance,
   checkIn as apiCheckIn,
   checkOut as apiCheckOut,
+  managerEditAttendance,
 } from "../api/attendanceApi";
 
 import { getAllEmployees } from "../api/employeeApi";
@@ -45,6 +46,9 @@ export default function Attendance() {
   const filterEmployee = location.state?.filterEmployee; // ✅ Employee ID from notification
   const employeeName = location.state?.employeeName;     // ✅ Employee name from notification
 
+  // Debug: Log the focus state
+  console.log("🎯 Navigation focus state:", focus);
+
   const today = new Date().toLocaleDateString("en-CA");
   const [selectedDate, setSelectedDate] = useState(today);
 
@@ -66,6 +70,15 @@ export default function Attendance() {
   const [empSearch, setEmpSearch] = useState(filterEmployee || "");
   const [showExportMenu, setShowExportMenu] = useState(false);
   const exportRef = useRef();
+
+  // State for manager edit modal
+  const [editModalVisible, setEditModalVisible] = useState(false);
+  const [editingRecord, setEditingRecord] = useState(null);
+  const [editForm, setEditForm] = useState({
+    status: "",
+    checkIn: "",
+    checkOut: "",
+  });
 
   const loggedUser = getLoggedUser();
   const role = loggedUser?.role?.toLowerCase();
@@ -250,6 +263,8 @@ console.log(
   finalData.length,
   "records"
 );
+console.log("👻 Absent records added:", absentRecords.length);
+console.log("👻 Absent records:", absentRecords.map(a => ({ name: a.name, status: a.status, date: a.date })));
 
 let scopedData = finalData;
 
@@ -557,6 +572,47 @@ name:
     }
   };
 
+  /* ================= MANAGER EDIT ATTENDANCE ================= */
+  const handleEditAttendance = (record) => {
+    setEditingRecord(record);
+    setEditForm({
+      status: record.status === "Absent" ? "Present" : record.status,
+      checkIn: record.checkIn && record.checkIn !== "-" ? record.checkIn : "09:00:00",
+      checkOut: record.checkOut && record.checkOut !== "-" ? record.checkOut : "18:00:00",
+    });
+    setEditModalVisible(true);
+  };
+
+  const handleSaveEdit = async () => {
+    if (!editingRecord) return;
+
+    try {
+      const payload = {
+        userId: editingRecord.userId,
+        date: editingRecord.date,
+        status: editForm.status,
+        checkIn: editForm.checkIn,
+        checkOut: editForm.checkOut,
+        managerEmail: loggedUser.email,
+      };
+
+      const response = await managerEditAttendance(payload);
+      
+      alert(response || "Attendance updated successfully!");
+      
+      // Close modal
+      setEditModalVisible(false);
+      setEditingRecord(null);
+      
+      // Refresh attendance records
+      await fetchRecords();
+      
+    } catch (err) {
+      console.error("Failed to update attendance:", err);
+      alert("Failed to update attendance: " + (err.response?.data || err.message));
+    }
+  };
+
   /* ================= CALCULATE HOURS ================= */
   const calculateHours = (checkIn, checkOut) => {
     if (!checkIn || checkIn === "-") return "-";
@@ -597,13 +653,18 @@ name:
   const filteredRecordsFinal = searchFiltered
   .filter((r) => {
 
+    // Priority filter: focus from navigation state
     if (focus === "present") {
-  return r.checkIn && r.checkIn !== "-";
-}
+      return r.checkIn && r.checkIn !== "-";
+    }
 
-if (focus === "absent") {
-  return r.status === "Absent";
-}
+    if (focus === "absent") {
+      // Debug: Log record status
+      console.log(`📋 Record: ${r.name} | Status: ${r.status} | CheckIn: ${r.checkIn} | Date: ${r.date}`);
+      // Filter records where status is "Absent" (employees who didn't check in)
+      return r.status === "Absent";
+    }
+
     // Date range filter
     if (fromDate || toDate) {
       const recordDate = new Date(r.date);
@@ -644,6 +705,11 @@ if (focus === "absent") {
 
     return timeB.localeCompare(timeA);
   });
+
+  // Debug: Log filtered results
+  if (focus) {
+    console.log(`✅ Filtered records for focus="${focus}":`, filteredRecordsFinal.length);
+  }
 
   const suggestions =
     activeFilter &&
@@ -755,6 +821,9 @@ if (focus === "absent") {
     { key: "status", label: "STATUS" },
    
     { key: "attendanceType", label: "TYPE" },
+    ...(role === "manager"
+      ? [{ key: "actions", label: "ACTIONS" }]
+      : []),
   ];
 
   const isWeeklyOff = [0, 6].includes(new Date(selectedDate).getDay());
@@ -941,7 +1010,7 @@ if (focus === "absent") {
                 <th key={col.key}>
                   <div className={styles.header}>
                     {col.label}
-                    {col.key !== "total" && (
+                    {col.key !== "total" && col.key !== "actions" && (
                      <span
   onClick={() => {
     setActiveFilter(col.key);
@@ -960,7 +1029,7 @@ if (focus === "absent") {
                     )}
                   </div>
 
-                 {activeFilter === col.key && (
+                 {activeFilter === col.key && col.key !== "actions" && (
   <div ref={popupRef} className={styles.popup}>
     <input
       placeholder="Search..."
@@ -1084,11 +1153,34 @@ if (focus === "absent") {
                   </td>
                 
                   <td>{r.attendanceType || "Office"}</td>
+                  
+                  {/* Manager Actions Column */}
+                  {role === "manager" && (
+                    <td>
+                      <button
+                        onClick={() => handleEditAttendance(r)}
+                        style={{
+                          padding: "4px 12px",
+                          fontSize: "12px",
+                          borderRadius: "4px",
+                          border: "1px solid #0d6efd",
+                          background: "#0d6efd",
+                          color: "#fff",
+                          cursor: "pointer",
+                          fontWeight: "600",
+                        }}
+                        onMouseEnter={(e) => (e.currentTarget.style.background = "#0b5ed7")}
+                        onMouseLeave={(e) => (e.currentTarget.style.background = "#0d6efd")}
+                      >
+                        Edit
+                      </button>
+                    </td>
+                  )}
                 </tr>
               ))
             ) : (
               <tr>
-                <td colSpan="15" style={{ textAlign: "center" }}>
+                <td colSpan={role === "manager" ? "16" : "15"} style={{ textAlign: "center" }}>
                   No attendance records found
                 </td>
               </tr>
@@ -1096,6 +1188,152 @@ if (focus === "absent") {
           </tbody>
         </table>
       </div>
+
+      {/* Manager Edit Modal */}
+      {editModalVisible && editingRecord && (
+        <div style={{
+          position: "fixed",
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          background: "rgba(0, 0, 0, 0.5)",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          zIndex: 9999,
+        }}>
+          <div style={{
+            background: "#fff",
+            borderRadius: "8px",
+            padding: "24px",
+            width: "90%",
+            maxWidth: "500px",
+            boxShadow: "0 4px 20px rgba(0,0,0,0.2)",
+          }}>
+            <h3 style={{ marginTop: 0, marginBottom: "20px", color: "#333" }}>
+              Edit Attendance - {editingRecord.name}
+            </h3>
+            
+            <div style={{ marginBottom: "16px" }}>
+              <p style={{ margin: "4px 0", fontSize: "14px", color: "#666" }}>
+                <strong>Employee ID:</strong> {editingRecord.empId}
+              </p>
+              <p style={{ margin: "4px 0", fontSize: "14px", color: "#666" }}>
+                <strong>Date:</strong> {editingRecord.date}
+              </p>
+              <p style={{ margin: "4px 0", fontSize: "14px", color: "#666" }}>
+                <strong>Current Status:</strong> {editingRecord.status}
+              </p>
+            </div>
+
+            <div style={{ marginBottom: "16px" }}>
+              <label style={{ display: "block", marginBottom: "6px", fontWeight: "600", fontSize: "14px" }}>
+                Status:
+              </label>
+              <select
+                value={editForm.status}
+                onChange={(e) => setEditForm({ ...editForm, status: e.target.value })}
+                style={{
+                  width: "100%",
+                  padding: "8px 12px",
+                  borderRadius: "6px",
+                  border: "1px solid #ccc",
+                  fontSize: "14px",
+                }}
+              >
+                <option value="Present">Present</option>
+                <option value="Half Day">Half Day</option>
+                <option value="Absent">Absent</option>
+              </select>
+            </div>
+
+            <div style={{ marginBottom: "16px" }}>
+              <label style={{ display: "block", marginBottom: "6px", fontWeight: "600", fontSize: "14px" }}>
+                Check-In Time (HH:MM:SS):
+              </label>
+              <input
+                type="time"
+                step="1"
+                value={editForm.checkIn}
+                onChange={(e) => {
+                  // Convert HH:MM to HH:MM:SS format
+                  const time = e.target.value;
+                  setEditForm({ ...editForm, checkIn: time + ":00" });
+                }}
+                style={{
+                  width: "100%",
+                  padding: "8px 12px",
+                  borderRadius: "6px",
+                  border: "1px solid #ccc",
+                  fontSize: "14px",
+                }}
+              />
+            </div>
+
+            <div style={{ marginBottom: "20px" }}>
+              <label style={{ display: "block", marginBottom: "6px", fontWeight: "600", fontSize: "14px" }}>
+                Check-Out Time (HH:MM:SS):
+              </label>
+              <input
+                type="time"
+                step="1"
+                value={editForm.checkOut}
+                onChange={(e) => {
+                  // Convert HH:MM to HH:MM:SS format
+                  const time = e.target.value;
+                  setEditForm({ ...editForm, checkOut: time + ":00" });
+                }}
+                style={{
+                  width: "100%",
+                  padding: "8px 12px",
+                  borderRadius: "6px",
+                  border: "1px solid #ccc",
+                  fontSize: "14px",
+                }}
+              />
+            </div>
+
+            <div style={{ display: "flex", gap: "12px", justifyContent: "flex-end" }}>
+              <button
+                onClick={() => {
+                  setEditModalVisible(false);
+                  setEditingRecord(null);
+                }}
+                style={{
+                  padding: "8px 20px",
+                  borderRadius: "6px",
+                  border: "1px solid #ccc",
+                  background: "#f5f5f5",
+                  color: "#333",
+                  cursor: "pointer",
+                  fontWeight: "600",
+                  fontSize: "14px",
+                }}
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleSaveEdit}
+                style={{
+                  padding: "8px 20px",
+                  borderRadius: "6px",
+                  border: "none",
+                  background: "#0d6efd",
+                  color: "#fff",
+                  cursor: "pointer",
+                  fontWeight: "600",
+                  fontSize: "14px",
+                }}
+                onMouseEnter={(e) => (e.currentTarget.style.background = "#0b5ed7")}
+                onMouseLeave={(e) => (e.currentTarget.style.background = "#0d6efd")}
+              >
+                Save Changes
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
