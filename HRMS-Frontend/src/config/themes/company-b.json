@@ -1,0 +1,21 @@
+{
+  "companyId": "company-b",
+  "companyName": "WorkForce Pro",
+  "initials": "WP",
+  "colors": {
+    "primary": "#047857",
+    "secondary": "#10B981",
+    "accent": "#D1FAE5",
+    "text": "#1F2937",
+    "background": "#FFFFFF",
+    "border": "#E5E7EB",
+    "hover": "#065F46",
+    "active": "#064E3B",
+    "disabled": "#9CA3AF"
+  },
+  "logos": {
+    "navigationLogo": "/logos/company-b/logo.png",
+    "loginLogo": "/logos/company-b/logo-large.png",
+    "faviconPath": "/logos/company-b/favicon.ico"
+  }
+}

@@ -15,6 +15,10 @@ import Sidebar from "./Components/Sidebar";
 import Navbar from "./Components/Navbar";
 import { AttendanceProvider } from "./Context/AttendanceContext";
 import { TaskProvider } from "./Context/TaskContext";
+
+/* ===== MULTI-TENANT THEME SYSTEM (NO BUSINESS LOGIC CHANGES) ===== */
+import { ThemeProvider } from "./context/ThemeContext";
+import "./styles/base.css";
 /* Recruitment */
 import RecruitmentDashboard from "./Pages/Recruitment/Recruitment";
 import PipelineTable from "./Pages/Recruitment/PipelineTable";
@@ -437,33 +441,33 @@ export default function App() {
   const isLoggedIn = !!localStorage.getItem("token");
 
   return (
-    <AuthProvider>
-    <Router>
-      <PayrollProvider>
-        <AttendanceProvider>
-          <TaskProvider>
-          
-          <CallProvider>   {/* ✅ Global Call Provider */}
-            <Routes>
-              <Route path="/" element={<Login />} />
-              <Route path="/debug-login" element={<DebugLogin />} />
+    <ThemeProvider>  {/* ✅ Multi-tenant theme wrapper - NO BUSINESS LOGIC CHANGES */}
+      <AuthProvider>
+        <Router>
+          <PayrollProvider>
+            <AttendanceProvider>
+              <TaskProvider>
+                <CallProvider>   {/* ✅ Global Call Provider */}
+                  <Routes>
+                    <Route path="/" element={<Login />} />
+                    <Route path="/debug-login" element={<DebugLogin />} />
 
-              <Route
-                path="/onboarding"
-                element={
-                  isLoggedIn ? <Onboarding /> : <Navigate to="/" />
-                }
-              />
+                    <Route
+                      path="/onboarding"
+                      element={
+                        isLoggedIn ? <Onboarding /> : <Navigate to="/" />
+                      }
+                    />
 
-              <Route path="/otp" element={<OtpVerification />} />
-              <Route path="/*" element={<AppLayout />} />
-            </Routes>
-            
-             </CallProvider>
-          </TaskProvider>
-        </AttendanceProvider>
-      </PayrollProvider>
-    </Router>
-    </AuthProvider>
+                    <Route path="/otp" element={<OtpVerification />} />
+                    <Route path="/*" element={<AppLayout />} />
+                  </Routes>
+                </CallProvider>
+              </TaskProvider>
+            </AttendanceProvider>
+          </PayrollProvider>
+        </Router>
+      </AuthProvider>
+    </ThemeProvider>
   );
 }

@@ -99,6 +99,9 @@ export default function WorkChat() {
   const [unreadPerUser, setUnreadPerUser] = useState({});
   const [unreadPerGroup, setUnreadPerGroup] = useState({});
   
+  // ✅ Track which chats have been opened/seen locally
+  const [locallySeenChats, setLocallySeenChats] = useState(new Set());
+  
   const [msgSearch, setMsgSearch] = useState("");
   const [showGroupModal, setShowGroupModal] = useState(false);
   const [showMembers, setShowMembers] = useState(false);
@@ -301,14 +304,45 @@ const handleReply = (msg) => {
     const handlePrivateMessage = (incomingMsg) => {
       const current = selectedChatRef.current;
       const senderEmail = incomingMsg.senderEmail?.toLowerCase();
+      const receiverEmail = incomingMsg.receiverEmail?.toLowerCase();
+      const myEmail = LOGGED_IN_EMAIL?.toLowerCase();
 
       console.log("📨 WorkChat received message:", incomingMsg);
+      console.log("   Sender:", senderEmail);
+      console.log("   Receiver:", receiverEmail);
+      console.log("   My Email:", myEmail);
 
-      // ── Immediately increment unread badge if chat is not currently open ──
+      // ✅ Check if this message is for me (either I'm the sender or receiver)
+      const isMyMessage = senderEmail === myEmail || receiverEmail === myEmail;
+      
+      if (!isMyMessage) {
+        console.log("⚠️ Message not for me, ignoring");
+        return;
+      }
+
+      console.log("✅ Message is for me!");
+
+      // ── Handle unread badge ──
       const isChatOpen = current?.type === "USER" &&
         current?.email?.toLowerCase() === senderEmail;
 
-      if (!isChatOpen && senderEmail && senderEmail !== LOGGED_IN_EMAIL?.toLowerCase()) {
+      console.log("   Chat open?", isChatOpen);
+      console.log("   Current chat:", current?.email?.toLowerCase());
+
+      // Only increment unread if:
+      // 1. Chat is not currently open
+      // 2. Message is from someone else (not me)
+      // 3. Sender email exists
+      if (!isChatOpen && senderEmail && senderEmail !== myEmail) {
+        console.log("✅ Incrementing unread badge for:", senderEmail);
+        
+        // Remove from locally seen chats (new message arrived)
+        setLocallySeenChats(prev => {
+          const next = new Set(prev);
+          next.delete(senderEmail);
+          return next;
+        });
+        
         setUnreadPerUser(prev => {
           const prevCount = prev[senderEmail] || 0;
           if (prevCount === 0) {
@@ -318,46 +352,36 @@ const handleReply = (msg) => {
         });
       }
 
-      // Refresh unread count from server (for accuracy)
-      fetchUnreadUsersCount(LOGGED_IN_EMAIL, TOKEN)
-        .then((count) => setUnreadUsersCount(count))
-        .catch((err) => console.error("Failed to refresh unread count:", err));
-
-      // Refresh unread per user
-      fetchUnreadMessagesPerUser(LOGGED_IN_EMAIL, TOKEN)
-        .then((data) => setUnreadPerUser(normalizeUnreadKeys(data)))
-        .catch((err) => console.error("Failed to refresh unread per user:", err));
-
       // Update last message in the chat list
       // ✅ FIX: Only update if this message is part of MY conversation
-      const myEmail = LOGGED_IN_EMAIL?.toLowerCase();
-      const sender = incomingMsg.senderEmail?.toLowerCase();
-      const receiver = incomingMsg.receiverEmail?.toLowerCase();
+      // Only update the OTHER person's chat entry (not mine)
+      const otherPersonEmail = senderEmail === myEmail ? receiverEmail : senderEmail;
       
-      // Only update last message if I'm either the sender or receiver
-      if (sender === myEmail || receiver === myEmail) {
-        // Update the OTHER person's chat entry (not mine)
-        const otherPersonEmail = sender === myEmail ? receiver : sender;
-        
-        setUsers(prevUsers => prevUsers.map(u =>
-          u.email?.toLowerCase() === otherPersonEmail
-            ? { ...u, lastMessage: incomingMsg.content, lastMessageTime: incomingMsg.timestamp }
-            : u
-        ));
+      console.log("   Updating last message for:", otherPersonEmail);
+      
+      setUsers(prevUsers => prevUsers.map(u =>
+        u.email?.toLowerCase() === otherPersonEmail
+          ? { ...u, lastMessage: incomingMsg.content, lastMessageTime: incomingMsg.timestamp }
+          : u
+      ));
+
+      // ✅ Now check if this message belongs to the currently open chat
+      if (!current || current.type !== "USER") {
+        console.log("   No chat open or not a user chat");
+        return;
       }
 
-      if (!current || current.type !== "USER") return;
-
       const isCurrentChat =
-        (incomingMsg.senderEmail?.toLowerCase() === LOGGED_IN_EMAIL?.toLowerCase() &&
-          incomingMsg.receiverEmail?.toLowerCase() === current.email?.toLowerCase()) ||
-        (incomingMsg.senderEmail?.toLowerCase() === current.email?.toLowerCase() &&
-          incomingMsg.receiverEmail?.toLowerCase() === LOGGED_IN_EMAIL?.toLowerCase());
+        (senderEmail === myEmail && receiverEmail === current.email?.toLowerCase()) ||
+        (senderEmail === current.email?.toLowerCase() && receiverEmail === myEmail);
+
+      console.log("   Is current chat?", isCurrentChat);
 
       if (!isCurrentChat) return;
 
       // If this is an edited message, update the existing message in place
       if (incomingMsg.edited && incomingMsg.id) {
+        console.log("   Editing existing message");
         setMessages(prev =>
           prev.map(m => m.id === incomingMsg.id
             ? { ...m, content: incomingMsg.content, edited: true, editedAt: incomingMsg.editedAt }
@@ -368,11 +392,19 @@ const handleReply = (msg) => {
       }
 
       // Prevent duplicate new messages from self (already added optimistically)
-      if (incomingMsg.senderEmail?.toLowerCase() === LOGGED_IN_EMAIL?.toLowerCase()) return;
+      if (senderEmail === myEmail) {
+        console.log("   Message from self, skipping (already added)");
+        return;
+      }
 
+      console.log("   Adding message to current chat");
       setMessages((prev) => {
         // Guard against duplicates
-        if (incomingMsg.id && prev.some(m => m.id === incomingMsg.id)) return prev;
+        if (incomingMsg.id && prev.some(m => m.id === incomingMsg.id)) {
+          console.log("   Duplicate message detected, skipping");
+          return prev;
+        }
+        console.log("   Message added successfully!");
         return [...prev, incomingMsg];
       });
     };
@@ -443,7 +475,16 @@ const handleReply = (msg) => {
       
       // Fetch unread messages per user
       fetchUnreadMessagesPerUser(LOGGED_IN_EMAIL, TOKEN)
-        .then((data) => setUnreadPerUser(normalizeUnreadKeys(data)))
+        .then((data) => {
+          const normalized = normalizeUnreadKeys(data);
+          
+          // ✅ Filter out chats that have been locally marked as seen
+          const filtered = Object.fromEntries(
+            Object.entries(normalized).filter(([email]) => !locallySeenChats.has(email))
+          );
+          
+          setUnreadPerUser(filtered);
+        })
         .catch((err) => console.error("Failed to fetch unread per user:", err));
     };
 
@@ -454,7 +495,7 @@ const handleReply = (msg) => {
     const interval = setInterval(fetchUnreadCount, 5000);
 
     return () => clearInterval(interval);
-  }, [TOKEN, LOGGED_IN_EMAIL]);
+  }, [TOKEN, LOGGED_IN_EMAIL, locallySeenChats]);
 
   // Fetch unread groups count on mount and periodically
   useEffect(() => {
@@ -548,6 +589,25 @@ const handleReply = (msg) => {
   useEffect(() => {
     if (!selectedChat || selectedChat.type !== "USER" || !TOKEN) return;
     setMessages([]);
+    
+    // ✅ Mark this chat as locally seen (prevents periodic refresh from restoring badge)
+    const chatEmailKey = selectedChat.email?.toLowerCase();
+    if (chatEmailKey) {
+      setLocallySeenChats(prev => new Set([...prev, chatEmailKey]));
+    }
+    
+    // ✅ Immediately clear unread badge (optimistic UI update)
+    setUnreadPerUser(prev => {
+      const next = { ...prev };
+      if (chatEmailKey && next[chatEmailKey]) {
+        const count = next[chatEmailKey];
+        delete next[chatEmailKey];
+        // Also decrement total count immediately
+        setUnreadUsersCount(c => Math.max(0, c - count));
+      }
+      return next;
+    });
+    
     fetchChatMessages(
       LOGGED_IN_EMAIL,
       selectedChat.email,
@@ -556,34 +616,12 @@ const handleReply = (msg) => {
       .then((msgs) => {
         setMessages(msgs);
         
-        // ── Immediately clear unread badge for this chat (Teams-style instant feedback)
-        setUnreadPerUser(prev => {
-          const next = { ...prev };
-          const emailKey = selectedChat.email?.toLowerCase();
-          if (emailKey && next[emailKey]) {
-            delete next[emailKey];
-          }
-          return next;
-        });
-        setUnreadUsersCount(prev => Math.max(0, prev - 1));
-        
-        // Mark messages as seen in the database (will update backend)
+        // Mark messages as seen in the database (async, no need to wait)
         markChatMessagesSeen(
           LOGGED_IN_EMAIL,
           selectedChat.email,
           TOKEN
         )
-          .then(() => {
-            // Refresh unread count after marking messages as seen
-            fetchUnreadUsersCount(LOGGED_IN_EMAIL, TOKEN)
-              .then((count) => setUnreadUsersCount(count))
-              .catch((err) => console.error("Failed to refresh unread count:", err));
-            
-            // Refresh unread per user
-            fetchUnreadMessagesPerUser(LOGGED_IN_EMAIL, TOKEN)
-              .then((data) => setUnreadPerUser(normalizeUnreadKeys(data)))
-              .catch((err) => console.error("Failed to refresh unread per user:", err));
-          })
           .catch((err) => console.error("Failed to mark messages as seen:", err));
       })
       .catch(() => setMessages([]));

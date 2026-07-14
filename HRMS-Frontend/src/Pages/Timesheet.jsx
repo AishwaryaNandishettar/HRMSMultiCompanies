@@ -73,16 +73,20 @@ export default function TimesheetManager() {
   const [records, setRecords] = useState([]);
   const [todayAttendance, setTodayAttendance] = useState([]);
 
+const getEmployeeId = (obj) =>
+  String(
+    obj?.empId ||
+    obj?.employeeId?.empId ||
+    obj?.employeeId ||
+    obj?.employeeCode ||
+    obj?.employee?.empId ||
+    ""
+  ).trim();
+
 const presentEmployeeIds = new Set(
   todayAttendance
     .filter(att => att.checkIn && att.checkIn !== "-")
-    .map(att =>
-      String(
-        att.empId ||
-        att.employeeId ||
-        att.employeeCode
-      ).trim()
-    )
+    .map(att => getEmployeeId(att))
 );
 console.log(
   "Attendance IDs:",
@@ -188,6 +192,12 @@ const currentMonth = today.substring(0, 7);
     const load = async () => {
       const res = await getTimesheet(fromMonth);
       
+      // Debug: Log the raw backend response
+      console.log("🔍 RAW BACKEND RESPONSE:", res);
+      if (res && res.length > 0) {
+        console.log("🔍 FIRST RECORD STRUCTURE:", res[0]);
+        console.log("🔍 FIRST RECORD EMPID:", res[0].empId);
+      }
 
       if (!res || res.length === 0) {
         // No data from backend — show empty table for all roles
@@ -197,25 +207,14 @@ const currentMonth = today.substring(0, 7);
         const grouped = {};
 
         res.forEach((r) => {
-       const empId = String(
-  r.empId ||
-  r.employeeId?.empId ||
-  r.employeeId ||
-  r.employeeCode ||
-  ""
-).trim();
+      // Extract empId similar to Attendance page logic
+      const empId = r.empId || r.employeeId || r.employeeCode || "-";
 
 const key = empId + "_" + (r.month || fromMonth);
 
           if (!grouped[key]) {
             grouped[key] = {
-         empId: String(
-  r.empId ||
-  r.employeeId?.empId ||
-  r.employeeId ||
-  r.employeeCode ||
-  ""
-).trim(),
+         empId: r.empId || r.employeeId || r.employeeCode || "-",
 
 empName:
   r.empName ||
@@ -326,11 +325,9 @@ console.log(
  
 
 const filtered = records.filter((r) => {
-  const attendance = todayAttendance.find(
-    (att) =>
-      String(att.empId || att.employeeId).trim() ===
-      String(r.empId).trim()
-  );
+const attendance = todayAttendance.find(
+  (att) => getEmployeeId(att) === getEmployeeId(r)
+);
 
   // KPI FILTER
   let matchesKpi = true;
@@ -424,6 +421,8 @@ console.log(
         alert("✅ Timesheet submitted successfully to MongoDB!");
         // Refresh the data
         const res = await getTimesheet(fromMonth);
+        console.log("Raw Timesheet Response");
+console.table(res);
         console.log("TIMESHEET RESPONSE");
 console.table(res);
         if (res && res.length > 0) {

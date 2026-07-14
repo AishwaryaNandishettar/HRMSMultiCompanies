@@ -7,7 +7,13 @@
     "dev": "vite",
     "build": "vite build",
     "lint": "eslint .",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "dev:company-a": "vite --mode company-a",
+    "dev:company-b": "vite --mode company-b",
+    "dev:company-c": "vite --mode company-c",
+    "build:company-a": "vite build --mode company-a",
+    "build:company-b": "vite build --mode company-b",
+    "build:company-c": "vite build --mode company-c"
   },
   "dependencies": {
     "@fullcalendar/core": "^6.1.20",

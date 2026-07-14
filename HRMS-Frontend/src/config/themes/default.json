@@ -1,0 +1,21 @@
+{
+  "companyId": "default",
+ "companyName": "Omoi HR Works",
+  "initials": "HR",
+  "colors": {
+    "primary": "#2563EB",
+    "secondary": "#3B82F6",
+    "accent": "#DBEAFE",
+    "text": "#1F2937",
+    "background": "#FFFFFF",
+    "border": "#E5E7EB",
+    "hover": "#1D4ED8",
+    "active": "#1E40AF",
+    "disabled": "#9CA3AF"
+  },
+  "logos": {
+    "navigationLogo": "/logos/default/logo.png",
+    "loginLogo": "/logos/default/logo-large.png",
+   "faviconPath": "/favicon.ico"
+  }
+}

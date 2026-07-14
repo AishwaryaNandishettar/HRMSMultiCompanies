@@ -2,7 +2,7 @@ import "./Recruitment.css";
 import PipelineTable from "./PipelineTable";
 import React, { useState, useEffect, useContext } from "react";
 import { AuthContext } from "../../Context/Authcontext";
-import { createJob, getAllJobs, updateJobStatus, updateJob, applyForJob } from "../../api/recruitmentApi"; // adjust path
+import { createJob, getAllJobs, updateJobStatus, updateJob } from "../../api/recruitmentApi"; // adjust path
 import { Eye } from "lucide-react";
 import OfferLetterModal from "./OfferLetterModal";
 import ReleaseOfferLetterModal from "./ReleaseOfferLetterModal"; // ✅ ADDED BACK: For releasing offer letters
@@ -472,13 +472,21 @@ const handleSubmit = async (e) => {
         const confirmed = window.confirm(`Apply for ${job.jobTitle}?\n\nYour profile will be submitted to HR for review.`);
         if (!confirmed) return;
         
-        // Call API to apply for job
-        await applyForJob(job._id || job.id, {
-          // Application data can be extended here
-          jobTitle: job.jobTitle,
-          department: job.department,
-          appliedDate: new Date().toISOString()
+        // Increment applicant count using existing updateJob API
+        const jobId = job._id || job.id;
+        const currentApplicants = parseInt(job.applicants) || 0;
+        
+        await updateJob(jobId, {
+          ...job,
+          applicants: currentApplicants + 1
         });
+        
+        // Update local state to reflect the change
+        setJobs(prev => prev.map(j => 
+          (j._id || j.id) === jobId 
+            ? { ...j, applicants: currentApplicants + 1 }
+            : j
+        ));
         
         alert(`✅ Application submitted successfully!\n\nOur HR team will review your application for ${job.jobTitle} and contact you soon.`);
       } catch (err) {

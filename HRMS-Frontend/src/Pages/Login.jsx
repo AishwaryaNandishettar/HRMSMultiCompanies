@@ -1,6 +1,8 @@
 import React, { useState, useContext } from "react";
 import { useNavigate } from "react-router-dom";
 import { AuthContext } from "../Context/Authcontext";
+import { useTheme } from "../context/ThemeContext"; // ✅ Multi-tenant theme
+import LogoManager from "../components/LogoManager"; // ✅ Multi-tenant logo
 import logo from "../assets/Background less.png";
 import "./Login.css";
 import api from "../api/axios";
@@ -24,6 +26,7 @@ const Login = () => {
   const [newPassword, setNewPassword] = useState("");
 
   const { login } = useContext(AuthContext);
+  const theme = useTheme(); // ✅ Get company theme
   const navigate = useNavigate();
 
   /* ================= LOGIN USING BACKEND ================= */
@@ -234,15 +237,20 @@ const Login = () => {
         >
           <div className="header-section">
             <div className="logo-wrapper">
-              <img
-                src={logo}
-                alt="Company Logo"
+              {/* ✅ MULTI-TENANT LOGO - Shows TH/WP/PS or custom logo */}
+              <LogoManager
+                logoPath={theme.logos.loginLogo}
+                fallbackInitials={theme.initials}
+                backgroundColor={theme.colors.primary}
+                size={120}
+                alt={`${theme.companyName} Logo`}
                 className="logo-logo"
               />
             </div>
 
             <h1 className="app-title">
-              Omoi HR Works
+              {/* ✅ MULTI-TENANT COMPANY NAME - Shows TalentHub/WorkForce/PeopleSync */}
+              {theme.companyName}
             </h1>
           </div>
 

@@ -1,0 +1,21 @@
+{
+  "companyId": "company-c",
+  "companyName": "PeopleSync Enterprise",
+  "initials": "PS",
+  "colors": {
+    "primary": "#5B21B6",
+    "secondary": "#8B5CF6",
+    "accent": "#EDE9FE",
+    "text": "#1F2937",
+    "background": "#FFFFFF",
+    "border": "#E5E7EB",
+    "hover": "#4C1D95",
+    "active": "#3B0764",
+    "disabled": "#9CA3AF"
+  },
+  "logos": {
+    "navigationLogo": "/logos/company-c/logo.png",
+    "loginLogo": "/logos/company-c/logo-large.png",
+    "faviconPath": "/logos/company-c/favicon.ico"
+  }
+}
