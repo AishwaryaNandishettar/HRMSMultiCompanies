@@ -18,6 +18,7 @@ public class Employee {
     private String designation;
     private String joiningDate;
     private String doj;  // ✅ ADD THIS (alias for joiningDate)
+    
 private String dob;
     private String userId;
     private String companyId;

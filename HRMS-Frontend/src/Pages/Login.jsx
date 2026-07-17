@@ -36,14 +36,19 @@ const Login = () => {
 
     console.log("🔍 Environment check:");
     console.log("VITE_API_BASE_URL:", import.meta.env.VITE_API_BASE_URL);
+    console.log("VITE_TENANT_ID:", import.meta.env.VITE_TENANT_ID);
 
     try {
       const apiUrl = import.meta.env.VITE_API_BASE_URL;
+      const tenantId = import.meta.env.VITE_TENANT_ID;
 
       if (!apiUrl) {
         setError("Configuration error: API URL not set.");
         return;
       }
+
+      // tenantId is OPTIONAL - only required for client portals (company-a, b, c)
+      // Default HRMS portal (for Omoi employees) doesn't need tenantId
 
       const res = await fetch(`${apiUrl}/api/auth/login`, {
         method: "POST",
@@ -53,6 +58,7 @@ const Login = () => {
         body: JSON.stringify({
           email,
           password,
+          tenantId, // ✅ Send tenant ID for validation (undefined for default portal)
         }),
       });
 

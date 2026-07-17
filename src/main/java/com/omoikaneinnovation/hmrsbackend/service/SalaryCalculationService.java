@@ -76,11 +76,28 @@ public class SalaryCalculationService {
         Integer lopDays = 0;
         Double attendancePercentage = 100.0;
 
+        // ✅ PRIORITY 1: Check if payroll table already has manual attendance values
+        boolean usePayrollAttendance = false;
+        if (existingPayroll.getWorkingDays() != null && existingPayroll.getWorkingDays() > 0) {
+            // Use values from payroll table (manually set in Update Payroll page)
+            totalWorkingDays = existingPayroll.getWorkingDays();
+            presentDays = existingPayroll.getPaidDays() != null ? existingPayroll.getPaidDays() : 0;
+            lopDays = existingPayroll.getLopDays() != null ? existingPayroll.getLopDays() : 0;
+            absentDays = totalWorkingDays - presentDays;
+            attendancePercentage = totalWorkingDays > 0 ? (presentDays * 100.0 / totalWorkingDays) : 0.0;
+            usePayrollAttendance = true;
+            
+            System.out.println("✅ USING PAYROLL TABLE ATTENDANCE: workingDays=" + totalWorkingDays + 
+                             ", paidDays=" + presentDays + 
+                             ", lopDays=" + lopDays +
+                             ", attendance%=" + attendancePercentage);
+        }
+
         // Performance data
         Double performanceRating = 3.0;
 
-        // Calculate attendance-based components
-        if (Boolean.TRUE.equals(request.getIncludeAttendance())) {
+        // ✅ PRIORITY 2: Calculate attendance-based components only if not using payroll values
+        if (Boolean.TRUE.equals(request.getIncludeAttendance()) && !usePayrollAttendance) {
             attendanceSummary = attendanceService.getMonthlyAttendance(employeeId, month);
             
             if (attendanceSummary != null) {
@@ -88,6 +105,11 @@ public class SalaryCalculationService {
                 presentDays = attendanceSummary.getPresentDays();
                 absentDays = attendanceSummary.getAbsentDays();
                 attendancePercentage = attendanceSummary.getAttendancePercentage();
+                
+                System.out.println("✅ USING TIMESHEET ATTENDANCE: workingDays=" + totalWorkingDays + 
+                                 ", presentDays=" + presentDays + 
+                                 ", absentDays=" + absentDays +
+                                 ", attendance%=" + attendancePercentage);
                 
                 // Calculate attendance bonus
                 attendanceBonus = attendanceService.calculateAttendanceBonus(attendanceSummary);

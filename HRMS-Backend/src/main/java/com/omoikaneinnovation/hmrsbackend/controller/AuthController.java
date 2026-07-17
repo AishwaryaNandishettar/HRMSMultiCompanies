@@ -54,6 +54,8 @@ public class AuthController {
   // 🔥 ADD THIS HERE
     System.out.println("EMAIL: " + request.getEmail());
     System.out.println("PASSWORD INPUT: " + request.getPassword());
+    System.out.println("COMPANY ID FROM REQUEST: " + request.getCompanyId());
+    System.out.println("TENANT ID FROM REQUEST: " + request.getTenantId());
         // Debug log
         System.out.println("Login attempt for email: " + request.getEmail());
 
@@ -69,6 +71,49 @@ public class AuthController {
         }
 
         System.out.println("Login successful for: " + user.getEmail());
+        
+        // ✅ DETECT OMOI EMPLOYEES BY EMAIL DOMAIN
+        String userEmail = user.getEmail().toLowerCase();
+        boolean isOmoiEmployee = userEmail.endsWith("@omoikaneinnovations.com") || 
+                                 userEmail.endsWith("@omoi.com") ||
+                                 user.getCompanyId() == null;
+        
+        // ✅ GET PORTAL IDENTIFIER (try both companyId and tenantId from request)
+        String requestedPortal = request.getTenantId() != null ? request.getTenantId() : request.getCompanyId();
+        
+        // ✅ DETECT PORTAL TYPE FROM REQUEST
+        boolean isOmoiPortal = (requestedPortal == null || 
+                               requestedPortal.trim().isEmpty() || 
+                               "omoi".equalsIgnoreCase(requestedPortal) ||
+                               "null".equalsIgnoreCase(requestedPortal));
+        
+        System.out.println("🔒 COMPANY VALIDATION:");
+        System.out.println("   User Email: " + userEmail);
+        System.out.println("   Is Omoi Employee: " + isOmoiEmployee);
+        System.out.println("   Requested Portal: " + requestedPortal);
+        System.out.println("   Is Omoi Portal: " + isOmoiPortal);
+        
+        // ✅ BLOCK OMOI EMPLOYEES FROM OTHER COMPANY PORTALS
+        if (isOmoiEmployee && !isOmoiPortal) {
+            System.out.println("❌ BLOCKED: Omoi employee " + user.getEmail() + " tried to login to " + requestedPortal + " portal");
+            return ResponseEntity.status(403).body("Access denied. Omoi employees can only access Omoi portal.");
+        }
+        
+        // ✅ BLOCK NON-OMOI USERS FROM OMOI PORTAL  
+        if (!isOmoiEmployee && isOmoiPortal) {
+            System.out.println("❌ BLOCKED: Non-Omoi user " + user.getEmail() + " tried to login to Omoi portal");
+            return ResponseEntity.status(403).body("Access denied. Only Omoi employees can access Omoi portal.");
+        }
+        
+        // ✅ BLOCK USERS FROM ACCESSING WRONG COMPANY PORTAL
+        String userCompanyId = user.getCompanyId();
+        if (!isOmoiEmployee && userCompanyId != null && requestedPortal != null && 
+            !userCompanyId.equals(requestedPortal) && !requestedPortal.trim().isEmpty()) {
+            System.out.println("❌ BLOCKED: User " + user.getEmail() + " (company: " + userCompanyId + ") tried to login to " + requestedPortal);
+            return ResponseEntity.status(403).body("Access denied. You cannot access other company portals.");
+        }
+        
+        System.out.println("✅ ACCESS GRANTED for " + user.getEmail());
 
        String role = user.getRole() != null ? user.getRole() : "EMPLOYEE";
 

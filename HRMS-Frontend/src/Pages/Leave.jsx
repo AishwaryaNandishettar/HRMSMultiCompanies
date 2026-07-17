@@ -274,15 +274,23 @@ setLeaves(
       }, [leaves]);
       
       useEffect(() => {
+  console.log("🔍 Setting employee name in leave form...");
+  console.log("   User object:", user);
+  console.log("   user.name:", user?.name);
+  console.log("   user.username:", user?.username);
+  console.log("   localStorage user:", JSON.parse(localStorage.getItem("user") || "{}"));
+
   const loggedInName =
     user?.name ||
     user?.username ||
     user?.employeeName ||
     user?.fullName ||
     user?.adminName ||
-    JSON.parse(localStorage.getItem("user"))?.name ||
-    JSON.parse(localStorage.getItem("user"))?.username ||
-    "Aishwarya";
+    JSON.parse(localStorage.getItem("user") || "{}")?.name ||
+    JSON.parse(localStorage.getItem("user") || "{}")?.username ||
+    ""; // ✅ Changed from "Aishwarya" to empty string
+
+  console.log("   ✅ Final loggedInName:", loggedInName);
 
   setFormData(prev => ({
     ...prev,
@@ -676,7 +684,27 @@ const renderCheckboxFilter = (key) => {
 {!showForm && (isEmployee || isManager || isHR) && (
   <button
     className="apply-btn fixed-btn"
-    onClick={() => setShowForm(true)}
+    onClick={() => {
+      // ✅ Set employee name when opening the form
+      const loggedInName =
+        user?.name ||
+        user?.username ||
+        user?.employeeName ||
+        user?.fullName ||
+        user?.adminName ||
+        JSON.parse(localStorage.getItem("user") || "{}")?.name ||
+        "";
+      
+      console.log("🔍 Opening Apply Leave form...");
+      console.log("   Setting employeeName to:", loggedInName);
+      
+      setFormData(prev => ({
+        ...prev,
+        employeeName: loggedInName
+      }));
+      
+      setShowForm(true);
+    }}
   >
     Apply Leave
   </button>

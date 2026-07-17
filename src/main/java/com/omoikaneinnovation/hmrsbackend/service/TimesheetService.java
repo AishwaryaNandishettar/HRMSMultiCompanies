@@ -80,119 +80,24 @@ public class TimesheetService {   // ✅ FIXED NAME
         Map<String, TimesheetSummary> map = new HashMap<>();
 
         for (Attendance r : data) {
-            System.out.println(
-    "Attendance userId = " + r.getUserId()
-);
-
-System.out.println(
-    "Attendance empId = " + r.getEmpId()
-);
-
-           String key = r.getUserId() + "_" + month;
+            String key = r.getUserId() + "_" + month;
 
             map.putIfAbsent(key, new TimesheetSummary());
             TimesheetSummary obj = map.get(key);
 
             // Enrich with user info (empId, name, department, reportingManager)
             if (obj.getEmpId() == null) {
-                String empId = null;
-                String empName = null;
-                String department = null;
-                String reportingManager = null;
+                // ✅ PRIORITY 1: Use data from Attendance record directly (source of truth for daily check-in/out)
+                String empId = r.getEmpId();
+                String empName = r.getName();
+                String department = r.getDepartment();
+                String reportingManager = r.getReportingManager();
                 
-                // ✅ STRATEGY: Lookup Employee table first (source of truth for Profile page)
-                Optional<Employee> empOpt = employeeRepo.findByUserId(r.getUserId());
-                
-                // Fallback: Try finding employee by email if userId lookup fails
-                if (empOpt.isEmpty()) {
-                    // First get user to find email
-                    Optional<User> userOpt = userRepo.findById(r.getUserId());
-                    if (userOpt.isEmpty()) {
-                        userOpt = userRepo.findByEmail(r.getUserId());
-                    }
-                    
-                    if (userOpt.isPresent()) {
-                        String email = userOpt.get().getEmail();
-                        empOpt = employeeRepo.findByEmail(email);
-                    }
-                }
-                
-                // ✅ If Employee record found, use it as primary source
-                if (empOpt.isPresent()) {
-                    Employee emp = empOpt.get();
-                    empId = emp.getEmployeeId();
-                    empName = emp.getFullName();
-                    department = emp.getDepartment();
-                    reportingManager = emp.getManager();
-                    
-                    if (reportingManager == null || reportingManager.isBlank()) {
-                        reportingManager = emp.getManagerEmail();
-                    }
-                    
-                    System.out.println("✅ EMPLOYEE TABLE LOOKUP SUCCESS");
-                    System.out.println("Employee ID: " + empId);
-                    System.out.println("Employee Name: " + empName);
-                }
-                
-                // ✅ Fallback to User table if Employee table doesn't have complete data
-                Optional<User> userOpt = userRepo.findById(r.getUserId());
-                if (userOpt.isEmpty()) {
-                    userOpt = userRepo.findByEmail(r.getUserId());
-                }
-                
-                if (userOpt.isPresent()) {
-                    User u = userOpt.get();
-                    
-                    // Fill in missing fields from User table
-                    if (empId == null || empId.isBlank()) {
-                        empId = u.getEmployeeId();
-                    }
-                    if (empName == null || empName.isBlank()) {
-                        empName = u.getName();
-                    }
-                    if (department == null || department.isBlank()) {
-                        department = u.getDepartment();
-                    }
-                    if (reportingManager == null || reportingManager.isBlank()) {
-                        reportingManager = u.getManagerName();
-                        if (reportingManager == null || reportingManager.isBlank()) {
-                            reportingManager = u.getManagerEmail();
-                        }
-                    }
-                    
-                    // For manager's own record, set reporting manager to "-"
-                    if ("MANAGER".equals(userRole) &&
-                        u.getEmail() != null && u.getEmail().equalsIgnoreCase(loggedEmail)) {
-                        reportingManager = "-";
-                    }
-                }
-                
-                // ✅ Final fallback to Attendance record
-                if (empId == null || empId.isBlank()) {
-                    empId = r.getEmpId();
-                }
-                if (empName == null || empName.isBlank()) {
-                    empName = r.getName();
-                }
-                if (department == null || department.isBlank()) {
-                    department = r.getDepartment();
-                }
-                if (reportingManager == null || reportingManager.isBlank()) {
-                    reportingManager = r.getReportingManager();
-                }
-                
-                // ✅ Set final values (with ultimate fallbacks)
+                // ✅ Set values from Attendance record (with fallbacks)
                 obj.setEmpId(empId != null && !empId.isBlank() ? empId : "-");
                 obj.setEmpName(empName != null && !empName.isBlank() ? empName : "-");
                 obj.setDepartment(department != null && !department.isBlank() ? department : "-");
                 obj.setReportingManager(reportingManager != null && !reportingManager.isBlank() ? reportingManager : "-");
-                
-                System.out.println("=================================");
-                System.out.println("Attendance UserId : " + r.getUserId());
-                System.out.println("Attendance EmpId  : " + r.getEmpId());
-                System.out.println("Final EmpId       : " + obj.getEmpId());
-                System.out.println("Final Name        : " + obj.getEmpName());
-                System.out.println("=================================");
             }
 
             obj.setMonth(month);

@@ -165,11 +165,18 @@ const styles = {
 
  const sendInviteEmployee = async () => {
   try {
+    // Get fullName from inviteEmail (simple fallback)
+    const emailPrefix = inviteEmail.split('@')[0];
+    const fullName = emailPrefix.charAt(0).toUpperCase() + emailPrefix.slice(1);
+    
     const res = await axios.post(
       `${import.meta.env.VITE_API_BASE_URL}/api/onboarding/invite`,
     {
   email: inviteEmail,
   password: tempPassword,
+  fullName: fullName,  // ✅ Required by backend
+  department: "General",  // ✅ Required by backend
+  designation: "Employee",  // ✅ Required by backend
 }
     );
     console.log("Invite response:", res);

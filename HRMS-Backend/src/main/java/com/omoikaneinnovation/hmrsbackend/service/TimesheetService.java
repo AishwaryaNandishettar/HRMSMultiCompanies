@@ -85,59 +85,101 @@ public class TimesheetService {   // ✅ FIXED NAME
 
             // Enrich with user info (empId, name, department, reportingManager)
             if (obj.getEmpId() == null) {
-                // Try to find user by email first, then by MongoDB _id
-                Optional<User> userOpt = userRepo.findByEmail(r.getUserId());
-                if (userOpt.isEmpty()) {
-                    userOpt = userRepo.findById(r.getUserId());
+                // ✅ PRIORITY 1: Use empId from Attendance record (most reliable)
+                String empId = r.getEmpId();
+                
+                // ✅ PRIORITY 2: If Attendance doesn't have empId, get from User/Employee
+                if (empId == null || empId.isBlank() || empId.equals("-")) {
+                    // Try to find user by email first, then by MongoDB _id
+                    Optional<User> userOpt = userRepo.findByEmail(r.getUserId());
+                    if (userOpt.isEmpty()) {
+                        userOpt = userRepo.findById(r.getUserId());
+                    }
+                    
+                    if (userOpt.isPresent()) {
+                        User u = userOpt.get();
+                        
+                        // Get employeeId from User document
+                        empId = u.getEmployeeId();
+                        
+                        // If still blank, use a generated value (last resort)
+                        if (empId == null || empId.isBlank()) {
+                            empId = "EMP-" + u.getEmail().substring(0, Math.min(5, u.getEmail().indexOf("@")));
+                        }
+                    } else {
+                        empId = "UNKNOWN";
+                    }
                 }
                 
-                if (userOpt.isPresent()) {
-                    User u = userOpt.get();
+                obj.setEmpId(empId);
+                System.out.println("✅ Timesheet: Set empId=" + empId + " for userId=" + r.getUserId());
+
+                // ✅ Set employee name from Attendance record first, then User
+                String name = r.getName();
+                if (name == null || name.isBlank() || name.equals("-")) {
+                    // Try to find user by email first, then by MongoDB _id
+                    Optional<User> userOpt = userRepo.findByEmail(r.getUserId());
+                    if (userOpt.isEmpty()) {
+                        userOpt = userRepo.findById(r.getUserId());
+                    }
                     
-                    // ✅ FIX: Set proper employee ID (NEVER MongoDB ObjectId or email)
-                    String empId = u.getEmployeeId();
-                    if (empId == null || empId.isBlank()) {
-                        // If no employeeId set, generate a placeholder but DON'T use MongoDB _id
-                        empId = "EMP-" + u.getEmail().substring(0, Math.min(5, u.getEmail().indexOf("@")));
-                    }
-                    obj.setEmpId(empId);
-
-                    // ✅ FIX: Set display name from User.employeeName (updated name)
-                    String name = u.getName(); // This is User.employeeName field
-                    if (name == null || name.isBlank()) {
-                        // Fallback to email prefix if name not set
-                        name = u.getEmail() != null ? u.getEmail().split("@")[0] : "-";
-                    }
-                    obj.setEmpName(name);
-                    obj.setDepartment(u.getDepartment() != null ? u.getDepartment() : "-");
-
-                    // Reporting manager: prefer managerName, fall back to managerEmail
-                    String managerName = u.getManagerName();
-                    if ((managerName == null || managerName.isBlank()) && u.getManagerId() != null && !u.getManagerId().isBlank()) {
-                        Optional<User> mgr = userRepo.findById(u.getManagerId());
-                        if (mgr.isEmpty()) mgr = userRepo.findByEmail(u.getManagerId());
-                        if (mgr.isPresent() && mgr.get().getName() != null) {
-                            managerName = mgr.get().getName();
+                    if (userOpt.isPresent()) {
+                        User u = userOpt.get();
+                        name = u.getName(); // This is User.employeeName field
+                        if (name == null || name.isBlank()) {
+                            // Fallback to email prefix if name not set
+                            name = u.getEmail() != null ? u.getEmail().split("@")[0] : "-";
                         }
+                    } else {
+                        name = "-";
                     }
-                    if (managerName == null || managerName.isBlank()) {
-                        managerName = u.getManagerEmail() != null ? u.getManagerEmail() : "-";
-                    }
+                }
+                obj.setEmpName(name);
 
-                    // For manager's own record, set reporting manager to "-"
-                    if ("MANAGER".equals(userRole) &&
-                        u.getEmail() != null && u.getEmail().equalsIgnoreCase(loggedEmail)) {
+                // ✅ Set department from Attendance record first, then User
+                String department = r.getDepartment();
+                if (department == null || department.isBlank() || department.equals("-")) {
+                    Optional<User> userOpt = userRepo.findByEmail(r.getUserId());
+                    if (userOpt.isEmpty()) {
+                        userOpt = userRepo.findById(r.getUserId());
+                    }
+                    department = userOpt.map(u -> u.getDepartment() != null ? u.getDepartment() : "-").orElse("-");
+                }
+                obj.setDepartment(department);
+
+                // ✅ Set reporting manager from Attendance record first, then User
+                String managerName = r.getReportingManager();
+                if (managerName == null || managerName.isBlank() || managerName.equals("-")) {
+                    Optional<User> userOpt = userRepo.findByEmail(r.getUserId());
+                    if (userOpt.isEmpty()) {
+                        userOpt = userRepo.findById(r.getUserId());
+                    }
+                    
+                    if (userOpt.isPresent()) {
+                        User u = userOpt.get();
+                        managerName = u.getManagerName();
+                        if ((managerName == null || managerName.isBlank()) && u.getManagerId() != null && !u.getManagerId().isBlank()) {
+                            Optional<User> mgr = userRepo.findById(u.getManagerId());
+                            if (mgr.isEmpty()) mgr = userRepo.findByEmail(u.getManagerId());
+                            if (mgr.isPresent() && mgr.get().getName() != null) {
+                                managerName = mgr.get().getName();
+                            }
+                        }
+                        if (managerName == null || managerName.isBlank()) {
+                            managerName = u.getManagerEmail() != null ? u.getManagerEmail() : "-";
+                        }
+                        
+                        // For manager's own record, set reporting manager to "-"
+                        if ("MANAGER".equals(userRole) &&
+                            u.getEmail() != null && u.getEmail().equalsIgnoreCase(loggedEmail)) {
+                            managerName = "-";
+                        }
+                    } else {
                         managerName = "-";
                     }
-
-                    obj.setReportingManager(managerName);
-                } else {
-                    // User not found - use fallback values
-                    obj.setEmpId("UNKNOWN");
-                    obj.setEmpName("-");
-                    obj.setDepartment("-");
-                    obj.setReportingManager("-");
                 }
+                
+                obj.setReportingManager(managerName);
             }
 
             obj.setMonth(month);

@@ -207,14 +207,15 @@ const currentMonth = today.substring(0, 7);
         const grouped = {};
 
         res.forEach((r) => {
-      // Extract empId similar to Attendance page logic
-      const empId = r.empId || r.employeeId || r.employeeCode || "-";
+      // Extract empId - backend returns it as 'empId' field directly
+      // Use the same format as Attendance page (full format like GN-EMP-0007, IT-EMP-0041)
+      const empId = r.empId || "-";
 
 const key = empId + "_" + (r.month || fromMonth);
 
           if (!grouped[key]) {
             grouped[key] = {
-         empId: r.empId || r.employeeId || r.employeeCode || "-",
+         empId: r.empId || "-",
 
 empName:
   r.empName ||

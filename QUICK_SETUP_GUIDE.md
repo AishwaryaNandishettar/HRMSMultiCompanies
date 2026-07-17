@@ -1,145 +1,256 @@
-# 🚀 Quick Setup Guide - Release Offer Letter Feature
+# Quick Setup Guide for Multi-Tenant Login Isolation
 
-## ⚡ 5-Minute Setup
+## ⚡ Quick Summary
 
-### Step 1: Install Frontend Dependencies
+**Problem**: Omoikaneinnovations employees (Aishwarya, Nikita, Mahesh) can login to TalentHub Solutions portal, but they shouldn't.
+
+**Solution**: Each user must have a `companyId` field that matches the portal they're accessing.
+
+## 🚀 Step-by-Step Setup
+
+### Step 1: Connect to MongoDB
+
 ```bash
-cd HRMS-Frontend
-npm install pdf-lib pdfjs-dist
+# Connect to your MongoDB
+mongosh
+
+# Or with connection string
+mongosh "mongodb://localhost:27017/hrms_db"
 ```
 
-### Step 2: Add PDF.js Worker File
-Download `pdf.worker.min.js` and place it in `HRMS-Frontend/public/` folder.
+### Step 2: Check Current User Data
 
-**Download Link:** https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js
+```javascript
+// Use your database
+use hrms_db
 
-Or create it manually:
-```bash
-cd HRMS-Frontend/public
-curl -O https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js
+// See all users and their current companyId
+db.users.find({}, { email: 1, companyId: 1, name: 1 }).pretty()
 ```
 
-### Step 3: Restart Backend
-```bash
-cd HRMS-Backend
-mvn clean install
-mvn spring-boot:run
+### Step 3: Assign Company IDs
+
+Choose the method that fits your data:
+
+#### Method A: Assign by Specific Emails
+
+```javascript
+// TalentHub Solutions employees
+db.users.updateMany(
+  { email: { $in: [
+    "talentemployee@talenthub.com",
+    "talentmanager@talenthub.com"
+  ]}},
+  { $set: { companyId: "company-a" }}
+)
+
+// WorkForce Pro employees
+db.users.updateMany(
+  { email: { $in: [
+    "workforceemployee@workforce.com"
+  ]}},
+  { $set: { companyId: "company-b" }}
+)
+
+// PeopleSync Enterprise employees
+db.users.updateMany(
+  { email: { $in: [
+    "peoplesyncemp@peoplesync.com"
+  ]}},
+  { $set: { companyId: "company-c" }}
+)
+
+// Omoikaneinnovations employees (SHOULD NOT ACCESS OTHER PORTALS)
+db.users.updateMany(
+  { email: { $in: [
+    "Aishwarya@company.com",
+    "aishwarya@omoi.com",
+    "nikita@omoi.com",
+    "nikitaadigennavar@gmail.com",
+    "mahesh@omoi.com"
+  ]}},
+  { $set: { companyId: "omoikaneinnovations" }}
+)
 ```
 
-### Step 4: Restart Frontend
-```bash
-cd HRMS-Frontend
-npm start
+#### Method B: Assign by Email Domain (Faster)
+
+```javascript
+// All @talenthub.com → company-a
+db.users.updateMany(
+  { email: { $regex: "@talenthub\\.com$", $options: "i" }},
+  { $set: { companyId: "company-a" }}
+)
+
+// All @workforce.com → company-b
+db.users.updateMany(
+  { email: { $regex: "@workforce\\.com$", $options: "i" }},
+  { $set: { companyId: "company-b" }}
+)
+
+// All @peoplesync.com → company-c
+db.users.updateMany(
+  { email: { $regex: "@peoplesync\\.com$", $options: "i" }},
+  { $set: { companyId: "company-c" }}
+)
+
+// All @omoi.com or @company.com → omoikaneinnovations
+db.users.updateMany(
+  { email: { $regex: "@(omoi|company)\\.com$", $options: "i" }},
+  { $set: { companyId: "omoikaneinnovations" }}
+)
 ```
 
----
+### Step 4: Verify Setup
 
-## ✅ Verify Installation
+```javascript
+// Count users per company
+db.users.aggregate([
+  { $group: { _id: "$companyId", count: { $sum: 1 } }},
+  { $sort: { _id: 1 }}
+])
 
-### 1. Check Backend
-Open: http://localhost:8080/api/offer-templates/all
-
-Expected: `[]` (empty array, no templates yet)
-
-### 2. Check Frontend
-1. Navigate to Recruitment page
-2. Set a candidate status to "Selected"
-3. Click "📄 Release Offer Letter" button
-4. Modal should open with 3 tabs
-
----
-
-## 🎯 First Test
-
-### Upload Your First Template
-
-1. **Prepare a PDF Template:**
-   - Create a simple PDF with placeholders like:
-     - `{{candidateName}}`
-     - `{{position}}`
-     - `{{ctc}}`
-   - Or use any existing company offer letter template
-
-2. **Upload:**
-   - Click "Release Offer Letter"
-   - Go to "Upload Template" tab
-   - Fill in:
-     - Template Name: "Test Template"
-     - Company Name: "Test Company"
-   - Select your PDF file
-   - Click "Upload Template"
-
-3. **Preview:**
-   - System automatically shows preview
-   - You should see your PDF rendered as images
-
-4. **Edit:**
-   - Go to "Edit Fields" tab
-   - Fill in candidate details
-   - Click "Update Preview"
-   - Check if preview updates
-
-5. **Download:**
-   - Click "Download Final PDF"
-   - Open downloaded PDF
-   - Verify placeholders are replaced
-
----
-
-## 🐛 Common Issues
-
-### Issue: "pdf.worker.min.js not found"
-**Fix:** Download the worker file and place in `/public` folder
-
-### Issue: "Cannot read property 'getDocument' of undefined"
-**Fix:** Ensure `pdfjs-dist` is installed: `npm install pdfjs-dist`
-
-### Issue: Backend 404 errors
-**Fix:** Ensure backend is running on port 8080
-
-### Issue: CORS errors
-**Fix:** Backend already configured for localhost:3000, localhost:5173, and Vercel
-
----
-
-## 📝 Sample PDF Template
-
-Create a simple Word document with this content, then save as PDF:
-
-```
-OFFER LETTER
-
-Dear {{candidateName}},
-
-We are pleased to offer you the position of {{position}} at {{companyName}}.
-
-Position: {{position}}
-Department: {{department}}
-Location: {{location}}
-Joining Date: {{joiningDate}}
-CTC: {{ctc}}
-
-Terms:
-- Probation Period: {{probationPeriod}}
-- Notice Period: {{noticePeriod}}
-
-This offer is valid until: {{offerValidUntil}}
-
-Sincerely,
-HR Department
+// Check specific user
+db.users.findOne({ email: "Aishwarya@company.com" }, { email: 1, companyId: 1 })
 ```
 
----
+Expected output:
+```javascript
+{
+  email: "Aishwarya@company.com",
+  companyId: "omoikaneinnovations"  // ✅ Should be this
+}
+```
 
-## 🎉 You're All Set!
+### Step 5: Test Login
 
-The feature is now ready to use. Check the full documentation in `RELEASE_OFFER_LETTER_IMPLEMENTATION.md` for detailed information.
+#### Test 1: Correct Portal ✅
+1. Go to **localhost:5176** (TalentHub Solutions)
+2. Login with **talentemployee@talenthub.com**
+3. Result: **Login successful** ✅
 
----
+#### Test 2: Wrong Portal ❌
+1. Go to **localhost:5176** (TalentHub Solutions)
+2. Login with **Aishwarya@company.com** (Omoikaneinnovations)
+3. Result: **"Access denied: You do not have permission to access this company portal"** ❌
 
-## 📞 Need Help?
+## 📋 Company Portal URLs
 
-1. Check browser console for errors
-2. Check backend logs
-3. Verify MongoDB is running
-4. Review `RELEASE_OFFER_LETTER_IMPLEMENTATION.md`
+| Company | Tenant ID | Local URL | Port |
+|---------|-----------|-----------|------|
+| TalentHub Solutions | company-a | localhost:5176 | 5176 |
+| WorkForce Pro | company-b | localhost:5177 | 5177 |
+| PeopleSync Enterprise | company-c | localhost:5178 | 5178 |
+| Omoikaneinnovations | omoikaneinnovations | localhost:5173 | 5173 |
+
+## 🔍 Troubleshooting
+
+### Issue: User gets "Access denied"
+**Solution**: Check their companyId matches the portal
+
+```javascript
+// Check user's companyId
+db.users.findOne(
+  { email: "user@example.com" },
+  { email: 1, companyId: 1 }
+)
+
+// Fix it if wrong
+db.users.updateOne(
+  { email: "user@example.com" },
+  { $set: { companyId: "company-a" }}
+)
+```
+
+### Issue: User gets "No company assigned"
+**Solution**: User has null or missing companyId
+
+```javascript
+// Assign company
+db.users.updateOne(
+  { email: "user@example.com" },
+  { $set: { companyId: "company-a" }}
+)
+```
+
+### Issue: All users can access any portal
+**Solution**: Check backend is receiving tenantId
+
+1. Check browser console for login request
+2. Should see: `tenantId: "company-a"`
+3. Check backend logs for: `TENANT ID: company-a`
+
+## 📝 Quick Reference Commands
+
+```javascript
+// 1. List all users without companyId
+db.users.find({ companyId: { $exists: false }}, { email: 1 })
+
+// 2. List all users with null companyId
+db.users.find({ companyId: null }, { email: 1 })
+
+// 3. List all users with empty companyId
+db.users.find({ companyId: "" }, { email: 1 })
+
+// 4. Count users per company
+db.users.aggregate([
+  { $group: { _id: "$companyId", count: { $sum: 1 }}}
+])
+
+// 5. Fix a specific user
+db.users.updateOne(
+  { email: "user@example.com" },
+  { $set: { companyId: "company-a" }}
+)
+
+// 6. Remove companyId (for testing)
+db.users.updateOne(
+  { email: "test@example.com" },
+  { $unset: { companyId: "" }}
+)
+```
+
+## ✅ Verification Checklist
+
+- [ ] All TalentHub employees have `companyId: "company-a"`
+- [ ] All WorkForce Pro employees have `companyId: "company-b"`
+- [ ] All PeopleSync employees have `companyId: "company-c"`
+- [ ] All Omoikaneinnovations employees have `companyId: "omoikaneinnovations"`
+- [ ] Omoikaneinnovations users CANNOT login to TalentHub portal
+- [ ] Each company's users can ONLY login to their portal
+- [ ] Backend logs show tenant validation messages
+
+## 🎯 Expected Behavior After Setup
+
+| User | Portal | Result |
+|------|--------|--------|
+| talentemployee@talenthub.com | TalentHub (5176) | ✅ Success |
+| talentemployee@talenthub.com | WorkForce (5177) | ❌ Access Denied |
+| Aishwarya@company.com | TalentHub (5176) | ❌ Access Denied |
+| Aishwarya@company.com | Omoi (5173) | ✅ Success |
+| workforceemployee@workforce.com | WorkForce (5177) | ✅ Success |
+| workforceemployee@workforce.com | TalentHub (5176) | ❌ Access Denied |
+
+## 🚨 Important Notes
+
+1. **Case Sensitive**: Email matching is case-sensitive in MongoDB by default
+2. **Regex Patterns**: Use `$options: "i"` for case-insensitive email matching
+3. **Backend Restart**: Not needed - changes take effect immediately
+4. **Frontend Restart**: Not needed - tenantId is read from .env file at build time
+5. **Database Backup**: Consider backing up before bulk updates
+
+## 💡 Pro Tips
+
+1. **Use email domains** for bulk assignment when possible
+2. **Keep a list** of which emails belong to which company
+3. **Test with one user** from each company first
+4. **Check backend logs** for detailed validation messages
+5. **Document company assignments** for future reference
+
+## 🆘 Need Help?
+
+1. Check backend console for detailed logs
+2. Verify .env file has correct `VITE_TENANT_ID`
+3. Ensure MongoDB updates were successful
+4. Test with a known working user first
+5. Review `MULTI_TENANT_LOGIN_FIX.md` for detailed explanation

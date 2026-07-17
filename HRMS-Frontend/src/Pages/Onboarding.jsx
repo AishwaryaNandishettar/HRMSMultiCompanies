@@ -1,11 +1,11 @@
 // src/Pages/Onboarding.jsx
 
-//import axios from "axios"; // add at top
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import "./Onboarding.css";
 import { addBGVRecord } from "../Pages/BGV";
 import { submitOnboarding } from "../Services/api"; // adjust path
+import api from "../api/axios"; // ✅ Import axios instance for file upload
 import InviteEmployee from "../Components/InviteEmployee";
 
 export default function Onboarding() {
@@ -138,24 +138,21 @@ export default function Onboarding() {
         ];
   });
 
-  const [docs, setDocs] = useState(() => {
-    const saved = localStorage.getItem("onboarding_docs");
-    return saved
-      ? JSON.parse(saved)
-      : {
-          resume: null,
-          offerLetter: null,
-          experienceLetter: null,
-          aadharFile: null,
-          panFile: null,
-          photo: null,
-          passportFile: null,
-          drivingLicense: null,
-          paySlips: null,
-          educationDocs: null,
-          relievingLetter: null,
-          previousExperience: null,
-        };
+  // ❌ REMOVED: Don't load docs from localStorage (will cause QuotaExceededError)
+  // Initialize with empty state instead
+  const [docs, setDocs] = useState({
+    resume: null,
+    offerLetter: null,
+    experienceLetter: null,
+    aadharFile: null,
+    panFile: null,
+    photo: null,
+    passportFile: null,
+    drivingLicense: null,
+    paySlips: null,
+    educationDocs: null,
+    relievingLetter: null,
+    previousExperience: null,
   });
 
   // ✅ SAVE TO LOCALSTORAGE WHENEVER STATE CHANGES
@@ -187,9 +184,8 @@ export default function Onboarding() {
     localStorage.setItem("onboarding_references", JSON.stringify(references));
   }, [references]);
 
-  useEffect(() => {
-    localStorage.setItem("onboarding_docs", JSON.stringify(docs));
-  }, [docs]);
+  // ❌ REMOVED: Don't save docs to localStorage (causes QuotaExceededError)
+  // Files will be uploaded to backend server instead
 
   // ✅ CHECK TOKEN/LOGIN
   useEffect(() => {
@@ -246,6 +242,7 @@ export default function Onboarding() {
   };
 
   const handleDocFile = (key, file) => {
+    // Store File object directly, not base64
     setDocs((d) => ({ ...d, [key]: file || null }));
   };
 
@@ -373,6 +370,48 @@ export default function Onboarding() {
   // allow submission without token
 }
  
+  try {
+    // ✅ UPLOAD FILES TO BACKEND FIRST
+    const uploadedDocUrls = {};
+    
+    // Helper function to upload a single file
+    const uploadFile = async (file, key) => {
+      if (!file) return null;
+      
+      const formData = new FormData();
+      formData.append("file", file);
+      
+      try {
+        const response = await api.post("/api/files/upload", formData, {
+          headers: { "Content-Type": "multipart/form-data" }
+        });
+        return response.data.fileUrl || response.data.url;
+      } catch (err) {
+        console.error(`Failed to upload ${key}:`, err);
+        return null;
+      }
+    };
+    
+    // Upload all documents
+    console.log("Uploading documents to backend...");
+    
+    if (docs.photo) uploadedDocUrls.photo = await uploadFile(docs.photo, "photo");
+    if (docs.resume) uploadedDocUrls.resume = await uploadFile(docs.resume, "resume");
+    if (docs.aadharFile) uploadedDocUrls.aadhar = await uploadFile(docs.aadharFile, "aadharFile");
+    if (docs.panFile) uploadedDocUrls.pan = await uploadFile(docs.panFile, "panFile");
+    if (docs.offerLetter) uploadedDocUrls.offerLetter = await uploadFile(docs.offerLetter, "offerLetter");
+    if (docs.experienceLetter) uploadedDocUrls.experienceLetter = await uploadFile(docs.experienceLetter, "experienceLetter");
+    if (docs.passportFile) uploadedDocUrls.passportFile = await uploadFile(docs.passportFile, "passportFile");
+    if (docs.drivingLicense) uploadedDocUrls.drivingLicense = await uploadFile(docs.drivingLicense, "drivingLicense");
+    if (docs.paySlips) uploadedDocUrls.paySlips = await uploadFile(docs.paySlips, "paySlips");
+    if (docs.educationDocs) uploadedDocUrls.educationDocs = await uploadFile(docs.educationDocs, "educationDocs");
+    if (docs.relievingLetter) uploadedDocUrls.relievingLetter = await uploadFile(docs.relievingLetter, "relievingLetter");
+    if (docs.previousExperience) uploadedDocUrls.previousExperience = await uploadFile(docs.previousExperience, "previousExperience");
+    if (residence.residencePhoto) uploadedDocUrls.residencePhoto = await uploadFile(residence.residencePhoto, "residencePhoto");
+    if (cibil.reportFile) uploadedDocUrls.cibilReport = await uploadFile(cibil.reportFile, "cibilReport");
+    if (police.policeFile) uploadedDocUrls.policeDocument = await uploadFile(police.policeFile, "policeFile");
+    
+    console.log("Uploaded document URLs:", uploadedDocUrls);
   
   const payload = {
        token: token || null, // allow null 
@@ -448,18 +487,15 @@ export default function Onboarding() {
 
     references: references,
 
-    documents: {
-      resume: docs.resume ? docs.resume.name : null,
-      aadhar: docs.aadharFile ? docs.aadharFile.name : null,
-      pan: docs.panFile ? docs.panFile.name : null,
-    },
+    // ✅ Use uploaded file URLs instead of base64
+    documents: uploadedDocUrls,
 
     submittedAt: new Date().toISOString(),
     bgvStatus: "PENDING",
   };
 
   console.log(payload);
- try {
+  
   // ✅ MongoDB save
  await submitOnboarding({
   ...payload, // keep everything
@@ -492,9 +528,18 @@ export default function Onboarding() {
 
   status: "Active"
 });
-  localStorage.removeItem("onboarding_personal"); // ✅ ADD HERE
 
-  // ✅ Local storage for table
+  // Clear localStorage after successful submission
+  localStorage.removeItem("onboarding_personal");
+  localStorage.removeItem("onboarding_job");
+  localStorage.removeItem("onboarding_experience");
+  localStorage.removeItem("onboarding_cibil");
+  localStorage.removeItem("onboarding_police");
+  localStorage.removeItem("onboarding_residence");
+  localStorage.removeItem("onboarding_references");
+  localStorage.removeItem("onboarding_docs");
+
+  // ✅ Local storage for BGV table (with uploaded URLs)
   const existing = JSON.parse(localStorage.getItem("bgv_records")) || [];
 
   existing.push({
@@ -515,16 +560,12 @@ export default function Onboarding() {
     policeStatus: police.status,
     policeVerificationNumber: police.verificationNumber,
 
-    documents: {
-      photo: docs.photo ? docs.photo.name : null,
-      resume: docs.resume?.name,
-      aadharFile: docs.aadharFile?.name,
-      panFile: docs.panFile?.name,
-    },
+    documents: uploadedDocUrls, // Use uploaded URLs
 
     submittedAt: new Date().toISOString(),
     bgvStatus: "Pending",
   });
+  
 console.log("Saving BGV Record:", existing);
   localStorage.setItem("bgv_records", JSON.stringify(existing));
   window.dispatchEvent(

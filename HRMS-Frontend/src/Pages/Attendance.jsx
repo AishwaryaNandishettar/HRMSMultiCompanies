@@ -393,15 +393,26 @@ const latestManagerEmail =
 
 const latestManagerName =
   latestEmployee?.manager || loggedUser.managerName || "";
+
+// ✅ FIX: Get real Employee ID from latest employee data
+const realEmployeeId =
+  latestEmployee?.employeeId ||
+  loggedUser.employeeId ||
+  loggedUser.empId ||
+  loggedUser.employeeCode ||
+  "-";
+
+console.log("🔍 CHECK-IN DEBUG:");
+console.log("  Latest Employee Data:", latestEmployee);
+console.log("  Real Employee ID:", realEmployeeId);
+console.log("  User from localStorage:", loggedUser);
+
           await apiCheckIn({
             userId: String(userId).trim(),
           empId:
   role === "admin"
     ? "ADMIN001"
-    : loggedUser.empId ||
-      loggedUser.employeeId ||
-      loggedUser.employeeCode ||
-      "-",
+    : realEmployeeId,
 
 name:
   role === "admin"
@@ -457,6 +468,12 @@ reportingManager:
 
     if (!recordToUpdate) {
       alert("Check-in first before checking out");
+      return;
+    }
+
+    // ✅ Check if already checked out
+    if (recordToUpdate.checkOut && recordToUpdate.checkOut !== "-") {
+      alert("Already checked out for selected date");
       return;
     }
 
@@ -529,15 +546,27 @@ reportingManager:
     const hour = new Date().getHours();
 
     try {
+      // ✅ FIX: Fetch latest employee data for accurate empId
+      const employees = await getAllEmployees();
+      const latestEmployee = employees.find(
+        (emp) =>
+          String(emp.email).toLowerCase() ===
+          String(loggedUser.email).toLowerCase()
+      );
+
+      const realEmployeeId =
+        latestEmployee?.employeeId ||
+        loggedUser.employeeId ||
+        loggedUser.empId ||
+        loggedUser.employeeCode ||
+        "-";
+
       await apiCheckIn({
         userId: String(userId).trim(),
 empId:
   role === "admin"
     ? "ADMIN001"
-    : loggedUser.empId ||
-      loggedUser.employeeId ||
-      loggedUser.employeeCode ||
-      "-",
+    : realEmployeeId,
 
 name:
   role === "admin"

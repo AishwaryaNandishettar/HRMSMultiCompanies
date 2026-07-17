@@ -1,0 +1,174 @@
+╔═══════════════════════════════════════════════════════════════╗
+║                 FIX AISHWARYA LOGIN - 3 STEPS                 ║
+╚═══════════════════════════════════════════════════════════════╝
+
+CURRENT PROBLEM:
+  Aishwarya@company.com can login to TalentHub (localhost:5176)
+  ❌ SHE SHOULD NOT BE ABLE TO LOGIN
+
+WHY:
+  1. Backend needs to be RESTARTED (code changes not active yet)
+  2. Database needs companyId assigned to Aishwarya
+
+═══════════════════════════════════════════════════════════════
+
+STEP 1: FIX DATABASE (2 minutes)
+───────────────────────────────────────────────────────────────
+
+Open terminal and run:
+
+  mongosh
+
+Then paste:
+
+  use hrms_db
+
+  db.users.updateOne(
+    { email: "Aishwarya@company.com" },
+    { $set: { companyId: "omoikaneinnovations" }}
+  )
+
+  db.users.findOne(
+    { email: "Aishwarya@company.com" },
+    { email: 1, companyId: 1 }
+  )
+
+EXPECTED OUTPUT:
+  {
+    email: "Aishwarya@company.com",
+    companyId: "omoikaneinnovations"  ← Should see this
+  }
+
+✅ If you see companyId: "omoikaneinnovations" → Continue to Step 2
+
+═══════════════════════════════════════════════════════════════
+
+STEP 2: RESTART BACKEND (5 minutes)
+───────────────────────────────────────────────────────────────
+
+OPTION A (EASIEST):
+  Double-click:  restart-backend.bat
+
+OPTION B (MANUAL):
+  1. Stop backend (Ctrl+C or taskkill /F /IM java.exe)
+  2. cd HRMS-Backend
+  3. mvnw.cmd clean install -DskipTests
+  4. mvnw.cmd spring-boot:run
+
+WAIT FOR THIS LOG:
+  Started HmrsbackendApplication in X.XXX seconds
+
+✅ If you see "Started HmrsbackendApplication" → Continue to Step 3
+
+═══════════════════════════════════════════════════════════════
+
+STEP 3: TEST LOGIN (1 minute)
+───────────────────────────────────────────────────────────────
+
+1. Open browser (Incognito mode recommended)
+
+2. Go to:  http://localhost:5176
+
+3. Login with:
+   Email: Aishwarya@company.com
+   Password: admin123
+
+4. Click Login
+
+EXPECTED RESULT:
+  ❌ LOGIN SHOULD FAIL
+  Error message:
+  "Access denied: You do not have permission to access this 
+   company portal. Please use the correct company URL."
+
+✅ SUCCESS! Tenant isolation is working!
+
+═══════════════════════════════════════════════════════════════
+
+VERIFY IT WORKED:
+───────────────────────────────────────────────────────────────
+
+Check backend logs - you should see:
+
+  EMAIL: Aishwarya@company.com
+  TENANT ID: company-a
+  🔍 TENANT VALIDATION:
+    Request Tenant ID: company-a
+    User Company ID: omoikaneinnovations
+  ❌ Login denied: Tenant mismatch
+
+═══════════════════════════════════════════════════════════════
+
+TROUBLESHOOTING:
+───────────────────────────────────────────────────────────────
+
+Problem: Aishwarya can still login
+
+Solution 1: Check database
+  mongosh
+  use hrms_db
+  db.users.findOne({ email: "Aishwarya@company.com" }, { companyId: 1 })
+  
+  If companyId is NOT "omoikaneinnovations", run Step 1 again
+
+Solution 2: Check backend restarted
+  Look for "TENANT VALIDATION" in backend console
+  
+  If not present, run Step 2 again
+
+Solution 3: Clear browser cache
+  Use Incognito mode or Ctrl+Shift+Delete
+
+═══════════════════════════════════════════════════════════════
+
+QUICK TEST:
+───────────────────────────────────────────────────────────────
+
+After Step 2, run this to test:
+
+  Double-click:  test-login-blocked.bat
+
+Expected output:
+  HTTP Status: 403
+  Message: "Access denied..."
+
+═══════════════════════════════════════════════════════════════
+
+NEED MORE HELP?
+───────────────────────────────────────────────────────────────
+
+Read these files:
+  1. FIX_NOW.md              ← Detailed step-by-step guide
+  2. RESTART_BACKEND_AND_TEST.md  ← Troubleshooting guide
+  3. README_FIX_AISHWARYA_LOGIN.md  ← Complete overview
+
+═══════════════════════════════════════════════════════════════
+
+WHAT CHANGED:
+───────────────────────────────────────────────────────────────
+
+BEFORE FIX:
+  Any user with correct password → Can login to any portal
+
+AFTER FIX:
+  User's companyId MUST match portal's tenantId
+  
+  TalentHub (company-a) → Only company-a users
+  WorkForce (company-b) → Only company-b users
+  PeopleSync (company-c) → Only company-c users
+  Omoi → Only omoikaneinnovations users
+
+═══════════════════════════════════════════════════════════════
+
+TIMELINE:
+───────────────────────────────────────────────────────────────
+
+  Step 1 (Database):  2 minutes  ░░░░░░░░░░
+  Step 2 (Backend):   5 minutes  ░░░░░░░░░░░░░░░░░░░░
+  Step 3 (Testing):   1 minute   ░░░░
+  ─────────────────────────────────────────
+  TOTAL:              8 minutes
+
+═══════════════════════════════════════════════════════════════
+
+Ready? Start with STEP 1 above! 🚀

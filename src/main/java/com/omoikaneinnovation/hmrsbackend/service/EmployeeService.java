@@ -46,7 +46,7 @@
     user.setRole("EMPLOYEE");
     user.setActive(true);
    // ✅ ADD THIS (VERY IMPORTANT)
-    user.setCompanyId(companyId); // ✅ USE PARAM
+  user.setCompanyId(companyId != null ? companyId : "omoi");// ✅ USE PARAM
 
 
     User savedUser = userRepository.save(user);
@@ -130,17 +130,28 @@
             }
         }
       if (dto.getEmail() != null && !dto.getEmail().trim().isEmpty()) {
-
     String oldEmail = employee.getEmail();
-
-    Optional<User> userOpt = userRepository.findByEmail(oldEmail);
-
-    employee.setEmail(dto.getEmail());
-
-    if (userOpt.isPresent()) {
-        User user = userOpt.get();
-        user.setEmail(dto.getEmail());
-        userRepository.save(user);
+    String newEmail = dto.getEmail().trim();
+    
+    // ✅ Check if new email is different from current email
+    if (!oldEmail.equalsIgnoreCase(newEmail)) {
+        // ✅ Check if new email already exists in another employee record
+        Optional<Employee> existingEmp = employeeRepo.findByEmail(newEmail);
+        if (existingEmp.isPresent() && !existingEmp.get().getId().equals(employee.getId())) {
+            throw new RuntimeException("Email already exists: " + newEmail);
+        }
+        
+        // ✅ Update employee email
+        employee.setEmail(newEmail);
+        
+        // ✅ Update user email if user exists
+        Optional<User> userOpt = userRepository.findByEmail(oldEmail);
+        if (userOpt.isPresent()) {
+            User user = userOpt.get();
+            user.setEmail(newEmail);
+            userRepository.save(user);
+            System.out.println("✅ Email updated: " + oldEmail + " → " + newEmail);
+        }
     }
 }
 

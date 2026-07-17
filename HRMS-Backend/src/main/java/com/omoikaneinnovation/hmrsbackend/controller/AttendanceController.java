@@ -72,4 +72,13 @@ public List<Attendance> getByUser(@PathVariable String userId) {
         
         return attendanceService.managerEditAttendance(userId, date, status, checkIn, checkOut, managerEmail);
     }
+    
+    /**
+     * Backfill missing empId data in all attendance records
+     * This ensures timesheet shows correct EMP IDs after page refresh
+     */
+    @PostMapping("/backfill-empids")
+    public String backfillEmpIds() {
+        return attendanceService.backfillAttendanceData();
+    }
 }

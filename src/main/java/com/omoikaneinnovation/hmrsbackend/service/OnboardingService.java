@@ -76,12 +76,15 @@ private EmailService emailService;
         user.setName((String) payload.get("fullName"));
         user.setRole("EMPLOYEE");
 
+        // ✅ Use password from payload if provided
         String password = (String) payload.get("password");
 
         if (password != null && !password.isEmpty()) {
             user.setPassword(encoder.encode(password));
+            log.info("Using provided password for user: {}", email);
         } else {
             user.setPassword(encoder.encode("Temp@123"));
+            log.info("Using default password for user: {}", email);
         }
 
         user = userRepo.save(user);

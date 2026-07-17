@@ -57,9 +57,6 @@ const PayrollTable = ({ data, onViewPayslip, onProfileView , onEditPayroll, onDo
     { key: "deductions", label: "Deductions" },
     { key: "net", label: "Net Pay" },
     { key: "status", label: "Status" },
-    { key: "payrollMonth", label: "Payroll Month" },
-    { key: "initiatedDate", label: "Initiated Date" },
-    { key: "payrollStatus", label: "Payroll Status" },
   ];
 
   /* =========================
@@ -214,7 +211,15 @@ const totalGross = data.reduce(
 
 const totalDeductions = data.reduce(
   (sum, emp) =>
-    sum + ((emp.tax || 0) + (emp.pf || 0) + (emp.insurance || 0)),
+    sum + (
+      (emp.pf || 0) +
+      (emp.esi || 0) +
+      (emp.tax || 0) +
+      (emp.deduction || 0) +
+      (emp.professionalTax || 0) +
+      (emp.lopDeduction || 0) +
+      (emp.otherDeduction || 0)
+    ),
   0
 );
 
@@ -439,9 +444,6 @@ const totalNet = data.reduce(
                       ₹ {totalNet.toLocaleString("en-IN")}
                     </td>
 
-                    <td style={tdStyle}></td>
-                    <td style={tdStyle}></td>
-                    <td style={tdStyle}></td>
                     <td style={tdStyle}></td>
                     <td style={tdStyle}></td>
                   </tr>

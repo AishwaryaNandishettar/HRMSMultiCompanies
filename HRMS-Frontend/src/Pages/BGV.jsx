@@ -40,6 +40,103 @@ function saveAll(records) {
   }
 }
 
+// ✅ Helper: Check if document is bank-related (confidential)
+const isBankDocument = (docName) => {
+  if (!docName) return false;
+  const lower = docName.toLowerCase();
+  return lower.includes('bank') || 
+         lower.includes('passbook') || 
+         lower.includes('cheque') ||
+         lower.includes('account') ||
+         lower.includes('statement');
+};
+
+// ✅ Helper: Mask confidential document names
+const maskDocument = (docName) => {
+  if (!docName || docName === 'N/A') return docName;
+  return '********** (Confidential) 🔒';
+};
+
+// ✅ Helper: Get viewable URL for documents
+const getDocumentUrl = (docPath) => {
+  if (!docPath || docPath === 'N/A') return null;
+  
+  // If it's already a full URL, return as-is
+  if (docPath.startsWith('http://') || docPath.startsWith('https://')) {
+    return docPath;
+  }
+  
+  // If it's a base64 data URL, return as-is
+  if (docPath.startsWith('data:')) {
+    return docPath;
+  }
+  
+  // If it's just a filename (like "RESUME.docx"), we can't view it
+  if (!docPath.includes('/') && !docPath.startsWith('http')) {
+    console.warn('⚠️ Document is just a filename, not a viewable URL:', docPath);
+    return null;
+  }
+  
+  // ✅ For server file paths, construct the full URL
+  const baseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8082';
+  
+  // ✅ If path already starts with /uploads/, use it as-is
+  if (docPath.startsWith('/uploads/')) {
+    return `${baseUrl}${docPath}`;
+  }
+  
+  // ✅ If path starts with uploads/ (no leading slash), add the slash
+  if (docPath.startsWith('uploads/')) {
+    return `${baseUrl}/${docPath}`;
+  }
+  
+  // ✅ Otherwise, assume it's a relative path and add /uploads/
+  const cleanPath = docPath.startsWith('/') ? docPath.substring(1) : docPath;
+  return `${baseUrl}/uploads/${cleanPath}`;
+};
+
+// ✅ Helper: View document in new tab
+const viewDocument = (docPath, docName) => {
+  console.log('🔍 Attempting to view document:', docPath);
+  
+  const url = getDocumentUrl(docPath);
+  
+  if (!url) {
+    // If it's just a filename, show helpful message
+    if (docPath && !docPath.includes('/') && !docPath.startsWith('data:')) {
+      alert(
+        `⚠️ Document "${docPath}" cannot be viewed.\n\n` +
+        `The document was uploaded but not stored on the server.\n\n` +
+        `To view documents:\n` +
+        `1. Documents must be uploaded to the backend server\n` +
+        `2. Or stored as base64 data in the database\n\n` +
+        `Currently, only the filename is saved.`
+      );
+    } else {
+      alert('Document not available');
+    }
+    return;
+  }
+  
+  // Check if it's confidential
+  if (isBankDocument(docName) || isBankDocument(docPath)) {
+    const confirmView = window.confirm(
+      '⚠️ CONFIDENTIAL DOCUMENT\n\nThis is a confidential bank document. Do you have authorization to view it?\n\nClick OK to proceed or Cancel to abort.'
+    );
+    if (!confirmView) return;
+  }
+  
+  console.log('📄 Opening document:', url);
+  
+  // For base64 data URLs, open directly
+  if (url.startsWith('data:')) {
+    window.open(url, '_blank');
+  } else {
+    // For server URLs, try to open
+    window.open(url, '_blank');
+  }
+};
+
 export default function BGV() {
   
   const [records, setRecords] = useState([]);
@@ -379,9 +476,164 @@ console.log("Filtered Records:", filtered);
 
               <section>
                 <h4>Documents</h4>
-                <div><strong>Resume:</strong> {r.documents?.resume || "N/A"}</div>
-                <div><strong>Aadhaar:</strong> {r.documents?.aadharFile || "N/A"}</div>
-                <div><strong>PAN:</strong> {r.documents?.panFile || "N/A"}</div>
+                
+                {/* Resume */}
+                <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '8px' }}>
+                  <strong>Resume:</strong> 
+                  <span>{r.documents?.resume || "N/A"}</span>
+                  {r.documents?.resume && r.documents.resume !== 'N/A' && (
+                    <button 
+                      onClick={() => viewDocument(r.documents.resume, 'Resume')}
+                      style={{
+                        padding: '5px 12px',
+                        background: '#4CAF50',
+                        color: 'white',
+                        border: 'none',
+                        borderRadius: '4px',
+                        cursor: 'pointer',
+                        fontSize: '12px',
+                        fontWeight: '600'
+                      }}
+                    >
+                      📄 View File
+                    </button>
+                  )}
+                </div>
+
+                {/* Aadhaar */}
+                <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '8px' }}>
+                  <strong>Aadhaar:</strong> 
+                  <span>{r.documents?.aadharFile || r.documents?.aadhaar || "N/A"}</span>
+                  {(r.documents?.aadharFile || r.documents?.aadhaar) && 
+                   (r.documents?.aadharFile !== 'N/A' && r.documents?.aadhaar !== 'N/A') && (
+                    <button 
+                      onClick={() => viewDocument(r.documents.aadharFile || r.documents.aadhaar, 'Aadhaar')}
+                      style={{
+                        padding: '5px 12px',
+                        background: '#2196F3',
+                        color: 'white',
+                        border: 'none',
+                        borderRadius: '4px',
+                        cursor: 'pointer',
+                        fontSize: '12px',
+                        fontWeight: '600'
+                      }}
+                    >
+                      📄 View File
+                    </button>
+                  )}
+                </div>
+
+                {/* PAN */}
+                <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '8px' }}>
+                  <strong>PAN:</strong> 
+                  <span>{r.documents?.panFile || r.documents?.pan || "N/A"}</span>
+                  {(r.documents?.panFile || r.documents?.pan) && 
+                   (r.documents?.panFile !== 'N/A' && r.documents?.pan !== 'N/A') && (
+                    <button 
+                      onClick={() => viewDocument(r.documents.panFile || r.documents.pan, 'PAN')}
+                      style={{
+                        padding: '5px 12px',
+                        background: '#FF9800',
+                        color: 'white',
+                        border: 'none',
+                        borderRadius: '4px',
+                        cursor: 'pointer',
+                        fontSize: '12px',
+                        fontWeight: '600'
+                      }}
+                    >
+                      📄 View File
+                    </button>
+                  )}
+                </div>
+
+                {/* Bank Passbook - Confidential */}
+                {(r.documents?.bankPassbook || r.documents?.passbook) && (
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '8px' }}>
+                    <strong>Bank Passbook:</strong> 
+                    <span style={{ color: '#f44336', fontWeight: 'bold' }}>
+                      {maskDocument(r.documents.bankPassbook || r.documents.passbook)}
+                    </span>
+                    <button 
+                      onClick={() => viewDocument(r.documents.bankPassbook || r.documents.passbook, 'Bank Passbook')}
+                      style={{
+                        padding: '5px 12px',
+                        background: '#f44336',
+                        color: 'white',
+                        border: 'none',
+                        borderRadius: '4px',
+                        cursor: 'pointer',
+                        fontSize: '12px',
+                        fontWeight: '600'
+                      }}
+                    >
+                      🔒 View Confidential
+                    </button>
+                  </div>
+                )}
+
+                {/* Cancelled Cheque - Confidential */}
+                {(r.documents?.cancelledCheque || r.documents?.cheque) && (
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '8px' }}>
+                    <strong>Cancelled Cheque:</strong> 
+                    <span style={{ color: '#f44336', fontWeight: 'bold' }}>
+                      {maskDocument(r.documents.cancelledCheque || r.documents.cheque)}
+                    </span>
+                    <button 
+                      onClick={() => viewDocument(r.documents.cancelledCheque || r.documents.cheque, 'Cancelled Cheque')}
+                      style={{
+                        padding: '5px 12px',
+                        background: '#f44336',
+                        color: 'white',
+                        border: 'none',
+                        borderRadius: '4px',
+                        cursor: 'pointer',
+                        fontSize: '12px',
+                        fontWeight: '600'
+                      }}
+                    >
+                      🔒 View Confidential
+                    </button>
+                  </div>
+                )}
+
+                {/* Other Documents */}
+                {r.documents && Object.entries(r.documents).map(([key, value]) => {
+                  // Skip already displayed documents
+                  if (['resume', 'aadharFile', 'aadhaar', 'panFile', 'pan', 'bankPassbook', 'passbook', 'cancelledCheque', 'cheque', 'photo'].includes(key)) {
+                    return null;
+                  }
+                  
+                  if (!value || value === 'N/A') return null;
+                  
+                  const isConfidential = isBankDocument(key) || isBankDocument(value);
+                  const displayName = key.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase());
+                  
+                  return (
+                    <div key={key} style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '8px' }}>
+                      <strong>{displayName}:</strong> 
+                      <span style={isConfidential ? { color: '#f44336', fontWeight: 'bold' } : {}}>
+                        {isConfidential ? maskDocument(value) : value}
+                      </span>
+                      <button 
+                        onClick={() => viewDocument(value, displayName)}
+                        style={{
+                          padding: '5px 12px',
+                          background: isConfidential ? '#f44336' : '#9C27B0',
+                          color: 'white',
+                          border: 'none',
+                          borderRadius: '4px',
+                          cursor: 'pointer',
+                          fontSize: '12px',
+                          fontWeight: '600'
+                        }}
+                      >
+                        {isConfidential ? '🔒 View Confidential' : '📄 View File'}
+                      </button>
+                    </div>
+                  );
+                })}
               </section>
             </div>
           )}

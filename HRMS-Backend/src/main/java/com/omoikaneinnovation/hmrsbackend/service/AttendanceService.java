@@ -48,8 +48,13 @@ private RestTemplate restTemplate;
         }
 
         public String checkIn(String userId, Map<String, String> payload) {
-            String today = LocalDate.now().toString();
+            String today = LocalDate.now(ZoneId.of("Asia/Kolkata")).toString();
             String date = (payload != null && payload.get("date") != null) ? payload.get("date") : today;
+
+            System.out.println("🔍 CHECK-IN REQUEST:");
+            System.out.println("   Original userId: " + userId);
+            System.out.println("   Date: " + date);
+            System.out.println("   Payload: " + payload);
 
             // Normalize userId: if it looks like an email, find the user and get their ID
             String normalizedUserId = userId;
@@ -59,20 +64,33 @@ private RestTemplate restTemplate;
                 if (userOpt.isPresent()) {
                     currentUser = userOpt.get();
                     normalizedUserId = currentUser.getId();
+                    System.out.println("   ✅ Resolved email to userId: " + normalizedUserId);
                 }
             } else {
                 // If userId is not email, try to find user by ID
                 Optional<User> userOpt = userRepo.findById(normalizedUserId);
                 if (userOpt.isPresent()) {
                     currentUser = userOpt.get();
+                    System.out.println("   ✅ Found user by ID: " + normalizedUserId);
                 }
             }
 
+            // ✅ CHECK IF ALREADY CHECKED IN TODAY
             Attendance existing = attendanceRepo.findByUserIdAndDate(normalizedUserId, date);
+            
+            System.out.println("   🔍 Checking existing attendance...");
+            System.out.println("   Normalized userId: " + normalizedUserId);
+            System.out.println("   Date: " + date);
+            System.out.println("   Existing record: " + (existing != null ? "FOUND" : "NOT FOUND"));
 
             if (existing != null) {
+                System.out.println("   ❌ DUPLICATE CHECK-IN BLOCKED!");
+                System.out.println("   Existing check-in: " + existing.getCheckIn());
+                System.out.println("   Existing check-out: " + existing.getCheckOut());
                 return "Already checked in for this date";
             }
+
+            System.out.println("   ✅ No existing record, creating new attendance...");
 
             Attendance attendance = new Attendance();
             attendance.setUserId(normalizedUserId);
@@ -81,11 +99,47 @@ private RestTemplate restTemplate;
     LocalTime.now(ZoneId.of("Asia/Kolkata")).toString()
 );
 
-            // Set additional fields from payload
+            // ✅ ALWAYS FETCH EMPID FROM EMPLOYEE COLLECTION (MOST RELIABLE)
+            String empId = null;
+            String fullName = null;
+            String department = null;
+            
+            if (currentUser != null) {
+                // Try to get from Employee collection first
+                Optional<Employee> empOpt = employeeRepo.findByEmail(currentUser.getEmail());
+                if (empOpt.isEmpty()) {
+                    empOpt = employeeRepo.findByUserId(currentUser.getId());
+                }
+                
+                if (empOpt.isPresent()) {
+                    Employee emp = empOpt.get();
+                    empId = emp.getEmployeeId();
+                    fullName = emp.getFullName();
+                    department = emp.getDepartment();
+                    System.out.println("   ✅ Got empId from Employee collection: " + empId);
+                }
+                
+                // Fallback to User collection
+                if (empId == null || empId.trim().isEmpty()) {
+                    empId = currentUser.getEmployeeId();
+                    System.out.println("   ℹ️  Fell back to User.employeeId: " + empId);
+                }
+                
+                if (fullName == null || fullName.trim().isEmpty()) {
+                    fullName = currentUser.getName();
+                }
+                
+                if (department == null || department.trim().isEmpty()) {
+                    department = currentUser.getDepartment();
+                }
+            }
+
+            // Set additional fields from payload or fetched data
             if (payload != null) {
-                attendance.setEmpId(payload.get("empId"));
-                attendance.setName(payload.get("name"));
-                attendance.setDepartment(payload.get("department"));
+                // Use payload values if provided, otherwise use fetched values
+                attendance.setEmpId(payload.get("empId") != null ? payload.get("empId") : empId);
+                attendance.setName(payload.get("name") != null ? payload.get("name") : fullName);
+                attendance.setDepartment(payload.get("department") != null ? payload.get("department") : department);
                 attendance.setLocationIn(payload.get("locationIn"));
                 attendance.setTos(payload.get("tos"));
                 attendance.setAttendanceType(payload.get("attendanceType") != null ? payload.get("attendanceType") : "Office");
@@ -97,7 +151,19 @@ private RestTemplate restTemplate;
                     int hour = Integer.parseInt(checkInTime.split(":")[0]);
                     attendance.setLate(hour > 9 ? "Yes" : "No");
                 }
+            } else {
+                // If no payload, use fetched values
+                attendance.setEmpId(empId);
+                attendance.setName(fullName);
+                attendance.setDepartment(department);
+                attendance.setAttendanceType("Office");
+                attendance.setStatus("Pending Approval");
             }
+            
+            System.out.println("   📋 Attendance data being saved:");
+            System.out.println("      empId: " + attendance.getEmpId());
+            System.out.println("      name: " + attendance.getName());
+            System.out.println("      department: " + attendance.getDepartment());
             
             // ✅ FIX: Always fetch and set current manager information from User table
             if (currentUser != null) {
@@ -124,6 +190,7 @@ private RestTemplate restTemplate;
             }
 
             attendanceRepo.save(attendance);
+            System.out.println("   ✅ Attendance saved successfully!");
             return "Check-in successful";
         }
 
@@ -286,6 +353,20 @@ public Attendance getByUserIdAndDate(String userId, String date) {
      */
     public List<AttendanceDTO> getAllAttendance() {
         List<Attendance> records = attendanceRepo.findAll();
+        
+        // ✅ Get current time in IST
+        LocalTime currentTime = LocalTime.now(ZoneId.of("Asia/Kolkata"));
+        LocalDate currentDate = LocalDate.now(ZoneId.of("Asia/Kolkata"));
+        String today = currentDate.toString();
+        
+        // ✅ Define end of work hours (6:00 PM)
+        LocalTime endOfWorkHours = LocalTime.of(18, 0);
+        boolean isAfterWorkHours = currentTime.isAfter(endOfWorkHours);
+        
+        System.out.println("🕐 Current Time (IST): " + currentTime);
+        System.out.println("🕐 End of Work Hours: " + endOfWorkHours);
+        System.out.println("🕐 Is After Work Hours: " + isAfterWorkHours);
+        
         return records.stream()
                 .map(r -> enrichAttendance(r))
                 .filter(dto -> {
@@ -300,6 +381,16 @@ public Attendance getByUserIdAndDate(String userId, String date) {
                     boolean hasValidDate = dto.getDate() != null && 
                                          !dto.getDate().equals("-") && 
                                          !dto.getDate().trim().isEmpty();
+                    
+                    // ✅ HIDE ABSENT STATUS DURING WORK HOURS (before 6 PM)
+                    // Only show "Absent" after 6 PM for today's date
+                    boolean isAbsentToday = "Absent".equals(dto.getStatus()) && today.equals(dto.getDate());
+                    boolean shouldHideAbsent = isAbsentToday && !isAfterWorkHours;
+                    
+                    if (shouldHideAbsent) {
+                        System.out.println("⏰ Hiding Absent status for " + dto.getName() + " (before 6 PM)");
+                        return false; // Don't show this record yet
+                    }
                     
                     return hasValidEmpId && hasValidName && hasValidDate;
                 })
@@ -720,4 +811,107 @@ public void checkMissedCheckouts() {
         
         return "Attendance updated successfully by manager";
     }
+
+    /**
+     * Backfill missing empId, name, department, and manager info in all Attendance records
+     * This ensures timesheet displays correct data after page refresh
+     */
+    public String backfillAttendanceData() {
+        System.out.println("🔄 Starting attendance data backfill...");
+        
+        List<Attendance> allAttendance = attendanceRepo.findAll();
+        int updatedCount = 0;
+        int skippedCount = 0;
+        
+        for (Attendance attendance : allAttendance) {
+            boolean needsUpdate = false;
+            
+            // Skip if empId is already properly set (not empty, not "-", not UNKNOWN)
+            if (attendance.getEmpId() == null || 
+                attendance.getEmpId().trim().isEmpty() || 
+                attendance.getEmpId().equals("-") ||
+                attendance.getEmpId().equals("UNKNOWN") ||
+                attendance.getEmpId().startsWith("EMP-")) {
+                
+                // Find user by userId (could be email or MongoDB _id)
+                Optional<User> userOpt = userRepo.findByEmail(attendance.getUserId());
+                if (userOpt.isEmpty()) {
+                    userOpt = userRepo.findById(attendance.getUserId());
+                }
+                
+                if (userOpt.isPresent()) {
+                    User user = userOpt.get();
+                    
+                    // Try to get empId from Employee collection first
+                    Optional<Employee> empOpt = employeeRepo.findByEmail(user.getEmail());
+                    if (empOpt.isEmpty()) {
+                        empOpt = employeeRepo.findByUserId(user.getId());
+                    }
+                    
+                    String empId = null;
+                    String fullName = null;
+                    
+                    if (empOpt.isPresent()) {
+                        Employee emp = empOpt.get();
+                        empId = emp.getEmployeeId();
+                        fullName = emp.getFullName();
+                    }
+                    
+                    // Fallback to User collection
+                    if (empId == null || empId.trim().isEmpty()) {
+                        empId = user.getEmployeeId();
+                    }
+                    
+                    if (fullName == null || fullName.trim().isEmpty()) {
+                        fullName = user.getName();
+                    }
+                    
+                    // Update attendance record
+                    if (empId != null && !empId.trim().isEmpty()) {
+                        attendance.setEmpId(empId);
+                        needsUpdate = true;
+                    }
+                    
+                    if (fullName != null && !fullName.trim().isEmpty()) {
+                        attendance.setName(fullName);
+                        needsUpdate = true;
+                    }
+                    
+                    if (user.getDepartment() != null && !user.getDepartment().trim().isEmpty()) {
+                        attendance.setDepartment(user.getDepartment());
+                        needsUpdate = true;
+                    }
+                    
+                    if (user.getManagerEmail() != null && !user.getManagerEmail().trim().isEmpty()) {
+                        attendance.setManagerEmail(user.getManagerEmail());
+                        needsUpdate = true;
+                    }
+                    
+                    if (user.getManagerName() != null && !user.getManagerName().trim().isEmpty()) {
+                        attendance.setReportingManager(user.getManagerName());
+                        needsUpdate = true;
+                    }
+                    
+                    if (needsUpdate) {
+                        attendanceRepo.save(attendance);
+                        updatedCount++;
+                        System.out.println("✅ Updated attendance: " + attendance.getDate() + 
+                                         " | " + attendance.getUserId() + 
+                                         " | empId=" + empId);
+                    }
+                } else {
+                    skippedCount++;
+                    System.out.println("⚠️  User not found for attendance: " + attendance.getUserId());
+                }
+            } else {
+                skippedCount++;
+            }
+        }
+        
+        String result = "Backfill complete: " + updatedCount + " records updated, " + 
+                       skippedCount + " records skipped (already have empId or user not found)";
+        System.out.println("🎉 " + result);
+        return result;
     }
+
+}

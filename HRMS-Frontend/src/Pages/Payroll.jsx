@@ -310,7 +310,15 @@ const totalPayroll = activePayrollData.reduce(
 const totalDeductions = activePayrollData.reduce(
   (sum, emp) =>
     sum +
-    Math.abs((emp.tax || 0) + (emp.pf || 0) + (emp.insurance || 0)),
+    Math.abs(
+      (emp.pf || 0) +
+      (emp.esi || 0) +
+      (emp.tax || 0) +
+      (emp.deduction || 0) +
+      (emp.professionalTax || 0) +
+      (emp.lopDeduction || 0) +
+      (emp.otherDeduction || 0)
+    ),
   0
 );
 

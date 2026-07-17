@@ -67,7 +67,8 @@ const formatTime = (timeStr) => {
       const [attendanceChartData, setAttendanceChartData] = useState([]);
       const [leaveChartData, setLeaveChartData] = useState([]);
       const [homeData, setHomeData] = useState(null);
-
+const [checkingIn, setCheckingIn] = useState(false);
+const [checkingOut, setCheckingOut] = useState(false);
 
       
       // Enhanced state for role-based KPIs
@@ -1838,7 +1839,17 @@ const matchesSearch =
                     </h2>
                   <button
     className="check-btn"
+     disabled={checkingIn}
   onClick={async () => {
+      if (checkingIn) return;
+  setCheckingIn(true);
+    // Already checked in today
+if (
+  homeData?.todayAttendance?.checkIn &&
+  homeData?.todayAttendance?.checkIn !== "-"
+) {
+  return;
+}
     try {
       const res = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/attendance/checkin`, {
         method: "POST",
@@ -1893,6 +1904,7 @@ const matchesSearch =
 
     alert("Check-in successful");
     await refreshAttendanceStatus(); // 🔄 LIVE UPDATE
+    setCheckingIn(false);
   } else {
     alert("Check-in failed");
   }
@@ -1914,7 +1926,17 @@ const matchesSearch =
                     </h2>
                   <button
     className="check-btn red-btn"
+    disabled={checkingOut}
   onClick={async () => {
+    if (checkingOut) return;
+setCheckingOut(true);
+    // Already checked out today
+if (
+  homeData?.todayAttendance?.checkOut &&
+  homeData?.todayAttendance?.checkOut !== "-"
+) {
+  return;
+}
     try {
     const currentTime = new Date().toLocaleTimeString("en-GB", {
   hour12: false,
@@ -1955,6 +1977,7 @@ const matchesSearch =
         
         // 🔄 Then fetch fresh data from server
         await refreshAttendanceStatus();
+        setCheckingIn(false);
       } else {
         alert("Check-out failed");
       }

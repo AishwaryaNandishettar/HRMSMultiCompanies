@@ -1,382 +1,372 @@
-# 🧪 Testing Checklist - Update Status Feature
+# Testing Checklist - Fixes Verification
 
-## ✅ Phase 1: Visual Test (No Backend Required)
+## 🔧 Before Testing
 
-### **Test 1: Check Columns Appear**
+### Backend Restart Required
+```bash
+cd HRMS-Backend
+# Stop the backend if running
+# Then restart:
+./mvnw spring-boot:run
+# OR if using IDE, restart the Spring Boot application
+```
 
-1. Open your pipeline page: http://localhost:5176/recruitment/pipeline
-2. Look at the table headers
-3. ✅ Verify you see these columns:
-   - ID
-   - Name
-   - **Email** ← NEW
-   - Role
-   - Exp
-   - Status
-   - Recruiter
-   - Stage
-   - **Comments** ← NEW
-   - Action
-
-**Expected Result:** ✅ You should see Email and Comments columns (they might show "-" if no data)
-
----
-
-### **Test 2: Check Action Menu Opens**
-
-1. Click the **"⋯"** (three dots) button on any candidate
-2. A dropdown menu should appear
-
-**Expected Result:** ✅ Menu opens
+### Frontend Refresh
+```bash
+cd HRMS-Frontend
+# If dev server is running, it should auto-reload
+# If not, restart:
+npm run dev
+```
 
 ---
 
-### **Test 3: Check "Update Status" Button**
+## ✅ TEST 1: Document Upload Fix (QuotaExceededError)
 
-1. In the action menu, look at the top
-2. You should see **"✏️ Update Status"** in blue text
-3. It should be the first option
+### Scenario: Upload documents without localStorage quota error
 
-**Expected Result:** ✅ "Update Status" appears at top in blue
-
----
-
-### **Test 4: Open Modal**
-
-1. Click **"✏️ Update Status"**
-2. A modal should slide up from bottom
-
-**Expected Result:** ✅ Modal opens with animation
-
-**If Modal Doesn't Open:**
-- Press F12 to open browser console
-- Look for red error messages
-- Take a screenshot and show me
-
----
-
-### **Test 5: Check Modal Content**
-
-When modal opens, you should see:
-
-1. ✅ Header: "Update Candidate Status"
-2. ✅ Candidate info: Name (email)
-3. ✅ Status dropdown with options:
-   - Received / Applied
-   - Shortlisted
-   - Interview Stage
-   - Selected
-   - Rejected
-4. ✅ Comments textarea
-5. ✅ Email notification info box
-6. ✅ Two buttons: Cancel | Save & Notify Candidate
-
-**Expected Result:** ✅ All elements visible
-
----
-
-### **Test 6: Fill Form**
-
-1. Select a status from dropdown (e.g., "Shortlisted")
-2. Type in comments: "Great candidate, moving forward"
-3. Try clicking "Save & Notify Candidate"
-
-**Expected Result:** 
-- If backend not ready: Error message appears
-- This is OK! It means frontend is working correctly
-
----
-
-## ✅ Phase 2: Backend Test (After API Created)
-
-### **Test 7: Add Test Email Data**
-
-**Option A: Using MongoDB Compass**
-
-1. Open MongoDB Compass
-2. Connect to your database
-3. Find `candidates` or `jobs` collection
-4. Edit the first candidate document:
-   ```json
-   {
-     "_id": "696cb175c2b8b04848f4a39a",
-     "jobTitle": "Frontend Developer",
-     "designation": "Web Developer",
-     "status": "Selected",
-     "email": "test@example.com",  ← ADD THIS
-     "comments": ""                 ← ADD THIS
-   }
-   ```
-5. Save changes
-6. Repeat for 2-3 more candidates
-
-**Option B: Using Script**
-
-1. Update `ADD_TEST_DATA.js` with your real candidate IDs
-2. Run: `node ADD_TEST_DATA.js`
-
----
-
-### **Test 8: Verify Email Appears in Table**
-
-1. Refresh your pipeline page
-2. Check the Email column
-3. You should now see email addresses instead of "-"
-
-**Expected Result:** ✅ Email addresses visible in table
-
----
-
-### **Test 9: Test Backend API (Using Postman)**
-
-Before testing from frontend, test the API directly:
-
-1. Open Postman or Thunder Client
-2. Create new POST request
-3. URL: `http://localhost:5000/api/candidates/update-status`
-4. Headers:
-   ```
-   Content-Type: application/json
-   ```
-5. Body (JSON):
-   ```json
-   {
-     "candidateId": "696cb175c2b8b04848f4a39a",
-     "candidateName": "Frontend Developer",
-     "candidateEmail": "test@example.com",
-     "newStatus": "Shortlisted",
-     "comments": "Test comment from Postman",
-     "emailSubject": "Application Shortlisted",
-     "emailBody": "Dear Candidate, You have been shortlisted!"
-   }
-   ```
-6. Click **Send**
+**Steps:**
+1. Open browser DevTools → Console tab (to see any errors)
+2. Navigate to **Onboarding page** (`/onboarding`)
+3. Fill in minimal required fields:
+   - Personal Details:
+     - ✏️ Full Name: "Test Employee"
+     - ✏️ Email: "test@example.com"
+   - Job Details:
+     - ✏️ Employee ID: "TEST-001"
+     - ✏️ Department: "IT"
+4. Scroll to **Documents section**
+5. Upload at least 3 files:
+   - 📎 Resume (any PDF/DOCX)
+   - 📎 Aadhaar File (any image/PDF)
+   - 📎 PAN File (any image/PDF)
+6. Click **Submit** button
 
 **Expected Result:**
-```json
-{
-  "success": true,
-  "message": "Status updated and email sent",
-  "candidate": { ... }
-}
+- ✅ Form submits successfully
+- ✅ No `QuotaExceededError` in console
+- ✅ Success message: "Onboarding submitted successfully ✅"
+- ✅ Redirects to BGV page
+
+**Backend Console Should Show:**
+```
+Uploading documents to backend...
+Uploaded document URLs: { photo: "/uploads/tasks/...", resume: "/uploads/tasks/...", ... }
 ```
 
-**If Error:**
-- Check if backend server is running
-- Check .env file has email credentials
-- Check MongoDB connection
+### Verify Document Storage
+
+**Steps:**
+1. Check backend `uploads/tasks/` folder
+2. Verify uploaded files exist with UUID filenames
+
+**Expected Result:**
+- ✅ Files exist in `uploads/tasks/` directory
+- ✅ Filenames follow pattern: `uuid.extension` (e.g., `a1b2c3d4-e5f6-7890-abcd-ef1234567890.pdf`)
 
 ---
 
-### **Test 10: Full Flow Test (Frontend → Backend → Email)**
+## ✅ TEST 2: Document Viewing in BGV Page
 
-Now test the complete flow:
+### Scenario: View uploaded documents from BGV page
 
-1. Go to pipeline page
-2. Click "⋯" on a candidate
-3. Click "✏️ Update Status"
-4. Modal opens
-5. Select status: "Shortlisted"
-6. Add comment: "Excellent technical skills"
-7. Click "Save & Notify Candidate"
-8. Wait 2-3 seconds
+**Steps:**
+1. Navigate to **BGV page** (`/BGV`)
+2. Find the employee record you just created
+3. Click **View Details** button
+4. Scroll to **Documents** section
+5. Click **📄 View File** button next to Resume
+6. Click **📄 View File** button next to Aadhaar
+7. Click **📄 View File** button next to PAN
 
-**Expected Results:**
+**Expected Result:**
+- ✅ Each document opens in new browser tab
+- ✅ Document content is visible (PDF viewer or image)
+- ✅ No "Document not available" error
 
-1. ✅ Success alert appears: "Status updated! Email sent to..."
-2. ✅ Modal closes
-3. ✅ Table updates immediately:
-   - Status badge changes to "Shortlisted"
-   - Comments column shows your comment
-4. ✅ Check candidate's email inbox
-   - Email should arrive within 1-2 minutes
-   - Subject: "Application Shortlisted - Congratulations!"
+### Test Confidential Document Masking
+
+**Steps:**
+1. If you uploaded any bank-related documents (passbook, cheque)
+2. Check Documents section in BGV page
+3. Verify bank documents show: `********** (Confidential) 🔒`
+4. Click **🔒 View Confidential** button
+5. Confirm dialog appears: "⚠️ CONFIDENTIAL DOCUMENT"
+6. Click OK
+
+**Expected Result:**
+- ✅ Bank documents masked with stars
+- ✅ Confirmation dialog appears before viewing
+- ✅ Document opens after confirmation
 
 ---
 
-## 🐛 Troubleshooting
+## ✅ TEST 3: Payroll Calculation with Timesheet Data
 
-### **Problem 1: Modal Not Opening**
+### Scenario: Payroll uses Timesheet data, not raw Attendance
 
-**Check Console:**
-1. Press F12
-2. Go to Console tab
-3. Look for errors like:
-   - "UpdateStatusModal is not defined"
-   - "Cannot find module"
+**Preparation:**
+1. Navigate to **Attendance page**
+2. Check in for employee "Aishwarya Sunil Nandishettar" (or create a test employee)
+3. Mark attendance for **5 different days** in current month
+4. Navigate to **Timesheet page**
+5. Verify Timesheet shows:
+   - Present: **5**
+   - Absent: **3** (or any non-zero value)
+   - Working Days: **31**
+
+**Steps:**
+1. Navigate to **Payroll page** (`/payroll`)
+2. Select Employee: "Aishwarya Sunil Nandishettar"
+3. Select Month: Current month (e.g., "July-2026")
+4. Click **Calculate Payroll** or equivalent button
+5. Check the attendance summary section
+
+**Expected Result:**
+- ✅ Present Days: **5** (matches Timesheet)
+- ✅ Absent Days: **3** (matches Timesheet)
+- ✅ Working Days: **31** (matches Timesheet)
+- ✅ Attendance Percentage: **16.13%** (5/31)
+- ✅ NOT showing 0 present days anymore!
+
+**Backend Console Should Show:**
+```
+✅ TIMESHEET DATA USED:
+   Employee: GN-EMP-0018
+   Month: July-2026
+   Present: 5
+   Absent: 3
+   LOP: 0
+   Working Days: 31
+   Late Arrivals: 0
+   Attendance %: 16.13
+```
+
+### Verify Bonus Calculation
+
+**Expected Bonus Rules:**
+- Attendance ≥ 98%: ₹2,000
+- Attendance ≥ 95%: ₹1,500
+- Attendance ≥ 90%: ₹1,000
+- Attendance ≥ 85%: ₹500
+- Attendance < 85%: ₹0
+
+**For 16.13% attendance:**
+- ✅ Attendance Bonus: **₹0** (below 85%)
+
+**Steps to test higher bonus:**
+1. Go to Timesheet
+2. Manually edit to increase present days to 28
+3. Recalculate payroll
+4. Verify Attendance Bonus = ₹1,000 (90.32% attendance)
+
+---
+
+## ✅ TEST 4: Late Deduction Calculation
+
+### Scenario: Late arrivals deduct ₹100 each
+
+**Preparation:**
+1. Go to Attendance page
+2. Check in for employee with time **after 10:00 AM** (e.g., 10:30 AM)
+3. Do this for 3 different days
+4. Verify Timesheet shows Late Count: **3**
+
+**Steps:**
+1. Navigate to Payroll page
+2. Calculate payroll for that employee
+3. Check "Late Deduction" field
+
+**Expected Result:**
+- ✅ Late Arrivals: **3**
+- ✅ Late Deduction: **₹300** (3 × ₹100)
+
+---
+
+## ✅ TEST 5: LOP Deduction from Timesheet
+
+### Scenario: Loss of Pay days deducted from salary
+
+**Preparation:**
+1. Go to Timesheet page
+2. Verify employee has LOP days (e.g., LOP: 2)
+
+**Steps:**
+1. Navigate to Payroll page
+2. Calculate payroll
+3. Check LOP deduction calculation
+
+**Formula:**
+```
+LOP Deduction = (Base Salary / Working Days) × LOP Days
+Example: (₹30,000 / 31) × 2 = ₹1,935.48
+```
+
+**Expected Result:**
+- ✅ LOP Days: **2** (from Timesheet)
+- ✅ LOP Deduction: **₹1,935.48** (or proportional amount)
+
+---
+
+## 🔍 Troubleshooting Guide
+
+### Issue: QuotaExceededError still appears
 
 **Solution:**
-- Make sure `UpdateStatusModal.jsx` file exists
-- Check import statement in PipelineTable.jsx
-- Restart frontend server
-
----
-
-### **Problem 2: Email Column Shows "-"**
-
-**Reason:** Database doesn't have email field yet
-
-**Solution:**
-1. Add email field to database manually
-2. Or use the ADD_TEST_DATA.js script
-3. Refresh page
-
----
-
-### **Problem 3: Backend API Not Working**
-
-**Check:**
-1. Is backend server running?
-   ```bash
-   npm start  # or node server.js
+1. Clear browser localStorage:
+   ```javascript
+   // In browser console:
+   localStorage.clear();
    ```
-2. Check terminal for errors
-3. Verify .env file has:
-   ```
-   EMAIL_USER=your-email@gmail.com
-   EMAIL_PASSWORD=your-app-password
-   ```
-4. Is nodemailer installed?
-   ```bash
-   npm install nodemailer
-   ```
+2. Hard refresh: `Ctrl + Shift + R` (Windows) or `Cmd + Shift + R` (Mac)
+3. Try in Incognito/Private window
+4. Check if `useEffect` for docs is really removed
 
 ---
 
-### **Problem 4: Email Not Sending**
+### Issue: Files not uploading to backend
 
-**Common Issues:**
-
-1. **Wrong Email Password**
-   - Use App Password, not regular Gmail password
-   - Get from: https://myaccount.google.com/apppasswords
-
-2. **Gmail Blocking SMTP**
-   - Enable "Less secure app access" (not recommended)
-   - OR use App Password (recommended)
-
-3. **Network Issue**
-   - Check internet connection
-   - Try sending test email from Postman first
-
----
-
-## 📊 Expected Behavior Summary
-
-### **When HR Updates Status to "Shortlisted":**
-
-```
-1. HR clicks "⋯" → "Update Status"
-2. Modal opens
-3. HR selects "Shortlisted"
-4. HR adds comment: "Good communication skills"
-5. HR clicks "Save & Notify Candidate"
-
-Backend:
-├─ Updates database
-├─ Saves comment
-└─ Sends email
-
-Frontend:
-├─ Shows success message
-├─ Closes modal
-└─ Updates table immediately
-
-Candidate:
-└─ Receives email within 1-2 minutes
-```
-
----
-
-## 📸 Screenshots to Take
-
-When testing, take screenshots of:
-
-1. ✅ Pipeline table showing Email & Comments columns
-2. ✅ Action menu with "Update Status" button
-3. ✅ Modal opened and filled
-4. ✅ Success message after save
-5. ✅ Table updated with new status and comments
-6. ✅ Email received in candidate's inbox
-
----
-
-## ✅ Final Checklist
-
-### Frontend:
-- [ ] Email column visible in table
-- [ ] Comments column visible in table
-- [ ] "⋯" action button works
-- [ ] "Update Status" button appears (in blue)
-- [ ] Modal opens when clicked
-- [ ] Modal has all form fields
-- [ ] Modal closes with Cancel button
-- [ ] No console errors
-
-### Backend:
-- [ ] Backend server running
-- [ ] .env file configured
-- [ ] nodemailer installed
-- [ ] API endpoint created
-- [ ] Database has email & comments fields
-- [ ] Postman test successful
-
-### Email:
-- [ ] Email credentials correct
-- [ ] Test email sends from Postman
-- [ ] Email arrives in inbox
-- [ ] Subject and body correct
-- [ ] Candidate name personalized
-
-### Complete Flow:
-- [ ] Update status from frontend
-- [ ] Success message appears
-- [ ] Database updates
-- [ ] Table updates immediately
-- [ ] Email sends to candidate
-- [ ] Comments saved
-
----
-
-## 🎯 Quick Test Commands
-
+**Check 1: Backend running?**
 ```bash
-# Start frontend
-cd HRMS-Frontend
-npm run dev
+# Backend should be running on:
+http://localhost:8082
 
-# Start backend (in separate terminal)
+# Test upload endpoint:
+curl http://localhost:8082/api/files/upload
+# Should return 400 or method not allowed, not 404
+```
+
+**Check 2: CORS enabled?**
+- Backend should allow `http://localhost:5173` origin
+- Check `FileController.java` has `@CrossOrigin` annotation
+
+**Check 3: uploads/ directory exists?**
+```bash
 cd HRMS-Backend
-npm start
-
-# Test API with curl
-curl -X POST http://localhost:5000/api/candidates/update-status \
-  -H "Content-Type: application/json" \
-  -d '{
-    "candidateId": "696cb175c2b8b04848f4a39a",
-    "candidateName": "Test Candidate",
-    "candidateEmail": "test@example.com",
-    "newStatus": "Shortlisted",
-    "comments": "Test comment",
-    "emailSubject": "Test Email",
-    "emailBody": "This is a test email"
-  }'
+ls -la uploads/tasks/
+# Should create automatically, but verify
 ```
 
 ---
 
-## 🆘 If Stuck
+### Issue: Payroll still shows 0 present days
 
-1. Check browser console (F12)
-2. Check backend terminal for errors
-3. Verify .env file configuration
-4. Test backend API with Postman first
-5. Add console.log() statements to debug
-6. Share error messages for help
+**Check 1: Timesheet has data?**
+1. Navigate to Timesheet page
+2. Verify employee has present days > 0
+3. Check month matches payroll calculation month
+
+**Check 2: Backend logs?**
+- Look for: "✅ TIMESHEET DATA USED"
+- If not found, TimesheetService not being called
+
+**Check 3: Employee ID matches?**
+- Timesheet employee ID must match payroll employee ID
+- Check for case sensitivity or extra spaces
+
+**Debug Query:**
+```java
+// Add to AttendanceIntegrationService.getMonthlyAttendance()
+System.out.println("Querying timesheet for: " + employeeId + ", month: " + month);
+TimesheetSummary summary = timesheetService.getMonthlySummary(employeeId, month);
+System.out.println("Timesheet result: " + summary);
+```
 
 ---
 
-**Remember:** Test in phases! Don't try to test everything at once.
+### Issue: Documents not viewable in BGV page
 
-**Start with:** Frontend visual test → Then backend API → Then complete flow
+**Check 1: Document URLs in database**
+```javascript
+// In browser console on BGV page:
+const records = JSON.parse(localStorage.getItem("bgv_records"));
+console.log(records[0].documents);
+// Should show URLs like "/uploads/tasks/uuid.pdf", not null
+```
 
+**Check 2: Backend serving files?**
+```bash
+# Test file access directly:
+curl http://localhost:8082/uploads/tasks/YOUR-FILE-UUID.pdf
+# Should return file content, not 404
+```
+
+**Check 3: WebConfig.java configured?**
+- Verify `addResourceHandlers` maps `/uploads/**` to `file:uploads/`
+
+---
+
+## 📊 Test Results Template
+
+Copy and fill this out after testing:
+
+```
+=== TEST RESULTS ===
+Date: _______________
+Tester: _______________
+
+[ ] TEST 1: Document Upload (QuotaExceededError fix)
+    Result: PASS / FAIL
+    Notes: ________________________________
+
+[ ] TEST 2: Document Viewing in BGV
+    Result: PASS / FAIL
+    Notes: ________________________________
+
+[ ] TEST 3: Payroll with Timesheet Data
+    Result: PASS / FAIL
+    Present Days Shown: ____
+    Expected: ____
+    Notes: ________________________________
+
+[ ] TEST 4: Late Deduction
+    Result: PASS / FAIL
+    Late Count: ____
+    Deduction: ₹____
+    Notes: ________________________________
+
+[ ] TEST 5: LOP Deduction
+    Result: PASS / FAIL
+    LOP Days: ____
+    Deduction: ₹____
+    Notes: ________________________________
+
+Overall Status: ALL PASS / NEEDS FIXES
+```
+
+---
+
+## 🎯 Success Criteria
+
+All fixes are working correctly when:
+
+✅ Documents upload without QuotaExceededError
+✅ Uploaded files visible in backend `uploads/` folder
+✅ Documents viewable from BGV page
+✅ Bank documents show confidentiality warning
+✅ Payroll shows correct present days from Timesheet (not 0)
+✅ Attendance bonus calculates correctly
+✅ Late deductions apply at ₹100 per late arrival
+✅ LOP deductions calculate from Timesheet LOP days
+✅ Backend logs show "TIMESHEET DATA USED"
+
+---
+
+## 📝 Notes for Production Deployment
+
+### Vercel Frontend
+- No changes needed - file upload uses relative API paths
+- Ensure `VITE_API_BASE_URL` points to production backend
+
+### Railway/Render Backend
+- Ensure `uploads/` directory persists (use volume/storage)
+- Or use cloud storage (S3, Cloudinary) for production
+- Set proper file size limits in `application.properties`:
+  ```properties
+  spring.servlet.multipart.max-file-size=10MB
+  spring.servlet.multipart.max-request-size=10MB
+  ```
+
+---
+
+Need help? Check the logs and error messages carefully!

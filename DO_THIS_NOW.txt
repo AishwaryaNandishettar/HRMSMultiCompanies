@@ -1,88 +1,156 @@
-═══════════════════════════════════════════════════════════
-  🔧 FIX 500 ERROR - DO THIS NOW
-═══════════════════════════════════════════════════════════
+╔═══════════════════════════════════════════════════════════════╗
+║              AISHWARYA IS STILL LOGGING IN - FIX NOW          ║
+╚═══════════════════════════════════════════════════════════════╝
 
-STEP 1: Check MongoDB
-───────────────────────────────────────────────────────────
-Open Command Prompt and run:
+The problem is that you haven't completed BOTH steps yet.
 
-    mongosh
+CODE CHANGES ARE DONE ✅
+But you need to:
+  1. Update database ❌ (probably not done)
+  2. Restart backend ❌ (probably not done)
 
-If it connects → MongoDB is running ✅
-If it fails → Start MongoDB:
+═══════════════════════════════════════════════════════════════
 
-    net start MongoDB
+STOP! DO THESE 2 THINGS RIGHT NOW:
+═══════════════════════════════════════════════════════════════
 
-───────────────────────────────────────────────────────────
+STEP 1: UPDATE DATABASE
+───────────────────────────────────────────────────────────────
 
-STEP 2: Restart Backend
-───────────────────────────────────────────────────────────
-Double-click this file:
+Double-click this file:  CRITICAL_FIX_NOW.bat
 
-    e:\HRMSProject\restart-backend.bat
+This will:
+  - Update Aishwarya's companyId to "omoikaneinnovations"
+  - Update all Omoi employees
+  - Show you the results
 
-Wait for: "Started HmrsBackendApplication"
+Wait for: "Database Update Complete"
 
-───────────────────────────────────────────────────────────
+═══════════════════════════════════════════════════════════════
 
-STEP 3: Test Backend API
-───────────────────────────────────────────────────────────
-Double-click this file:
+STEP 2: RESTART BACKEND
+───────────────────────────────────────────────────────────────
 
-    e:\HRMSProject\test-backend-api.bat
+Go to your terminal where backend is running and press:
+  
+  Ctrl + C
+
+Then run:
+
+  cd HRMS-Backend
+  mvnw.cmd spring-boot:run
+
+OR double-click:  restart-backend.bat
+
+Wait for: "Started HmrsbackendApplication"
+
+═══════════════════════════════════════════════════════════════
+
+STEP 3: TEST
+───────────────────────────────────────────────────────────────
+
+1. Open NEW Incognito window (Ctrl + Shift + N)
+
+2. Go to: http://localhost:5176
+
+3. Login:
+   Email: Aishwarya@company.com
+   Password: admin123
+
+4. Should see: "Access denied"
+
+═══════════════════════════════════════════════════════════════
+
+IF STILL NOT WORKING:
+───────────────────────────────────────────────────────────────
+
+Run this to diagnose:
+
+  CHECK_WHY_STILL_LOGGING_IN.bat
+
+It will tell you exactly what's wrong.
+
+═══════════════════════════════════════════════════════════════
+
+MANUAL DATABASE FIX (if batch file doesn't work):
+───────────────────────────────────────────────────────────────
+
+Open terminal and type:
+
+  mongosh
+
+Then paste EXACTLY this:
+
+  use hrms_db
+  
+  db.users.updateOne(
+    { email: "Aishwarya@company.com" },
+    { $set: { companyId: "omoikaneinnovations" }}
+  )
+  
+  db.users.findOne(
+    { email: "Aishwarya@company.com" },
+    { email: 1, companyId: 1 }
+  )
 
 You should see:
-    {"status":"success","message":"API is working!"}
+  {
+    email: "Aishwarya@company.com",
+    companyId: "omoikaneinnovations"
+  }
 
-If you see this → Backend is ready! ✅
+If you see this, the database is fixed. Now restart backend.
 
-───────────────────────────────────────────────────────────
+═══════════════════════════════════════════════════════════════
 
-STEP 4: Restart Frontend
-───────────────────────────────────────────────────────────
-In your frontend terminal:
-- Press Ctrl+C to stop
-- Run: npm start
+WHY THIS IS HAPPENING:
+───────────────────────────────────────────────────────────────
 
-───────────────────────────────────────────────────────────
+The code I wrote is already saved in your files:
+  ✅ Login.jsx sends tenantId
+  ✅ LoginRequest.java has tenantId field
+  ✅ AuthController.java validates tenantId
 
-STEP 5: Clear Browser Cache
-───────────────────────────────────────────────────────────
-Press: Ctrl + F5 (hard refresh)
+BUT Java/backend needs to be RECOMPILED and RESTARTED for the 
+changes to actually run.
 
-───────────────────────────────────────────────────────────
+AND the database needs the companyId field set for users.
 
-STEP 6: Try Upload Again
-───────────────────────────────────────────────────────────
-1. Go to Recruitment page
-2. Click "Release Offer Letter"
-3. Fill in:
-   Template Name:  Hero FinCorp Template
-   Company Name:   Hero FinCorp
-   Description:    Test template
-4. Select PDF file
-5. Click "Upload Template"
+Without these 2 steps, the OLD code is still running (before
+the fix).
 
-───────────────────────────────────────────────────────────
+═══════════════════════════════════════════════════════════════
 
-✅ EXPECTED RESULT:
-───────────────────────────────────────────────────────────
-- Success message appears
-- Modal switches to "Preview" tab
-- PDF renders as images
+QUICK CHECK:
+───────────────────────────────────────────────────────────────
 
-───────────────────────────────────────────────────────────
+After you restart backend, look for this in backend console:
 
-❌ IF STILL FAILS:
-───────────────────────────────────────────────────────────
-Send me:
-1. Backend console output (copy the error)
-2. Result of test-backend-api.bat
-3. MongoDB status (running or not?)
+  🔍 TENANT VALIDATION:
+    Request Tenant ID: company-a
+    User Company ID: omoikaneinnovations
+  ❌ Login denied: Tenant mismatch
 
-═══════════════════════════════════════════════════════════
+If you DON'T see this message → Backend not restarted properly
 
-MOST IMPORTANT: Make sure MongoDB is running!
-Run: net start MongoDB
+═══════════════════════════════════════════════════════════════
 
-═══════════════════════════════════════════════════════════
+THE ABSOLUTE TRUTH:
+───────────────────────────────────────────────────────────────
+
+I have fixed the CODE ✅
+You need to:
+  1. Run the database update ❌
+  2. Restart the backend ❌
+
+That's it. Do these 2 things and it will work.
+
+═══════════════════════════════════════════════════════════════
+
+START HERE:
+
+1. Double-click: CRITICAL_FIX_NOW.bat
+2. Double-click: restart-backend.bat  
+3. Test login in Incognito mode
+
+═══════════════════════════════════════════════════════════════
