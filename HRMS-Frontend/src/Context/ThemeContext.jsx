@@ -5,8 +5,8 @@
  */
 
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { loadThemeConfig } from '../utils/themeLoader';
-import { injectThemeColors } from '../utils/cssInjector';
+import { loadThemeConfig } from '../Utils/themeLoader';
+import { injectThemeColors } from '../Utils/cssInjector';
 
 // Create Theme Context
 const ThemeContext = createContext(null);
