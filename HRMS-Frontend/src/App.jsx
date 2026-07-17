@@ -17,7 +17,7 @@ import { AttendanceProvider } from "./Context/AttendanceContext";
 import { TaskProvider } from "./Context/TaskContext";
 
 /* ===== MULTI-TENANT THEME SYSTEM (NO BUSINESS LOGIC CHANGES) ===== */
-import { ThemeProvider } from "./context/ThemeContext";
+import { ThemeProvider } from "./Context/ThemeContext";
 import "./styles/base.css";
 /* Recruitment */
 import RecruitmentDashboard from "./Pages/Recruitment/Recruitment";

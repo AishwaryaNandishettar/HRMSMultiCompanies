@@ -6,7 +6,7 @@
 
 import React, { useState } from 'react';
 import InitialLogo from './InitialLogo';
-import { useTheme } from '../context/ThemeContext';
+import { useTheme } from '../Context/ThemeContext';
 
 /**
  * LogoManager Component

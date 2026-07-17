@@ -1,8 +1,8 @@
 import React, { useState, useContext } from "react";
 import { useNavigate } from "react-router-dom";
 import { AuthContext } from "../Context/Authcontext";
-import { useTheme } from "../context/ThemeContext"; // ✅ Multi-tenant theme
-import LogoManager from "../components/LogoManager"; // ✅ Multi-tenant logo
+import { useTheme } from "../Context/ThemeContext"; // ✅ Multi-tenant theme
+import LogoManager from "../Components/LogoManager"; // ✅ Multi-tenant logo
 import logo from "../assets/Background less.png";
 import "./Login.css";
 import api from "../api/axios";
