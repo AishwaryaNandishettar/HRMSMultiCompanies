@@ -156,7 +156,9 @@ employeeRepo.save(emp);
         emailService.sendInviteEmail(email, onboardingLink, otp, "Temp@123");
         log.info("📩 Invite email sent to: {}", email);
     } catch (Exception e) {
-        log.error("Email sending failed: {}", e.getMessage());
+        log.error("❌ Email sending failed for {}: {}", email, e.getMessage(), e);
+        // Re-throw so the controller returns a real error instead of false success
+        throw new RuntimeException("Employee saved but email failed: " + e.getMessage(), e);
     }
 }
 

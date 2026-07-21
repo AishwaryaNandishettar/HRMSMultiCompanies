@@ -8,7 +8,7 @@ import org.springframework.mail.javamail.JavaMailSenderImpl;
 import org.springframework.scheduling.annotation.EnableAsync;
 import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
-
+import jakarta.annotation.PostConstruct;
 import javax.net.ssl.*;
 import java.security.cert.X509Certificate;
 import java.util.Properties;
@@ -40,8 +40,17 @@ public class EmailConfig {
     @Value("${spring.task.execution.pool.queue-capacity:100}")
     private int queueCapacity;
 
+
+ @PostConstruct
+    public void testMailConfig() {
+        System.out.println("==================================");
+        System.out.println("MAIL USER = " + mailUsername);
+        System.out.println("MAIL PASS = " + (mailPassword == null ? "NULL" : "Loaded"));
+        System.out.println("==================================");
+    }
     @Bean
     public JavaMailSender javaMailSender() {
+
         // Disable SSL certificate validation for development
         disableSSLValidation();
         
@@ -51,6 +60,10 @@ public class EmailConfig {
         mailSender.setPort(mailPort);
         mailSender.setUsername(mailUsername);
         mailSender.setPassword(mailPassword);
+        System.out.println("==================================");
+System.out.println("Mail Username : " + mailUsername);
+System.out.println("Mail Password Present : " + (mailPassword != null && !mailPassword.isBlank()));
+System.out.println("==================================");
         
         Properties props = mailSender.getJavaMailProperties();
         props.put("mail.transport.protocol", "smtp");
