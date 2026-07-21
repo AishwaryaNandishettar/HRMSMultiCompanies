@@ -1,6 +1,6 @@
 import { FaEye, FaEdit, FaDownload } from "react-icons/fa";
 
-const PayrollRow = ({ record, onViewPayslip, onProfileView,onEditPayroll,onDownloadPayslip,onProcessPayroll,onStatusChange }) => {
+const PayrollRow = ({ record,  serialNumber, onViewPayslip, onProfileView,onEditPayroll,onDownloadPayslip,onProcessPayroll,onStatusChange }) => {
   // ✅ Calculate total deductions from individual fields (same as UpdatePayroll)
   const deductionTotal = 
     (record.pf || 0) +
@@ -13,6 +13,10 @@ const PayrollRow = ({ record, onViewPayslip, onProfileView,onEditPayroll,onDownl
 
   return (
     <tr>
+      
+<td className="serial-number-column">
+  {serialNumber}
+</td>
       <td className="emp-cell">
     <img
       src={

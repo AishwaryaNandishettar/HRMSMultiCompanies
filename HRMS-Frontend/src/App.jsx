@@ -33,42 +33,42 @@ import EmployeeProfile from "./Pages/EmployeeProfile";
 import Timesheet from "./Pages/Timesheet";
 import Attendance from "./Pages/Attendance";
 import Leave from "./Pages/Leave";
-import InsuranceClaim from "./Pages/InsuranceClaim";
+// import InsuranceClaim from "./Pages/InsuranceClaim"; // HIDDEN
 import EmployeeCard from "./Pages/Emplyeecard";
 import Payroll from "./Pages/Payroll";
-import Helpdesk from "./Pages/Helpdesk"; // ✅ adjust path if different
+// import Helpdesk from "./Pages/Helpdesk"; // HIDDEN
 
-import BulkUploadEmployees from "./Pages/BulkUploadEmployees";
+// import BulkUploadEmployees from "./Pages/BulkUploadEmployees"; // HIDDEN
 import UpdatePayroll from "./Pages/Payroll/UpdatePayroll";
-import ReimbursementForm from "./Pages/ReimbursementForm";
-import FinancialAssessment from "./Pages/financialAssessment";
+// import ReimbursementForm from "./Pages/ReimbursementForm"; // HIDDEN
+// import FinancialAssessment from "./Pages/financialAssessment"; // HIDDEN
 import ProtectedRoute from "./Pages/ProtectedRoute";
-import CibilCheck from "./Pages/CibilCheck";
+// import CibilCheck from "./Pages/CibilCheck"; // HIDDEN
 import Onboarding from "./Pages/Onboarding";
 import OtpVerification from "./Pages/OtpVerification";
 import BGV from "./Pages/BGV";
 import TaskManagement from "./Pages/TaskManagement";
-import InvitePage from "./Pages/InvitePage";
-import InviteAccept from "./Pages/InviteAccept";
-import PersonalInsurance from "./Pages/PersonalInsurance";
-import LoanApplication from "./Pages/LoanApplication";
-import Report from "./Pages/Report";
-import Settings from "./Pages/Settings";
-import RevenueExpense from "./Pages/Financial/RevenueExpense";
-import BudgetDetails from "./Pages/Financial/BudgetDetails";
-import PayrollDetails from "./Pages/Financial/PayrollDetails";
-import CashFlowDetails from "./Pages/Financial/CashFlowDetails";
+// import InvitePage from "./Pages/InvitePage"; // HIDDEN
+// import InviteAccept from "./Pages/InviteAccept"; // HIDDEN
+// import PersonalInsurance from "./Pages/PersonalInsurance"; // HIDDEN
+// import LoanApplication from "./Pages/LoanApplication"; // HIDDEN
+// import Report from "./Pages/Report"; // HIDDEN
+// import Settings from "./Pages/Settings"; // HIDDEN
+// import RevenueExpense from "./Pages/Financial/RevenueExpense"; // HIDDEN
+// import BudgetDetails from "./Pages/Financial/BudgetDetails"; // HIDDEN
+// import PayrollDetails from "./Pages/Financial/PayrollDetails"; // HIDDEN
+// import CashFlowDetails from "./Pages/Financial/CashFlowDetails"; // HIDDEN
 import { PayrollProvider } from "./Context/PayrollContext";
 
 
-/* ✅ NEW PERFORMANCE PAGE */
-import Performance from "./Pages/Performance";
+/* ✅ NEW PERFORMANCE PAGE - HIDDEN */
+// import Performance from "./Pages/Performance";
 
-/* ✅ REPORT DETAIL PAGES */
-import HiringAttritionDetails from "./Pages/Reports/HiringAttritionDetails";
-import EmployeeGrowthDetails from "./Pages/Reports/EmployeeGrowthDetails";
-import DepartmentDetails from "./Pages/Reports/DepartmentDetails";
-import EmployeeCostDetails from "./Pages/Reports/EmployeeCostDetails";
+/* ✅ REPORT DETAIL PAGES - HIDDEN */
+// import HiringAttritionDetails from "./Pages/Reports/HiringAttritionDetails";
+// import EmployeeGrowthDetails from "./Pages/Reports/EmployeeGrowthDetails";
+// import DepartmentDetails from "./Pages/Reports/DepartmentDetails";
+// import EmployeeCostDetails from "./Pages/Reports/EmployeeCostDetails";
 
 /* Work Chat */
 import WorkChat from "./Pages/WorkChat/WorkChat";
@@ -136,11 +136,13 @@ const [showNotif, setShowNotif] = useState(false);
                 }
               />
 
-<Route
+{/* PERSONAL INSURANCE - HIDDEN */}
+{/* <Route
   path="/personal-insurance"
   element={<PersonalInsurance />}
-/>
-  {/* 👇 ADD EMPLOYEE ROUTE HERE */}
+/> */}
+
+  {/* EMPLOYEE CARD ROUTE - KEPT FOR ADMIN */}
   <Route
     path="/employees"
     element={
@@ -150,21 +152,21 @@ const [showNotif, setShowNotif] = useState(false);
     }
   />
 
-              {/* ✅ PERFORMANCE ROUTE */}
-              <Route
+              {/* PERFORMANCE ROUTE - HIDDEN */}
+              {/* <Route
                 path="/performance"
                 element={
                   <ProtectedRoute>
                     <Performance />
                   </ProtectedRoute>
                 }
-              />
+              /> */}
 
               {/* RECRUITMENT */}
              <Route
   path="/Recruitment"
   element={
-    <ProtectedRoute roles={["admin", "manager", "employee"]}>
+    <ProtectedRoute roles={["admin", "manager"]}>
       <RecruitmentDashboard />
     </ProtectedRoute>
   }
@@ -189,7 +191,8 @@ const [showNotif, setShowNotif] = useState(false);
 
 
 
-           <Route
+           {/* FINANCIAL ASSESSMENT - HIDDEN */}
+           {/* <Route
   path="/financial-assessment"
   element={
     <ProtectedRoute roles={["admin", "manager"]}>
@@ -200,9 +203,9 @@ const [showNotif, setShowNotif] = useState(false);
 <Route path="/financial/revenue-expense" element={<RevenueExpense />} />
 <Route path="/financial/budget" element={<BudgetDetails />} />
 <Route path="/financial/payroll" element={<PayrollDetails />} />
+<Route path="/financial/cashflow" element={<CashFlowDetails />} /> */}
 
 <Route path="/update-payroll" element={<UpdatePayroll />} />
-<Route path="/financial/cashflow" element={<CashFlowDetails />} />
               {/* EMPLOYEE */}
               <Route
                 path="/profile"
@@ -264,17 +267,18 @@ const [showNotif, setShowNotif] = useState(false);
 
          
 
-              <Route
+              {/* REPORT - HIDDEN */}
+              {/* <Route
                 path="/report"
                 element={
                   <ProtectedRoute roles={["manager", "admin"]}>
                     <Report />
                   </ProtectedRoute>
                 }
-              />
+              /> */}
 
-              {/* ✅ REPORT DETAIL ROUTES */}
-              <Route
+              {/* REPORT DETAIL ROUTES - HIDDEN */}
+              {/* <Route
                 path="/reports/hiring-attrition"
                 element={
                   <ProtectedRoute roles={["manager", "admin"]}>
@@ -308,10 +312,10 @@ const [showNotif, setShowNotif] = useState(false);
                     <EmployeeCostDetails />
                   </ProtectedRoute>
                 }
-              />
+              /> */}
 
-              {/* ADMIN ONLY */}
-              <Route
+              {/* ADMIN ONLY - INSURANCE, BGV, REIMBURSEMENT - HIDDEN */}
+              {/* <Route
                 path="/insurance-claim"
                 element={
                   <ProtectedRoute roles={["employee","manager","admin"]}>
@@ -336,7 +340,7 @@ const [showNotif, setShowNotif] = useState(false);
                     <ReimbursementForm />
                   </ProtectedRoute>
                 }
-              />
+              /> */}
 
               <Route
                 path="/employee-card"
@@ -348,6 +352,7 @@ const [showNotif, setShowNotif] = useState(false);
               />
 
 
+              {/* BGV */}
               <Route
                 path="/bgv"
                 element={
@@ -358,7 +363,8 @@ const [showNotif, setShowNotif] = useState(false);
               />
 
 
-         <Route
+         {/* INVITE - HIDDEN */}
+         {/* <Route
   path="/invite"
   element={
     <ProtectedRoute roles={["admin"]}>
@@ -366,40 +372,46 @@ const [showNotif, setShowNotif] = useState(false);
     </ProtectedRoute>
   }
 />
- {/* ✅ EMPLOYEE INVITE LINK PAGE (NO PROTECTED ROUTE) */}
+ ✅ EMPLOYEE INVITE LINK PAGE (NO PROTECTED ROUTE)
   <Route
     path="/invite-accept"
     element={<InviteAccept />}
-  />
+  /> */}
 
-  <Route path="/bulk-upload" element={<BulkUploadEmployees />} />
-              <Route
+  {/* BULK UPLOAD - HIDDEN */}
+  {/* <Route path="/bulk-upload" element={<BulkUploadEmployees />} /> */}
+
+              {/* SETTINGS - HIDDEN */}
+              {/* <Route
                 path="/settings"
                 element={
                    <ProtectedRoute roles={["employee", "manager", "admin"]}>
                     <Settings />
                   </ProtectedRoute>
                 }
-              />
+              /> */}
               
-              <Route
+              {/* CIBIL CHECK - HIDDEN */}
+              {/* <Route
                 path="/cibil-check"
                 element={
                   <ProtectedRoute roles={["employee", "manager", "admin"]}>
                     <CibilCheck />
                   </ProtectedRoute>
                 }
-              />
+              /> */}
 
-              <Route
+              {/* LOAN APPLICATION - HIDDEN */}
+              {/* <Route
                 path="/loan-application"
                 element={
                   <ProtectedRoute roles={["employee", "manager", "admin"]}>
                     <LoanApplication />
                   </ProtectedRoute>
                 }
-              />
+              /> */}
 
+             {/* TASKS - KEPT */}
              <Route
   path="/tasks"
   element={
@@ -408,14 +420,16 @@ const [showNotif, setShowNotif] = useState(false);
     </ProtectedRoute>
   }
 />
-<Route
+
+{/* HELPDESK - HIDDEN */}
+{/* <Route
   path="/helpdesk"
   element={
     <ProtectedRoute>
       <Helpdesk />
     </ProtectedRoute>
   }
-/>
+/> */}
               {/* Event Detail — accessible by all roles */}
               <Route
                 path="/events/:id"

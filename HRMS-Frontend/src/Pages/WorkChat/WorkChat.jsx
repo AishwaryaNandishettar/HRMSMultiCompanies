@@ -100,7 +100,15 @@ export default function WorkChat() {
   const [unreadPerGroup, setUnreadPerGroup] = useState({});
   
   // ✅ Track which chats have been opened/seen locally
-  const [locallySeenChats, setLocallySeenChats] = useState(new Set());
+  const [locallySeenChats, setLocallySeenChats] = useState(() => {
+  try {
+    const saved = sessionStorage.getItem("locallySeenChats");
+    return saved ? new Set(JSON.parse(saved)) : new Set();
+  } catch (error) {
+    console.error("Failed to restore locally seen chats:", error);
+    return new Set();
+  }
+});
   
   const [msgSearch, setMsgSearch] = useState("");
   const [showGroupModal, setShowGroupModal] = useState(false);
@@ -465,37 +473,42 @@ const handleReply = (msg) => {
 
   // Fetch unread users count on mount and periodically
   useEffect(() => {
-    if (!TOKEN || !LOGGED_IN_EMAIL) return;
+  if (!TOKEN || !LOGGED_IN_EMAIL) return;
 
-    const fetchUnreadCount = () => {
-      // Fetch total unread users count
-      fetchUnreadUsersCount(LOGGED_IN_EMAIL, TOKEN)
-        .then((count) => setUnreadUsersCount(count))
-        .catch((err) => console.error("Failed to fetch unread count:", err));
-      
-      // Fetch unread messages per user
-      fetchUnreadMessagesPerUser(LOGGED_IN_EMAIL, TOKEN)
-        .then((data) => {
-          const normalized = normalizeUnreadKeys(data);
-          
-          // ✅ Filter out chats that have been locally marked as seen
-          const filtered = Object.fromEntries(
-            Object.entries(normalized).filter(([email]) => !locallySeenChats.has(email))
-          );
-          
-          setUnreadPerUser(filtered);
-        })
-        .catch((err) => console.error("Failed to fetch unread per user:", err));
-    };
+  const fetchUnreadCount = () => {
+    fetchUnreadMessagesPerUser(LOGGED_IN_EMAIL, TOKEN)
+      .then((data) => {
+        const normalized = normalizeUnreadKeys(data);
 
-    // Fetch immediately
-    fetchUnreadCount();
+        // Remove chats that were already opened/read
+        const filtered = Object.fromEntries(
+          Object.entries(normalized).filter(
+            ([email]) => !locallySeenChats.has(email)
+          )
+        );
 
-    // Refresh every 5 seconds
-    const interval = setInterval(fetchUnreadCount, 5000);
+        // Update individual unread badges
+        setUnreadPerUser(filtered);
 
-    return () => clearInterval(interval);
-  }, [TOKEN, LOGGED_IN_EMAIL, locallySeenChats]);
+        // Count only chats that still have unread messages
+        const unreadChatCount = Object.keys(filtered).length;
+
+        setUnreadUsersCount(unreadChatCount);
+      })
+      .catch((err) => {
+        console.error("Failed to fetch unread per user:", err);
+      });
+  };
+
+  // Fetch immediately
+  fetchUnreadCount();
+
+  // Refresh every 5 seconds
+  const interval = setInterval(fetchUnreadCount, 5000);
+
+  return () => clearInterval(interval);
+}, [TOKEN, LOGGED_IN_EMAIL, locallySeenChats]);
+
 
   // Fetch unread groups count on mount and periodically
   useEffect(() => {
@@ -592,9 +605,20 @@ const handleReply = (msg) => {
     
     // ✅ Mark this chat as locally seen (prevents periodic refresh from restoring badge)
     const chatEmailKey = selectedChat.email?.toLowerCase();
-    if (chatEmailKey) {
-      setLocallySeenChats(prev => new Set([...prev, chatEmailKey]));
-    }
+   if (chatEmailKey) {
+  setLocallySeenChats(prev => {
+    const next = new Set(prev);
+    next.add(chatEmailKey);
+
+    // Keep locally seen chats when navigating to another page
+    sessionStorage.setItem(
+      "locallySeenChats",
+      JSON.stringify([...next])
+    );
+
+    return next;
+  });
+}
     
     // ✅ Immediately clear unread badge (optimistic UI update)
     setUnreadPerUser(prev => {

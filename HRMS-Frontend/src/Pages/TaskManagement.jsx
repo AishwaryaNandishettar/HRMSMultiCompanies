@@ -813,7 +813,8 @@ const updateTaskAction = async (taskId, action) => {
       <thead>
 
         <tr>
-
+          {/* Serial Number */}
+  <th>S.NO.</th>
           <th className="taskPage-sticky-col taskPage-col-1">
 
   <div className="taskPage-thHeader">
@@ -1038,7 +1039,9 @@ const updateTaskAction = async (taskId, action) => {
   .map((t, index) => (
 
           <tr key={index}>
-
+           
+             {/* Serial Number */}
+    <td>{index + 1}</td>
           <td className="taskPage-sticky-col taskPage-col-1">
    {t.employeeId || t.assigneeId || t.id}
 

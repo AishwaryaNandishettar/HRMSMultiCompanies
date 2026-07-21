@@ -1133,3 +1133,32 @@ td:nth-child(5) {
   color: #6b7280;
   border: 1px solid #d1d5db;
 }
+/* Employee Directory - clear column separation */
+.employee-table {
+  border-collapse: separate;
+  border-spacing: 0;
+}
+
+/* Clear vertical lines between all columns */
+.employee-table th,
+.employee-table td {
+  border-right: 1px solid #d1d5db;
+  border-bottom: 1px solid #d1d5db;
+}
+
+/* Left border of the table */
+.employee-table th:first-child,
+.employee-table td:first-child {
+  border-left: 1px solid #d1d5db;
+}
+
+/* Stronger header column separation */
+.employee-table th {
+  border-right: 1px solid rgba(255, 255, 255, 0.35);
+}
+
+/* Keep the last column clean */
+.employee-table th:last-child,
+.employee-table td:last-child {
+  border-right: none;
+}

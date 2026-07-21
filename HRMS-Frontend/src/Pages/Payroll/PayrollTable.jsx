@@ -3,7 +3,7 @@ import PayrollRow from "./PayrollRow";
 import payslipData from "../../Data/PaySlipData";
 import "./Payroll.css";
 
-const PayrollTable = ({ data, onViewPayslip, onProfileView , onEditPayroll, onDownloadPayslip,onProcessPayroll,onStatusChange, columnFilters, setColumnFilters }) => {
+const PayrollTable = ({ data, filterData,onViewPayslip, onProfileView , onEditPayroll, onDownloadPayslip,onProcessPayroll,onStatusChange, columnFilters, setColumnFilters }) => {
    /* =========================
      FILTER STATES
   ========================= */
@@ -68,7 +68,7 @@ const PayrollTable = ({ data, onViewPayslip, onProfileView , onEditPayroll, onDo
     console.log("Data:", data);
     return [
       ...new Set(
-        data.map((item) => {
+        (filterData || data).map((item) => {
           switch (key) {
             case "employeeName":
   return (
@@ -122,7 +122,7 @@ const PayrollTable = ({ data, onViewPayslip, onProfileView , onEditPayroll, onDo
      FILTERED DATA
   ========================= */
 
-  const filteredData = data.filter((item) => {
+const filteredData = (filterData || data).filter((item) => {
     return Object.keys(filters).every((key) => {
       if (!filters[key]) return true;
 
@@ -232,6 +232,8 @@ const totalNet = data.reduce(
       <table className="payroll-table">
         <thead>
           <tr>
+              <th className="serial-number-column">S.NO.</th>
+
             {columns.map((col) => (
           
 <th key={col.key}>
@@ -378,14 +380,15 @@ const totalNet = data.reduce(
             </tr>
           ) : (
             <>
-              {filteredData.map((record) => (
-                <PayrollRow
-                  key={
-                    record.employeeId ||
-                    record.empId ||
-                    record.empCode
-                  }
-                  record={record}
+             {filteredData.map((record, index) => (
+  <PayrollRow
+    key={
+      record.employeeId ||
+      record.empId ||
+      record.empCode
+    }
+    serialNumber={index + 1}
+    record={record}
                   onViewPayslip={onViewPayslip}
                   onProfileView={onProfileView}
                   onEditPayroll={onEditPayroll}
@@ -408,16 +411,18 @@ const totalNet = data.reduce(
                 };
 
                 return (
-                  <tr>
-                    <td
-                      style={{
-                        ...tdStyle,
-                        textTransform: "uppercase",
-                        letterSpacing: "0.5px",
-                      }}
-                    >
-                      💰 Grand Total
-                    </td>
+                 <tr>
+  <td style={tdStyle}></td>
+
+  <td
+    style={{
+      ...tdStyle,
+      textTransform: "uppercase",
+      letterSpacing: "0.5px",
+    }}
+  >
+    💰 Grand Total
+  </td>
 
                     <td style={tdStyle}></td>
                     <td style={tdStyle}></td>

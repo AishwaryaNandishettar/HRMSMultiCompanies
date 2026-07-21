@@ -920,8 +920,9 @@ const renderCheckboxFilter = (key) => {
               <table className="leave-table">
               <thead>
         <tr>
-
-          {/* EMPLOYEE */}
+ 
+    <th>S.No</th>
+         
           {renderFilterHeader("Employee Name", "employeeName")}
 {renderFilterHeader("Emp ID", "empId")}
       {renderFilterHeader("Department", "department")}
@@ -941,9 +942,10 @@ const renderCheckboxFilter = (key) => {
       </thead>
 
       <tbody>
-        {filteredLeaves.map(l => (
+       {filteredLeaves.map((l, index) => (
           <tr key={l._id || l.id}>
-
+           
+      <td>{index + 1}</td>
             <td>
               {l.employeeName || l.name || l.userName || "N/A"}
             </td>

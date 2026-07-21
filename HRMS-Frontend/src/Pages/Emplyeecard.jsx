@@ -1193,6 +1193,11 @@ const getEmployeeProfileImage = (emp) => {
   <table className="employee-table">
           <thead>
             <tr className="table-head">
+              <th>
+  <div className="th-header">
+    S.No.
+  </div>
+</th>
              <th>
   <div className="th-header">
     Profile
@@ -2003,6 +2008,8 @@ const getEmployeeProfileImage = (emp) => {
             ) : (
               filteredEmployees.map((emp, index) => (
                 <tr key={`${emp.employeeId}-${emp.email}-${index}`}>
+                   {/* Serial Number */}
+    <td>{index + 1}</td>
                 <td>
   {getEmployeeProfileImage(emp) ? (
     <img

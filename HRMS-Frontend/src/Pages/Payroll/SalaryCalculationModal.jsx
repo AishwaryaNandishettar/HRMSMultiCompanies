@@ -2,7 +2,14 @@ import { useState } from "react";
 import { calculateSalary, calculateAndApplySalary } from "../../api/payrollApi";
 import "./SalaryCalculationModal.css";
 
-const SalaryCalculationModal = ({ open, onClose, employee, month, onSuccess }) => {
+const SalaryCalculationModal = ({
+  open,
+  onClose,
+  employee,
+  month,
+  payrollData,
+  onSuccess
+}) => {
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState(null);
   const [includeAttendance, setIncludeAttendance] = useState(true);
@@ -14,13 +21,26 @@ const SalaryCalculationModal = ({ open, onClose, employee, month, onSuccess }) =
   const handleCalculate = async () => {
     setLoading(true);
     try {
-      const request = {
-        employeeId: employee.employeeId || employee.empId,
-        month: month,
-        includeAttendance,
-        includeLeave,
-        includePerformance,
-      };
+     const request = {
+  employeeId: employee.employeeId || employee.empId,
+  month: month,
+  includeAttendance,
+  includeLeave,
+  includePerformance,
+
+  // Use values manually entered in Update Payroll
+  workingDays: Number(payrollData?.workingDays || 0),
+  paidDays: Number(payrollData?.paidDays || 0),
+  lopDays: Number(payrollData?.lopDays || 0),
+
+  // Monthly salary
+  basic: Number(payrollData?.basic || 0),
+  hra: Number(payrollData?.hra || 0),
+  allowance: Number(payrollData?.allowance || 0),
+  bonus: Number(payrollData?.bonus || 0),
+  incentive: Number(payrollData?.incentive || 0),
+  conveyance: Number(payrollData?.conveyance || 0),
+};
 
       const response = await calculateSalary(request);
       setResult(response.data);
@@ -37,13 +57,24 @@ const SalaryCalculationModal = ({ open, onClose, employee, month, onSuccess }) =
 
     setLoading(true);
     try {
-      const request = {
-        employeeId: employee.employeeId || employee.empId,
-        month: month,
-        includeAttendance,
-        includeLeave,
-        includePerformance,
-      };
+    const request = {
+  employeeId: employee.employeeId || employee.empId,
+  month: month,
+  includeAttendance,
+  includeLeave,
+  includePerformance,
+
+  workingDays: Number(payrollData?.workingDays || 0),
+  paidDays: Number(payrollData?.paidDays || 0),
+  lopDays: Number(payrollData?.lopDays || 0),
+
+  basic: Number(payrollData?.basic || 0),
+  hra: Number(payrollData?.hra || 0),
+  allowance: Number(payrollData?.allowance || 0),
+  bonus: Number(payrollData?.bonus || 0),
+  incentive: Number(payrollData?.incentive || 0),
+  conveyance: Number(payrollData?.conveyance || 0),
+};
 
       await calculateAndApplySalary(request);
       alert("✅ Salary calculated and applied successfully!");

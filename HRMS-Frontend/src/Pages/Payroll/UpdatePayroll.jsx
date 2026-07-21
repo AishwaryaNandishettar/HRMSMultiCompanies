@@ -232,9 +232,9 @@ ifsc:
   };
 
   // ✅ AUTO CALC AFTER updated exists
-  updated.workingDays = 30;
-  updated.lopDays = Number(updated.lopDays || 0);
-  updated.paidDays = updated.workingDays - updated.lopDays;
+updated.workingDays = Number(updated.workingDays || 30);
+updated.lopDays = Number(updated.lopDays || 0);
+updated.paidDays = Number(updated.paidDays || 0);
 
   const gross =
     Number(updated.basic || 0) +
@@ -828,16 +828,23 @@ ifsc: d.ifsc || "",
 
       {/* NEW: Salary Calculation Modal */}
       {selectedEmployee && (
-        <SalaryCalculationModal
-          open={showCalcModal}
-          onClose={() => {
-            setShowCalcModal(false);
-            setSelectedEmployee(null);
-          }}
-          employee={selectedEmployee}
-          month={month}
-          onSuccess={handleCalculationSuccess}
-        />
+      <SalaryCalculationModal
+  open={showCalcModal}
+  onClose={() => {
+    setShowCalcModal(false);
+    setSelectedEmployee(null);
+  }}
+  employee={selectedEmployee}
+  month={month}
+  payrollData={
+    selectedEmployee
+      ? payrollData[
+          selectedEmployee.employeeId || selectedEmployee.empId
+        ]
+      : null
+  }
+  onSuccess={handleCalculationSuccess}
+/>
       )}
 
       {/* NEW: Bulk Calculation Results Modal */}

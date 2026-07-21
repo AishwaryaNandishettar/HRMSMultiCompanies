@@ -129,7 +129,7 @@ const handleMenuClick = () => {
 
  
       {/* RECRUITMENT */}
-{(role === "admin" || role === "manager" || role === "employee") && (
+{(role === "admin" || role === "manager") && (
   <li>
     <NavLink  to="/recruitment"
   className={({ isActive }) =>
@@ -182,8 +182,8 @@ const handleMenuClick = () => {
 
 
 
-       {/* ✅ FINANCIAL ASSESSMENT (Admin / Manager) */}
-{(role === "admin" || role === "manager") && (
+       {/* ✅ FINANCIAL ASSESSMENT (Admin / Manager) - HIDDEN */}
+{/* {(role === "admin" || role === "manager") && (
   <li>
     <NavLink  to="/financial-assessment"
   className={({ isActive }) =>
@@ -196,11 +196,12 @@ const handleMenuClick = () => {
       {isOpen && <span>Financial Assessment</span>}
     </NavLink>
   </li>
-)}
-        {/* COMMON */}
+)} */}
+        {/* COMMON - HIDDEN */}
        
 
-    <li>
+    {/* REPORT - HIDDEN */}
+    {/* <li>
       <NavLink  to="/report"
   className={({ isActive }) =>
     `${styles.navLink} ${
@@ -211,7 +212,7 @@ const handleMenuClick = () => {
         <FaChartBar />
         {isOpen && <span>Report</span>}
       </NavLink>
-    </li>
+    </li> */}
 
     <li>
       <NavLink  to="/bgv"
@@ -233,7 +234,8 @@ const handleMenuClick = () => {
            {/* ALL ROLES */}
 {(role === "admin" || role === "manager" || role === "employee") && (
   <>
-    <li>
+    {/* SETTINGS - HIDDEN */}
+    {/* <li>
       <NavLink  to="/settings"
   className={({ isActive }) =>
     `${styles.navLink} ${
@@ -244,9 +246,10 @@ const handleMenuClick = () => {
         <FiSettings />
         {isOpen && <span>Settings</span>}
       </NavLink>
-    </li>
+    </li> */}
 
-    <li>
+    {/* CIBIL CHECK - HIDDEN */}
+    {/* <li>
       <NavLink  to="/cibil-check"
   className={({ isActive }) =>
     `${styles.navLink} ${
@@ -257,7 +260,7 @@ const handleMenuClick = () => {
         <FaCreditCard />
         {isOpen && <span>CIBIL Check</span>}
       </NavLink>
-    </li>
+    </li> */}
 
   <li>
           <NavLink  to="/workchat"
@@ -286,7 +289,8 @@ const handleMenuClick = () => {
           </NavLink>
         </li>
 
-<li>
+{/* HELPDESK - HIDDEN */}
+{/* <li>
   <NavLink  to="/helpdesk"
   className={({ isActive }) =>
     `${styles.navLink} ${
@@ -297,8 +301,10 @@ const handleMenuClick = () => {
     <FaBriefcase/>
     {isOpen && <span>Helpdesk</span>}
   </NavLink>
-</li>
- <li>
+</li> */}
+
+{/* PERFORMANCE - HIDDEN */}
+{/* <li>
           <NavLink  to="/performance"
   className={({ isActive }) =>
     `${styles.navLink} ${
@@ -309,7 +315,8 @@ const handleMenuClick = () => {
             <FaChartLine />
             {isOpen && <span>Performance</span>}
           </NavLink>
-        </li>
+        </li> */}
+
   <li>
             <NavLink  to="/payroll"
   className={({ isActive }) =>
@@ -323,7 +330,8 @@ const handleMenuClick = () => {
             </NavLink>
           </li>
 
- <li>
+ {/* INSURANCE CLAIM - HIDDEN */}
+ {/* <li>
           <NavLink  to="/insurance-claim"
   className={({ isActive }) =>
     `${styles.navLink} ${
@@ -334,9 +342,10 @@ const handleMenuClick = () => {
            <FaHeartbeat />
             {isOpen && <span>Insurance Claim</span>}
           </NavLink>
-        </li>
+        </li> */}
 
-<li>
+{/* PERSONAL INSURANCE - HIDDEN */}
+{/* <li>
   <NavLink  to="/personal-insurance"
   className={({ isActive }) =>
     `${styles.navLink} ${
@@ -347,8 +356,10 @@ const handleMenuClick = () => {
   <FaFileMedical />
     {isOpen && <span>Personal Insurance Claim</span>}
   </NavLink>
-</li>
-        <li>
+</li> */}
+
+        {/* REIMBURSEMENT - HIDDEN */}
+        {/* <li>
           <NavLink  to="/reimbursement"
   className={({ isActive }) =>
     `${styles.navLink} ${
@@ -359,11 +370,12 @@ const handleMenuClick = () => {
             <FaWallet />
             {isOpen && <span>Reimbursement</span>}
           </NavLink>
-        </li>
+        </li> */}
 
      
 
-    <li>
+    {/* LOAN APPLICATION - HIDDEN */}
+    {/* <li>
       <NavLink  to="/loan-application"
   className={({ isActive }) =>
     `${styles.navLink} ${
@@ -374,7 +386,7 @@ const handleMenuClick = () => {
         <FaHandHoldingUsd />
         {isOpen && <span>Loan Application</span>}
       </NavLink>
-    </li>
+    </li> */}
   </>
 )}
 

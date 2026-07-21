@@ -480,6 +480,7 @@ const handleExport = () => {
 
             <PayrollTable
               data={paginatedData}
+                filterData={sortedData}
               onViewPayslip={handleViewPayslip}
               onProfileView={handleProfileView}
               onDownloadPayslip={handleDownloadPayslip}

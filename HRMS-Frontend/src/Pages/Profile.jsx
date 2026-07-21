@@ -1,4 +1,4 @@
-    import React, { useState, useEffect, useRef } from "react";
+﻿    import React, { useState, useEffect, useRef } from "react";
     import { useLocation } from "react-router-dom";
     //import { getSkillsByEmployee, addSkill, updateManagerRating } from "../api/skillApi";
     import styles from "./Profile.module.css";
@@ -470,17 +470,19 @@ console.log("LOCATION EMPLOYEE =", location.state?.employee);
 console.log("PROFILE EMPLOYEE =", profileEmployee);
 console.log("REPORTING MANAGER =", selectedEmployee?.reportingManager);
  const reporting = [
-  {
-    name:
-      profileEmployee?.reportingManager ||
-      profileEmployee?.managerName ||
-      profileEmployee?.managerEmail ||
-      profileData?.reportingManager ||
-      profileData?.managerName ||
-      profileData?.managerEmail ||
-      "-",
-    role: "Reporting Manager",
-  },
+ {
+  name:
+    profileEmployee?.reportingManager ||
+    profileEmployee?.managerName ||
+    profileEmployee?.manager ||
+    profileData?.reportingManager ||
+    profileData?.managerName ||
+    profileData?.manager ||
+    profileEmployee?.managerEmail ||
+    profileData?.managerEmail ||
+    "-",
+  role: "Reporting Manager",
+},
   {
     name:
       profileEmployee?.reportingHead ||
@@ -498,23 +500,63 @@ console.log("REPORTING MANAGER =", selectedEmployee?.reportingManager);
 ];
 
     const downloadPDF = (emp) => {
-    const content = `
-      Increment Letter
+    // Resolve all fields from the passed employee object (never fall back to logged-in user)
+    const empName    = emp?.fullName || emp?.empName || emp?.name || "Employee";
+    const empId      = emp?.employeeId || emp?.id || "N/A";
+    const dept       = emp?.department || "N/A";
+    const desig      = emp?.designation || "N/A";
+    const ctc        = emp?.ctc || "N/A";
+    const hikePercent = emp?.hikePercent || "0";
+    const hikeValue   = emp?.hikeValue || "0";
 
-      Employee: ${emp?.name || employee.name}
-      Date: 01 January 2025
+    const html = `<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8"/>
+  <title>Increment Letter - ${empName}</title>
+  <style>
+    body { font-family: Arial, sans-serif; max-width: 720px; margin: 60px auto; color: #333; }
+    h2   { text-align: center; color: #1a3c6e; }
+    .sub { text-align: center; color: #888; margin-bottom: 24px; }
+    hr   { border: none; border-top: 1px solid #ccc; margin: 16px 0; }
+    p    { line-height: 1.8; }
+    .label { font-weight: bold; display: inline-block; min-width: 220px; }
+    .footer{ margin-top: 48px; }
+  </style>
+</head>
+<body>
+  <h2>Salary Revision Letter</h2>
+  <p class="sub">Human Resources Department</p>
+  <hr/>
+  <p><span class="label">Date:</span> 01 January 2025</p>
+  <p>Dear <strong>${empName}</strong>,</p>
+  <p>We are pleased to inform you that based on your performance, your compensation has been revised as follows:</p>
+  <p><span class="label">Employee ID:</span> ${empId}</p>
+  <p><span class="label">Department:</span> ${dept}</p>
+  <p><span class="label">Designation:</span> ${desig}</p>
+  <hr/>
+  <p><span class="label">Previous CTC:</span> ₹${ctc}</p>
+  <p><span class="label">Hike Percentage:</span> ${hikePercent}%</p>
+  <p><span class="label">Hike Value:</span> ₹${hikeValue}</p>
+  <hr/>
+  <p><span class="label">Revised CTC:</span> ₹${
+    ctc !== "N/A" && hikeValue !== "0"
+      ? Number(ctc) + Number(hikeValue)
+      : "N/A"
+  }</p>
+  <p style="margin-top:20px;">This revision reflects your contribution and performance in the organisation.</p>
+  <div class="footer">
+    <p>Regards,<br/><strong>Human Resources Team</strong></p>
+  </div>
+</body>
+</html>`;
 
-      Congratulations! Your salary has been revised.
-
-      Regards,
-      HR Team
-    `;
-
-    const blob = new Blob([content], { type: "application/pdf" });
+    const blob = new Blob([html], { type: "text/html" });
     const link = document.createElement("a");
     link.href = URL.createObjectURL(blob);
-    link.download = `${emp?.name || employee.name}_Increment_Letter.pdf`;
+    link.download = `${empName}_Increment_Letter_2025.html`;
     link.click();
+    URL.revokeObjectURL(link.href);
   };
 
  const [personalEdit, setPersonalEdit] = useState({
@@ -1538,28 +1580,56 @@ useEffect(() => {
       <input
         className={styles.excelSearch}
         placeholder="Search"
+        value={compensationFilterText}
+        onChange={(e) => setCompensationFilterText(e.target.value)}
       />
 
     <div className={styles.excelList}>
   <label className={styles.excelItem}>
-    <input type="checkbox" />
-    Select All
+    <input
+      type="checkbox"
+      checked={!columnFilters.empName || columnFilters.empName?.length === [...new Set(allEmployees.map(e => e.empName || e.name || e.fullName))].length}
+      onChange={(e) => {
+        if (e.target.checked) {
+          setColumnFilters({...columnFilters, empName: [...new Set(allEmployees.map(emp => emp.empName || emp.name || emp.fullName))]});
+        } else {
+          setColumnFilters({...columnFilters, empName: []});
+        }
+      }}
+    />
+    <span>(Select All)</span>
   </label>
 
   {Array.isArray(allEmployees) &&
-    allEmployees.map((emp, index) => (
-      <label
-        key={index}
-        className={styles.excelItem}
-      >
-        <input type="checkbox" />
-        {emp.employeeId || emp.id}
-      </label>
-    ))}
+    [...new Set(allEmployees.map(e => e.empName || e.name || e.fullName))]
+      .filter(v => String(v).toLowerCase().includes(compensationFilterText.toLowerCase()))
+      .map((empName, index) => {
+        const selectedValues = columnFilters.empName || [...new Set(allEmployees.map(e => e.empName || e.name || e.fullName))];
+        return (
+          <label
+            key={index}
+            className={styles.excelItem}
+          >
+            <input
+              type="checkbox"
+              checked={selectedValues.includes(empName)}
+              onChange={(e) => {
+                let updated = [...selectedValues];
+                if (e.target.checked) {
+                  updated.push(empName);
+                } else {
+                  updated = updated.filter((v) => v !== empName);
+                }
+                setColumnFilters({...columnFilters, empName: updated});
+              }}
+            />
+            <span>{empName}</span>
+          </label>
+        );
+      })}
 </div>
 
       <div className={styles.excelActions}>
-       <div className={styles.excelActions}>
   <button
     onClick={() => setActiveFilter(null)}
   >
@@ -1567,12 +1637,16 @@ useEffect(() => {
   </button>
 
   <button
-    onClick={() => setActiveFilter(null)}
+    onClick={() => {
+      const newFilters = {...columnFilters};
+      delete newFilters.empName;
+      setColumnFilters(newFilters);
+      setActiveFilter(null);
+    }}
   >
     Cancel
   </button>
 </div>
-      </div>
     </div>
   )}
 </th>
@@ -2089,7 +2163,7 @@ filteredEmployees.map((emp, i) => (
        
       <td>{emp.empName || emp.name || emp.fullName || "N/A"}</td>
        
-        <td>{emp.joiningDate}</td>
+        <td>{emp.doj || emp.joiningDate}</td>
         <td>{emp.tenure}</td>
        
          {/* NEW VALUES (adjust field names if backend differs) */}

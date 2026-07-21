@@ -149,7 +149,13 @@ export default function Attendance() {
           managerId: r.managerId || "-",
           managerEmail: r.managerEmail || r.managerId || "-",
           reportingManager:
-            r.reportingManager || r.managerName || r.managerEmail || "-",
+            r.reportingManager || r.managerName || r.manager ||
+            // if only email available, strip domain to show readable name
+            (r.managerEmail && r.managerEmail !== "-"
+              ? r.managerEmail.split("@")[0]
+                  .replace(/[._]/g, " ")
+                  .replace(/\b\w/g, (c) => c.toUpperCase())
+              : "-"),
         
           date: r.date || "-",
           checkIn: r.checkIn || "-",
@@ -158,7 +164,8 @@ export default function Attendance() {
           locationOut: r.locationOut || "-",
           late: r.late || "No",
           earlyLeave: r.earlyLeave || "-",
-          status: r.status || "Pending Approval",
+          // ✅ If record has checkIn, default to "Present"; only "Pending Approval" if truly no status and no checkIn
+          status: r.status || (r.checkIn && r.checkIn !== "-" ? "Present" : "Pending Approval"),
           attendanceType: r.attendanceType || r.type || "Office",
         }));
 // Fetch all employees
@@ -193,11 +200,18 @@ if (role === "manager") {
   );
 }
 
+
+// ============================================================
+// CREATE ABSENT RECORDS ONLY FOR EMPLOYEES WHO HAVE NO
+// ATTENDANCE RECORD FOR THE SELECTED DATE
+// ============================================================
+
 const attendanceDates = new Set(
-  data.map(
-    (r) =>
-      `${String(r.userId).trim().toLowerCase()}_${r.date}`
-  )
+  data
+    .filter((r) => r.date === selectedDate)
+    .map((r) =>
+      `${String(r.userId).trim().toLowerCase()}_${String(r.date).trim()}`
+    )
 );
 
 const absentRecords = [];
@@ -208,32 +222,85 @@ employees.forEach((emp) => {
   // Skip weekends
   if (day === 0 || day === 6) return;
 
- const employeeUserId = emp.id || emp._id;
+  const employeeUserId = emp.id || emp._id;
 
-const key = `${employeeUserId}_${selectedDate}`;
+  // Normalize ID exactly like attendanceDates
+  const normalizedEmployeeUserId = String(employeeUserId)
+    .trim()
+    .toLowerCase();
 
-  if (!attendanceDates.has(key)) {
+  const normalizedDate = String(selectedDate)
+    .trim();
+
+  const key = `${normalizedEmployeeUserId}_${normalizedDate}`;
+
+  // ============================================================
+  // IMPORTANT:
+  // CHECK BOTH userId AND employeeId.
+  // This prevents Present + Absent duplicate rows when the
+  // backend and employee API use different identifiers.
+  // ============================================================
+
+  const hasAttendance = data.some((att) => {
+    const sameDate =
+      String(att.date).trim() === normalizedDate;
+
+    const sameUserId =
+      String(att.userId || "")
+        .trim()
+        .toLowerCase() === normalizedEmployeeUserId;
+
+    const sameEmployeeId =
+      String(att.empId || "")
+        .trim()
+        .toLowerCase() ===
+      String(emp.employeeId || "")
+        .trim()
+        .toLowerCase();
+
+    return sameDate && (sameUserId || sameEmployeeId);
+  });
+
+  if (!hasAttendance) {
     absentRecords.push({
-     userId: employeeUserId,
-      empId: emp.employeeId || "-",
-      name: emp.fullName || "-",
-      department: emp.department || "-",
+      userId: employeeUserId,
 
-         managerEmail:
-      emp.managerEmail ||
-      emp.reportingManager ||
-      emp.manager ||
-      "",
+      empId: emp.employeeId || "-",
+
+      name:
+        emp.fullName ||
+        emp.name ||
+        "-",
+
+      department:
+        emp.department ||
+        "-",
+
+      managerEmail:
+        emp.managerEmail ||
+        emp.reportingManager ||
+        emp.manager ||
+        "",
 
       reportingManager:
-  emp.reportingManager ||
-  emp.managerName ||
-  emp.managerEmail ||
-  "-",
+        emp.reportingManager ||
+        emp.managerName ||
+        emp.manager ||
+        (
+          emp.managerEmail &&
+          emp.managerEmail !== "-"
+            ? emp.managerEmail
+                .split("@")[0]
+                .replace(/[._]/g, " ")
+                .replace(/\b\w/g, (c) => c.toUpperCase())
+            : "-"
+        ),
+
       date: selectedDate,
 
       checkIn: "-",
       checkOut: "-",
+
       locationIn: "-",
       locationOut: "-",
 
@@ -241,20 +308,41 @@ const key = `${employeeUserId}_${selectedDate}`;
       earlyLeave: "-",
 
       status: "Absent",
+
       attendanceType: "-",
     });
   }
 });
-    const finalData = [
+   const finalData = [
   ...data,
   ...absentRecords.filter(
     (absent) =>
-      !data.some(
-        (att) =>
-          String(att.userId).trim().toLowerCase() ===
-            String(absent.userId).trim().toLowerCase() &&
-          att.date === absent.date
-      )
+      !data.some((att) => {
+        const sameDate =
+          String(att.date).trim() ===
+          String(absent.date).trim();
+
+        const sameUserId =
+          String(att.userId || "")
+            .trim()
+            .toLowerCase() ===
+          String(absent.userId || "")
+            .trim()
+            .toLowerCase();
+
+        const sameEmployeeId =
+          String(att.empId || "")
+            .trim()
+            .toLowerCase() ===
+          String(absent.empId || "")
+            .trim()
+            .toLowerCase();
+
+        return (
+          sameDate &&
+          (sameUserId || sameEmployeeId)
+        );
+      })
   ),
 ];
 
@@ -832,6 +920,7 @@ name:
 
   /* ================= TABLE COLUMNS ================= */
   const columns = [
+     { key: "serialNo", label: "S.No." },
     { key: "empId", label: "EMP ID" },
   
     { key: "name", label: "Emp Name" },
@@ -1141,13 +1230,22 @@ name:
             {filteredRecordsFinal.length > 0 ? (
               filteredRecordsFinal.map((r, index) => (
                 <tr key={index}>
+                   <td>{index + 1}</td>
                   <td>{r.empId || "-"}</td>
                 
                   <td>{r.name}</td>
                   <td>{r.department}</td>
 
                   {(role === "admin" || role === "manager") && (
-                    <td>{r.reportingManager || "-"}</td>
+                    <td>{
+                      (() => {
+                        const val = r.reportingManager || "-";
+                        if (!val.includes("@")) return val;
+                        return val.split("@")[0]
+                          .replace(/[._]/g, " ")
+                          .replace(/\b\w/g, (c) => c.toUpperCase());
+                      })()
+                    }</td>
                   )}
                     <td>{r.date}</td>
                   <td>{formatTime(r.checkIn)}</td>
@@ -1169,15 +1267,17 @@ name:
                         r.status === 'Half Day'         ? '#fef9c3' :
                         r.status === 'Absent'           ? '#fee2e2' :
                         r.status === 'On Leave'         ? '#dbeafe' :
+                        r.status === 'Work From Home'   ? '#ede9fe' :
                         r.status === 'Pending Approval' ? '#f3f4f6' : '#f3f4f6',
                       color:
                         r.status === 'Present'          ? '#16a34a' :
                         r.status === 'Half Day'         ? '#854d0e' :
                         r.status === 'Absent'           ? '#dc2626' :
                         r.status === 'On Leave'         ? '#1d4ed8' :
+                        r.status === 'Work From Home'   ? '#6d28d9' :
                         r.status === 'Pending Approval' ? '#6b7280' : '#6b7280',
                     }}>
-                      {r.status}
+                      {r.status === 'Pending Approval' ? 'Present' : r.status}
                     </span>
                   </td>
                 

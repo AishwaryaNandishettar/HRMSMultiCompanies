@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import styles from "./Timesheet.module.css";
 import { getTimesheet, approveTimesheet, submitTimesheet } from "../api/timesheetApi";
 import { getAllAttendance } from "../api/attendanceApi";
+import { getAllEmployees } from "../api/employeeApi";
 import { getAllLeaves } from "../api/leaveApi";
 /* ── Export helpers ── */
 const exportToCSV = (data, cols, filename) => {
@@ -69,6 +70,59 @@ export default function TimesheetManager() {
   const normalizeRole = (r) => (r || "").trim().toLowerCase();
 
   const [role, setRole] = useState(normalizeRole(loggedUser?.role));
+const [employees, setEmployees] = useState([]);
+useEffect(() => {
+  const loadEmployees = async () => {
+    try {
+      const employeeData = await getAllEmployees();
+      setEmployees(employeeData || []);
+    } catch (error) {
+      console.error("Failed to load employees:", error);
+    }
+  };
+
+  loadEmployees();
+}, []);
+
+const getReportingManagerName = (record) => {
+  // If Timesheet backend already provides the name, use it
+  if (record?.reportingManager && !record.reportingManager.includes("@")) {
+    return record.reportingManager;
+  }
+
+  if (record?.managerName && !record.managerName.includes("@")) {
+    return record.managerName;
+  }
+
+  if (record?.manager && !record.manager.includes("@")) {
+    return record.manager;
+  }
+
+  // Get manager email from Timesheet record
+  const managerEmail = (
+    record?.managerEmail ||
+    record?.reportingManager ||
+    ""
+  ).trim().toLowerCase();
+
+  if (!managerEmail) {
+    return "-";
+  }
+
+  // Find employee whose email matches the manager email
+  const managerEmployee = employees.find(
+    (employee) =>
+      employee?.email?.trim().toLowerCase() === managerEmail
+  );
+
+  // Get the actual name dynamically from backend
+  return (
+    managerEmployee?.fullName ||
+    managerEmployee?.name ||
+    "-"
+  );
+};
+
 
   const [records, setRecords] = useState([]);
   const [todayAttendance, setTodayAttendance] = useState([]);
@@ -190,28 +244,45 @@ const currentMonth = today.substring(0, 7);
 
   useEffect(() => {
     const load = async () => {
-      const res = await getTimesheet(fromMonth);
+      // ✅ FIX: Handle month range filtering (June to July)
+      const from = new Date(fromMonth + "-01");
+      const to = new Date(toMonth + "-01");
+      
+      const allRecords = [];
+      
+      // Fetch data for each month in the range
+      let current = new Date(from);
+      while (current <= to) {
+        const monthStr = current.toISOString().slice(0, 7);
+        const monthData = await getTimesheet(monthStr);
+        
+        if (monthData && monthData.length > 0) {
+          allRecords.push(...monthData);
+        }
+        
+        // Move to next month
+        current.setMonth(current.getMonth() + 1);
+      }
       
       // Debug: Log the raw backend response
-      console.log("🔍 RAW BACKEND RESPONSE:", res);
-      if (res && res.length > 0) {
-        console.log("🔍 FIRST RECORD STRUCTURE:", res[0]);
-        console.log("🔍 FIRST RECORD EMPID:", res[0].empId);
+      console.log("🔍 RAW BACKEND RESPONSE (all months):", allRecords);
+      if (allRecords && allRecords.length > 0) {
+        console.log("🔍 FIRST RECORD STRUCTURE:", allRecords[0]);
+        console.log("🔍 FIRST RECORD EMPID:", allRecords[0].empId);
       }
 
-      if (!res || res.length === 0) {
+      if (!allRecords || allRecords.length === 0) {
         // No data from backend — show empty table for all roles
-        // (employee has no check-ins yet, manager's team has no check-ins yet)
         setRecords([]);
       } else {
         const grouped = {};
 
-        res.forEach((r) => {
+        allRecords.forEach((r) => {
       // Extract empId - backend returns it as 'empId' field directly
-      // Use the same format as Attendance page (full format like GN-EMP-0007, IT-EMP-0041)
       const empId = r.empId || "-";
 
-const key = empId + "_" + (r.month || fromMonth);
+      // ✅ FIX: Group by empId only (not by month) to aggregate across months
+      const key = empId;
 
           if (!grouped[key]) {
             grouped[key] = {
@@ -224,8 +295,8 @@ empName:
   r.fullName ||
   "-",
               department: r.department || "-",
-              reportingManager: r.reportingManager || "-",
-              month: r.month || fromMonth,
+             reportingManager: getReportingManagerName(r),
+              month: fromMonth === toMonth ? fromMonth : `${fromMonth} to ${toMonth}`,
               present: 0,
               leave: 0,
               lop: 0,
@@ -240,17 +311,39 @@ empName:
             };
           }
 
-          // Backend already aggregates counts — use them directly
-          grouped[key].present = r.present || grouped[key].present;
-          grouped[key].leave = r.leave || grouped[key].leave;
-         grouped[key].lop = r.absent || r.lop || grouped[key].lop;
-          grouped[key].halfDay = r.halfDay || grouped[key].halfDay;
-          grouped[key].late = r.late || grouped[key].late;
-          grouped[key].wfh = r.wfh || grouped[key].wfh;
-          grouped[key].field = r.field || grouped[key].field;
+          // Backend already aggregates counts — use them directly and sum across months
+          grouped[key].present += r.present || 0;
+          grouped[key].leave += r.leave || 0;
+          grouped[key].lop += (r.absent || r.lop || 0);
+          grouped[key].halfDay += r.halfDay || 0;
+          grouped[key].late += r.late || 0;
+          grouped[key].wfh += r.wfh || 0;
+          grouped[key].field += r.field || 0;
           grouped[key].totalHours += parseFloat(r.duration || r.avgHours || 0);
           grouped[key].days += 1;
         });
+
+        // Helper function to calculate working days in a date range
+        const calculateWorkingDaysInRange = (fromMonthStr, toMonthStr) => {
+          const from = new Date(fromMonthStr + "-01");
+          const to = new Date(toMonthStr + "-01");
+          to.setMonth(to.getMonth() + 1); // Move to next month
+          to.setDate(0); // Get last day of toMonth
+          
+          let workingDays = 0;
+          let current = new Date(from);
+          
+          while (current <= to) {
+            const dayOfWeek = current.getDay();
+            // 0 = Sunday, 6 = Saturday - exclude weekends
+            if (dayOfWeek !== 0 && dayOfWeek !== 6) {
+              workingDays++;
+            }
+            current.setDate(current.getDate() + 1);
+          }
+          
+          return workingDays;
+        };
 
         // Convert to array
         const mapped = Object.values(grouped).map((g) => {
@@ -262,8 +355,13 @@ empName:
         const absentDays = Number(g.lop || 0);
           const payableDays = workingDays + g.leave + g.halfDay * 0.5;
 
+          // ✅ FIX: Calculate attendance % based on total working days in month range
+          const totalWorkingDaysInRange = calculateWorkingDaysInRange(fromMonth, toMonth);
+          
           const attendancePercent =
-            g.days > 0 ? ((workingDays / g.days) * 100).toFixed(1) : 0;
+            totalWorkingDaysInRange > 0 
+              ? ((workingDays / totalWorkingDaysInRange) * 100).toFixed(1) 
+              : 0;
 
           const overtime = 0;
 
@@ -293,7 +391,7 @@ console.table(records.map(r => String(r.empId).trim()));
 
     load();
 
-  }, [fromMonth]);
+  }, [fromMonth, toMonth]); // ✅ FIX: Now depends on both fromMonth AND toMonth
 
   /* CLOSE POPUP */
   useEffect(() => {
@@ -473,6 +571,7 @@ console.log("Absent KPI:", totalLOP);
       : 0;
 
   const cols = [
+      { key: "serialNo", label: "S.NO." },
     { key: "empId", label: "EMP ID" },
     { key: "empName", label: "EMP NAME" },
     { key: "department", label: "DEPARTMENT" },
@@ -864,21 +963,25 @@ console.log(
           </thead>
 
           <tbody>
-            {filtered.map((r, i) => (
-              <tr key={i}>
-                {cols.map((c) => (
-                 <td key={`${c.key}-${c.label}`}>
-                    {c.key === "status"
-                      ? role === ROLE_EMP
-                        ? r.status || "Pending"
-                        : role === ROLE_ADMIN
-                        ? r.status === "Approved" || r.status === "Rejected"
-                          ? r.status
-                          : "-"
-                        : r.status
-                      : r[c.key]}
-                  </td>
-                ))}
+{filtered.map((r, i) => (
+  <tr key={i}>
+    {cols.map((c) => (
+      <td key={`${c.key}-${c.label}`}>
+        {c.key === "serialNo"
+          ? i + 1
+          : c.key === "status"
+          ? role === ROLE_EMP
+            ? r.status || "Pending"
+            : role === ROLE_ADMIN
+            ? r.status === "Approved" || r.status === "Rejected"
+              ? r.status
+              : "-"
+            : r.status
+          : c.key === "attendancePercent"
+          ? `${r[c.key]}%`
+          : r[c.key]}
+      </td>
+    ))}
                 {role === ROLE_MGR && (
                   <td>
                     <select
