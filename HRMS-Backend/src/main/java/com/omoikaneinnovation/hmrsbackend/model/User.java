@@ -30,6 +30,7 @@ private String esic;
 private String status;
 private String employmentType;
 private String managerName;
+private String reportingHead;  // ✅ Reporting Head name
 private String hrName;
 private String companyId;
 
@@ -114,6 +115,9 @@ public void setEmploymentType(String employmentType) { this.employmentType = emp
 
 public String getManagerName() { return managerName; }
 public void setManagerName(String managerName) { this.managerName = managerName; }
+
+public String getReportingHead() { return reportingHead; }
+public void setReportingHead(String reportingHead) { this.reportingHead = reportingHead; }
 
 public String getHrName() { return hrName; }
 public void setHrName(String hrName) { this.hrName = hrName; }

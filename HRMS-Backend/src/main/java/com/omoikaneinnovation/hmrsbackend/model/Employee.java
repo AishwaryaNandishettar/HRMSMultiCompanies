@@ -25,6 +25,8 @@ private String dob;
     private Instant createdAt = Instant.now();
     private String managerEmail;
     private String manager;  // ✅ ADD THIS (manager name)
+    private String reportingHead;  // ✅ Reporting Head name
+    private String hrName;  // ✅ HR Business Partner name
     private String location;  // ✅ ADD THIS (work location)
     private String exitDate;  // ✅ ADD THIS (exit date)
     private String image;  // ✅ ADD THIS (profile image)
@@ -44,6 +46,13 @@ private String dob;
     private String esic;
     private String designationChanged;
     private String designationChangedDate;
+
+    // ── Document fields (Base64 or URLs) ──
+    private String resumeDocument;      // Resume file
+    private String aadhaarDocument;     // Aadhaar file
+    private String offerLetterDocument; // Offer Letter file
+    private String panDocument;         // PAN Card file
+    private String educationDocument;   // Education Certificate file
 
 
     public String getManagerEmail() {
@@ -154,6 +163,20 @@ public void setDob(String dob) {
         this.manager = manager;
     }
 
+    public String getReportingHead() {
+        return reportingHead;
+    }
+    public void setReportingHead(String reportingHead) {
+        this.reportingHead = reportingHead;
+    }
+
+    public String getHrName() {
+        return hrName;
+    }
+    public void setHrName(String hrName) {
+        this.hrName = hrName;
+    }
+
     public String getLocation() {
         return location;
     }
@@ -241,4 +264,20 @@ public void setDob(String dob) {
 
     public String getDesignationChangedDate() { return designationChangedDate; }
     public void setDesignationChangedDate(String designationChangedDate) { this.designationChangedDate = designationChangedDate; }
+
+    // ── Document getters and setters ──
+    public String getResumeDocument() { return resumeDocument; }
+    public void setResumeDocument(String resumeDocument) { this.resumeDocument = resumeDocument; }
+
+    public String getAadhaarDocument() { return aadhaarDocument; }
+    public void setAadhaarDocument(String aadhaarDocument) { this.aadhaarDocument = aadhaarDocument; }
+
+    public String getOfferLetterDocument() { return offerLetterDocument; }
+    public void setOfferLetterDocument(String offerLetterDocument) { this.offerLetterDocument = offerLetterDocument; }
+
+    public String getPanDocument() { return panDocument; }
+    public void setPanDocument(String panDocument) { this.panDocument = panDocument; }
+
+    public String getEducationDocument() { return educationDocument; }
+    public void setEducationDocument(String educationDocument) { this.educationDocument = educationDocument; }
 }

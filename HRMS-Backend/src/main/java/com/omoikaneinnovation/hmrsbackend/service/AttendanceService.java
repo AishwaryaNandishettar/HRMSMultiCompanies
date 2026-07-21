@@ -739,9 +739,11 @@ public void checkMissedCheckouts() {
         }
 
         // Update status
-        if (status != null && !status.isEmpty()) {
+        // ✅ FIX: When manager explicitly sets status, use it. Otherwise, auto-calculate from worked hours
+        if (status != null && !status.isEmpty() && !status.equalsIgnoreCase("Pending Approval")) {
             attendance.setStatus(status);
         }
+        // If status is "Pending Approval" or empty, it will be auto-calculated below when check-out is set
 
         // Update check-in time if provided
         if (checkIn != null && !checkIn.isEmpty() && !checkIn.equals("-")) {
@@ -766,14 +768,17 @@ public void checkMissedCheckouts() {
                     int minutes = (int) Duration.between(in, out).toMinutes();
                     attendance.setWorkedMinutes(minutes);
                     
-                    // Auto-calculate status based on worked hours if not explicitly set
-                    if (status == null || status.isEmpty()) {
-                        if (minutes >= 480) { // 8 hours
+                    // ✅ FIX: Auto-calculate and SET status when manager edits (even if status was "Pending Approval")
+                    // Only keep explicit status if manager specifically set it to Present/Absent/Half Day
+                    if (status == null || status.isEmpty() || status.equalsIgnoreCase("Pending Approval")) {
+                        if (minutes >= 480) { // 8 hours or more
                             attendance.setStatus("Present");
-                        } else if (minutes >= 240) { // 4 hours
+                        } else if (minutes >= 240) { // 4 hours or more
+                            attendance.setStatus("Half Day");
+                        } else if (minutes > 0) { // Less than 4 hours
                             attendance.setStatus("Half Day");
                         } else {
-                            attendance.setStatus("Half Day");
+                            attendance.setStatus("Absent");
                         }
                     }
                 } catch (Exception e) {

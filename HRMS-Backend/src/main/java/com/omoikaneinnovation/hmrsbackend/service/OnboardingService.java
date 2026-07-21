@@ -8,6 +8,7 @@
     import com.omoikaneinnovation.hmrsbackend.repository.UserRepository;
     import com.omoikaneinnovation.hmrsbackend.security.JwtUtil;
     import org.springframework.beans.factory.annotation.Autowired;
+    import org.springframework.beans.factory.annotation.Value;
     import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
     import org.springframework.stereotype.Service;
     import org.slf4j.Logger;
@@ -21,6 +22,10 @@
     public class OnboardingService {
 
     private static final Logger log = LoggerFactory.getLogger(OnboardingService.class);
+    
+        @Value("${frontend.url}")
+        private String frontendUrl;
+        
         @Autowired
         private EmployeeRepository employeeRepo;
 
@@ -144,7 +149,7 @@ employeeRepo.save(emp);
     String token = jwtUtil.generateToken(email, "EMPLOYEE", expiry);
 
     String onboardingLink =
-            "http://localhost:5176/onboarding?token=" + token;
+            frontendUrl + "/onboarding?token=" + token;
 
     // -------- SEND EMAIL --------
     try {
@@ -320,7 +325,7 @@ public void sendInvitationEmail(
         );
 
         String onboardingLink =
-                "http://localhost:5176/onboarding?token=" + token;
+                frontendUrl + "/onboarding?token=" + token;
 
         String otp = otpService.generateOtp(email);
 

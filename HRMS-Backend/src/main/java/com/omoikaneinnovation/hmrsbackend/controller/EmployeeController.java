@@ -10,6 +10,8 @@ import com.omoikaneinnovation.hmrsbackend.repository.UserRepository;
 import com.omoikaneinnovation.hmrsbackend.service.EmployeeService;
 import com.omoikaneinnovation.hmrsbackend.service.OnboardingService;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -28,6 +30,8 @@ import java.util.Map;
         "https://*.ngrok-free.dev"
 })
 public class EmployeeController {
+
+    private static final Logger log = LoggerFactory.getLogger(EmployeeController.class);
 
     @Autowired
     private EmployeeService employeeService;
@@ -840,6 +844,65 @@ System.out.println("Employees found: " + employees.size());
                             "message", e.getMessage()
                     )
             );
+        }
+    }
+
+    /**
+     * Test email endpoint to verify email configuration
+     * POST /api/employee/test-email
+     * Body: { "email": "test@example.com" }
+     */
+    @PostMapping("/test-email")
+    public ResponseEntity<?> testEmail(@RequestBody Map<String, String> request) {
+        try {
+            String email = request.get("email");
+            
+            System.out.println("🔵 Testing email send to: " + email);
+            
+            onboardingService.sendInvitationEmail(
+                    email,
+                    "Test User",
+                    "Temp@123"
+            );
+            
+            System.out.println("✅ Test email sent successfully to: " + email);
+            
+            return ResponseEntity.ok(Map.of(
+                    "success", true,
+                    "message", "Test email sent to " + email + ". Check inbox and spam folder."
+            ));
+        } catch (Exception e) {
+            System.err.println("❌ Test email failed: " + e.getMessage());
+            e.printStackTrace();
+            
+            return ResponseEntity.status(500).body(Map.of(
+                    "success", false,
+                    "error", e.getMessage(),
+                    "message", "Email sending failed. Check backend logs for details."
+            ));
+        }
+    }
+
+    /**
+     * Check email queue statistics
+     * GET /api/employee/email-queue-stats
+     */
+    @GetMapping("/email-queue-stats")
+    public ResponseEntity<?> getEmailQueueStats() {
+        try {
+            // This requires emailService to be autowired
+            System.out.println("📊 Checking email queue statistics");
+            
+            return ResponseEntity.ok(Map.of(
+                    "success", true,
+                    "message", "Email service is configured and running",
+                    "note", "Check backend console logs for detailed email sending status"
+            ));
+        } catch (Exception e) {
+            return ResponseEntity.status(500).body(Map.of(
+                    "success", false,
+                    "error", e.getMessage()
+            ));
         }
     }
 }

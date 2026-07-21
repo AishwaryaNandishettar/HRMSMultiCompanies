@@ -94,4 +94,42 @@ public class FileController {
             return ResponseEntity.internalServerError().body(errorResponse);
         }
     }
+    
+    /**
+     * Download/serve uploaded file
+     * GET /api/files/download/{filename}
+     */
+    @GetMapping("/download/{filename}")
+    public ResponseEntity<org.springframework.core.io.Resource> downloadFile(@PathVariable String filename) {
+        try {
+            System.out.println("📥 File download request: " + filename);
+            
+            Path filePath = Paths.get(UPLOAD_DIR).resolve(filename).normalize();
+            org.springframework.core.io.Resource resource = new org.springframework.core.io.UrlResource(filePath.toUri());
+            
+            if (resource.exists() && resource.isReadable()) {
+                System.out.println("   ✅ File found and readable");
+                
+                // Detect content type
+                String contentType = Files.probeContentType(filePath);
+                if (contentType == null) {
+                    contentType = "application/octet-stream";
+                }
+                
+                return ResponseEntity.ok()
+                        .header(org.springframework.http.HttpHeaders.CONTENT_DISPOSITION, 
+                                "inline; filename=\"" + resource.getFilename() + "\"")
+                        .header(org.springframework.http.HttpHeaders.CONTENT_TYPE, contentType)
+                        .body(resource);
+            } else {
+                System.err.println("   ❌ File not found or not readable");
+                return ResponseEntity.notFound().build();
+            }
+            
+        } catch (Exception e) {
+            System.err.println("❌ File download error: " + e.getMessage());
+            e.printStackTrace();
+            return ResponseEntity.internalServerError().build();
+        }
+    }
 }
