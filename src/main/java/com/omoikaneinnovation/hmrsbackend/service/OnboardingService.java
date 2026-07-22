@@ -158,7 +158,8 @@ employeeRepo.save(emp);
         log.info("📩 Invite email sent to: {}", email);
     } catch (Exception e) {
         log.error("❌ Email sending failed for {}: {}", email, e.getMessage(), e);
-        throw new RuntimeException("Employee saved but email failed: " + e.getMessage(), e);
+        // Do NOT re-throw — employee was already saved, just log the email failure
+        // This prevents 400 errors when SMTP fails but the invite was created
     }
 }
 
