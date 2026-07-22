@@ -152,7 +152,9 @@ employeeRepo.save(emp);
         log.info("📩 Invite email sent to: {}", email);
     } catch (Exception e) {
         log.error("❌ Email sending failed for {}: {}", email, e.getMessage(), e);
-        // Do NOT re-throw — employee was already saved, just log the email failure
+        System.err.println("❌ [OnboardingService] Email failed for " + email + ": " + e.getMessage());
+        // ⚠️ THROW ERROR - Frontend needs to know email failed
+        throw new RuntimeException("Failed to send invite email. Please check email configuration: " + e.getMessage(), e);
     }
 }
 
