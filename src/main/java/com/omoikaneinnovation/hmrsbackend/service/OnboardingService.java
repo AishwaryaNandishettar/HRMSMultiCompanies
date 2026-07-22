@@ -46,56 +46,125 @@
         @Autowired
 private EmailService emailService;
 
-        public void onboard(Map<String, Object> payload) {
+public void onboard(Map<String, Object> payload) {
 
     log.info("Payload received: {}", payload);
 
-    String email = (String) payload.get("email");
-    log.info("Checking employee email: {}", email);
+    String email = ((String) payload.get("email")).trim().toLowerCase();
 
-    // ✅ CHECK IF EMPLOYEE EXISTS
-    boolean exists = employeeRepo.existsByEmail(email);
+    log.info("Checking employee email: {}", email);
 
     User user;
     Employee emp;
 
-    if (exists) {
-        // 🔁 FETCH EXISTING USER + EMPLOYEE (NO DUPLICATION)
-        user = userRepo.findByEmail(email)
-                .orElseThrow(() -> new RuntimeException("User not found"));
+    // =====================================================
+    // 1. FIND EXISTING EMPLOYEE
+    // =====================================================
+    emp = employeeRepo.findByEmail(email).orElse(null);
 
-        if (user.getRole() == null || user.getRole().isEmpty()) {
-    user.setRole("EMPLOYEE");
-    userRepo.save(user);
-}
-        emp = employeeRepo.findByEmail(email)
-                .orElseThrow(() -> new RuntimeException("Employee not found"));
+    if (emp != null) {
 
-        log.info("🔁 Re-inviting existing employee: {}", email);
+        log.info("Existing employee found: {}", email);
+
+        // =================================================
+        // 2. FIND EXISTING USER
+        // =================================================
+        user = userRepo.findByEmail(email).orElse(null);
+
+        // =================================================
+        // 3. IF USER DOES NOT EXIST, CREATE USER
+        // =================================================
+        if (user == null) {
+
+            user = new User();
+
+            user.setEmail(email);
+            user.setName(
+                    emp.getFullName() != null
+                            ? emp.getFullName()
+                            : (String) payload.get("fullName")
+            );
+
+            user.setRole("EMPLOYEE");
+
+            String password = (String) payload.get("password");
+
+            if (password != null && !password.isEmpty()) {
+                user.setPassword(encoder.encode(password));
+            } else {
+                user.setPassword(encoder.encode("Temp@123"));
+            }
+
+            user = userRepo.save(user);
+
+            log.info("New User account created for existing employee: {}", email);
+
+        } else {
+
+            log.info("Existing User found for: {}", email);
+
+            if (user.getRole() == null || user.getRole().isEmpty()) {
+                user.setRole("EMPLOYEE");
+                userRepo.save(user);
+            }
+        }
+
+        // Connect employee with user
+        emp.setUserId(user.getId());
+
+        // Update only if values are available
+        if (payload.get("fullName") != null) {
+            emp.setFullName((String) payload.get("fullName"));
+        }
+
+        if (payload.get("department") != null) {
+            emp.setDepartment((String) payload.get("department"));
+        }
+
+        if (payload.get("designation") != null) {
+            emp.setDesignation((String) payload.get("designation"));
+        }
+
+        emp.setStatus("INVITED");
+
+        employeeRepo.save(emp);
+
+        log.info("Existing employee prepared for invitation: {}", email);
 
     } else {
-        // -------- CREATE USER --------
+
+        // =====================================================
+        // 4. CREATE NEW USER
+        // =====================================================
+
         user = new User();
+
         user.setEmail(email);
         user.setName((String) payload.get("fullName"));
         user.setRole("EMPLOYEE");
 
-        // ✅ Use password from payload if provided
         String password = (String) payload.get("password");
 
         if (password != null && !password.isEmpty()) {
             user.setPassword(encoder.encode(password));
-            log.info("Using provided password for user: {}", email);
         } else {
             user.setPassword(encoder.encode("Temp@123"));
-            log.info("Using default password for user: {}", email);
         }
 
         user = userRepo.save(user);
 
-        // -------- CREATE EMPLOYEE --------
+        // =====================================================
+        // 5. CREATE NEW EMPLOYEE
+        // =====================================================
+
         emp = new Employee();
-      emp.setEmployeeId(generateEmployeeId((String) payload.get("department")));
+
+        emp.setEmployeeId(
+                generateEmployeeId(
+                        (String) payload.get("department")
+                )
+        );
+
         emp.setFullName((String) payload.get("fullName"));
         emp.setEmail(email);
         emp.setDepartment((String) payload.get("department"));
@@ -104,80 +173,49 @@ private EmailService emailService;
         emp.setStatus("INVITED");
 
         employeeRepo.save(emp);
-        // ✅ UPDATE EMPLOYEE WITH ONBOARDING DATA
-Map<String, Object> personal = (Map<String, Object>) payload.get("personal");
 
-if (personal != null) {
-    emp.setFullName((String) personal.get("fullName"));
-    emp.setEmail((String) personal.get("email"));
-}
-
-Map<String, Object> job = (Map<String, Object>) payload.get("job");
-
-if (job != null) {
-    emp.setDepartment((String) job.get("department"));
-    emp.setDesignation((String) job.get("designation"));
-}
-
-// Optional (if fields exist in Employee model)
-emp.setStatus("ACTIVE");
-
-employeeRepo.save(emp);
-
-        log.info("🆕 New employee created: {}", email);
+        log.info("New employee created: {}", email);
     }
 
-    // -------- CREATE ONBOARDING RECORD (APPEND ALWAYS) --------
-    OnboardingRecord record = new OnboardingRecord();
+    // =====================================================
+    // 6. GENERATE OTP
+    // =====================================================
 
-    record.setEmployeeId(emp.getEmployeeId()); // ✅ FIXED
-    record.setPersonal((Map<String, Object>) payload.getOrDefault("personal", null));
-    record.setJob((Map<String, Object>) payload.getOrDefault("job", null));
-    record.setExperience((List<Map<String, Object>>) payload.getOrDefault("experience", null));
-    record.setCibil((Map<String, Object>) payload.getOrDefault("cibil", null));
-    record.setPolice((Map<String, Object>) payload.getOrDefault("police", null));
-    record.setResidence((Map<String, Object>) payload.getOrDefault("residence", null));
-    record.setReferences((List<Map<String, Object>>) payload.getOrDefault("references", null));
-    record.setDocuments((Map<String, Object>) payload.getOrDefault("documents", null));
-
-    onboardingRepo.save(record);
-
-    // -------- GENERATE OTP --------
     String otp = otpService.generateOtp(email);
 
-    // -------- GENERATE LOGIN LINK (NO TOKEN - Employee must login first) --------
+    // =====================================================
+    // 7. SEND INVITATION EMAIL
+    // =====================================================
+
     String onboardingLink = frontendUrl;
 
-    // -------- SEND EMAIL --------
-// -------- SEND EMAIL --------
-try {
+    try {
 
-    System.out.println("====================================");
-    System.out.println("STEP 1: About to send invite email");
-    System.out.println("Email = " + email);
-    System.out.println("Frontend URL = " + onboardingLink);
-    System.out.println("OTP = " + otp);
-    System.out.println("====================================");
+        log.info("Sending invite email to: {}", email);
 
-    emailService.sendInviteEmail(email, onboardingLink, otp, "Temp@123");
+        emailService.sendInviteEmail(
+                email,
+                onboardingLink,
+                otp,
+                "Temp@123"
+        );
 
-    System.out.println("====================================");
-    System.out.println("STEP 2: sendInviteEmail finished");
-    System.out.println("====================================");
+        log.info("Invite email successfully sent to: {}", email);
 
-    log.info("📩 Invite email sent to: {}", email);
+    } catch (Exception e) {
 
-} catch (Exception e) {
+        log.error(
+                "Email sending failed for {}: {}",
+                email,
+                e.getMessage(),
+                e
+        );
 
-    System.out.println("====================================");
-    System.out.println("STEP 3: Exception while sending mail");
-    e.printStackTrace();
-    System.out.println("====================================");
-
-    log.error("❌ Email sending failed for {}: {}", email, e.getMessage(), e);
+        throw new RuntimeException(
+                "Failed to send invitation email to " + email
+        );
+    }
 }
-}
-
 private String generateEmployeeId(String department) {
 
     long count = employeeRepo.count() + 1;
