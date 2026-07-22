@@ -467,21 +467,48 @@ console.log("BULK LIST:", list);
     setShowBulkInvite(true);
   };
 
-  const handleBulkInviteSend = async () => {
-    const toSend = bulkInviteList.filter(e => e.selected);
-    if (toSend.length === 0) { alert("No employees selected."); return; }
+ const handleBulkInviteSend = async () => {
+  try {
     setBulkInviteSending(true);
-    setBulkInviteResult(null);
-    try {
-      const res = await api.post("/api/onboarding/bulk-invite", toSend);
-      setBulkInviteResult(res.data);
-    } catch (err) {
-      alert("❌ Bulk invite failed: " + (err.response?.data?.message || err.message));
-    } finally {
-      setBulkInviteSending(false);
-    }
-  };
 
+    const selectedEmployees = bulkInviteList.filter(
+      (emp) => emp.selected && emp.email
+    );
+
+    if (selectedEmployees.length === 0) {
+      alert("Please select at least one employee");
+      return;
+    }
+
+    for (const emp of selectedEmployees) {
+      await axios.post(
+        `${import.meta.env.VITE_API_BASE_URL}/api/onboarding/invite`,
+        {
+          email: emp.email,
+          password: tempPassword,
+          fullName: emp.fullName,
+          department: "General",
+          designation: "Employee",
+        }
+      );
+    }
+
+    setBulkInviteResult(true);
+
+    alert(
+      `Invitations sent successfully to ${selectedEmployees.length} employee(s)`
+    );
+
+  } catch (err) {
+    console.error("Bulk invite error:", err);
+    alert(
+      "Failed to send bulk invitations: " +
+      (err.response?.data || err.message)
+    );
+  } finally {
+    setBulkInviteSending(false);
+  }
+};
   // ── Bulk Upload: parse Excel file ──
   const handleExcelUpload = (e) => {
     const file = e.target.files[0];
