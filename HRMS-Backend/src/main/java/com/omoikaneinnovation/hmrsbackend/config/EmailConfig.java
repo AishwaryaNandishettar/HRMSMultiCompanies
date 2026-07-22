@@ -48,6 +48,7 @@ public class EmailConfig {
         System.out.println("MAIL PASS = " + (mailPassword == null ? "NULL" : "Loaded"));
         System.out.println("==================================");
     }
+    
     @Bean
     public JavaMailSender javaMailSender() {
 

@@ -143,13 +143,8 @@ employeeRepo.save(emp);
     // -------- GENERATE OTP --------
     String otp = otpService.generateOtp(email);
 
-    // -------- GENERATE ONBOARDING LINK --------
-    long expiry = 24 * 60 * 60 * 1000;
-
-    String token = jwtUtil.generateToken(email, "EMPLOYEE", expiry);
-
-    String onboardingLink =
-            frontendUrl + "/onboarding?token=" + token;
+    // -------- LOGIN LINK (Employee must login with credentials from email) --------
+    String onboardingLink = frontendUrl;
 
     // -------- SEND EMAIL --------
     try {
@@ -325,8 +320,8 @@ public void sendInvitationEmail(
                 expiry
         );
 
-        String onboardingLink =
-                frontendUrl + "/onboarding?token=" + token;
+        // LOGIN LINK (Employee must login with credentials from email)
+        String onboardingLink = frontendUrl;
 
         String otp = otpService.generateOtp(email);
 
