@@ -8,6 +8,7 @@
     import com.omoikaneinnovation.hmrsbackend.repository.UserRepository;
     import com.omoikaneinnovation.hmrsbackend.security.JwtUtil;
     import org.springframework.beans.factory.annotation.Autowired;
+    import org.springframework.beans.factory.annotation.Value;
     import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
     import org.springframework.stereotype.Service;
     import org.slf4j.Logger;
@@ -15,12 +16,15 @@
 
     import java.util.List;
     import java.util.Map;
-    //import java.util.Date;   // ✅ ADD THIS
 
     @Service
     public class OnboardingService {
 
     private static final Logger log = LoggerFactory.getLogger(OnboardingService.class);
+
+        @Value("${frontend.url:http://localhost:5173}")
+        private String frontendUrl;
+
         @Autowired
         private EmployeeRepository employeeRepo;
 
@@ -146,15 +150,15 @@ employeeRepo.save(emp);
 
     String token = jwtUtil.generateToken(email, "EMPLOYEE", expiry);
 
-    String onboardingLink =
-            "http://localhost:5176/onboarding?token=" + token;
+    String onboardingLink = frontendUrl + "/onboarding?token=" + token;
 
     // -------- SEND EMAIL --------
     try {
         emailService.sendInviteEmail(email, onboardingLink, otp, "Temp@123");
         log.info("📩 Invite email sent to: {}", email);
     } catch (Exception e) {
-        log.error("Email sending failed: {}", e.getMessage());
+        log.error("❌ Email sending failed for {}: {}", email, e.getMessage(), e);
+        throw new RuntimeException("Employee saved but email failed: " + e.getMessage(), e);
     }
 }
 

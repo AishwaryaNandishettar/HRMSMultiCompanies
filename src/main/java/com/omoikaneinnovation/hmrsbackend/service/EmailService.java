@@ -186,10 +186,15 @@ public class EmailService {
             MimeMessage message = mailSender.createMimeMessage();
             MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
 
-            // Set email properties
-            helper.setFrom(fromAddress, fromName);
+            log.info("================================");
+            log.info("FROM ADDRESS : {}", fromAddress);
+            log.info("TO           : {}", to);
+            log.info("SUBJECT      : {}", subject);
+            log.info("================================");
+
+            // from must exactly match the authenticated SMTP account
+            helper.setFrom(fromAddress);
             helper.setTo(to);
-            helper.setReplyTo(replyToAddress);
             helper.setSubject(subject);
 
             // Process template
@@ -203,11 +208,11 @@ public class EmailService {
 
             // Send email
             mailSender.send(message);
-            log.debug("Email sent successfully to: {}", to);
+            log.info("✅ Email sent successfully to: {}", to);
             
         } catch (Exception e) {
-            log.error("Failed to send email to {}: {}", to, e.getMessage(), e);
-            throw new MessagingException("Failed to send email", e);
+            log.error("❌ Failed to send email to {} | error: {}", to, e.getMessage(), e);
+            throw new MessagingException("Failed to send email to " + to + ": " + e.getMessage(), e);
         }
     }
 
@@ -276,32 +281,23 @@ public class EmailService {
 
     /**
      * Legacy method for invite emails (backward compatibility)
+     * Synchronous — errors surface immediately to the caller.
      */
-    public void sendInviteEmail(String email, String link, String otp,String password) {
+    public void sendInviteEmail(String email, String link, String otp, String password) {
         try {
-            Map<String, Object> variables = Map.of(
-                    "email", email,
-                    "inviteLink", link,
-                    "otp", otp,
-                     "password", password
-            );
+            Map<String, Object> variables = new java.util.HashMap<>();
+            variables.put("email", email);
+            variables.put("inviteLink", link);
+            variables.put("otp", otp);
+            variables.put("password", password);
 
-            EmailRequest emailRequest = EmailRequest.builder()
-                    .to(email)
-                    .subject("HRMS Invitation - Welcome!")
-                    .templateName("invite-email") // You'll need to create this template
-                    .templateVariables(variables)
-                    .emailType(EmailRequest.EmailType.MEETING_INVITATION) // Reusing enum
-                    .scheduledTime(Instant.now())
-                    .build();
+            log.info("📧 Sending invite email to: {} with link: {}", email, link);
+            sendSingleEmail(email, "HRMS Invitation - Welcome!", "invite-email", variables);
+            log.info("✅ Invite email sent successfully to: {}", email);
 
-            // Send immediately for invites
-            sendEmailImmediately(emailRequest);
-            
         } catch (Exception e) {
-            log.error("Failed to send invite email to {}: {}", email, e.getMessage(), e);
-            // Fallback to simple email
-            sendSimpleInviteEmail(email, link, otp);
+            log.error("❌ Failed to send invite email to {}: {}", email, e.getMessage(), e);
+            throw new RuntimeException("Failed to send invite email to " + email + ": " + e.getMessage(), e);
         }
     }
 
