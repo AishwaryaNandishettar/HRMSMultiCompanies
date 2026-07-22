@@ -193,9 +193,10 @@ public class EmailService {
             log.info("================================");
 
             // from must exactly match the authenticated SMTP account
-            helper.setFrom(fromAddress);
-            helper.setTo(to);
-            helper.setSubject(subject);
+        helper.setFrom(fromAddress, fromName);
+helper.setReplyTo(replyToAddress);
+helper.setTo(to);
+helper.setSubject(subject);
 
             // Process template
             Context context = new Context();
