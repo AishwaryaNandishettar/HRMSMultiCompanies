@@ -71,9 +71,11 @@ System.out.println("==================================");
         props.put("mail.smtp.starttls.enable", "true");
         props.put("mail.smtp.starttls.required", "true");
 props.put("mail.smtp.ssl.protocols", "TLSv1.2");
+
         props.put("mail.smtp.connectiontimeout", "10000");
         props.put("mail.smtp.timeout", "10000");
         props.put("mail.smtp.writetimeout", "10000");
+
         props.put("mail.debug", "true"); // Enable debug for troubleshooting
         
         return mailSender;

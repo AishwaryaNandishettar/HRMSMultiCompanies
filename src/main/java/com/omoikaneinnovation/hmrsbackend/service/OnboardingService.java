@@ -149,15 +149,33 @@ employeeRepo.save(emp);
     String onboardingLink = frontendUrl;
 
     // -------- SEND EMAIL --------
-    try {
-        emailService.sendInviteEmail(email, onboardingLink, otp, "Temp@123");
-        log.info("📩 Invite email sent to: {}", email);
-    } catch (Exception e) {
-        log.error("❌ Email sending failed for {}: {}", email, e.getMessage(), e);
-        System.err.println("❌ [OnboardingService] Email failed for " + email + ": " + e.getMessage());
-        // Do NOT re-throw — employee was already saved, just log the email failure
-        // This prevents 400 errors when SMTP fails but the invite was created
-    }
+// -------- SEND EMAIL --------
+try {
+
+    System.out.println("====================================");
+    System.out.println("STEP 1: About to send invite email");
+    System.out.println("Email = " + email);
+    System.out.println("Frontend URL = " + onboardingLink);
+    System.out.println("OTP = " + otp);
+    System.out.println("====================================");
+
+    emailService.sendInviteEmail(email, onboardingLink, otp, "Temp@123");
+
+    System.out.println("====================================");
+    System.out.println("STEP 2: sendInviteEmail finished");
+    System.out.println("====================================");
+
+    log.info("📩 Invite email sent to: {}", email);
+
+} catch (Exception e) {
+
+    System.out.println("====================================");
+    System.out.println("STEP 3: Exception while sending mail");
+    e.printStackTrace();
+    System.out.println("====================================");
+
+    log.error("❌ Email sending failed for {}: {}", email, e.getMessage(), e);
+}
 }
 
 private String generateEmployeeId(String department) {

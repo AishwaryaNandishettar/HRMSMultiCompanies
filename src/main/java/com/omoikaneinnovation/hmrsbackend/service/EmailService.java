@@ -206,9 +206,10 @@ helper.setSubject(subject);
             
             String htmlContent = templateEngine.process("email/" + templateName, context);
             helper.setText(htmlContent, true);
-
+           log.info("Calling mailSender.send()");
             // Send email
             mailSender.send(message);
+            log.info("mailSender.send() completed");
             log.info("✅ Email sent successfully to: {}", to);
             
         } catch (Exception e) {
