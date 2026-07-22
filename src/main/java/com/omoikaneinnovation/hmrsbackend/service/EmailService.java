@@ -291,11 +291,19 @@ public class EmailService {
             variables.put("otp", otp);
             variables.put("password", password);
 
+            System.out.println("📧 [EmailService] sendInviteEmail called for: " + email);
+            System.out.println("📧 [EmailService] fromAddress = " + fromAddress);
+            System.out.println("📧 [EmailService] link = " + link);
+
             log.info("📧 Sending invite email to: {} with link: {}", email, link);
             sendSingleEmail(email, "HRMS Invitation - Welcome!", "invite-email", variables);
+
+            System.out.println("✅ [EmailService] Email sent successfully to: " + email);
             log.info("✅ Invite email sent successfully to: {}", email);
 
         } catch (Exception e) {
+            System.err.println("❌ [EmailService] FAILED to send email to " + email + " | error: " + e.getMessage());
+            e.printStackTrace();
             log.error("❌ Failed to send invite email to {}: {}", email, e.getMessage(), e);
             throw new RuntimeException("Failed to send invite email to " + email + ": " + e.getMessage(), e);
         }
