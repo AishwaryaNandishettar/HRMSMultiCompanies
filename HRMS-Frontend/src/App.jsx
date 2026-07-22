@@ -49,7 +49,7 @@ import OtpVerification from "./Pages/OtpVerification";
 import BGV from "./Pages/BGV";
 import TaskManagement from "./Pages/TaskManagement";
 // import InvitePage from "./Pages/InvitePage"; // HIDDEN
-// import InviteAccept from "./Pages/InviteAccept"; // HIDDEN
+import InviteAccept from "./Pages/InviteAccept";
 // import PersonalInsurance from "./Pages/PersonalInsurance"; // HIDDEN
 // import LoanApplication from "./Pages/LoanApplication"; // HIDDEN
 // import Report from "./Pages/Report"; // HIDDEN
@@ -124,6 +124,16 @@ const [showNotif, setShowNotif] = useState(false);
             <Routes>
               <Route path="/" element={<Navigate to="/home" replace />} />
               
+              {/* ONBOARDING - Admin only, requires login */}
+              <Route
+                path="/onboarding"
+                element={
+                  <ProtectedRoute roles={["admin", "hr"]}>
+                    <Onboarding />
+                  </ProtectedRoute>
+                }
+              />
+
               <Route
                 path="/home"
                 element={
@@ -371,12 +381,12 @@ const [showNotif, setShowNotif] = useState(false);
       <InvitePage />
     </ProtectedRoute>
   }
-/>
- ✅ EMPLOYEE INVITE LINK PAGE (NO PROTECTED ROUTE)
+/> */}
+{/* ✅ EMPLOYEE INVITE LINK PAGE (NO PROTECTED ROUTE) */}
   <Route
     path="/invite-accept"
     element={<InviteAccept />}
-  /> */}
+  />
 
   {/* BULK UPLOAD - HIDDEN */}
   {/* <Route path="/bulk-upload" element={<BulkUploadEmployees />} /> */}
@@ -452,7 +462,6 @@ const [showNotif, setShowNotif] = useState(false);
 
 /* ================= MAIN APP ================= */
 export default function App() {
-  const isLoggedIn = !!localStorage.getItem("token");
 
   return (
     <ThemeProvider>  {/* ✅ Multi-tenant theme wrapper - NO BUSINESS LOGIC CHANGES */}
@@ -461,22 +470,14 @@ export default function App() {
           <PayrollProvider>
             <AttendanceProvider>
               <TaskProvider>
-                <CallProvider>   {/* ✅ Global Call Provider */}
-                  <Routes>
-                    <Route path="/" element={<Login />} />
-                    <Route path="/debug-login" element={<DebugLogin />} />
-
-                    <Route
-                      path="/onboarding"
-                      element={
-                        isLoggedIn ? <Onboarding /> : <Navigate to="/" />
-                      }
-                    />
-
-                    <Route path="/otp" element={<OtpVerification />} />
-                    <Route path="/*" element={<AppLayout />} />
-                  </Routes>
-                </CallProvider>
+<CallProvider>
+    <Routes>
+        <Route path="/" element={<Login />} />
+        <Route path="/debug-login" element={<DebugLogin />} />
+        <Route path="/otp" element={<OtpVerification />} />
+        <Route path="/*" element={<AppLayout />} />
+    </Routes>
+</CallProvider>
               </TaskProvider>
             </AttendanceProvider>
           </PayrollProvider>

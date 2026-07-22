@@ -3,6 +3,7 @@ import axios from "axios";
 import { useLocation, useNavigate } from "react-router-dom";
 
 export default function InviteAccept() {
+  
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -13,6 +14,44 @@ export default function InviteAccept() {
   const location = useLocation();
   const navigate = useNavigate();
 
+  useEffect(() => {
+  const loggedUser = localStorage.getItem("loggedUser");
+
+  if (!loggedUser) {
+    return;
+  }
+
+  console.log("🔥 InviteAccept PAGE LOADED");
+
+  const params = new URLSearchParams(location.search);
+  const t = params.get("token");
+
+  setToken(t);
+
+  if (!t) {
+    alert("Invalid invite link");
+    return;
+  }
+
+  const fetchData = async () => {
+    try {
+      const apiBase =
+        import.meta.env.VITE_API_BASE_URL ||
+        "https://trowel-eldercare-scouting.ngrok-free.dev";
+
+      const res = await axios.get(
+        `${apiBase}/api/onboarding/validate?token=${t}`
+      );
+
+      setEmail(res.data.email);
+    } catch (err) {
+      alert("Invite link expired or invalid");
+    }
+  };
+
+  fetchData();
+}, [location.search]);
+  
   // 1️⃣ Get token from URL + validate
   useEffect(() => {
      console.log("🔥 InviteAccept PAGE LOADED");
@@ -31,7 +70,7 @@ export default function InviteAccept() {
       try {
         const apiBase = import.meta.env.VITE_API_BASE_URL || 'https://trowel-eldercare-scouting.ngrok-free.dev';
         const res = await axios.get(
-          `${apiBase}/api/invite/onboarding?token=${t}`
+          `${apiBase}/api/onboarding/validate?token=${t}`
         );
 
         setEmail(res.data.email);

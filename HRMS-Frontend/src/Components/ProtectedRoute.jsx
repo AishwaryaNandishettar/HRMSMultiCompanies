@@ -1,11 +1,19 @@
 import React, { useContext } from "react";
-import { Navigate } from "react-router-dom";
+import { Navigate, useLocation } from "react-router-dom";
 import { AuthContext } from "../Context/Authcontext";
 
 const ProtectedRoute = ({ roles, children }) => {
+  const location = useLocation();
   const { user } = useContext(AuthContext);
 
-  if (!user) return <Navigate to="/" replace />;
+if (!user) {
+  sessionStorage.setItem(
+    "postLoginRedirect",
+    location.pathname + location.search
+  );
+
+  return <Navigate to="/" replace />;
+}
 
   // ✅ FIXED ROLE FORMAT
   const userRole = user.role?.replace("ROLE_", "").toLowerCase();

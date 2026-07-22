@@ -25,9 +25,19 @@ const Login = () => {
   const [enteredOtp, setEnteredOtp] = useState("");
   const [newPassword, setNewPassword] = useState("");
 
-  const { login } = useContext(AuthContext);
+ const { login, user } = useContext(AuthContext);
+ 
   const theme = useTheme(); // ✅ Get company theme
   const navigate = useNavigate();
+  
+  // ✅ If already logged in, redirect to home
+  React.useEffect(() => {
+  if (user) {
+    const redirect = sessionStorage.getItem("postLoginRedirect") || "/home";
+    sessionStorage.removeItem("postLoginRedirect");
+    navigate(redirect, { replace: true });
+  }
+}, [user, navigate]);
 
   /* ================= LOGIN USING BACKEND ================= */
   const handleLogin = async (e) => {
