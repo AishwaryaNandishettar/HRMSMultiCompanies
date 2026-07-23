@@ -40,6 +40,18 @@ public ResponseEntity<?> inviteEmployee(@RequestBody Map<String, Object> request
     }
 }
 
+@PostMapping("/invite-all")
+public ResponseEntity<?> inviteAllEmployees(@RequestBody List<Map<String, Object>> employeeList) {
+    try {
+        for (Map<String, Object> emp : employeeList) {
+            onboardingService.onboard(emp);
+        }
+        return ResponseEntity.ok(Map.of("message", "All bulk invitations sent successfully"));
+    } catch (Exception e) {
+        return ResponseEntity.badRequest().body(Map.of("message", "Bulk invite failed: " + e.getMessage()));
+    }
+}
+
 @PostMapping("/accept-invite")
 public ResponseEntity<?> acceptInvite(@RequestBody Map<String, Object> request) {
 

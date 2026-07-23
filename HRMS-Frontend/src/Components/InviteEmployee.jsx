@@ -36,45 +36,39 @@ export default function InviteEmployee() {
   };
 
   // ✅ NEW BULK INVITE LOGIC
-  const handleInviteAll = async () => {
+ const handleInviteAll = async (employeesToInvite = []) => {
+  try {
+    setLoading(true);
 
-    try {
+    const apiBase =
+      import.meta.env.VITE_API_BASE_URL ||
+      "https://trowel-eldercare-scouting.ngrok-free.dev";
 
-      setLoading(true);
+    const token = localStorage.getItem("token");
 
-      const apiBase =
-        import.meta.env.VITE_API_BASE_URL ||
-        "https://trowel-eldercare-scouting.ngrok-free.dev";
+    // Pass the payload array expected by the controller
+    const response = await axios.post(
+      `${apiBase}/api/onboarding/invite-all`,
+      employeesToInvite, // Array of employee objects { email, fullName, department, designation }
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+      }
+    );
 
-      const token = localStorage.getItem("token");
-
-      const response = await axios.post(
-        `${apiBase}/api/employee/invite-all`,
-        {},
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
-
-      alert(response.data.message);
-
-    } catch (err) {
-
-      console.error(err);
-
-      alert(
-        err?.response?.data?.message ||
-        "Failed to send bulk invites"
-      );
-
-    } finally {
-
-      setLoading(false);
-    }
-  };
-
+    alert(response.data.message || "Bulk invites sent successfully 📩");
+  } catch (err) {
+    console.error(err);
+    alert(
+      err?.response?.data?.message ||
+        "Failed to send bulk invites. Ensure backend route exists."
+    );
+  } finally {
+    setLoading(false);
+  }
+};
   return (
     <div>
 

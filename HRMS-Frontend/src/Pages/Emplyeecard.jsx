@@ -490,47 +490,48 @@ console.log("BULK LIST:", list);
     setBulkInviteResult(null);
     setShowBulkInvite(true);
   };
+const handleBulkInviteSend = async () => {
+  const selectedEmployees = bulkInviteList.filter(
+    (emp) => emp.selected && emp.email
+  );
 
- const handleBulkInviteSend = async () => {
-  try {
-    setBulkInviteSending(true);
+  if (selectedEmployees.length === 0) {
+    alert("Please select at least one employee");
+    return;
+  }
 
-    const selectedEmployees = bulkInviteList.filter(
-      (emp) => emp.selected && emp.email
-    );
+  setBulkInviteSending(true);
 
-    if (selectedEmployees.length === 0) {
-      alert("Please select at least one employee");
-      return;
-    }
-
-    for (const emp of selectedEmployees) {
-      await axios.post(
+  // Track succeeded and failed invites
+  const results = await Promise.allSettled(
+    selectedEmployees.map((emp) =>
+      axios.post(
         `${import.meta.env.VITE_API_BASE_URL}/api/onboarding/invite`,
         {
           email: emp.email,
-          password: tempPassword,
+          password: emp.password || "Temp@123", // ✅ Fallback default password
           fullName: emp.fullName,
-          department: "General",
-          designation: "Employee",
+          department: emp.department || "General",
+          designation: emp.designation || "Employee",
         }
-      );
-    }
+      )
+    )
+  );
 
-    setBulkInviteResult(true);
+  const successful = results.filter((r) => r.status === "fulfilled").length;
+  const failed = results.filter((r) => r.status === "rejected");
 
+  setBulkInviteSending(false);
+
+  if (failed.length === 0) {
+    alert(`✅ Invitations sent successfully to all ${successful} employee(s).`);
+    setShowBulkInvite(false);
+  } else {
+    console.error("Bulk Invite Failures:", failed);
     alert(
-      `Invitations sent successfully to ${selectedEmployees.length} employee(s)`
+      `⚠️ Sent ${successful} invitation(s) successfully.\n` +
+      `❌ ${failed.length} failed (e.g., ${failed[0]?.reason?.response?.data?.message || failed[0]?.reason?.message}).`
     );
-
-  } catch (err) {
-    console.error("Bulk invite error:", err);
-    alert(
-      "Failed to send bulk invitations: " +
-      (err.response?.data || err.message)
-    );
-  } finally {
-    setBulkInviteSending(false);
   }
 };
   // ── Bulk Upload: parse Excel file ──
