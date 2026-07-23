@@ -112,17 +112,12 @@ public class EmailService {
         return CompletableFuture.completedFuture(null);
     }
 
-    /**
-     * Process individual email from queue
-     */
     private void processEmailQueue(EmailQueue emailQueue) {
         try {
-            // Update status to processing
             emailQueue.setStatus(EmailQueue.EmailStatus.PROCESSING);
             emailQueue.setLastAttemptAt(Instant.now());
             emailQueueRepository.save(emailQueue);
 
-            // Send emails to all recipients
             boolean allSent = true;
             for (String recipient : emailQueue.getRecipients()) {
                 try {
@@ -135,12 +130,10 @@ public class EmailService {
             }
 
             if (allSent) {
-                // Mark as sent
                 emailQueue.setStatus(EmailQueue.EmailStatus.SENT);
                 emailQueue.setSentAt(Instant.now());
                 log.info("Email queue {} processed successfully", emailQueue.getId());
             } else {
-                // Mark as failed for retry
                 handleEmailFailure(emailQueue, "Failed to send to some recipients");
             }
 
@@ -152,9 +145,6 @@ public class EmailService {
         }
     }
 
-    /**
-     * Handle email sending failure
-     */
     private void handleEmailFailure(EmailQueue emailQueue, String errorMessage) {
         emailQueue.setRetryCount(emailQueue.getRetryCount() + 1);
         emailQueue.setErrorMessage(errorMessage);
@@ -166,8 +156,7 @@ public class EmailService {
                     emailQueue.getId(), emailQueue.getRetryCount());
         } else {
             emailQueue.setStatus(EmailQueue.EmailStatus.PENDING);
-            // Schedule retry with exponential backoff
-            long delayMinutes = (long) Math.pow(2, emailQueue.getRetryCount()) * 5; // 5, 10, 20 minutes
+            long delayMinutes = (long) Math.pow(2, emailQueue.getRetryCount()) * 5;
             emailQueue.setScheduledAt(Instant.now().plusSeconds(delayMinutes * 60));
             log.warn("Email queue {} will be retried in {} minutes (attempt {})", 
                     emailQueue.getId(), delayMinutes, emailQueue.getRetryCount() + 1);
@@ -177,7 +166,7 @@ public class EmailService {
     }
 
     /**
-     * Send single email using template
+     * Send single email using Thymeleaf template
      */
     private void sendSingleEmail(String to, String subject, String templateName, Map<String, Object> variables) 
             throws MessagingException {
@@ -192,13 +181,11 @@ public class EmailService {
             log.info("SUBJECT      : {}", subject);
             log.info("================================");
 
-            // from must exactly match the authenticated SMTP account
-        helper.setFrom(fromAddress, fromName);
-helper.setReplyTo(replyToAddress);
-helper.setTo(to);
-helper.setSubject(subject);
+            helper.setFrom(fromAddress, fromName);
+            helper.setReplyTo(replyToAddress);
+            helper.setTo(to);
+            helper.setSubject(subject);
 
-            // Process template
             Context context = new Context();
             if (variables != null) {
                 context.setVariables(variables);
@@ -206,8 +193,8 @@ helper.setSubject(subject);
             
             String htmlContent = templateEngine.process("email/" + templateName, context);
             helper.setText(htmlContent, true);
-           log.info("Calling mailSender.send()");
-            // Send email
+
+            log.info("Calling mailSender.send()");
             mailSender.send(message);
             log.info("mailSender.send() completed");
             log.info("✅ Email sent successfully to: {}", to);
@@ -218,9 +205,6 @@ helper.setSubject(subject);
         }
     }
 
-    /**
-     * Cancel queued emails for a meeting
-     */
     public void cancelQueuedEmails(String meetingId) {
         try {
             List<EmailQueue> queuedEmails = emailQueueRepository.findByMeetingId(meetingId);
@@ -239,9 +223,6 @@ helper.setSubject(subject);
         }
     }
 
-    /**
-     * Get email queue statistics
-     */
     public Map<String, Long> getEmailQueueStats() {
         return Map.of(
                 "pending", emailQueueRepository.countByStatus(EmailQueue.EmailStatus.PENDING),
@@ -252,9 +233,6 @@ helper.setSubject(subject);
         );
     }
 
-    /**
-     * Legacy method for OTP emails (backward compatibility)
-     */
     public void sendOtp(String email, String otp) {
         try {
             Map<String, Object> variables = Map.of(
@@ -265,25 +243,22 @@ helper.setSubject(subject);
             EmailRequest emailRequest = EmailRequest.builder()
                     .to(email)
                     .subject("Your OTP Code - HRMS")
-                    .templateName("otp-email") // You'll need to create this template
+                    .templateName("otp-email")
                     .templateVariables(variables)
-                    .emailType(EmailRequest.EmailType.MEETING_INVITATION) // Reusing enum
+                    .emailType(EmailRequest.EmailType.MEETING_INVITATION)
                     .scheduledTime(Instant.now())
                     .build();
 
-            // Send immediately for OTP
             sendEmailImmediately(emailRequest);
             
         } catch (Exception e) {
             log.error("Failed to send OTP email to {}: {}", email, e.getMessage(), e);
-            // Fallback to simple email
             sendSimpleOtpEmail(email, otp);
         }
     }
 
     /**
-     * Legacy method for invite emails (backward compatibility)
-     * Synchronous — errors surface immediately to the caller.
+     * Synchronous invite email used by OnboardingService
      */
     public void sendInviteEmail(String email, String link, String otp, String password) {
         try {
@@ -293,27 +268,17 @@ helper.setSubject(subject);
             variables.put("otp", otp);
             variables.put("password", password);
 
-            System.out.println("📧 [EmailService] sendInviteEmail called for: " + email);
-            System.out.println("📧 [EmailService] fromAddress = " + fromAddress);
-            System.out.println("📧 [EmailService] link = " + link);
-
             log.info("📧 Sending invite email to: {} with link: {}", email, link);
             sendSingleEmail(email, "HRMS Invitation - Welcome!", "invite-email", variables);
 
-            System.out.println("✅ [EmailService] Email sent successfully to: " + email);
             log.info("✅ Invite email sent successfully to: {}", email);
 
         } catch (Exception e) {
-            System.err.println("❌ [EmailService] FAILED to send email to " + email + " | error: " + e.getMessage());
-            e.printStackTrace();
             log.error("❌ Failed to send invite email to {}: {}", email, e.getMessage(), e);
             throw new RuntimeException("Failed to send invite email to " + email + ": " + e.getMessage(), e);
         }
     }
 
-    /**
-     * Fallback method for simple OTP email
-     */
     private void sendSimpleOtpEmail(String email, String otp) {
         try {
             sendSingleEmail(email, "Your OTP Code - HRMS", "simple-otp", 
@@ -323,9 +288,6 @@ helper.setSubject(subject);
         }
     }
 
-    /**
-     * Fallback method for simple invite email
-     */
     private void sendSimpleInviteEmail(String email, String link, String otp) {
         try {
             sendSingleEmail(email, "HRMS Invitation - Welcome!", "simple-invite", 

@@ -162,30 +162,54 @@ const styles = {
     border: "1px solid #ccc"
   }
 };
-
- const sendInviteEmployee = async () => {
+const sendInviteEmployee = async () => {
   try {
     // Get fullName from inviteEmail (simple fallback)
-    const emailPrefix = inviteEmail.split('@')[0];
-    const fullName = emailPrefix.charAt(0).toUpperCase() + emailPrefix.slice(1);
-    
+    const emailPrefix = inviteEmail.split("@")[0];
+    const fullName =
+      emailPrefix.charAt(0).toUpperCase() + emailPrefix.slice(1);
+
+    console.log("Sending invite to:", inviteEmail);
+    console.log("API URL:", import.meta.env.VITE_API_BASE_URL);
+
     const res = await axios.post(
       `${import.meta.env.VITE_API_BASE_URL}/api/onboarding/invite`,
-    {
-  email: inviteEmail,
-  password: tempPassword,
-  fullName: fullName,  // ✅ Required by backend
-  department: "General",  // ✅ Required by backend
-  designation: "Employee",  // ✅ Required by backend
-}
+      {
+        email: inviteEmail,
+        password: tempPassword,
+        fullName: fullName,
+        department: "General",
+        designation: "Employee",
+      }
     );
-    console.log("Invite response:", res);
+
+    console.log("Invite response:", res.data);
+
     alert("Invite sent successfully");
+
     setInviteEmail("");
     setShowInvite(false);
+
   } catch (err) {
     console.error("FULL ERROR:", err);
-    alert("Failed to send invite: " + (err.response?.data?.message || err.message));
+
+    if (err.response) {
+      console.error("STATUS:", err.response.status);
+      console.error("DATA:", err.response.data);
+
+      alert(
+        "Failed to send invite: " +
+          (err.response.data?.message ||
+            err.response.data ||
+            "Server error")
+      );
+    } else if (err.request) {
+      alert(
+        "Request reached the server, but no response was received. Please check backend/server."
+      );
+    } else {
+      alert("Failed to send invite: " + err.message);
+    }
   }
 };
   // Derived options
@@ -1163,552 +1187,110 @@ const getEmployeeProfileImage = (emp) => {
             </div>
           </div>
         </div>
-      )}
+        )}
 
-      {/* Main Header */}
-      <div className="directory-header">
-        <h2>Employee Directory</h2>
+        {/* Main Header */}
+        <div className="directory-header">
+          <h2>Employee Directory</h2>
 
-        <div className="header-actions">
-          <div className="mode-buttons">
-            <button
-              className={viewMode === "all" ? "active-mode" : ""}
-              onClick={() => setViewMode("all")}
-            >
-              📋 View All
-            </button>
-            <button
-              className={viewMode === "birthday" ? "active-mode" : ""}
-              onClick={() => setViewMode("birthday")}
-            >
-              🎂 Birthdays
-            </button>
-            <button
-              className={viewMode === "anniversary" ? "active-mode" : ""}
-              onClick={() => setViewMode("anniversary")}
-            >
-              🎉 Anniversary
-            </button>
-            <button
-              className={viewMode === "resigned" ? "active-mode" : ""}
-              onClick={() => setViewMode("resigned")}
-            >
-              🚪 Resigned
-            </button>
-          </div>
+          <div className="header-actions">
+            <div className="mode-buttons">
+              <button
+                className={viewMode === "all" ? "active-mode" : ""}
+                onClick={() => setViewMode("all")}
+              >
+                📋 View All
+              </button>
+              <button
+                className={viewMode === "birthday" ? "active-mode" : ""}
+                onClick={() => setViewMode("birthday")}
+              >
+                🎂 Birthdays
+              </button>
+              <button
+                className={viewMode === "anniversary" ? "active-mode" : ""}
+                onClick={() => setViewMode("anniversary")}
+              >
+                🎉 Anniversary
+              </button>
+              <button
+                className={viewMode === "resigned" ? "active-mode" : ""}
+                onClick={() => setViewMode("resigned")}
+              >
+                🚪 Resigned
+              </button>
+            </div>
 
-          <div className="action-buttons">
-            <button className="clear-btn" onClick={clearAll}>
-              Clear Filters
-            </button>
-            <button className="export-btn" onClick={exportExcel}>
-              ⬇ Download
-            </button>
-            <button
-  className="export-btn"
-  onClick={() => navigate("/bulk-upload")}
->
-  ⬆ Upload
-</button>
+            <div className="action-buttons">
+              <button className="clear-btn" onClick={clearAll}>
+                Clear Filters
+              </button>
+              <button className="export-btn" onClick={exportExcel}>
+                ⬇ Download
+              </button>
+              <button
+    className="export-btn"
+    onClick={() => navigate("/bulk-upload")}
+  >
+    ⬆ Upload
+  </button>
+            </div>
           </div>
         </div>
-      </div>
 
-      {/* Employee Table */}
-      <div className="table-wrapper">
-       
-  <table className="employee-table">
-          <thead>
-            <tr className="table-head">
+        {/* Employee Table */}
+        <div className="table-wrapper">
+        
+    <table className="employee-table">
+            <thead>
+              <tr className="table-head">
+                <th>
+    <div className="th-header">
+      S.No.
+    </div>
+  </th>
               <th>
-  <div className="th-header">
-    S.No.
-  </div>
-</th>
-             <th>
-  <div className="th-header">
-    Profile
-   
-  </div>
+    <div className="th-header">
+      Profile
+    
+    </div>
 
-  {activeFilter === "profile" && (
-    <div ref={popupRef} className="popup">
-      <input
-        placeholder="Search..."
-        value={filterText}
-        onChange={(e) => setFilterText(e.target.value)}
-      />
+    {activeFilter === "profile" && (
+      <div ref={popupRef} className="popup">
+        <input
+          placeholder="Search..."
+          value={filterText}
+          onChange={(e) => setFilterText(e.target.value)}
+        />
 
-      <div className="list">
-        {suggestions.map((s) => (
-          <div
-            key={s}
-            onClick={() => {
-              setColumnFilters({
-                ...columnFilters,
-                profile: s,
-              });
-              setActiveFilter(null);
-              setFilterText("");
-            }}
-          >
-            {s}
-          </div>
-        ))}
+        <div className="list">
+          {suggestions.map((s) => (
+            <div
+              key={s}
+              onClick={() => {
+                setColumnFilters({
+                  ...columnFilters,
+                  profile: s,
+                });
+                setActiveFilter(null);
+                setFilterText("");
+              }}
+            >
+              {s}
+            </div>
+          ))}
+        </div>
       </div>
-    </div>
-  )}
-</th>
-              <th>
-  <div className="th-header">
-    Employee Name
-    <span onClick={() => setActiveFilter("employeename")}>⏷</span>
-  </div>
-
-
-{activeFilter === "employeename" && (
-  <div ref={popupRef} className="excel-filter-popup">
-
-    <input
-      type="text"
-      placeholder="Search"
-      value={filterText}
-      onChange={(e) => setFilterText(e.target.value)}
-      className="filter-search"
-    />
-
-    <div className="filter-list">
-
-      <label className="filter-item">
-        <input
-          type="checkbox"
-          checked={
-            (tempSelections.employeename || []).length ===
-            suggestions.length
-          }
-          onChange={(e) =>
-            setTempSelections({
-              ...tempSelections,
-              employeename: e.target.checked
-                ? suggestions
-                : [],
-            })
-          }
-        />
-        (Select All)
-      </label>
-
-      {suggestions.map((item) => (
-        <label key={item} className="filter-item">
-          <input
-            type="checkbox"
-            checked={
-              (tempSelections.employeename || []).includes(item)
-            }
-            onChange={() =>
-              handleCheckboxChange("employeename", item)
-            }
-          />
-          {item}
-        </label>
-      ))}
+    )}
+  </th>
+                <th>
+    <div className="th-header">
+      Employee Name
+      <span onClick={() => setActiveFilter("employeename")}>⏷</span>
     </div>
 
-    <div className="filter-footer">
-      <button
-        onClick={() => {
-          setColumnFilters({
-            ...columnFilters,
-            employeename:
-              (tempSelections.employeename || []).join("|"),
-          });
 
-          setActiveFilter(null);
-        }}
-      >
-        OK
-      </button>
-
-      <button onClick={() => setActiveFilter(null)}>
-        Cancel
-      </button>
-    </div>
-  </div>
-)}
-</th>
-             <th>
-  <div className="th-header">
-    Emp ID
-    <span onClick={() => setActiveFilter("employeeId")}>⏷</span>
-  </div>
-{activeFilter === "employeeId" && (
-  <div ref={popupRef} className="excel-filter-popup">
-
-    <input
-      type="text"
-      placeholder="Search"
-      value={filterText}
-      onChange={(e) => setFilterText(e.target.value)}
-      className="filter-search"
-    />
-
-    <div className="filter-list">
-
-      <label className="filter-item">
-        <input
-          type="checkbox"
-          checked={
-            (tempSelections.employeeId || []).length ===
-            suggestions.length
-          }
-          onChange={(e) =>
-            setTempSelections({
-              ...tempSelections,
-              employeeId: e.target.checked ? suggestions : [],
-            })
-          }
-        />
-        (Select All)
-      </label>
-
-      {suggestions.map((item) => (
-        <label key={item} className="filter-item">
-          <input
-            type="checkbox"
-            checked={
-              (tempSelections.employeeId || []).includes(item)
-            }
-            onChange={() =>
-              handleCheckboxChange("employeeId", item)
-            }
-          />
-          {item}
-        </label>
-      ))}
-    </div>
-
-    <div className="filter-footer">
-      <button
-        onClick={() => {
-          setColumnFilters({
-            ...columnFilters,
-            employeeId:
-              (tempSelections.employeeId || []).join("|"),
-          });
-          setActiveFilter(null);
-        }}
-      >
-        OK
-      </button>
-
-      <button onClick={() => setActiveFilter(null)}>
-        Cancel
-      </button>
-    </div>
-  </div>
-)}
-</th>
-             <th>
-  <div className="th-header">
-    Department
-    <span onClick={() => setActiveFilter("employeedepartment")}>⏷</span>
-  </div>
-{activeFilter === "employeedepartment" && (
-  <div ref={popupRef} className="excel-filter-popup">
-
-    <input
-      type="text"
-      placeholder="Search"
-      value={filterText}
-      onChange={(e) => setFilterText(e.target.value)}
-      className="filter-search"
-    />
-
-    <div className="filter-list">
-
-      <label className="filter-item">
-        <input
-          type="checkbox"
-          checked={
-            (tempSelections.employeedepartment || []).length ===
-            suggestions.length
-          }
-          onChange={(e) =>
-            setTempSelections({
-              ...tempSelections,
-              employeedepartment: e.target.checked
-                ? suggestions
-                : [],
-            })
-          }
-        />
-        (Select All)
-      </label>
-
-      {suggestions.map((item) => (
-        <label key={item} className="filter-item">
-          <input
-            type="checkbox"
-            checked={
-              (tempSelections.employeedepartment || []).includes(item)
-            }
-            onChange={() =>
-              handleCheckboxChange("employeedepartment", item)
-            }
-          />
-          {item}
-        </label>
-      ))}
-    </div>
-
-    <div className="filter-footer">
-      <button
-        onClick={() => {
-          setColumnFilters({
-            ...columnFilters,
-            employeedepartment:
-              (tempSelections.employeedepartment || []).join("|"),
-          });
-
-          setActiveFilter(null);
-        }}
-      >
-        OK
-      </button>
-
-      <button onClick={() => setActiveFilter(null)}>
-        Cancel
-      </button>
-    </div>
-  </div>
-)}
-</th>
-            <th>
-  <div className="th-header">
-    Designation
-    <span onClick={() => setActiveFilter("employeedesignation")}>⏷</span>
-  </div>
-{activeFilter === "employeedesignation" && (
-  <div ref={popupRef} className="excel-filter-popup">
-
-    <input
-      type="text"
-      placeholder="Search"
-      value={filterText}
-      onChange={(e) => setFilterText(e.target.value)}
-      className="filter-search"
-    />
-
-    <div className="filter-list">
-
-      <label className="filter-item">
-        <input
-          type="checkbox"
-          checked={
-            (tempSelections.employeedesignation || []).length ===
-            suggestions.length
-          }
-          onChange={(e) =>
-            setTempSelections({
-              ...tempSelections,
-              employeedesignation: e.target.checked
-                ? suggestions
-                : [],
-            })
-          }
-        />
-        (Select All)
-      </label>
-
-      {suggestions.map((item) => (
-        <label key={item} className="filter-item">
-          <input
-            type="checkbox"
-            checked={
-              (tempSelections.employeedesignation || []).includes(item)
-            }
-            onChange={() =>
-              handleCheckboxChange(
-                "employeedesignation",
-                item
-              )
-            }
-          />
-          {item}
-        </label>
-      ))}
-    </div>
-
-    <div className="filter-footer">
-      <button
-        onClick={() => {
-          setColumnFilters({
-            ...columnFilters,
-            employeedesignation:
-              (tempSelections.employeedesignation || []).join("|"),
-          });
-
-          setActiveFilter(null);
-        }}
-      >
-        OK
-      </button>
-
-      <button onClick={() => setActiveFilter(null)}>
-        Cancel
-      </button>
-    </div>
-  </div>
-)}
-</th>
-           <th>
-  <div className="th-header">
-    Location
-    <span onClick={() => setActiveFilter("employeelocation")}>⏷</span>
-  </div>
-{activeFilter === "employeelocation" && (
-  <div ref={popupRef} className="excel-filter-popup">
-    <input
-      type="text"
-      placeholder="Search"
-      value={filterText}
-      onChange={(e) => setFilterText(e.target.value)}
-      className="filter-search"
-    />
-
-    <div className="filter-list">
-      <label className="filter-item">
-        <input
-          type="checkbox"
-          checked={
-            (tempSelections.employeelocation || []).length ===
-            suggestions.length
-          }
-          onChange={(e) =>
-            setTempSelections({
-              ...tempSelections,
-              employeelocation: e.target.checked ? suggestions : [],
-            })
-          }
-        />
-        (Select All)
-      </label>
-
-      {suggestions.map((item) => (
-        <label key={item} className="filter-item">
-          <input
-            type="checkbox"
-            checked={
-              (tempSelections.employeelocation || []).includes(item)
-            }
-            onChange={() =>
-              handleCheckboxChange("employeelocation", item)
-            }
-          />
-          {item}
-        </label>
-      ))}
-    </div>
-
-    <div className="filter-footer">
-      <button
-        onClick={() => {
-          setColumnFilters({
-            ...columnFilters,
-            employeelocation:
-              (tempSelections.employeelocation || []).join("|"),
-          });
-          setActiveFilter(null);
-        }}
-      >
-        OK
-      </button>
-
-      <button onClick={() => setActiveFilter(null)}>
-        Cancel
-      </button>
-    </div>
-  </div>
-)}
-</th>
-            <th>
-  <div className="th-header">
-    <span>Employee Email</span>
-    <span onClick={() => setActiveFilter("employeeemail")}>⏷</span>
-  </div>
-{activeFilter === "employeeemail" && (
-  <div ref={popupRef} className="excel-filter-popup">
-    <input
-      type="text"
-      placeholder="Search"
-      value={filterText}
-      onChange={(e) => setFilterText(e.target.value)}
-      className="filter-search"
-    />
-
-    <div className="filter-list">
-      <label className="filter-item">
-        <input
-          type="checkbox"
-          checked={
-            (tempSelections.employeeemail || []).length ===
-            suggestions.length
-          }
-          onChange={(e) =>
-            setTempSelections({
-              ...tempSelections,
-              employeeemail: e.target.checked ? suggestions : [],
-            })
-          }
-        />
-        (Select All)
-      </label>
-
-      {suggestions.map((item) => (
-        <label key={item} className="filter-item">
-          <input
-            type="checkbox"
-            checked={
-              (tempSelections.employeeemail || []).includes(item)
-            }
-            onChange={() =>
-              handleCheckboxChange("employeeemail", item)
-            }
-          />
-          {item}
-        </label>
-      ))}
-    </div>
-
-    <div className="filter-footer">
-      <button
-        onClick={() => {
-          setColumnFilters({
-            ...columnFilters,
-            employeeemail:
-              (tempSelections.employeeemail || []).join("|"),
-          });
-          setActiveFilter(null);
-        }}
-      >
-        OK
-      </button>
-
-      <button onClick={() => setActiveFilter(null)}>
-        Cancel
-      </button>
-    </div>
-  </div>
-)}
-</th>
-
-<th>
-  <div className="th-header">
-    Reporting Manager
-    <span onClick={() => setActiveFilter("employeereportingmanager")}>⏷</span>
-  </div>
-
-  {activeFilter === "employeereportingmanager" && (
+  {activeFilter === "employeename" && (
     <div ref={popupRef} className="excel-filter-popup">
 
       <input
@@ -1725,13 +1307,13 @@ const getEmployeeProfileImage = (emp) => {
           <input
             type="checkbox"
             checked={
-              (tempSelections.employeereportingmanager || []).length ===
+              (tempSelections.employeename || []).length ===
               suggestions.length
             }
             onChange={(e) =>
               setTempSelections({
                 ...tempSelections,
-                employeereportingmanager: e.target.checked
+                employeename: e.target.checked
                   ? suggestions
                   : [],
               })
@@ -1745,11 +1327,233 @@ const getEmployeeProfileImage = (emp) => {
             <input
               type="checkbox"
               checked={
-                (tempSelections.employeereportingmanager || []).includes(item)
+                (tempSelections.employeename || []).includes(item)
+              }
+              onChange={() =>
+                handleCheckboxChange("employeename", item)
+              }
+            />
+            {item}
+          </label>
+        ))}
+      </div>
+
+      <div className="filter-footer">
+        <button
+          onClick={() => {
+            setColumnFilters({
+              ...columnFilters,
+              employeename:
+                (tempSelections.employeename || []).join("|"),
+            });
+
+            setActiveFilter(null);
+          }}
+        >
+          OK
+        </button>
+
+        <button onClick={() => setActiveFilter(null)}>
+          Cancel
+        </button>
+      </div>
+    </div>
+  )}
+  </th>
+              <th>
+    <div className="th-header">
+      Emp ID
+      <span onClick={() => setActiveFilter("employeeId")}>⏷</span>
+    </div>
+  {activeFilter === "employeeId" && (
+    <div ref={popupRef} className="excel-filter-popup">
+
+      <input
+        type="text"
+        placeholder="Search"
+        value={filterText}
+        onChange={(e) => setFilterText(e.target.value)}
+        className="filter-search"
+      />
+
+      <div className="filter-list">
+
+        <label className="filter-item">
+          <input
+            type="checkbox"
+            checked={
+              (tempSelections.employeeId || []).length ===
+              suggestions.length
+            }
+            onChange={(e) =>
+              setTempSelections({
+                ...tempSelections,
+                employeeId: e.target.checked ? suggestions : [],
+              })
+            }
+          />
+          (Select All)
+        </label>
+
+        {suggestions.map((item) => (
+          <label key={item} className="filter-item">
+            <input
+              type="checkbox"
+              checked={
+                (tempSelections.employeeId || []).includes(item)
+              }
+              onChange={() =>
+                handleCheckboxChange("employeeId", item)
+              }
+            />
+            {item}
+          </label>
+        ))}
+      </div>
+
+      <div className="filter-footer">
+        <button
+          onClick={() => {
+            setColumnFilters({
+              ...columnFilters,
+              employeeId:
+                (tempSelections.employeeId || []).join("|"),
+            });
+            setActiveFilter(null);
+          }}
+        >
+          OK
+        </button>
+
+        <button onClick={() => setActiveFilter(null)}>
+          Cancel
+        </button>
+      </div>
+    </div>
+  )}
+  </th>
+              <th>
+    <div className="th-header">
+      Department
+      <span onClick={() => setActiveFilter("employeedepartment")}>⏷</span>
+    </div>
+  {activeFilter === "employeedepartment" && (
+    <div ref={popupRef} className="excel-filter-popup">
+
+      <input
+        type="text"
+        placeholder="Search"
+        value={filterText}
+        onChange={(e) => setFilterText(e.target.value)}
+        className="filter-search"
+      />
+
+      <div className="filter-list">
+
+        <label className="filter-item">
+          <input
+            type="checkbox"
+            checked={
+              (tempSelections.employeedepartment || []).length ===
+              suggestions.length
+            }
+            onChange={(e) =>
+              setTempSelections({
+                ...tempSelections,
+                employeedepartment: e.target.checked
+                  ? suggestions
+                  : [],
+              })
+            }
+          />
+          (Select All)
+        </label>
+
+        {suggestions.map((item) => (
+          <label key={item} className="filter-item">
+            <input
+              type="checkbox"
+              checked={
+                (tempSelections.employeedepartment || []).includes(item)
+              }
+              onChange={() =>
+                handleCheckboxChange("employeedepartment", item)
+              }
+            />
+            {item}
+          </label>
+        ))}
+      </div>
+
+      <div className="filter-footer">
+        <button
+          onClick={() => {
+            setColumnFilters({
+              ...columnFilters,
+              employeedepartment:
+                (tempSelections.employeedepartment || []).join("|"),
+            });
+
+            setActiveFilter(null);
+          }}
+        >
+          OK
+        </button>
+
+        <button onClick={() => setActiveFilter(null)}>
+          Cancel
+        </button>
+      </div>
+    </div>
+  )}
+  </th>
+              <th>
+    <div className="th-header">
+      Designation
+      <span onClick={() => setActiveFilter("employeedesignation")}>⏷</span>
+    </div>
+  {activeFilter === "employeedesignation" && (
+    <div ref={popupRef} className="excel-filter-popup">
+
+      <input
+        type="text"
+        placeholder="Search"
+        value={filterText}
+        onChange={(e) => setFilterText(e.target.value)}
+        className="filter-search"
+      />
+
+      <div className="filter-list">
+
+        <label className="filter-item">
+          <input
+            type="checkbox"
+            checked={
+              (tempSelections.employeedesignation || []).length ===
+              suggestions.length
+            }
+            onChange={(e) =>
+              setTempSelections({
+                ...tempSelections,
+                employeedesignation: e.target.checked
+                  ? suggestions
+                  : [],
+              })
+            }
+          />
+          (Select All)
+        </label>
+
+        {suggestions.map((item) => (
+          <label key={item} className="filter-item">
+            <input
+              type="checkbox"
+              checked={
+                (tempSelections.employeedesignation || []).includes(item)
               }
               onChange={() =>
                 handleCheckboxChange(
-                  "employeereportingmanager",
+                  "employeedesignation",
                   item
                 )
               }
@@ -1764,8 +1568,8 @@ const getEmployeeProfileImage = (emp) => {
           onClick={() => {
             setColumnFilters({
               ...columnFilters,
-              employeereportingmanager:
-                (tempSelections.employeereportingmanager || []).join("|"),
+              employeedesignation:
+                (tempSelections.employeedesignation || []).join("|"),
             });
 
             setActiveFilter(null);
@@ -1780,158 +1584,14 @@ const getEmployeeProfileImage = (emp) => {
       </div>
     </div>
   )}
-</th>
-             <th>
-  <div className="th-header">
-    Employee DOB
-    <span onClick={() => setActiveFilter("employeeDOB")}>⏷</span>
-  </div>
-
-  {activeFilter === "employeeDOB" && (
-    <div ref={popupRef} className="excel-filter-popup">
-
-      <input
-        type="text"
-        placeholder="Search"
-        value={filterText}
-        onChange={(e) => setFilterText(e.target.value)}
-        className="filter-search"
-      />
-
-      <div className="filter-list">
-
-        <label className="filter-item">
-          <input
-            type="checkbox"
-            checked={
-              (tempSelections.employeeDOB || []).length ===
-              suggestions.length
-            }
-            onChange={(e) =>
-              setTempSelections({
-                ...tempSelections,
-                employeeDOB: e.target.checked ? suggestions : [],
-              })
-            }
-          />
-          (Select All)
-        </label>
-
-        {suggestions.map((item) => (
-          <label key={item} className="filter-item">
-            <input
-              type="checkbox"
-              checked={
-                (tempSelections.employeeDOB || []).includes(item)
-              }
-              onChange={() =>
-                handleCheckboxChange("employeeDOB", item)
-              }
-            />
-            {item}
-          </label>
-        ))}
-      </div>
-
-      <div className="filter-footer">
-        <button
-          onClick={() => {
-            setColumnFilters({
-              ...columnFilters,
-              employeeDOB:
-                (tempSelections.employeeDOB || []).join("|"),
-            });
-
-            setActiveFilter(null);
-          }}
-        >
-          OK
-        </button>
-
-        <button onClick={() => setActiveFilter(null)}>
-          Cancel
-        </button>
-      </div>
-    </div>
-  )}
-</th>
-             <th>
-  <div className="th-header">
-    Employee DOJ
-    <span onClick={() => setActiveFilter("employeeDOJ")}>⏷</span>
-  </div>
-
-  {activeFilter === "employeeDOJ" && (
-    <div ref={popupRef} className="popup">
-      <input
-        placeholder="Search..."
-        value={filterText}
-        onChange={(e) => setFilterText(e.target.value)}
-      />
-
-      <div className="list">
-        {suggestions.map((s) => (
-          <div
-            key={s}
-            onClick={() => {
-              setColumnFilters({
-                ...columnFilters,
-                employeeDOJ: s,
-              });
-              setActiveFilter(null);
-              setFilterText("");
-            }}
-          >
-            {s}
-          </div>
-        ))}
-      </div>
-    </div>
-  )}
-</th>
+  </th>
             <th>
-  <div className="th-header">
-    Employee ExitDate
-    <span onClick={() => setActiveFilter("employeeexitdate")}>⏷</span>
-  </div>
-
-  {activeFilter === "employeeexitdate" && (
-    <div ref={popupRef} className="popup">
-      <input
-        placeholder="Search..."
-        value={filterText}
-        onChange={(e) => setFilterText(e.target.value)}
-      />
-
-      <div className="list">
-        {suggestions.map((s) => (
-          <div
-            key={s}
-            onClick={() => {
-              setColumnFilters({
-                ...columnFilters,
-                employeeexitdate: s,
-              });
-              setActiveFilter(null);
-              setFilterText("");
-            }}
-          >
-            {s}
-          </div>
-        ))}
-      </div>
+    <div className="th-header">
+      Location
+      <span onClick={() => setActiveFilter("employeelocation")}>⏷</span>
     </div>
-  )}
-</th>
-<th>
-  <div className="th-header">
-    Status
-    <span onClick={() => setActiveFilter("employeestatus")}>⏷</span>
-  </div>
-
-  {activeFilter === "employeestatus" && (
+  {activeFilter === "employeelocation" && (
     <div ref={popupRef} className="excel-filter-popup">
-
       <input
         type="text"
         placeholder="Search"
@@ -1941,20 +1601,17 @@ const getEmployeeProfileImage = (emp) => {
       />
 
       <div className="filter-list">
-
         <label className="filter-item">
           <input
             type="checkbox"
             checked={
-              (tempSelections.employeestatus || []).length ===
+              (tempSelections.employeelocation || []).length ===
               suggestions.length
             }
             onChange={(e) =>
               setTempSelections({
                 ...tempSelections,
-                employeestatus: e.target.checked
-                  ? suggestions
-                  : [],
+                employeelocation: e.target.checked ? suggestions : [],
               })
             }
           />
@@ -1966,10 +1623,10 @@ const getEmployeeProfileImage = (emp) => {
             <input
               type="checkbox"
               checked={
-                (tempSelections.employeestatus || []).includes(item)
+                (tempSelections.employeelocation || []).includes(item)
               }
               onChange={() =>
-                handleCheckboxChange("employeestatus", item)
+                handleCheckboxChange("employeelocation", item)
               }
             />
             {item}
@@ -1982,10 +1639,9 @@ const getEmployeeProfileImage = (emp) => {
           onClick={() => {
             setColumnFilters({
               ...columnFilters,
-              employeestatus:
-                (tempSelections.employeestatus || []).join("|"),
+              employeelocation:
+                (tempSelections.employeelocation || []).join("|"),
             });
-
             setActiveFilter(null);
           }}
         >
@@ -1998,144 +1654,512 @@ const getEmployeeProfileImage = (emp) => {
       </div>
     </div>
   )}
-</th>
-              <th><div className="th-header">Bank Account No.</div></th>
-              <th><div className="th-header">IFSC</div></th>
-              <th><div className="th-header">UAN</div></th>
-              <th><div className="th-header">PF Member ID</div></th>
-              <th><div className="th-header">PF</div></th>
-              <th><div className="th-header">ESIC</div></th>
-              <th><div className="th-header">Designation Changed</div></th>
-              <th><div className="th-header">Desig. Changed Date</div></th>
-              
-              {user?.role === "admin" && <th>Action</th>}
+  </th>
+              <th>
+    <div className="th-header">
+      <span>Employee Email</span>
+      <span onClick={() => setActiveFilter("employeeemail")}>⏷</span>
+    </div>
+  {activeFilter === "employeeemail" && (
+    <div ref={popupRef} className="excel-filter-popup">
+      <input
+        type="text"
+        placeholder="Search"
+        value={filterText}
+        onChange={(e) => setFilterText(e.target.value)}
+        className="filter-search"
+      />
 
-            </tr>
+      <div className="filter-list">
+        <label className="filter-item">
+          <input
+            type="checkbox"
+            checked={
+              (tempSelections.employeeemail || []).length ===
+              suggestions.length
+            }
+            onChange={(e) =>
+              setTempSelections({
+                ...tempSelections,
+                employeeemail: e.target.checked ? suggestions : [],
+              })
+            }
+          />
+          (Select All)
+        </label>
 
-            {/* Filter row */}
-            <tr className="filter-row">
-              
-             
-             
-              
-            
-         
-             
-             
-            </tr>
-          </thead>
+        {suggestions.map((item) => (
+          <label key={item} className="filter-item">
+            <input
+              type="checkbox"
+              checked={
+                (tempSelections.employeeemail || []).includes(item)
+              }
+              onChange={() =>
+                handleCheckboxChange("employeeemail", item)
+              }
+            />
+            {item}
+          </label>
+        ))}
+      </div>
 
-          <tbody>
-            {filteredEmployees.length === 0 ? (
-              <tr>
-                <td colSpan="12" className="no-data">
-                  No employees found
-                </td>
-              </tr>
-            ) : (
-              filteredEmployees.map((emp, index) => (
-                <tr key={`${emp.employeeId}-${emp.email}-${index}`}>
-                   {/* Serial Number */}
-    <td>{index + 1}</td>
-                <td>
-  {getEmployeeProfileImage(emp) ? (
-    <img
-      src={getEmployeeProfileImage(emp)}
-      alt={emp.fullName}
-      className="profile-pic"
-      style={{ cursor: "pointer" }}
-      onClick={() =>
-        navigate("/employee-profile", {
-          state: { employee: emp },
-        })
-      }
-    />
-  ) : (
-    <div
-      className="employee-initials"
-      style={{ cursor: "pointer" }}
-      onClick={() =>
-        navigate("/employee-profile", {
-          state: { employee: emp },
-        })
-      }
-    >
-      {emp.fullName?.charAt(0)}
+      <div className="filter-footer">
+        <button
+          onClick={() => {
+            setColumnFilters({
+              ...columnFilters,
+              employeeemail:
+                (tempSelections.employeeemail || []).join("|"),
+            });
+            setActiveFilter(null);
+          }}
+        >
+          OK
+        </button>
+
+        <button onClick={() => setActiveFilter(null)}>
+          Cancel
+        </button>
+      </div>
     </div>
   )}
-</td>
-                  <td>{emp.fullName}</td> 
-                  <td>{emp.employeeId}</td>
-                  <td>{emp.department}</td>
-                  <td>{emp.designation}</td>
-                  <td>{emp.location}</td>
-                  <td>{emp.email}</td>
-                  <td>
-                    {emp.manager}
-                    <div className="mgr-email">{emp.managerEmail}</div>
-                  </td>
-                  <td>{emp.dob}</td>
-                  <td>{emp.doj}</td>
-                  <td>{emp.exitDate}</td>
-                  <td>
-                    <span
-                      className={`status ${
-                      (emp.status || "").toUpperCase() === "ACTIVE"
-  ? "active"
-  : (emp.status || "").toUpperCase() === "INACTIVE"
-  ? "inactive"
-  : (emp.status || "").toUpperCase() === "SERVING NOTICE"
-  ? "notice"
-  : "resigned"
-                      }`}
-                    >
-                      {emp.status}
-                    </span>
-                  </td>
-                  <td>{emp.bankAccountNumber || "-"}</td>
-                  <td>{emp.ifsc || "-"}</td>
-                  <td>{emp.uan || "-"}</td>
-                  <td>{emp.pfMemberId || "-"}</td>
-                  <td>{emp.pf || "-"}</td>
-                  <td>{emp.esic || "-"}</td>
-                  <td>{emp.designationChanged || "-"}</td>
-                  <td>{emp.designationChangedDate || "-"}</td>
-                  {user?.role === "admin" && (
-                    <td>
-                      <button
-                        onClick={() => openUpdateModal(emp)}
-                        style={{
-                          padding: "6px 14px",
-                          background: "linear-gradient(135deg, #1e3a5f 0%, #2563eb 100%)",
-                          color: "#fff",
-                          border: "none",
-                          borderRadius: 6,
-                          cursor: "pointer",
-                          fontSize: 12,
-                          fontWeight: 600,
-                          whiteSpace: "nowrap",
-                          boxShadow: "0 2px 8px rgba(37,99,235,0.3)",
-                          display: "flex",
-                          alignItems: "center",
-                          gap: 5,
-                          transition: "all 0.2s"
-                        }}
-                        onMouseEnter={e => e.currentTarget.style.boxShadow = "0 4px 14px rgba(37,99,235,0.5)"}
-                        onMouseLeave={e => e.currentTarget.style.boxShadow = "0 2px 8px rgba(37,99,235,0.3)"}
-                      >
-                        ✏️ Update
-                      </button>
-                    </td>
-                  )}
-                </tr>
-              ))
-            )}
-          </tbody>
-        </table>
-         </div>
-        
-        
+  </th>
+
+  <th>
+    <div className="th-header">
+      Reporting Manager
+      <span onClick={() => setActiveFilter("employeereportingmanager")}>⏷</span>
+    </div>
+
+    {activeFilter === "employeereportingmanager" && (
+      <div ref={popupRef} className="excel-filter-popup">
+
+        <input
+          type="text"
+          placeholder="Search"
+          value={filterText}
+          onChange={(e) => setFilterText(e.target.value)}
+          className="filter-search"
+        />
+
+        <div className="filter-list">
+
+          <label className="filter-item">
+            <input
+              type="checkbox"
+              checked={
+                (tempSelections.employeereportingmanager || []).length ===
+                suggestions.length
+              }
+              onChange={(e) =>
+                setTempSelections({
+                  ...tempSelections,
+                  employeereportingmanager: e.target.checked
+                    ? suggestions
+                    : [],
+                })
+              }
+            />
+            (Select All)
+          </label>
+
+          {suggestions.map((item) => (
+            <label key={item} className="filter-item">
+              <input
+                type="checkbox"
+                checked={
+                  (tempSelections.employeereportingmanager || []).includes(item)
+                }
+                onChange={() =>
+                  handleCheckboxChange(
+                    "employeereportingmanager",
+                    item
+                  )
+                }
+              />
+              {item}
+            </label>
+          ))}
+        </div>
+
+        <div className="filter-footer">
+          <button
+            onClick={() => {
+              setColumnFilters({
+                ...columnFilters,
+                employeereportingmanager:
+                  (tempSelections.employeereportingmanager || []).join("|"),
+              });
+
+              setActiveFilter(null);
+            }}
+          >
+            OK
+          </button>
+
+          <button onClick={() => setActiveFilter(null)}>
+            Cancel
+          </button>
+        </div>
       </div>
-    
-  );
-}
+    )}
+  </th>
+              <th>
+    <div className="th-header">
+      Employee DOB
+      <span onClick={() => setActiveFilter("employeeDOB")}>⏷</span>
+    </div>
+
+    {activeFilter === "employeeDOB" && (
+      <div ref={popupRef} className="excel-filter-popup">
+
+        <input
+          type="text"
+          placeholder="Search"
+          value={filterText}
+          onChange={(e) => setFilterText(e.target.value)}
+          className="filter-search"
+        />
+
+        <div className="filter-list">
+
+          <label className="filter-item">
+            <input
+              type="checkbox"
+              checked={
+                (tempSelections.employeeDOB || []).length ===
+                suggestions.length
+              }
+              onChange={(e) =>
+                setTempSelections({
+                  ...tempSelections,
+                  employeeDOB: e.target.checked ? suggestions : [],
+                })
+              }
+            />
+            (Select All)
+          </label>
+
+          {suggestions.map((item) => (
+            <label key={item} className="filter-item">
+              <input
+                type="checkbox"
+                checked={
+                  (tempSelections.employeeDOB || []).includes(item)
+                }
+                onChange={() =>
+                  handleCheckboxChange("employeeDOB", item)
+                }
+              />
+              {item}
+            </label>
+          ))}
+        </div>
+
+        <div className="filter-footer">
+          <button
+            onClick={() => {
+              setColumnFilters({
+                ...columnFilters,
+                employeeDOB:
+                  (tempSelections.employeeDOB || []).join("|"),
+              });
+
+              setActiveFilter(null);
+            }}
+          >
+            OK
+          </button>
+
+          <button onClick={() => setActiveFilter(null)}>
+            Cancel
+          </button>
+        </div>
+      </div>
+    )}
+  </th>
+              <th>
+    <div className="th-header">
+      Employee DOJ
+      <span onClick={() => setActiveFilter("employeeDOJ")}>⏷</span>
+    </div>
+
+    {activeFilter === "employeeDOJ" && (
+      <div ref={popupRef} className="popup">
+        <input
+          placeholder="Search..."
+          value={filterText}
+          onChange={(e) => setFilterText(e.target.value)}
+        />
+
+        <div className="list">
+          {suggestions.map((s) => (
+            <div
+              key={s}
+              onClick={() => {
+                setColumnFilters({
+                  ...columnFilters,
+                  employeeDOJ: s,
+                });
+                setActiveFilter(null);
+                setFilterText("");
+              }}
+            >
+              {s}
+            </div>
+          ))}
+        </div>
+      </div>
+    )}
+  </th>
+              <th>
+    <div className="th-header">
+      Employee ExitDate
+      <span onClick={() => setActiveFilter("employeeexitdate")}>⏷</span>
+    </div>
+
+    {activeFilter === "employeeexitdate" && (
+      <div ref={popupRef} className="popup">
+        <input
+          placeholder="Search..."
+          value={filterText}
+          onChange={(e) => setFilterText(e.target.value)}
+        />
+
+        <div className="list">
+          {suggestions.map((s) => (
+            <div
+              key={s}
+              onClick={() => {
+                setColumnFilters({
+                  ...columnFilters,
+                  employeeexitdate: s,
+                });
+                setActiveFilter(null);
+                setFilterText("");
+              }}
+            >
+              {s}
+            </div>
+          ))}
+        </div>
+      </div>
+    )}
+  </th>
+  <th>
+    <div className="th-header">
+      Status
+      <span onClick={() => setActiveFilter("employeestatus")}>⏷</span>
+    </div>
+
+    {activeFilter === "employeestatus" && (
+      <div ref={popupRef} className="excel-filter-popup">
+
+        <input
+          type="text"
+          placeholder="Search"
+          value={filterText}
+          onChange={(e) => setFilterText(e.target.value)}
+          className="filter-search"
+        />
+
+        <div className="filter-list">
+
+          <label className="filter-item">
+            <input
+              type="checkbox"
+              checked={
+                (tempSelections.employeestatus || []).length ===
+                suggestions.length
+              }
+              onChange={(e) =>
+                setTempSelections({
+                  ...tempSelections,
+                  employeestatus: e.target.checked
+                    ? suggestions
+                    : [],
+                })
+              }
+            />
+            (Select All)
+          </label>
+
+          {suggestions.map((item) => (
+            <label key={item} className="filter-item">
+              <input
+                type="checkbox"
+                checked={
+                  (tempSelections.employeestatus || []).includes(item)
+                }
+                onChange={() =>
+                  handleCheckboxChange("employeestatus", item)
+                }
+              />
+              {item}
+            </label>
+          ))}
+        </div>
+
+        <div className="filter-footer">
+          <button
+            onClick={() => {
+              setColumnFilters({
+                ...columnFilters,
+                employeestatus:
+                  (tempSelections.employeestatus || []).join("|"),
+              });
+
+              setActiveFilter(null);
+            }}
+          >
+            OK
+          </button>
+
+          <button onClick={() => setActiveFilter(null)}>
+            Cancel
+          </button>
+        </div>
+      </div>
+    )}
+  </th>
+                <th><div className="th-header">Bank Account No.</div></th>
+                <th><div className="th-header">IFSC</div></th>
+                <th><div className="th-header">UAN</div></th>
+                <th><div className="th-header">PF Member ID</div></th>
+                <th><div className="th-header">PF</div></th>
+                <th><div className="th-header">ESIC</div></th>
+                <th><div className="th-header">Designation Changed</div></th>
+                <th><div className="th-header">Desig. Changed Date</div></th>
+                
+                {user?.role === "admin" && <th>Action</th>}
+
+              </tr>
+
+              {/* Filter row */}
+              <tr className="filter-row">
+                
+              
+              
+                
+              
+          
+              
+              
+              </tr>
+            </thead>
+
+            <tbody>
+              {filteredEmployees.length === 0 ? (
+                <tr>
+                  <td colSpan="12" className="no-data">
+                    No employees found
+                  </td>
+                </tr>
+              ) : (
+                filteredEmployees.map((emp, index) => (
+                  <tr key={`${emp.employeeId}-${emp.email}-${index}`}>
+                    {/* Serial Number */}
+      <td>{index + 1}</td>
+                  <td>
+    {getEmployeeProfileImage(emp) ? (
+      <img
+        src={getEmployeeProfileImage(emp)}
+        alt={emp.fullName}
+        className="profile-pic"
+        style={{ cursor: "pointer" }}
+        onClick={() =>
+          navigate("/employee-profile", {
+            state: { employee: emp },
+          })
+        }
+      />
+    ) : (
+      <div
+        className="employee-initials"
+        style={{ cursor: "pointer" }}
+        onClick={() =>
+          navigate("/employee-profile", {
+            state: { employee: emp },
+          })
+        }
+      >
+        {emp.fullName?.charAt(0)}
+      </div>
+    )}
+  </td>
+                    <td>{emp.fullName}</td> 
+                    <td>{emp.employeeId}</td>
+                    <td>{emp.department}</td>
+                    <td>{emp.designation}</td>
+                    <td>{emp.location}</td>
+                    <td>{emp.email}</td>
+                    <td>
+                      {emp.manager}
+                      <div className="mgr-email">{emp.managerEmail}</div>
+                    </td>
+                    <td>{emp.dob}</td>
+                    <td>{emp.doj}</td>
+                    <td>{emp.exitDate}</td>
+                    <td>
+                      <span
+                        className={`status ${
+                        (emp.status || "").toUpperCase() === "ACTIVE"
+    ? "active"
+    : (emp.status || "").toUpperCase() === "INACTIVE"
+    ? "inactive"
+    : (emp.status || "").toUpperCase() === "SERVING NOTICE"
+    ? "notice"
+    : "resigned"
+                        }`}
+                      >
+                        {emp.status}
+                      </span>
+                    </td>
+                    <td>{emp.bankAccountNumber || "-"}</td>
+                    <td>{emp.ifsc || "-"}</td>
+                    <td>{emp.uan || "-"}</td>
+                    <td>{emp.pfMemberId || "-"}</td>
+                    <td>{emp.pf || "-"}</td>
+                    <td>{emp.esic || "-"}</td>
+                    <td>{emp.designationChanged || "-"}</td>
+                    <td>{emp.designationChangedDate || "-"}</td>
+                    {user?.role === "admin" && (
+                      <td>
+                        <button
+                          onClick={() => openUpdateModal(emp)}
+                          style={{
+                            padding: "6px 14px",
+                            background: "linear-gradient(135deg, #1e3a5f 0%, #2563eb 100%)",
+                            color: "#fff",
+                            border: "none",
+                            borderRadius: 6,
+                            cursor: "pointer",
+                            fontSize: 12,
+                            fontWeight: 600,
+                            whiteSpace: "nowrap",
+                            boxShadow: "0 2px 8px rgba(37,99,235,0.3)",
+                            display: "flex",
+                            alignItems: "center",
+                            gap: 5,
+                            transition: "all 0.2s"
+                          }}
+                          onMouseEnter={e => e.currentTarget.style.boxShadow = "0 4px 14px rgba(37,99,235,0.5)"}
+                          onMouseLeave={e => e.currentTarget.style.boxShadow = "0 2px 8px rgba(37,99,235,0.3)"}
+                        >
+                          ✏️ Update
+                        </button>
+                      </td>
+                    )}
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
+          </div>
+          
+          
+        </div>
+      
+    );
+  }
