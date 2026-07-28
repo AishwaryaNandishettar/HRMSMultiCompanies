@@ -18,4 +18,11 @@ public interface AttendanceRepository
     List<Attendance> findByUserIdAndDateStartingWith(String userId, String month);
     
     List<Attendance> findByUserIdInAndDateStartingWith(List<String> userIds, String month);
+
+    // ✅ empId-based queries (employee code e.g. "OMOI9606")
+    List<Attendance> findByEmpId(String empId);
+
+    List<Attendance> findByEmpIdAndDateStartingWith(String empId, String yearMonth);
+
+    Attendance findByEmpIdAndDate(String empId, String date);
 }

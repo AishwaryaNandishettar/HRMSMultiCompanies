@@ -27,6 +27,15 @@ const [columnFilters, setColumnFilters] = useState({});
 const [tempFilterValues, setTempFilterValues] = useState({});
       const [showEditModal, setShowEditModal] = useState(false);
       const [showJobModal, setShowJobModal] = useState(false);
+      const [showAppraisalEditModal, setShowAppraisalEditModal] = useState(false);
+      const [appraisalEdit, setAppraisalEdit] = useState({
+        hikeYear: "",
+        appraisalRating: "",
+        hikePercent: "",
+        hikeValue: "",
+        appraisalRemarks: "",
+        ctc: "",
+      });
       const [earlyRelease, setEarlyRelease] = useState(false);
 const [calculatedLwd, setCalculatedLwd] = useState("");
       const [profileImage, setProfileImage] = useState(() => {
@@ -432,6 +441,14 @@ useEffect(() => {
   joiningDate: profileData?.joiningDate || "N/A",
   totalExp: profileData?.totalExp || "N/A",
   currentExp: profileData?.currentExp || "N/A",
+  // Compensation / appraisal fields
+  ctc: profileData?.ctc || "",
+  hikeValue: profileData?.hikeValue || "",
+  hikePercent: profileData?.hikePercent || "",
+  hikeYear: profileData?.hikeYear || "",
+  appraisalRating: profileData?.appraisalRating || "",
+  appraisalRemarks: profileData?.appraisalRemarks || "",
+  employeeId: profileData?.employeeId || user?.employeeId || "",
 };
 
   // ✅ NEW: Update jobEdit when profileData changes (from backend)
@@ -1342,22 +1359,116 @@ useEffect(() => {
                       </tr>
                     </thead>
                     <tbody>
-                      <tr>
-                        <td>2024</td>
-                        <td>Exceeds Expectations</td>
-                        <td>18%</td>
-                        <td>₹90,000</td>
-                        <td>Outstanding performance</td>
-                      </tr>
-                      <tr>
-                        <td>2023</td>
-                        <td>Meets Expectations</td>
-                        <td>12%</td>
-                        <td>₹60,000</td>
-                        <td>Consistent performer</td>
-                      </tr>
+                      {employee.hikeYear ? (
+                        <tr>
+                          <td>{employee.hikeYear}</td>
+                          <td>{employee.appraisalRating || "—"}</td>
+                          <td>{employee.hikePercent ? `${employee.hikePercent}%` : "—"}</td>
+                          <td>{employee.hikeValue ? `₹${Number(employee.hikeValue).toLocaleString("en-IN")}` : "—"}</td>
+                          <td>{employee.appraisalRemarks || "—"}</td>
+                        </tr>
+                      ) : (
+                        <tr>
+                          <td colSpan={5} style={{ textAlign: "center", color: "#999", padding: "16px" }}>
+                            No appraisal data available
+                          </td>
+                        </tr>
+                      )}
                     </tbody>
                   </table>
+
+                  {/* Appraisal Edit Modal — Admin only */}
+                  {showAppraisalEditModal && role === "ADMIN" && (
+                    <div style={{
+                      position: "fixed", inset: 0, background: "rgba(0,0,0,0.5)",
+                      display: "flex", alignItems: "center", justifyContent: "center", zIndex: 9999
+                    }}>
+                      <div style={{
+                        background: "#fff", borderRadius: "12px", padding: "28px",
+                        width: "420px", boxShadow: "0 8px 32px rgba(0,0,0,0.2)"
+                      }}>
+                        <h3 style={{ marginBottom: "4px" }}>Edit Appraisal</h3>
+                        <p style={{ fontSize: "13px", color: "#666", marginBottom: "18px" }}>
+                          {selectedEmployee?.fullName || selectedEmployee?.empName || selectedEmployee?.name || "Employee"} &nbsp;•&nbsp;
+                          {selectedEmployee?.employeeId || selectedEmployee?.id}
+                        </p>
+
+                        {[
+                          { label: "Hike Year", key: "hikeYear", placeholder: "e.g. 2024" },
+                          { label: "Rating", key: "appraisalRating", placeholder: "e.g. Exceeds Expectations" },
+                          { label: "Hike %", key: "hikePercent", placeholder: "e.g. 18" },
+                          { label: "Hike Value (₹)", key: "hikeValue", placeholder: "e.g. 90000" },
+                          { label: "Remarks", key: "appraisalRemarks", placeholder: "e.g. Outstanding performance" },
+                          { label: "CTC (₹)", key: "ctc", placeholder: "e.g. 600000" },
+                        ].map(({ label, key, placeholder }) => (
+                          <div key={key} style={{ marginBottom: "12px" }}>
+                            <label style={{ fontSize: "13px", fontWeight: 600, display: "block", marginBottom: "4px" }}>
+                              {label}
+                            </label>
+                            <input
+                              type="text"
+                              value={appraisalEdit[key]}
+                              placeholder={placeholder}
+                              onChange={(e) =>
+                                setAppraisalEdit((prev) => ({ ...prev, [key]: e.target.value }))
+                              }
+                              style={{
+                                width: "100%", padding: "8px 10px", border: "1px solid #ddd",
+                                borderRadius: "6px", fontSize: "14px", boxSizing: "border-box"
+                              }}
+                            />
+                          </div>
+                        ))}
+
+                        <div style={{ display: "flex", gap: "10px", marginTop: "18px" }}>
+                          <button
+                            style={{
+                              flex: 1, padding: "9px", background: "#4f46e5", color: "#fff",
+                              border: "none", borderRadius: "7px", cursor: "pointer", fontWeight: 600
+                            }}
+                            onClick={async () => {
+                              try {
+                                // Save to the SELECTED employee (from the table row), not the logged-in admin
+                                const empId = selectedEmployee?.employeeId || selectedEmployee?.id;
+                                await updateEmployee(empId, {
+                                  email: selectedEmployee?.email || "", // ✅ send email for backend fallback lookup
+                                  hikeYear: appraisalEdit.hikeYear,
+                                  appraisalRating: appraisalEdit.appraisalRating,
+                                  hikePercent: appraisalEdit.hikePercent,
+                                  hikeValue: appraisalEdit.hikeValue,
+                                  appraisalRemarks: appraisalEdit.appraisalRemarks,
+                                  ctc: appraisalEdit.ctc,
+                                });
+                                // Refresh the employees list so table reflects new values
+                                const updated = await getAllEmployees();
+                                const empList = Array.isArray(updated) ? updated : (updated?.data || []);
+                                setAllEmployees(empList);
+                                setShowAppraisalEditModal(false);
+                                setSelectedEmployee(null);
+                              } catch (err) {
+                                console.error("Appraisal update failed:", err);
+                                alert("Failed to save: " + err.message);
+                              }
+                            }}
+                          >
+                            Save
+                          </button>
+                          <button
+                            style={{
+                              flex: 1, padding: "9px", background: "#f3f4f6", color: "#333",
+                              border: "1px solid #ddd", borderRadius: "7px", cursor: "pointer"
+                            }}
+                            onClick={() => {
+                              setShowAppraisalEditModal(false);
+                              setSelectedEmployee(null);
+                            }}
+                          >
+                            Cancel
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  )}
 
                   {/* Increment Letter */}
                   <h4 style={{ marginTop: "24px" }}>
@@ -2196,6 +2307,27 @@ filteredEmployees.map((emp, i) => (
     >
       ⬇ Download
     </button>
+
+    {role === "ADMIN" && (
+      <button
+        className={styles.viewBtn}
+        style={{ background: "#4f46e5", color: "#fff", border: "none" }}
+        onClick={() => {
+          setSelectedEmployee(emp || {});
+          setAppraisalEdit({
+            hikeYear: emp.hikeYear || "",
+            appraisalRating: emp.appraisalRating || "",
+            hikePercent: emp.hikePercent || "",
+            hikeValue: emp.hikeValue || "",
+            appraisalRemarks: emp.appraisalRemarks || "",
+            ctc: emp.ctc || "",
+          });
+          setShowAppraisalEditModal(true);
+        }}
+      >
+        ✏ Edit
+      </button>
+    )}
   </div>
 </td>
       </tr>

@@ -6,11 +6,9 @@ import com.omoikaneinnovation.hmrsbackend.repository.AttendanceRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.time.LocalDate;
 import java.time.YearMonth;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
-import java.util.stream.Collectors;
 
 @Service
 public class AttendanceIntegrationService {
@@ -34,37 +32,31 @@ public class AttendanceIntegrationService {
             DateTimeFormatter inputFormatter = DateTimeFormatter.ofPattern("MMMM-yyyy");
             YearMonth yearMonth = YearMonth.parse(month, inputFormatter);
             
+            // Convert to YYYY-MM format for efficient DB query (e.g., "2026-07")
+            String yearMonthStr = String.format("%d-%02d", year, yearMonth.getMonthValue());
+            
             int totalWorkingDays = yearMonth.lengthOfMonth(); // Simplified: all days are working days
             
-            // Get all attendance records for this employee in this month
-            List<Attendance> attendanceList = attendanceRepository.findByUserId(employeeId);
+            // ✅ FIX: Query by empId (employee code) first, fallback to userId
+            List<Attendance> monthlyAttendance = attendanceRepository.findByEmpIdAndDateStartingWith(employeeId, yearMonthStr);
             
             System.out.println("🔍 Searching attendance for employeeId: " + employeeId);
-            System.out.println("📅 Month: " + month + " (Year: " + year + ", Month: " + monthName + ")");
-            System.out.println("📋 Total attendance records found: " + attendanceList.size());
+            System.out.println("📅 Month: " + month + " (Year-Month: " + yearMonthStr + ")");
+            System.out.println("📋 Attendance records found by empId: " + monthlyAttendance.size());
             
-            // Filter by month
-            List<Attendance> monthlyAttendance = attendanceList.stream()
-                .filter(att -> {
-                    if (att.getDate() == null) return false;
-                    try {
-                        LocalDate attDate = LocalDate.parse(att.getDate());
-                        boolean matches = attDate.getYear() == year && 
-                               attDate.getMonth().toString().equalsIgnoreCase(monthName);
-                        
-                        if (matches) {
-                            System.out.println("✅ Matched record: " + att.getDate() + " | CheckIn: " + att.getCheckIn());
-                        }
-                        
-                        return matches;
-                    } catch (Exception e) {
-                        System.err.println("❌ Date parse error for: " + att.getDate());
-                        return false;
-                    }
-                })
-                .collect(Collectors.toList());
+            // Fallback: try userId if empId query returns nothing
+            if (monthlyAttendance.isEmpty()) {
+                System.out.println("⚠️ No records found by empId, trying userId...");
+                monthlyAttendance = attendanceRepository.findByUserIdAndDateStartingWith(employeeId, yearMonthStr);
+                System.out.println("📋 Attendance records found by userId: " + monthlyAttendance.size());
+            }
             
-            System.out.println("📊 Monthly attendance records: " + monthlyAttendance.size());
+            // Debug output
+            monthlyAttendance.forEach(att -> 
+                System.out.println("✅ Record: " + att.getDate() + " | CheckIn: " + att.getCheckIn() + " | empId: " + att.getEmpId())
+            );
+            
+            System.out.println("📊 Final monthly attendance count: " + monthlyAttendance.size());
             
             int presentDays = monthlyAttendance.size();
             int absentDays = totalWorkingDays - presentDays;

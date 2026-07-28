@@ -249,13 +249,20 @@ body {
   z-index: 1;
 }
 .status-box {
-  background: white;
-  padding: 16px;
-  border-radius: 12px;
-  min-width: 150px;
-  text-align: center;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.08);
-  transition: 0.3s;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+
+  height: 90px;
+  padding: 12px 18px;
+
+  border-radius: 14px;
+  cursor: pointer;
+
+  box-shadow: 0 6px 18px rgba(0,0,0,0.12);
+  transition: all .25s ease;
+
+  text-align: left;
 }
 
 .status-box:hover {
@@ -1619,23 +1626,18 @@ body {
 .status-box h4 {
   margin: 0;
   font-size: 15px;
-  font-weight: 700;   /* was 600 */
+  font-weight: 600;
   color: #fff !important;
 }
 
-/* Value */
 .status-box strong {
-  margin-top: 6px;
-  font-size: 20px;    /* slightly bigger like Home */
-  font-weight: 800;   /* stronger bold */
+  margin-top: 4px;
+  font-size: 18px;
+  font-weight: 700;
   line-height: 1.2;
-
   color: #fff !important;
-
-  text-align: left;
-  padding-left: 0;
-  display: block;
 }
+
 .status-box h4 {
   font-size: 18px;
   font-weight: 700;
@@ -1647,4 +1649,43 @@ body {
   font-weight: 800;
   color: #fff !important;
   margin-top: 6px;
+}
+@media screen and (max-width:768px) and (orientation:portrait){
+
+  /* First sticky column */
+  .leave-table thead th:nth-child(1),
+  .leave-table tbody td:nth-child(1){
+      left:0 !important;
+      width:110px !important;
+      min-width:110px !important;
+      max-width:110px !important;
+  }
+
+  /* Second sticky column */
+  .leave-table thead th:nth-child(2),
+  .leave-table tbody td:nth-child(2){
+      left:110px !important;     /* FIXED */
+      width:150px !important;
+      min-width:150px !important;
+      max-width:150px !important;
+
+      overflow:hidden;
+      white-space:nowrap;
+      text-overflow:ellipsis;
+  }
+
+  /* Remaining columns */
+  .leave-table th:nth-child(n+3),
+  .leave-table td:nth-child(n+3){
+      min-width:140px !important;
+      width:140px !important;
+  }
+}
+ 
+.leave-table td,
+.leave-table th{
+    overflow:hidden;
+    white-space:nowrap;
+    text-overflow:ellipsis;
+    box-sizing:border-box;
 }

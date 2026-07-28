@@ -2146,26 +2146,28 @@ width: auto;
   .kpi-row,
   .payroll-stats {
     display: flex;
-    grid-template-columns: 1fr !important;
-    gap: 15px !important;
+    flex-wrap: wrap;
+    gap: 10px !important;
   }
 
   .kpi-card,
   .stat-card {
-    width: 100%;
-    min-height: 50px;
-    min-width: 500px;
+    width: calc(50% - 5px) !important;
+    min-width: calc(50% - 5px) !important;
+    min-height: 64px !important;
+    padding: 10px 12px !important;
   }
 
   .kpi-title {
-    font-size: 75px !important;
-    font-weight: 700;
+    font-size: 11px !important;
+    font-weight: 600;
   }
 
   .kpi-value {
-    font-size: 50px !important;
+    font-size: 16px !important;
     padding-left: 0 !important;
-    font-weight: 800px;
+    font-weight: 700;
+    margin-top: 4px;
   }
 
   /* CONTENT */
@@ -3138,4 +3140,38 @@ width: auto;
 .payroll-table td:nth-child(2) {
   min-width: 220px !important;
   width: 220px !important;
+}
+/* ===================================================
+   MOBILE KPI CARD SAME SIZE FIX
+   =================================================== */
+
+@media only screen and (max-width:768px){
+
+  .kpi-row{
+    display:grid !important;
+    grid-template-columns:repeat(2,1fr) !important;
+    gap:10px !important;
+  }
+
+  .kpi-card{
+    width:100% !important;
+    min-width:0 !important;
+    max-width:none !important;
+
+    min-height:90px !important;
+
+    margin:0 !important;
+  }
+
+  /* Third card (Net Pay) */
+  .kpi-row .kpi-card:last-child{
+    grid-column:1 / 2 !important;
+
+    width:100% !important;
+    min-width:0 !important;
+    max-width:none !important;
+
+    margin:0 !important;
+  }
+
 }

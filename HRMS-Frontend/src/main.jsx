@@ -3,6 +3,7 @@ import ReactDOM from "react-dom/client";
 import App from "./App";
 import { AuthProvider } from "./Context/Authcontext";
 import "./responsive.css";
+import "./mobile.css";
 
 // 🔴 BLOCK any socket.io usage globally
 window.io = () => {

@@ -33,13 +33,23 @@ const SalaryCalculationModal = ({
   paidDays: Number(payrollData?.paidDays || 0),
   lopDays: Number(payrollData?.lopDays || 0),
 
-  // Monthly salary
+  // Monthly salary — send what admin typed so backend uses these instead of DB values
   basic: Number(payrollData?.basic || 0),
   hra: Number(payrollData?.hra || 0),
   allowance: Number(payrollData?.allowance || 0),
   bonus: Number(payrollData?.bonus || 0),
   incentive: Number(payrollData?.incentive || 0),
   conveyance: Number(payrollData?.conveyance || 0),
+  variableSalary: Number(payrollData?.variableSalary || 0),
+
+  // Deductions — send what admin typed
+  pf: Number(payrollData?.pf || 0),
+  esi: Number(payrollData?.esi || 0),
+  tax: Number(payrollData?.tax || 0),
+  deduction: Number(payrollData?.deduction || 0),
+  professionalTax: Number(payrollData?.professionalTax || 0),
+  lopDeduction: Number(payrollData?.lopDeduction || 0),
+  otherDeduction: Number(payrollData?.otherDeduction || 0),
 };
 
       const response = await calculateSalary(request);
@@ -74,6 +84,15 @@ const SalaryCalculationModal = ({
   bonus: Number(payrollData?.bonus || 0),
   incentive: Number(payrollData?.incentive || 0),
   conveyance: Number(payrollData?.conveyance || 0),
+  variableSalary: Number(payrollData?.variableSalary || 0),
+
+  pf: Number(payrollData?.pf || 0),
+  esi: Number(payrollData?.esi || 0),
+  tax: Number(payrollData?.tax || 0),
+  deduction: Number(payrollData?.deduction || 0),
+  professionalTax: Number(payrollData?.professionalTax || 0),
+  lopDeduction: Number(payrollData?.lopDeduction || 0),
+  otherDeduction: Number(payrollData?.otherDeduction || 0),
 };
 
       await calculateAndApplySalary(request);

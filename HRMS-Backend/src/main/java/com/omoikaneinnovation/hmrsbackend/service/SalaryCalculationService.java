@@ -44,21 +44,24 @@ public class SalaryCalculationService {
         // Get employee details
         User user = userRepository.findByEmployeeId(employeeId);
 
-        // Initialize base salary components from existing payroll
-        Double basic = existingPayroll.getBasic() != null ? existingPayroll.getBasic() : 0.0;
-        Double hra = existingPayroll.getHra() != null ? existingPayroll.getHra() : 0.0;
-        Double allowance = existingPayroll.getAllowance() != null ? existingPayroll.getAllowance() : 0.0;
-        Double bonus = existingPayroll.getBonus() != null ? existingPayroll.getBonus() : 0.0;
-        Double incentive = existingPayroll.getIncentive() != null ? existingPayroll.getIncentive() : 0.0;
-        Double conveyance = 0.0; // Default
+        // Initialize base salary components:
+        // Use values from request (admin-entered in Update Payroll table) if provided,
+        // otherwise fall back to the existing DB payroll record.
+        Double basic      = request.getBasic()      != null && request.getBasic()      > 0 ? request.getBasic()      : (existingPayroll.getBasic()      != null ? existingPayroll.getBasic()      : 0.0);
+        Double hra        = request.getHra()         != null && request.getHra()        > 0 ? request.getHra()        : (existingPayroll.getHra()         != null ? existingPayroll.getHra()         : 0.0);
+        Double allowance  = request.getAllowance()   != null && request.getAllowance()  > 0 ? request.getAllowance()  : (existingPayroll.getAllowance()    != null ? existingPayroll.getAllowance()    : 0.0);
+        Double bonus      = request.getBonus()       != null && request.getBonus()      > 0 ? request.getBonus()      : (existingPayroll.getBonus()       != null ? existingPayroll.getBonus()       : 0.0);
+        Double incentive  = request.getIncentive()   != null && request.getIncentive() > 0 ? request.getIncentive()  : (existingPayroll.getIncentive()    != null ? existingPayroll.getIncentive()    : 0.0);
+        Double conveyance = request.getConveyance()  != null && request.getConveyance()> 0 ? request.getConveyance() : (existingPayroll.getConveyance()   != null ? existingPayroll.getConveyance()   : 0.0);
+        Double variableSalary = request.getVariableSalary() != null && request.getVariableSalary() > 0 ? request.getVariableSalary() : (existingPayroll.getVariableSalary() != null ? existingPayroll.getVariableSalary() : 0.0);
 
-        // Initialize deductions from existing payroll
-        Double pf = existingPayroll.getPf() != null ? existingPayroll.getPf() : 0.0;
-        Double esi = existingPayroll.getEsi() != null ? existingPayroll.getEsi() : 0.0;
-        Double tax = existingPayroll.getTax() != null ? existingPayroll.getTax() : 0.0;
-        Double professionalTax = 0.0; // Default
-        Double deduction = existingPayroll.getDeduction() != null ? existingPayroll.getDeduction() : 0.0;
-        Double otherDeduction = 0.0;
+        // Initialize deductions — request overrides DB values when provided
+        Double pf              = request.getPf()             != null && request.getPf()             > 0 ? request.getPf()             : (existingPayroll.getPf()             != null ? existingPayroll.getPf()             : 0.0);
+        Double esi             = request.getEsi()            != null && request.getEsi()            > 0 ? request.getEsi()            : (existingPayroll.getEsi()            != null ? existingPayroll.getEsi()            : 0.0);
+        Double tax             = request.getTax()            != null && request.getTax()            > 0 ? request.getTax()            : (existingPayroll.getTax()            != null ? existingPayroll.getTax()            : 0.0);
+        Double professionalTax = request.getProfessionalTax()!= null && request.getProfessionalTax()> 0 ? request.getProfessionalTax(): 0.0;
+        Double deduction       = request.getDeduction()      != null && request.getDeduction()      > 0 ? request.getDeduction()      : (existingPayroll.getDeduction()      != null ? existingPayroll.getDeduction()      : 0.0);
+        Double otherDeduction  = request.getOtherDeduction() != null && request.getOtherDeduction() > 0 ? request.getOtherDeduction() : 0.0;
 
         // Real-time calculated components
         Double attendanceBonus = 0.0;
@@ -67,14 +70,14 @@ public class SalaryCalculationService {
         Double lopDeduction = 0.0;
         Double lateDeduction = 0.0;
 
-        // Attendance data
+        // Attendance data — use request values when provided (from Update Payroll table)
         AttendanceSummary attendanceSummary = null;
-        Integer totalWorkingDays = 30;
-        Integer presentDays = 30;
-        Integer absentDays = 0;
-        Integer leaveDays = 0;
-        Integer lopDays = 0;
-        Double attendancePercentage = 100.0;
+        Integer totalWorkingDays = request.getWorkingDays() != null && request.getWorkingDays() > 0 ? request.getWorkingDays() : 30;
+        Integer presentDays = request.getPaidDays()     != null && request.getPaidDays()     > 0 ? request.getPaidDays()     : 30;
+        Integer absentDays  = 0;
+        Integer leaveDays   = 0;
+        Integer lopDays     = request.getLopDays()      != null && request.getLopDays()      > 0 ? request.getLopDays()      : 0;
+        Double attendancePercentage = totalWorkingDays > 0 ? (presentDays * 100.0) / totalWorkingDays : 100.0;
 
         // Performance data
         Double performanceRating = 3.0;
@@ -121,8 +124,8 @@ public class SalaryCalculationService {
             performanceBonus = performanceService.calculatePerformanceBonus(performanceRating, basic);
         }
 
-        // Calculate totals
-        Double grossSalary = basic + hra + allowance + bonus + incentive + conveyance 
+        // Calculate totals — variableSalary included in gross
+        Double grossSalary = basic + hra + allowance + bonus + incentive + conveyance + variableSalary
                            + attendanceBonus + performanceBonus + overtimePay;
 
         Double totalDeductions = pf + esi + tax + professionalTax + deduction 

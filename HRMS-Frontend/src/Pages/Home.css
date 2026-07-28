@@ -156,9 +156,46 @@
   /* TABLE */
   .emp-table {
     width: 100%;
+      min-width: 700px;
     border-collapse: collapse;
   }
+.kpi-row,
+.mobile-top-panels,
+.panel,
+.emp-panel {
+    width: 100%;
+    max-width: 100%;
+    /* overflow: hidden removed — blocks table horizontal scroll on mobile */
+}
+@media (max-width:768px){
 
+.dashboard{
+    padding:10px;
+}
+
+.kpi-row{
+    grid-template-columns:1fr;
+}
+
+.mobile-top-panels{
+    flex-direction:column;
+}
+
+.emp-panel{
+    width:100%;
+    overflow:hidden;
+}
+
+.emp-scroll{
+    width:100%;
+    overflow-x:auto;
+}
+
+.emp-table{
+    min-width:700px;
+}
+
+}
   .emp-table th,
   .emp-table td {
     padding: 10px 12px;
@@ -364,10 +401,15 @@
   .pay.green { background: #22c55e; }
 
   /* PAYROLL TABLE – ONLY 3–4 ROWS */
-  .payroll-scroll {
-    max-height: 160px;
-    overflow-y: auto;
-  }
+ .payroll-scroll {
+  max-height: 150px;
+  overflow-y: auto;
+  overflow-x: auto;
+  overscroll-behavior: contain;
+}
+.payroll-scroll table {
+  min-width: 600px;
+}
 
   /* ================= NOTIFICATIONS ================= */
   .notify {
@@ -1134,17 +1176,15 @@
     }
 
    .emp-scroll {
-  max-height: 260px;   /* adjust height as needed */
-  overflow-y: auto;
-  overflow-x: hidden;
-
-  /* prevent page scrolling when mouse is over table */
-  overscroll-behavior: contain;
+    width: 100%;
+    overflow-x: auto;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
 }
 .scrollable-box.emp-scroll {
   max-height: 260px;
   overflow-y: auto;
-  overflow-x: hidden;
+  overflow-x: auto;
   overscroll-behavior: contain;
 }
 .emp-table thead th {
@@ -1159,7 +1199,7 @@
   height: 260px !important;
   max-height: 260px !important;
   overflow-y: auto !important;
-  overflow-x: hidden !important;
+  overflow-x: auto !important;   /* allow horizontal scroll on all sizes */
   position: relative !important;
 }
 
@@ -1777,11 +1817,8 @@
   overflow: visible !important;
 }
 
-.emp-scroll,
-.scrollable-box,
-.emp-panel {
-  overflow-x: visible !important;
-}
+/* overflow-x:visible removed — was blocking horizontal scroll on mobile */
+/* The filter popup still works via position:absolute on the th */
 
 .filter-popup {
   position: absolute !important;
@@ -1948,4 +1985,194 @@
   flex: 1;
   padding: 6px 10px;
   cursor: pointer;
+}
+html,
+body,
+#root {
+    width: 100%;
+    overflow-x: hidden;
+}
+
+.dashboard {
+    width: 100%;
+    max-width: 100%;
+    overflow-x: hidden;
+}
+
+
+/* =========================================================
+   MOBILE RESPONSIVE FIXES — tables, charts, layout
+   ========================================================= */
+
+@media (max-width: 768px) {
+
+  /* ── Layout: stack main grid columns ── */
+  .main-grid,
+  .dashboard-layout {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 12px !important;
+  }
+
+  /* ── Layout: stack bottom grid ── */
+  .bottom-grid {
+    grid-template-columns: 1fr !important;
+    gap: 12px !important;
+  }
+
+  /* ── Charts: stack side by side into single column ── */
+  .chart-row {
+    grid-template-columns: 1fr !important;
+    gap: 12px !important;
+  }
+
+  /* Make each chart box tall enough to show content */
+  .chart-box {
+    min-height: 280px !important;
+  }
+
+  /* ── Employee Directory: allow horizontal scroll ── */
+  .emp-panel {
+    overflow: visible !important;   /* remove the clipping */
+    height: auto !important;
+  }
+
+  .scrollable-box.emp-scroll,
+  .emp-scroll {
+    width: 100% !important;
+    max-height: 280px !important;
+    overflow-x: auto !important;
+    overflow-y: auto !important;
+    -webkit-overflow-scrolling: touch !important;
+    overscroll-behavior: contain !important;
+  }
+
+  .emp-table {
+    min-width: 560px !important;  /* force wider than screen → enables scroll */
+  }
+
+  /* ── Last 3 Months Payroll: allow horizontal scroll ── */
+  .panel.small-panel {
+    overflow: visible !important;  /* remove clipping */
+  }
+
+  .scrollable-box.payroll-scroll,
+  .payroll-scroll {
+    width: 100% !important;
+    max-height: 200px !important;
+    overflow-x: auto !important;
+    overflow-y: auto !important;
+    -webkit-overflow-scrolling: touch !important;
+    overscroll-behavior: contain !important;
+  }
+
+  .payroll-scroll table,
+  .payroll-scroll .emp-table {
+    min-width: 520px !important;   /* wider than screen → horizontal scroll */
+  }
+
+  /* ── Global panel: do NOT clip overflow on mobile ── */
+  .panel {
+    overflow: visible !important;
+  }
+
+}
+/* =========================================================
+   MOBILE SCROLL FIX - ADD THIS AT THE VERY END
+   ========================================================= */
+@media screen and (max-width:768px){
+
+  html,
+  body,
+  #root{
+    overflow-x:hidden;
+    width:100%;
+  }
+
+  .dashboard{
+    width:100%;
+    overflow-x:hidden;
+  }
+
+  /* Employee Table */
+  .emp-panel{
+    width:100%;
+    overflow:hidden;
+  }
+
+  .emp-scroll{
+    width:100%;
+    overflow-x:auto !important;
+    overflow-y:auto !important;
+    -webkit-overflow-scrolling:touch;
+  }
+
+  .emp-table{
+    min-width:700px !important;
+    width:max-content !important;
+  }
+
+  /* Payroll Table */
+  .payroll-scroll{
+    width:100%;
+    overflow-x:auto !important;
+    overflow-y:auto !important;
+    -webkit-overflow-scrolling:touch;
+  }
+
+  .payroll-scroll table{
+    min-width:650px !important;
+    width:max-content !important;
+  }
+
+  /* Charts */
+  .chart-row{
+    display:flex !important;
+    flex-direction:column !important;
+    gap:12px;
+  }
+
+  .chart-box{
+    width:100%;
+    min-height:300px;
+    overflow:hidden;
+  }
+
+  .chart-box .recharts-responsive-container{
+    width:100% !important;
+    height:260px !important;
+  }
+ /* Leave + Holiday */
+
+  .mobile-top-panels{
+    display:grid !important;
+    grid-template-columns:1fr 1fr !important;
+    gap:8px;
+  }
+
+  /* Check Card */
+
+  .check-card{
+    width:100%;
+    order:3;
+  }
+  /* Bottom Grid */
+  .bottom-grid{
+    display:flex !important;
+    flex-direction:column !important;
+    gap:12px;
+  }
+
+  /* Main Grid */
+  .main-grid,
+  .dashboard-layout{
+    display:flex !important;
+    flex-direction:column !important;
+    gap:12px;
+  }
+
+  /* Prevent page horizontal scroll */
+  *{
+    max-width:100%;
+  }
 }

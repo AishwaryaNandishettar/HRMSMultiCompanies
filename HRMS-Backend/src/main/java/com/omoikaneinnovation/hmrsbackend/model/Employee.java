@@ -36,6 +36,8 @@ private String dob;
     private String hikePercent;  // ✅ ADD THIS (hike percentage)
     private String hikeYear;  // ✅ ADD THIS (hike year)
     private String incrementLetter;  // ✅ ADD THIS (increment letter status)
+    private String appraisalRating;  // ✅ Appraisal rating (e.g. "Exceeds Expectations")
+    private String appraisalRemarks; // ✅ Appraisal remarks (e.g. "Outstanding performance")
 
     // ── New statutory / bank fields ──
     private String bankAccountNumber;
@@ -238,6 +240,20 @@ public void setDob(String dob) {
     }
     public void setIncrementLetter(String incrementLetter) {
         this.incrementLetter = incrementLetter;
+    }
+
+    public String getAppraisalRating() {
+        return appraisalRating;
+    }
+    public void setAppraisalRating(String appraisalRating) {
+        this.appraisalRating = appraisalRating;
+    }
+
+    public String getAppraisalRemarks() {
+        return appraisalRemarks;
+    }
+    public void setAppraisalRemarks(String appraisalRemarks) {
+        this.appraisalRemarks = appraisalRemarks;
     }
 
     // ── New statutory / bank fields ──

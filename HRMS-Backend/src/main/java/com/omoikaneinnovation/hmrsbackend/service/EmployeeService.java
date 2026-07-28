@@ -91,7 +91,20 @@
                     ". Using first match: " + employee.getFullName());
             }
         } else {
-            throw new RuntimeException("Employee not found with ID: " + employeeId);
+            // ✅ FALLBACK: try matching by email (handles cases where employeeId wasn't set at creation)
+            if (dto.getEmail() != null && !dto.getEmail().trim().isEmpty()) {
+                employee = employeeRepo.findByEmail(dto.getEmail()).orElse(null);
+                if (employee != null) {
+                    System.out.println("✅ Found employee by email fallback: " + employee.getFullName());
+                    // Also stamp the employeeId onto the record so future lookups work
+                    if (employee.getEmployeeId() == null || employee.getEmployeeId().isBlank()) {
+                        employee.setEmployeeId(employeeId);
+                    }
+                }
+            }
+            if (employee == null) {
+                throw new RuntimeException("Employee not found with ID: " + employeeId);
+            }
         }
         
         System.out.println("✅ Found employee: " + employee.getFullName() + " (ID: " + employeeId + ")");
@@ -131,7 +144,9 @@
                 userRepository.save(user);
             }
         }
-        if (dto.getEmail() != null && !dto.getEmail().trim().isEmpty()) {
+        if (dto.getEmail() != null && !dto.getEmail().trim().isEmpty()
+                && !dto.getEmail().equalsIgnoreCase(employee.getEmail())) {
+            // Only overwrite email if it's actually being changed to something different
             employee.setEmail(dto.getEmail());
         }
 
@@ -171,6 +186,14 @@
         if (dto.getDoj() != null && !dto.getDoj().trim().isEmpty()) employee.setDoj(dto.getDoj());
         if (dto.getExitDate() != null) employee.setExitDate(dto.getExitDate());
         if (dto.getStatus() != null && !dto.getStatus().trim().isEmpty()) employee.setStatus(dto.getStatus());
+
+        // Appraisal / compensation fields (admin-only)
+        if (dto.getCtc() != null) employee.setCtc(dto.getCtc());
+        if (dto.getHikeValue() != null) employee.setHikeValue(dto.getHikeValue());
+        if (dto.getHikePercent() != null) employee.setHikePercent(dto.getHikePercent());
+        if (dto.getHikeYear() != null) employee.setHikeYear(dto.getHikeYear());
+        if (dto.getAppraisalRating() != null) employee.setAppraisalRating(dto.getAppraisalRating());
+        if (dto.getAppraisalRemarks() != null) employee.setAppraisalRemarks(dto.getAppraisalRemarks());
 
         Employee saved = employeeRepo.save(employee);
         System.out.println("✅ Employee updated successfully: " + saved.getFullName());

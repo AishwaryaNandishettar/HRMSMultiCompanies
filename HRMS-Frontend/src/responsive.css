@@ -161,6 +161,13 @@
     grid-template-columns: repeat(2, 1fr) !important;
   }
 
+  /* Prevent orphan 3rd card from going half-width at this breakpoint */
+  .kpi-row > *,
+  .kpiRow > *,
+  .payroll-stats > * {
+    min-width: 0 !important;
+  }
+
   /* Chart row stacks */
   .chart-row {
     grid-template-columns: 1fr !important;
@@ -227,6 +234,250 @@
 
   /* Insurance claim dashboard */
   .claim-dashboard {
+    grid-template-columns: repeat(2, 1fr) !important;
+  }
+}
+
+/* =====================================================
+   BREAKPOINT: screens ≤ 480px (all phones)
+   iPhone SE (375), iPhone XR/14 Pro Max (430),
+   Pixel 7 (412), Samsung Galaxy (360–412)
+   Forces all KPI cards to full-width single column —
+   no zigzag orphan card. No logic changes, CSS only.
+   ===================================================== */
+@media (max-width: 480px) {
+
+  /* Switch to flex column — bypasses any grid/minmax rule */
+  .kpi-row,
+  .kpiRow,
+  .payroll-stats {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 10px !important;
+    width: 100% !important;
+  }
+
+  /* Every card: full width, no orphan, no zigzag */
+  .kpi-row > .kpi-card,
+  .kpiRow > .kpi-card,
+  .payroll-stats > .stat-card,
+  .kpi-row > *,
+  .kpiRow > *,
+  .payroll-stats > * {
+    width: 100% !important;
+    min-width: 0 !important;
+    max-width: 100% !important;
+    flex: 0 0 100% !important;
+    min-height: 80px !important;
+    align-self: stretch !important;
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+  }
+}
+
+/* =====================================================
+   PAYROLL TABLE — MOBILE PORTRAIT HORIZONTAL SCROLL
+   Only activates on portrait mobile (max-width: 767px
+   AND portrait orientation). Desktop and landscape are
+   untouched. No logic changes, CSS only.
+   ===================================================== */
+@media (max-width: 767px) and (orientation: portrait) {
+
+  /* Stack left/right panels vertically */
+  .payroll-content {
+    flex-direction: column !important;
+    gap: 16px !important;
+  }
+
+  /* Left panel takes full width */
+  .payroll-left {
+    width: 100% !important;
+    flex: unset !important;
+  }
+
+  /* Right profile card comes below the table */
+  .payroll-right {
+    width: 100% !important;
+    flex: unset !important;
+    position: static !important;
+  }
+
+  /* ── TABLE WRAPPER: BOTH axes scroll ── */
+  /* vertical scroll: table body scrolls, header stays pinned */
+  /* horizontal scroll: swipe to see more columns */
+  .payroll-table-wrapper,
+  .payroll-table-container {
+    position: relative !important;
+    width: 100% !important;
+    max-height: 420px !important;       /* vertical boundary — body scrolls inside */
+    overflow-x: auto !important;        /* swipe left/right */
+    overflow-y: auto !important;        /* scroll up/down inside the wrapper */
+    -webkit-overflow-scrolling: touch;  /* smooth iOS momentum scroll */
+    border-radius: 10px !important;
+    /* disable any conflicting scroll constraints from Payroll.css */
+    min-height: unset !important;
+  }
+
+  /* ── TABLE: wide enough to require horizontal scroll ── */
+  .payroll-table {
+    min-width: 720px !important;
+    table-layout: auto !important;
+    /* reset any display overrides set by Payroll.css */
+    display: table !important;
+  }
+
+  /* ── RESET display overrides from Payroll.css on mobile ── */
+  /* Payroll.css forces thead/tbody/tr/th/td display values —
+     those break sticky headers; override them here             */
+  .payroll-table thead {
+    display: table-header-group !important;
+  }
+  .payroll-table tbody {
+    display: table-row-group !important;
+  }
+  .payroll-table tr {
+    display: table-row !important;
+  }
+  .payroll-table th,
+  .payroll-table td {
+    display: table-cell !important;
+  }
+
+  /* ── STICKY HEADER ROW ── */
+  /* Keeps the entire header row pinned to the top of the
+     scrollable wrapper while the body scrolls vertically.    */
+  .payroll-table thead th {
+    position: sticky !important;
+    top: 0 !important;
+    z-index: 30 !important;             /* above body rows */
+    background: #0d3b66 !important;     /* matches existing dark header colour */
+    /* clear any left: offset from Payroll.css frozen-column rules */
+    left: unset !important;
+  }
+
+  /* ── COLUMN 1: S.NO. — sticky left edge ── */
+  /* S.NO. is th:nth-child(1), td:nth-child(1)              */
+  .payroll-table th:nth-child(1),
+  .payroll-table td:nth-child(1) {
+    position: sticky !important;
+    left: 0 !important;
+    z-index: 20 !important;
+    min-width: 52px !important;
+    max-width: 52px !important;
+    width: 52px !important;
+    background: inherit !important;     /* td inherits row bg; th gets override below */
+    white-space: nowrap !important;
+  }
+
+  /* Header cell of S.NO. must sit above body cells */
+  .payroll-table thead th:nth-child(1) {
+    z-index: 40 !important;
+    background: #0d3b66 !important;
+  }
+
+  /* ── COLUMN 2: Employee Name — sticky just after S.NO. ── */
+  /* Employee Name is th:nth-child(2), td:nth-child(2)       */
+  .payroll-table th:nth-child(2),
+  .payroll-table td:nth-child(2) {
+    position: sticky !important;
+    left: 52px !important;              /* width of S.NO. column */
+    z-index: 20 !important;
+    min-width: 140px !important;
+    background: inherit !important;
+    white-space: nowrap !important;
+    /* thin right shadow to visually separate frozen area */
+    box-shadow: 2px 0 6px rgba(0, 0, 0, 0.12) !important;
+  }
+
+  /* Header cell of Employee Name */
+  .payroll-table thead th:nth-child(2) {
+    z-index: 40 !important;
+    background: #0d3b66 !important;
+    box-shadow: 2px 0 6px rgba(0, 0, 0, 0.25) !important;
+  }
+
+  /* Body rows — white background for frozen columns so
+     scrolling content doesn't bleed through             */
+  .payroll-table tbody td:nth-child(1),
+  .payroll-table tbody td:nth-child(2) {
+    background: #ffffff !important;
+  }
+
+  .payroll-table tbody tr:nth-child(even) td:nth-child(1),
+  .payroll-table tbody tr:nth-child(even) td:nth-child(2) {
+    background: #f9fafb !important;
+  }
+
+  /* Grand total row frozen columns */
+  .payroll-table tbody tr:last-child td:nth-child(1),
+  .payroll-table tbody tr:last-child td:nth-child(2) {
+    background: #0d3b66 !important;
+  }
+
+  /* ── Scroll hint: right-edge fade ── */
+  .payroll-table-wrapper::after,
+  .payroll-table-container::after {
+    content: "";
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: 28px;
+    height: 100%;
+    background: linear-gradient(to right, transparent, rgba(255,255,255,0.7));
+    pointer-events: none;
+    border-radius: 0 10px 10px 0;
+    z-index: 5;
+  }
+
+  /* ── Toolbar wraps on mobile ── */
+  .payroll-toolbar {
+    flex-wrap: wrap !important;
+    gap: 8px !important;
+  }
+
+  .payroll-toolbar input,
+  .payroll-toolbar select {
+    width: 100% !important;
+    max-width: 100% !important;
+  }
+
+  /* ── Stats cards: 2 per row on mobile ── */
+  .payroll-stats {
+    grid-template-columns: repeat(2, 1fr) !important;
+  }
+
+  /* ── KPI row (PayrollStats): all 3 cards equal width, stacked ── */
+  /* Payroll.css sets minmax(210px, 1fr) which makes the 3rd card
+     shrink when there's not enough space for all 3 at 210px min.
+     Force all cards to stretch equally on mobile.                  */
+  .kpi-row {
+    display: grid !important;
+    grid-template-columns: 1fr !important;   /* one card per row — no zigzag */
+    gap: 10px !important;
+  }
+
+  .kpi-row .kpi-card {
+    width: 100% !important;
+    min-width: 0 !important;                 /* override the 210px min */
+    min-height: 80px !important;
+    grid-column: 1 / -1 !important;         /* always span the full single column */
+  }
+
+  /* ── Footer pagination wraps ── */
+  .payroll-footer {
+    flex-direction: column !important;
+    gap: 10px !important;
+    align-items: flex-start !important;
+  }
+
+  /* ── Salary slip full width ── */
+  .salary-slip {
+    width: 100% !important;
+    padding: 16px !important;
+  }
+
+  /* ── Profile card salary boxes: two columns ── */
+  .salary-box {
     grid-template-columns: repeat(2, 1fr) !important;
   }
 }
