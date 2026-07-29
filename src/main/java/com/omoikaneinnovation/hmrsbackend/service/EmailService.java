@@ -195,6 +195,11 @@ public class EmailService {
             helper.setText(htmlContent, true);
 
             log.info("Calling mailSender.send()");
+            log.info("SMTP CONFIG → host={}, port={}, username={}, fromAddress={}",
+                    System.getProperty("spring.mail.host", "N/A"),
+                    System.getProperty("spring.mail.port", "N/A"),
+                    System.getProperty("spring.mail.username", "N/A"),
+                    fromAddress);
             mailSender.send(message);
             log.info("mailSender.send() completed");
             log.info("✅ Email sent successfully to: {}", to);
