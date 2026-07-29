@@ -519,18 +519,31 @@ const handleBulkInviteSend = async () => {
   );
 
   const successful = results.filter((r) => r.status === "fulfilled").length;
-  const failed = results.filter((r) => r.status === "rejected");
+  const failedResults = results
+    .map((r, i) => ({ result: r, emp: selectedEmployees[i] }))
+    .filter(({ result }) => result.status === "rejected");
 
   setBulkInviteSending(false);
 
-  if (failed.length === 0) {
+  if (failedResults.length === 0) {
     alert(`✅ Invitations sent successfully to all ${successful} employee(s).`);
     setShowBulkInvite(false);
   } else {
-    console.error("Bulk Invite Failures:", failed);
+    const failedEmails = failedResults
+      .map(({ emp, result }) => {
+        const reason =
+          result.reason?.response?.data?.message ||
+          result.reason?.response?.data ||
+          result.reason?.message ||
+          "Unknown error";
+        return `• ${emp.email} — ${reason}`;
+      })
+      .join("\n");
+
+    console.error("Bulk Invite Failures:", failedResults);
     alert(
       `⚠️ Sent ${successful} invitation(s) successfully.\n` +
-      `❌ ${failed.length} failed (e.g., ${failed[0]?.reason?.response?.data?.message || failed[0]?.reason?.message}).`
+      `❌ ${failedResults.length} failed:\n\n${failedEmails}`
     );
   }
 };
