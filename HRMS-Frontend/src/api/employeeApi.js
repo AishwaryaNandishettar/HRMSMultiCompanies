@@ -38,7 +38,11 @@ export const fetchAllEmployees = async () => {
   return response.data;
 };
 
-// ✅ UPDATE EMPLOYEE
+// ✅ SEED DUMMY APPRAISAL HISTORY — testing only
+export const seedAppraisalHistory = async () => {
+  const response = await api.post("/api/employee/seed-appraisal-history");
+  return response.data;
+};
 
 export const updateEmployee = async (id, data) => {
   // If data is FormData, convert it to JSON object

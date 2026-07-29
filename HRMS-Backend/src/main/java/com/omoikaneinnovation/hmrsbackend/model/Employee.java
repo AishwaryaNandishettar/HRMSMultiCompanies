@@ -3,6 +3,8 @@ import lombok.*;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 import java.time.Instant;
+import java.util.ArrayList;
+import java.util.List;
 import org.springframework.data.mongodb.core.index.Indexed;
 
 @Document(collection = "employees")
@@ -38,6 +40,47 @@ private String dob;
     private String incrementLetter;  // ✅ ADD THIS (increment letter status)
     private String appraisalRating;  // ✅ Appraisal rating (e.g. "Exceeds Expectations")
     private String appraisalRemarks; // ✅ Appraisal remarks (e.g. "Outstanding performance")
+
+    // ── Appraisal History (list of all yearly appraisals) ──
+    private List<AppraisalRecord> appraisalHistory = new ArrayList<>();
+
+    // ── Inner class to hold one year's appraisal snapshot ──
+    public static class AppraisalRecord {
+        private String hikeYear;
+        private String hikePercent;
+        private String hikeValue;
+        private String ctcAfterHike;      // CTC after this hike was applied
+        private String appraisalRating;
+        private String appraisalRemarks;
+        private String designation;       // designation at the time of appraisal
+        private String recordedAt;        // ISO date string when admin saved this
+
+        public AppraisalRecord() {}
+
+        public String getHikeYear() { return hikeYear; }
+        public void setHikeYear(String hikeYear) { this.hikeYear = hikeYear; }
+
+        public String getHikePercent() { return hikePercent; }
+        public void setHikePercent(String hikePercent) { this.hikePercent = hikePercent; }
+
+        public String getHikeValue() { return hikeValue; }
+        public void setHikeValue(String hikeValue) { this.hikeValue = hikeValue; }
+
+        public String getCtcAfterHike() { return ctcAfterHike; }
+        public void setCtcAfterHike(String ctcAfterHike) { this.ctcAfterHike = ctcAfterHike; }
+
+        public String getAppraisalRating() { return appraisalRating; }
+        public void setAppraisalRating(String appraisalRating) { this.appraisalRating = appraisalRating; }
+
+        public String getAppraisalRemarks() { return appraisalRemarks; }
+        public void setAppraisalRemarks(String appraisalRemarks) { this.appraisalRemarks = appraisalRemarks; }
+
+        public String getDesignation() { return designation; }
+        public void setDesignation(String designation) { this.designation = designation; }
+
+        public String getRecordedAt() { return recordedAt; }
+        public void setRecordedAt(String recordedAt) { this.recordedAt = recordedAt; }
+    }
 
     // ── New statutory / bank fields ──
     private String bankAccountNumber;
@@ -296,4 +339,13 @@ public void setDob(String dob) {
 
     public String getEducationDocument() { return educationDocument; }
     public void setEducationDocument(String educationDocument) { this.educationDocument = educationDocument; }
+
+    // ── Appraisal History getter/setter ──
+    public List<AppraisalRecord> getAppraisalHistory() {
+        if (appraisalHistory == null) appraisalHistory = new ArrayList<>();
+        return appraisalHistory;
+    }
+    public void setAppraisalHistory(List<AppraisalRecord> appraisalHistory) {
+        this.appraisalHistory = appraisalHistory;
+    }
 }

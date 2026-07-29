@@ -5,7 +5,7 @@
     import { fetchMyProfile } from "../api/profileApi";
     import { useContext } from "react";
     import { AuthContext } from "../Context/Authcontext";
-    import { getAllEmployees, updateEmployee } from "../api/employeeApi";
+    import { getAllEmployees, updateEmployee, seedAppraisalHistory } from "../api/employeeApi";
     import { updateJobDetails } from "../api/profileApi";
     import { submitResignation, getResignationsByEmployee, updateResignationStatus, getAllResignations, getResignationsForApproval, getAllResignationsByManager, getResignationsForHRApproval, approveResignation, rejectResignation } from "../api/resignationApi";
     import { getEmployeeProfileImage } from "../Utils/profileImageHelper";
@@ -448,6 +448,8 @@ useEffect(() => {
   hikeYear: profileData?.hikeYear || "",
   appraisalRating: profileData?.appraisalRating || "",
   appraisalRemarks: profileData?.appraisalRemarks || "",
+  // Full appraisal history array (multi-year)
+  appraisalHistory: Array.isArray(profileData?.appraisalHistory) ? profileData.appraisalHistory : [],
   employeeId: profileData?.employeeId || user?.employeeId || "",
 };
 
@@ -516,21 +518,36 @@ console.log("REPORTING MANAGER =", selectedEmployee?.reportingManager);
   },
 ];
 
-    const downloadPDF = (emp) => {
+    // downloadPDF(emp)              → uses emp's current flat fields (latest hike)
+  // downloadPDF(emp, historyRecord) → uses a specific appraisal history year
+  const downloadPDF = (emp, historyRecord = null) => {
     // Resolve all fields from the passed employee object (never fall back to logged-in user)
     const empName    = emp?.fullName || emp?.empName || emp?.name || "Employee";
     const empId      = emp?.employeeId || emp?.id || "N/A";
     const dept       = emp?.department || "N/A";
-    const desig      = emp?.designation || "N/A";
-    const ctc        = emp?.ctc || "N/A";
-    const hikePercent = emp?.hikePercent || "0";
-    const hikeValue   = emp?.hikeValue || "0";
+
+    // If a specific history record is passed, use its fields; otherwise use the employee's latest
+    const rec        = historyRecord || emp;
+    const desig      = rec?.designation || emp?.designation || "N/A";
+    const ctcBefore  = rec?.ctcAfterHike
+      ? (Number(rec.ctcAfterHike) - Number(rec.hikeValue || "0")).toString()
+      : (emp?.ctc || "N/A");
+    const ctcAfter   = rec?.ctcAfterHike || (
+      rec?.ctc && rec?.hikeValue
+        ? String(Number(rec.ctc) + Number(rec.hikeValue))
+        : "N/A"
+    );
+    const hikePercent = rec?.hikePercent || "0";
+    const hikeValue   = rec?.hikeValue || "0";
+    const hikeYear    = rec?.hikeYear || "2025";
+    const rating      = rec?.appraisalRating || "—";
+    const remarks     = rec?.appraisalRemarks || "—";
 
     const html = `<!DOCTYPE html>
 <html>
 <head>
   <meta charset="UTF-8"/>
-  <title>Increment Letter - ${empName}</title>
+  <title>Increment Letter ${hikeYear} - ${empName}</title>
   <style>
     body { font-family: Arial, sans-serif; max-width: 720px; margin: 60px auto; color: #333; }
     h2   { text-align: center; color: #1a3c6e; }
@@ -545,22 +562,20 @@ console.log("REPORTING MANAGER =", selectedEmployee?.reportingManager);
   <h2>Salary Revision Letter</h2>
   <p class="sub">Human Resources Department</p>
   <hr/>
-  <p><span class="label">Date:</span> 01 January 2025</p>
+  <p><span class="label">Date:</span> 01 January ${hikeYear}</p>
   <p>Dear <strong>${empName}</strong>,</p>
   <p>We are pleased to inform you that based on your performance, your compensation has been revised as follows:</p>
   <p><span class="label">Employee ID:</span> ${empId}</p>
   <p><span class="label">Department:</span> ${dept}</p>
   <p><span class="label">Designation:</span> ${desig}</p>
   <hr/>
-  <p><span class="label">Previous CTC:</span> ₹${ctc}</p>
+  <p><span class="label">Previous CTC:</span> ₹${ctcBefore}</p>
   <p><span class="label">Hike Percentage:</span> ${hikePercent}%</p>
   <p><span class="label">Hike Value:</span> ₹${hikeValue}</p>
   <hr/>
-  <p><span class="label">Revised CTC:</span> ₹${
-    ctc !== "N/A" && hikeValue !== "0"
-      ? Number(ctc) + Number(hikeValue)
-      : "N/A"
-  }</p>
+  <p><span class="label">Revised CTC:</span> ₹${ctcAfter}</p>
+  <p><span class="label">Appraisal Rating:</span> ${rating}</p>
+  <p><span class="label">Remarks:</span> ${remarks}</p>
   <p style="margin-top:20px;">This revision reflects your contribution and performance in the organisation.</p>
   <div class="footer">
     <p>Regards,<br/><strong>Human Resources Team</strong></p>
@@ -571,7 +586,7 @@ console.log("REPORTING MANAGER =", selectedEmployee?.reportingManager);
     const blob = new Blob([html], { type: "text/html" });
     const link = document.createElement("a");
     link.href = URL.createObjectURL(blob);
-    link.download = `${empName}_Increment_Letter_2025.html`;
+    link.download = `${empName}_Increment_Letter_${hikeYear}.html`;
     link.click();
     URL.revokeObjectURL(link.href);
   };
@@ -624,11 +639,81 @@ const currentBGV = bgvRecords.find(
 console.log("BGV Records:", bgvRecords);
 console.log("Current BGV:", currentBGV);
 
-const documents = [
-  { name: "Resume.pdf", url: "/documents/Resume.pdf" },
-  { name: "Aadhaar.pdf", url: "/documents/Aadhaar.pdf" },
-  { name: "Offer_Letter.pdf", url: "/documents/Offer_Letter.pdf" }
-];
+// Build documents list from profileData fields (Base64 strings stored in backend)
+const buildDocuments = () => {
+  const docs = [];
+  if (profileData?.resumeDocument) {
+    docs.push({ name: "Resume", data: profileData.resumeDocument });
+  }
+  if (profileData?.aadhaarDocument) {
+    docs.push({ name: "Aadhaar", data: profileData.aadhaarDocument });
+  }
+  if (profileData?.offerLetterDocument) {
+    docs.push({ name: "Offer_Letter", data: profileData.offerLetterDocument });
+  }
+  if (profileData?.panDocument) {
+    docs.push({ name: "PAN", data: profileData.panDocument });
+  }
+  if (profileData?.educationDocument) {
+    docs.push({ name: "Education_Certificate", data: profileData.educationDocument });
+  }
+  return docs;
+};
+const documents = buildDocuments();
+
+// Helper: open a Base64 document as an image or PDF in a new tab
+const openDocument = (doc) => {
+  const raw = doc.data || "";
+
+  // If it's already a full URL (http/https), open directly
+  if (raw.startsWith("http://") || raw.startsWith("https://")) {
+    window.open(raw, "_blank");
+    return;
+  }
+
+  // Detect MIME type from Base64 data URI prefix or by magic bytes
+  let mimeType = "application/octet-stream";
+  let base64Data = raw;
+
+  if (raw.startsWith("data:")) {
+    // e.g. "data:image/png;base64,iVBOR..."
+    const match = raw.match(/^data:([^;]+);base64,(.+)$/);
+    if (match) {
+      mimeType = match[1];
+      base64Data = match[2];
+    }
+  } else {
+    // Detect from raw Base64 magic bytes
+    const header = raw.substring(0, 8);
+    if (header.startsWith("JVBERi0")) {
+      mimeType = "application/pdf";          // PDF: %PDF-
+    } else if (header.startsWith("/9j/")) {
+      mimeType = "image/jpeg";               // JPEG
+    } else if (header.startsWith("iVBORw0")) {
+      mimeType = "image/png";                // PNG
+    } else if (header.startsWith("R0lGOD")) {
+      mimeType = "image/gif";                // GIF
+    } else if (header.startsWith("UklGR")) {
+      mimeType = "image/webp";               // WebP
+    }
+  }
+
+  try {
+    const byteChars = atob(base64Data);
+    const byteArray = new Uint8Array(byteChars.length);
+    for (let i = 0; i < byteChars.length; i++) {
+      byteArray[i] = byteChars.charCodeAt(i);
+    }
+    const blob = new Blob([byteArray], { type: mimeType });
+    const url = URL.createObjectURL(blob);
+    window.open(url, "_blank");
+    // Revoke the object URL after a short delay to free memory
+    setTimeout(() => URL.revokeObjectURL(url), 10000);
+  } catch (e) {
+    console.error("Failed to open document:", e);
+    alert("Could not open document. The file data may be corrupted.");
+  }
+};
 
 const getDesignation = () => {
   // Use actual designation from profile data, fallback to role-based
@@ -1310,27 +1395,24 @@ useEffect(() => {
 
                   <div className={styles.profileSectionCard}>
                     <h3>Documents</h3>
-                    {documents.map((doc, i) => (
-  <div key={i} className={styles.docRow}>
-    <div>
-      <p className={styles.docName}>{doc.name}</p>
-      <span className={styles.docDate}>Uploaded</span>
-    </div>
-
-    <button
-  className={styles.downloadBtn}
-  onClick={() => {
-    const link = document.createElement("a");
-    link.href = doc.url;
-    link.download = doc.name;
-    link.target = "_blank"; // ✅ open correctly
-    link.click();
-  }}
->
-  Download
-</button>
-  </div>
-))}
+                    {documents.length === 0 ? (
+                      <p style={{ color: "#888", fontSize: "14px" }}>No documents uploaded yet.</p>
+                    ) : (
+                      documents.map((doc, i) => (
+                        <div key={i} className={styles.docRow}>
+                          <div>
+                            <p className={styles.docName}>{doc.name}</p>
+                            <span className={styles.docDate}>Uploaded</span>
+                          </div>
+                          <button
+                            className={styles.downloadBtn}
+                            onClick={() => openDocument(doc)}
+                          >
+                            Download
+                          </button>
+                        </div>
+                      ))
+                    )}
                   </div>
 
                 </div>
@@ -1338,12 +1420,8 @@ useEffect(() => {
 
               {/* ================= COMPENSATION ================= */}
               {view === "compensation" && (
+                <>
                 <div className={styles.profileSectionCard}>
-                 
-                    
-                  
-                 
-
                   <h4 style={{ marginTop: "20px" }}>
                     Previous Year Appraisal
                   </h4>
@@ -1355,21 +1433,57 @@ useEffect(() => {
                         <th>Rating</th>
                         <th>Hike</th>
                         <th>Hike Value</th>
+                        <th>Revised CTC</th>
                         <th>Remarks</th>
+                        <th>Letter</th>
                       </tr>
                     </thead>
                     <tbody>
-                      {employee.hikeYear ? (
+                      {Array.isArray(employee.appraisalHistory) && employee.appraisalHistory.length > 0 ? (
+                        // Show full history — sorted newest first
+                        [...employee.appraisalHistory]
+                          .sort((a, b) => (b.hikeYear || "").localeCompare(a.hikeYear || ""))
+                          .map((rec, idx) => (
+                            <tr key={idx}>
+                              <td>{rec.hikeYear || "—"}</td>
+                              <td>{rec.appraisalRating || "—"}</td>
+                              <td>{rec.hikePercent ? `${rec.hikePercent}%` : "—"}</td>
+                              <td>{rec.hikeValue ? `₹${Number(rec.hikeValue).toLocaleString("en-IN")}` : "—"}</td>
+                              <td>{rec.ctcAfterHike ? `₹${Number(rec.ctcAfterHike).toLocaleString("en-IN")}` : "—"}</td>
+                              <td>{rec.appraisalRemarks || "—"}</td>
+                              <td>
+                                <button
+                                  className={styles.downloadBtn}
+                                  style={{ fontSize: "12px", padding: "4px 10px" }}
+                                  onClick={() => downloadPDF(employee, rec)}
+                                >
+                                  ⬇ Download
+                                </button>
+                              </td>
+                            </tr>
+                          ))
+                      ) : employee.hikeYear ? (
+                        // Fallback: show single flat record if no history array yet
                         <tr>
                           <td>{employee.hikeYear}</td>
                           <td>{employee.appraisalRating || "—"}</td>
                           <td>{employee.hikePercent ? `${employee.hikePercent}%` : "—"}</td>
                           <td>{employee.hikeValue ? `₹${Number(employee.hikeValue).toLocaleString("en-IN")}` : "—"}</td>
+                          <td>{employee.ctc ? `₹${Number(employee.ctc).toLocaleString("en-IN")}` : "—"}</td>
                           <td>{employee.appraisalRemarks || "—"}</td>
+                          <td>
+                            <button
+                              className={styles.downloadBtn}
+                              style={{ fontSize: "12px", padding: "4px 10px" }}
+                              onClick={() => downloadPDF(employee)}
+                            >
+                              ⬇ Download
+                            </button>
+                          </td>
                         </tr>
                       ) : (
                         <tr>
-                          <td colSpan={5} style={{ textAlign: "center", color: "#999", padding: "16px" }}>
+                          <td colSpan={7} style={{ textAlign: "center", color: "#999", padding: "16px" }}>
                             No appraisal data available
                           </td>
                         </tr>
@@ -1470,36 +1584,45 @@ useEffect(() => {
                     </div>
                   )}
 
-                  {/* Increment Letter */}
+                  {/* Increment Letter — one entry per appraisal history year */}
                   <h4 style={{ marginTop: "24px" }}>
-                    Increment Letter
+                    Increment Letters
                   </h4>
 
-                  <div className={styles.docRow}>
-                    <div>
-                      <p className={styles.docName}>Increment_Letter_2025.pdf</p>
-                      <span className={styles.docDate}>Issued on: 01 Jan 2025</span>
+                  {(Array.isArray(employee.appraisalHistory) && employee.appraisalHistory.length > 0
+                    ? [...employee.appraisalHistory].sort((a, b) => (b.hikeYear || "").localeCompare(a.hikeYear || ""))
+                    : employee.hikeYear
+                      ? [{ hikeYear: employee.hikeYear, hikePercent: employee.hikePercent, hikeValue: employee.hikeValue, appraisalRating: employee.appraisalRating, appraisalRemarks: employee.appraisalRemarks }]
+                      : []
+                  ).map((rec, idx) => (
+                    <div key={idx} className={styles.docRow}>
+                      <div>
+                        <p className={styles.docName}>Increment_Letter_{rec.hikeYear}.html</p>
+                        <span className={styles.docDate}>Appraisal Year: {rec.hikeYear}</span>
+                      </div>
+                      <div>
+                        <button
+                          className={styles.downloadBtn}
+                          onClick={() => {
+                            setSelectedEmployee({ ...employee, ...rec, _historyRecord: rec });
+                            setShowIncrementLetter(true);
+                          }}
+                        >
+                          View
+                        </button>
+                        <button
+                          className={styles.downloadBtn}
+                          style={{ marginLeft: "8px" }}
+                          onClick={() => downloadPDF(employee, rec)}
+                        >
+                          Download
+                        </button>
+                      </div>
                     </div>
-
-<div>
-  <button
-    className={styles.downloadBtn}
-    onClick={() => {
-      setSelectedEmployee(employee);
-      setShowIncrementLetter(true);
-    }}
-  >
-    View
-  </button>
-
-  <button
-    className={styles.downloadBtn}
-    style={{ marginLeft: "8px" }}
-    onClick={() => downloadPDF(employee)}
-  >
-    Download
-  </button>
-</div>
+                  ))}
+                  {(!employee.hikeYear && !(Array.isArray(employee.appraisalHistory) && employee.appraisalHistory.length > 0)) && (
+                    <p style={{ color: "#999", fontSize: "14px" }}>No increment letters available yet.</p>
+                  )}
                    </div>
                  {showIncrementLetter && selectedEmployee && (
   <div className={styles.incrementPreview}>
@@ -1510,10 +1633,10 @@ useEffect(() => {
       <hr />
     </div>
 
-    <p><strong>Date:</strong> 01 January 2025</p>
+    <p><strong>Date:</strong> 01 January {selectedEmployee.hikeYear || new Date().getFullYear()}</p>
 
     <p>
-      Dear <strong>{selectedEmployee.name}</strong>,
+      Dear <strong>{selectedEmployee.fullName || selectedEmployee.empName || selectedEmployee.name}</strong>,
     </p>
 
     <p>
@@ -1528,19 +1651,25 @@ useEffect(() => {
 
       <hr />
 
-      <p><strong>Previous CTC:</strong> ₹{selectedEmployee.ctc || "N/A"}</p>
-      <p><strong>Hike Percentage:</strong> {selectedEmployee.hikePercent || "0"}%</p>
-      <p><strong>Hike Value:</strong> ₹{selectedEmployee.hikeValue || "0"}</p>
+      <p><strong>Hike Percentage:</strong> {selectedEmployee.hikePercent ? `${selectedEmployee.hikePercent}%` : "0%"}</p>
+      <p><strong>Hike Value:</strong> {selectedEmployee.hikeValue ? `₹${Number(selectedEmployee.hikeValue).toLocaleString("en-IN")}` : "0"}</p>
 
       <hr />
 
       <p>
         <strong>Revised CTC:</strong>{" "}
-        ₹
-        {selectedEmployee.ctc && selectedEmployee.hikeValue
-          ? Number(selectedEmployee.ctc) + Number(selectedEmployee.hikeValue)
-          : "N/A"}
+        {selectedEmployee.ctcAfterHike
+          ? `₹${Number(selectedEmployee.ctcAfterHike).toLocaleString("en-IN")}`
+          : selectedEmployee.ctc && selectedEmployee.hikeValue
+            ? `₹${(Number(selectedEmployee.ctc) + Number(selectedEmployee.hikeValue)).toLocaleString("en-IN")}`
+            : "N/A"}
       </p>
+      {selectedEmployee.appraisalRating && (
+        <p><strong>Appraisal Rating:</strong> {selectedEmployee.appraisalRating}</p>
+      )}
+      {selectedEmployee.appraisalRemarks && (
+        <p><strong>Remarks:</strong> {selectedEmployee.appraisalRemarks}</p>
+      )}
     </div>
 
     <p style={{ marginTop: "20px" }}>
@@ -1566,7 +1695,31 @@ useEffect(() => {
 
                   {role === "ADMIN" && (
     <>
-      <h4 style={{ marginTop: "20px" }}>Employee Compensation Tracking</h4>
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginTop: "20px", marginBottom: "12px" }}>
+        <h4 style={{ margin: 0 }}>Employee Compensation Tracking</h4>
+        <button
+          style={{
+            padding: "5px 12px", background: "transparent", color: "#6b7280",
+            border: "1px solid #d1d5db", borderRadius: "6px", cursor: "pointer",
+            fontSize: "12px", fontWeight: 500, display: "flex", alignItems: "center", gap: "4px"
+          }}
+          onClick={async () => {
+            if (!window.confirm("Seed last 2 years (2024 & 2025) dummy appraisal data for all employees?")) return;
+            try {
+              const result = await seedAppraisalHistory();
+              alert(`Done! ${result.employeesUpdated} employees updated with years: ${result.yearsAdded?.join(", ")}`);
+              // Refresh employee list
+              const updated = await getAllEmployees();
+              const empList = Array.isArray(updated) ? updated : (updated?.data || []);
+              setAllEmployees(empList);
+            } catch (err) {
+              alert("Seed failed: " + err.message);
+            }
+          }}
+        >
+          🌱 Seed Test Data
+        </button>
+      </div>
      <div className={styles.compensationTableWrapper}>
       <table className={styles.table}>
       <thead>
@@ -2337,7 +2490,7 @@ filteredEmployees.map((emp, i) => (
       </div>
     </>
   )}
-                </div>
+                </>
               )}
 
               

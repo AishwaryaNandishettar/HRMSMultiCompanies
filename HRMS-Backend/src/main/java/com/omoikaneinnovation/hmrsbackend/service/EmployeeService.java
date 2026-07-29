@@ -195,6 +195,46 @@
         if (dto.getAppraisalRating() != null) employee.setAppraisalRating(dto.getAppraisalRating());
         if (dto.getAppraisalRemarks() != null) employee.setAppraisalRemarks(dto.getAppraisalRemarks());
 
+        // ── Append to appraisal history when hikeYear is provided ──
+        // Only add a new history record when an actual appraisal (hikeYear) is being saved.
+        // If the same year already exists in history, update that record instead of duplicating.
+        if (dto.getHikeYear() != null && !dto.getHikeYear().trim().isEmpty()) {
+            java.util.List<Employee.AppraisalRecord> history = employee.getAppraisalHistory();
+            String year = dto.getHikeYear().trim();
+
+            // Check if this year already has a record
+            Employee.AppraisalRecord existing = history.stream()
+                .filter(r -> year.equals(r.getHikeYear()))
+                .findFirst()
+                .orElse(null);
+
+            if (existing != null) {
+                // Update the existing record for this year
+                if (dto.getHikePercent() != null)    existing.setHikePercent(dto.getHikePercent());
+                if (dto.getHikeValue() != null)       existing.setHikeValue(dto.getHikeValue());
+                if (dto.getCtc() != null)             existing.setCtcAfterHike(dto.getCtc());
+                if (dto.getAppraisalRating() != null) existing.setAppraisalRating(dto.getAppraisalRating());
+                if (dto.getAppraisalRemarks() != null) existing.setAppraisalRemarks(dto.getAppraisalRemarks());
+                existing.setDesignation(employee.getDesignation());
+                existing.setRecordedAt(java.time.LocalDate.now().toString());
+                System.out.println("✅ Updated existing appraisal history record for year: " + year);
+            } else {
+                // Add a brand-new record for this year
+                Employee.AppraisalRecord record = new Employee.AppraisalRecord();
+                record.setHikeYear(year);
+                record.setHikePercent(dto.getHikePercent());
+                record.setHikeValue(dto.getHikeValue());
+                record.setCtcAfterHike(dto.getCtc());
+                record.setAppraisalRating(dto.getAppraisalRating());
+                record.setAppraisalRemarks(dto.getAppraisalRemarks());
+                record.setDesignation(employee.getDesignation());
+                record.setRecordedAt(java.time.LocalDate.now().toString());
+                history.add(record);
+                employee.setAppraisalHistory(history);
+                System.out.println("✅ Added new appraisal history record for year: " + year);
+            }
+        }
+
         Employee saved = employeeRepo.save(employee);
         System.out.println("✅ Employee updated successfully: " + saved.getFullName());
         

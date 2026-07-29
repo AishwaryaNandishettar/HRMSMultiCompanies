@@ -186,7 +186,8 @@ System.out.println("Employees found: " + employees.size());
             System.out.println("   - Role: " + user.getRole());
 
             // Return User data formatted as employee profile using HashMap
-            Map<String, String> profileMap = new java.util.HashMap<>();
+            // Use a generic Map to also carry appraisalHistory array if Employee record exists
+            java.util.Map<String, Object> profileMap = new java.util.HashMap<>();
             profileMap.put("email", user.getEmail() != null ? user.getEmail() : "");
             profileMap.put("name", user.getName() != null ? user.getName() : "");
             profileMap.put("fullName", user.getName() != null ? user.getName() : "");
@@ -206,6 +207,28 @@ System.out.println("Employees found: " + employees.size());
             profileMap.put("totalExp", user.getTotalExp() != null ? user.getTotalExp() : "");
             profileMap.put("currentExp", user.getCurrentExp() != null ? user.getCurrentExp() : "");
             profileMap.put("employmentType", user.getEmploymentType() != null ? user.getEmploymentType() : "Full-Time");
+
+            // Try to find an Employee record by employeeId or email to pull appraisal history
+            // (admin users may have their appraisal stored in the Employee collection)
+            Employee empByEmail = employeeRepository.findByEmail(user.getEmail()).orElse(null);
+            if (empByEmail == null && user.getEmployeeId() != null) {
+                empByEmail = employeeRepository.findAll().stream()
+                    .filter(e -> user.getEmployeeId().equals(e.getEmployeeId()))
+                    .findFirst().orElse(null);
+            }
+            if (empByEmail != null) {
+                // Merge appraisal data from Employee record
+                profileMap.put("appraisalHistory", empByEmail.getAppraisalHistory());
+                if (empByEmail.getCtc() != null)             profileMap.put("ctc", empByEmail.getCtc());
+                if (empByEmail.getHikeYear() != null)        profileMap.put("hikeYear", empByEmail.getHikeYear());
+                if (empByEmail.getHikePercent() != null)     profileMap.put("hikePercent", empByEmail.getHikePercent());
+                if (empByEmail.getHikeValue() != null)       profileMap.put("hikeValue", empByEmail.getHikeValue());
+                if (empByEmail.getAppraisalRating() != null) profileMap.put("appraisalRating", empByEmail.getAppraisalRating());
+                if (empByEmail.getAppraisalRemarks() != null) profileMap.put("appraisalRemarks", empByEmail.getAppraisalRemarks());
+                System.out.println("✅ Merged appraisal history from Employee record: " + empByEmail.getAppraisalHistory().size() + " records");
+            } else {
+                profileMap.put("appraisalHistory", new java.util.ArrayList<>());
+            }
 
             return ResponseEntity.ok(profileMap);
 
@@ -902,6 +925,80 @@ System.out.println("Employees found: " + employees.size());
             return ResponseEntity.status(500).body(Map.of(
                     "success", false,
                     "error", e.getMessage()
+            ));
+        }
+    }
+
+    /* =========================================================
+       SEED DUMMY APPRAISAL HISTORY — FOR TESTING ONLY
+       Adds the last 2 years (current year - 1, current year - 2)
+       appraisal records to every employee that doesn't have them yet.
+       Safe to call multiple times — skips years already present.
+       POST /api/employee/seed-appraisal-history
+       ========================================================= */
+    @PostMapping("/seed-appraisal-history")
+    public ResponseEntity<?> seedAppraisalHistory() {
+        try {
+            int currentYear = java.time.LocalDate.now().getYear();
+            // Last 2 years: e.g. 2025 and 2024 (if current year is 2026)
+            String[] yearsToSeed = {
+                String.valueOf(currentYear - 1),
+                String.valueOf(currentYear - 2)
+            };
+
+            // Dummy data per year (varied so they look realistic)
+            java.util.Map<String, String[]> yearData = new java.util.HashMap<>();
+            // format: { hikePercent, hikeValue, ctcAfterHike, rating, remarks }
+            yearData.put(yearsToSeed[0], new String[]{"12", "72000", "672000", "Exceeds Expectations", "Strong performance"});
+            yearData.put(yearsToSeed[1], new String[]{"10", "55000", "605000", "Meets Expectations",   "Consistent delivery"});
+
+            List<Employee> allEmployees = employeeRepository.findAll();
+            int updated = 0;
+
+            for (Employee emp : allEmployees) {
+                java.util.List<Employee.AppraisalRecord> history = emp.getAppraisalHistory();
+                boolean changed = false;
+
+                for (String year : yearsToSeed) {
+                    // Skip if this year already exists in history
+                    boolean alreadyExists = history.stream()
+                        .anyMatch(r -> year.equals(r.getHikeYear()));
+                    if (alreadyExists) continue;
+
+                    String[] data = yearData.get(year);
+                    Employee.AppraisalRecord rec = new Employee.AppraisalRecord();
+                    rec.setHikeYear(year);
+                    rec.setHikePercent(data[0]);
+                    rec.setHikeValue(data[1]);
+                    rec.setCtcAfterHike(data[2]);
+                    rec.setAppraisalRating(data[3]);
+                    rec.setAppraisalRemarks(data[4]);
+                    rec.setDesignation(emp.getDesignation() != null ? emp.getDesignation() : "Software Developer");
+                    rec.setRecordedAt(year + "-01-01");
+                    history.add(rec);
+                    changed = true;
+                    System.out.println("  ✅ Added " + year + " record for: " + emp.getFullName());
+                }
+
+                if (changed) {
+                    emp.setAppraisalHistory(history);
+                    employeeRepository.save(emp);
+                    updated++;
+                }
+            }
+
+            System.out.println("🌱 Seeded appraisal history for " + updated + " employees");
+            return ResponseEntity.ok(Map.of(
+                "success", true,
+                "message", "Seeded last 2 years appraisal history",
+                "employeesUpdated", updated,
+                "yearsAdded", yearsToSeed
+            ));
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.status(500).body(Map.of(
+                "success", false,
+                "error", e.getMessage()
             ));
         }
     }
