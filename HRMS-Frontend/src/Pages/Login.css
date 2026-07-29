@@ -108,6 +108,49 @@
   box-sizing: border-box;
 }
 
+/* Password field wrapper */
+.password-wrapper {
+  position: relative;
+  width: 100%;
+  margin-top: 10px;
+}
+
+.password-wrapper input {
+  width: 100%;
+  margin-top: 0;
+  padding-right: 44px;
+}
+
+/* Eye toggle — span, not a button, so no button styles apply */
+.eye-toggle {
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  cursor: pointer;
+  color: #444;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  user-select: none;
+  line-height: 1;
+  z-index: 10;
+  background: transparent;
+  border: none;
+  padding: 4px;
+}
+
+.eye-toggle svg {
+  display: block;
+  width: 18px;
+  height: 18px;
+  pointer-events: none;
+}
+
+.eye-toggle:hover {
+  color: #0066ff;
+}
+
 .login-form input:focus {
   border-color: #00c8ff;
   box-shadow: 0 0 15px rgba(0, 200, 255, 0.35);
@@ -361,9 +404,13 @@
 
   .login-form input {
     height: 46px;
-    padding: 0 12px;
+    padding: 0 44px 0 12px;
     margin-top: 10px;
     font-size: 16px;
+  }
+
+  .password-wrapper input {
+    padding-right: 44px;
   }
 
   .login-form button {
