@@ -61,16 +61,36 @@ private EmailService emailService;
     Employee emp;
 
     if (exists) {
-        // 🔁 FETCH EXISTING USER + EMPLOYEE (NO DUPLICATION)
-        user = userRepo.findByEmail(email)
-                .orElseThrow(() -> new RuntimeException("User not found"));
-
-        if (user.getRole() == null || user.getRole().isEmpty()) {
-    user.setRole("EMPLOYEE");
-    userRepo.save(user);
-}
+        // 🔁 FETCH EXISTING EMPLOYEE
         emp = employeeRepo.findByEmail(email)
                 .orElseThrow(() -> new RuntimeException("Employee not found"));
+
+        // Try to find user — create one if it doesn't exist yet
+        user = userRepo.findByEmail(email).orElse(null);
+
+        if (user == null) {
+            user = new User();
+            user.setEmail(email);
+            user.setName(emp.getFullName() != null ? emp.getFullName() : (String) payload.get("fullName"));
+            user.setRole("EMPLOYEE");
+            String password = (String) payload.get("password");
+            if (password != null && !password.isEmpty()) {
+                user.setPassword(encoder.encode(password));
+            } else {
+                user.setPassword(encoder.encode("Temp@123"));
+            }
+            user = userRepo.save(user);
+            log.info("✅ Created missing User account for existing employee: {}", email);
+        }
+
+        if (user.getRole() == null || user.getRole().isEmpty()) {
+            user.setRole("EMPLOYEE");
+            userRepo.save(user);
+        }
+
+        emp.setUserId(user.getId());
+        emp.setStatus("INVITED");
+        employeeRepo.save(emp);
 
         log.info("🔁 Re-inviting existing employee: {}", email);
 
