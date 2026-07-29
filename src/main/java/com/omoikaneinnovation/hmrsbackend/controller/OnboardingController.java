@@ -42,14 +42,27 @@ public ResponseEntity<?> inviteEmployee(@RequestBody Map<String, Object> request
 
 @PostMapping("/invite-all")
 public ResponseEntity<?> inviteAllEmployees(@RequestBody List<Map<String, Object>> employeeList) {
-    try {
-        for (Map<String, Object> emp : employeeList) {
+    int success = 0;
+    int failed = 0;
+    List<String> failedEmails = new java.util.ArrayList<>();
+
+    for (Map<String, Object> emp : employeeList) {
+        try {
             onboardingService.onboard(emp);
+            success++;
+        } catch (Exception e) {
+            failed++;
+            String email = emp.getOrDefault("email", "unknown").toString();
+            failedEmails.add(email);
         }
-        return ResponseEntity.ok(Map.of("message", "All bulk invitations sent successfully"));
-    } catch (Exception e) {
-        return ResponseEntity.badRequest().body(Map.of("message", "Bulk invite failed: " + e.getMessage()));
     }
+
+    return ResponseEntity.ok(Map.of(
+        "message", "Bulk invite processed: " + success + " succeeded, " + failed + " failed",
+        "success", success,
+        "failed", failed,
+        "failedEmails", failedEmails
+    ));
 }
 
 @PostMapping("/accept-invite")

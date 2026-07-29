@@ -204,15 +204,14 @@ public void onboard(Map<String, Object> payload) {
 
     } catch (Exception e) {
 
+        // Employee/user record is already saved — log the email failure
+        // but do NOT throw so that the invite is not treated as a complete failure.
+        // The admin can resend the invitation manually.
         log.error(
-                "Email sending failed for {}: {}",
+                "⚠️ Employee record created but email delivery failed for {}: {}",
                 email,
                 e.getMessage(),
                 e
-        );
-
-        throw new RuntimeException(
-                "Failed to send invitation email to " + email
         );
     }
 }

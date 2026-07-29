@@ -32,7 +32,7 @@ public class EmailService {
     @Value("${meeting.email.from-name:HRMS Meeting System}")
     private String fromName;
 
-    @Value("${meeting.email.from-address}")
+    @Value("${meeting.email.from-address:noreply@omoikaneinnovations.com}")
     private String fromAddress;
 
     @Value("${meeting.email.reply-to:noreply@omoikaneinnovations.com}")
