@@ -939,7 +939,7 @@ name:
     { key: "status", label: "STATUS" },
    
     { key: "attendanceType", label: "TYPE" },
-    ...(role === "manager"
+    ...(role === "manager" || role === "admin"
       ? [{ key: "actions", label: "ACTIONS" }]
       : []),
   ];
@@ -1283,8 +1283,8 @@ name:
                 
                   <td>{r.attendanceType || "Office"}</td>
                   
-                  {/* Manager Actions Column */}
-                  {role === "manager" && (
+                  {/* Manager/Admin Actions Column */}
+                  {(role === "manager" || role === "admin") && (
                     <td>
                       <button
                         onClick={() => handleEditAttendance(r)}
@@ -1309,7 +1309,7 @@ name:
               ))
             ) : (
               <tr>
-                <td colSpan={role === "manager" ? "16" : "15"} style={{ textAlign: "center" }}>
+                <td colSpan={role === "manager" || role === "admin" ? "16" : "15"} style={{ textAlign: "center" }}>
                   No attendance records found
                 </td>
               </tr>
