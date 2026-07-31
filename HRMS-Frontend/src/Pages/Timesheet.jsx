@@ -197,7 +197,8 @@ console.log(
 );
 
       // Load leave data
-      const leaveData = await getAllLeaves();
+      const leaveResponse = await getAllLeaves();
+      const leaveData = Array.isArray(leaveResponse) ? leaveResponse : (leaveResponse?.data ?? []);
       const todayStr = new Date().toISOString().split("T")[0];
       
       // Filter leaves that are active today
