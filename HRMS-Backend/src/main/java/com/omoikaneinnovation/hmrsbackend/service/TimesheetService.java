@@ -148,7 +148,17 @@ public class TimesheetService {   // ✅ FIXED NAME
                 obj.setDepartment(department);
 
                 // ✅ Set reporting manager from Attendance record first, then User
+                // Scan all records for this user to find a non-empty reporting manager
                 String managerName = r.getReportingManager();
+                if (managerName == null || managerName.isBlank() || managerName.equals("-")) {
+                    // Try other attendance records for the same user that may have the manager set
+                    managerName = data.stream()
+                            .filter(att -> att.getUserId() != null && att.getUserId().equals(r.getUserId()))
+                            .map(Attendance::getReportingManager)
+                            .filter(m -> m != null && !m.isBlank() && !m.equals("-"))
+                            .findFirst()
+                            .orElse(null);
+                }
                 if (managerName == null || managerName.isBlank() || managerName.equals("-")) {
                     Optional<User> userOpt = userRepo.findByEmail(r.getUserId());
                     if (userOpt.isEmpty()) {
@@ -166,7 +176,17 @@ public class TimesheetService {   // ✅ FIXED NAME
                             }
                         }
                         if (managerName == null || managerName.isBlank()) {
-                            managerName = u.getManagerEmail() != null ? u.getManagerEmail() : "-";
+                            // Try resolving manager name from managerEmail
+                            if (u.getManagerEmail() != null && !u.getManagerEmail().isBlank() && !u.getManagerEmail().equals("-")) {
+                                Optional<User> mgrByEmail = userRepo.findByEmail(u.getManagerEmail());
+                                if (mgrByEmail.isPresent() && mgrByEmail.get().getName() != null) {
+                                    managerName = mgrByEmail.get().getName();
+                                } else {
+                                    managerName = u.getManagerEmail();
+                                }
+                            } else {
+                                managerName = "-";
+                            }
                         }
                         
                         // For manager's own record, set reporting manager to "-"
