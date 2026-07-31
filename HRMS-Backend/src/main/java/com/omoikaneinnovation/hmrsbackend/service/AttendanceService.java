@@ -308,6 +308,33 @@ private RestTemplate restTemplate;
     List<Attendance> records = attendanceRepo.findByUserIdIn(userIds);
     System.out.println("📋 Found " + records.size() + " attendance records for these users");
 
+    // Build set of userIds that already have a record for today
+    String today = java.time.LocalDate.now(java.time.ZoneId.of("Asia/Kolkata")).toString();
+    java.util.Set<String> userIdsWithTodayRecord = records.stream()
+            .filter(r -> today.equals(r.getDate()))
+            .map(Attendance::getUserId)
+            .collect(java.util.stream.Collectors.toSet());
+
+    // For team members with no record today, create a synthetic absent entry so manager/admin can edit
+    for (User u : team) {
+        if (!userIdsWithTodayRecord.contains(u.getId())) {
+            Attendance synthetic = new Attendance();
+            synthetic.setUserId(u.getId());
+            synthetic.setDate(today);
+            synthetic.setStatus("Absent");
+            synthetic.setName(u.getName() != null ? u.getName() : u.getEmail());
+            synthetic.setEmpId(u.getEmployeeId() != null ? u.getEmployeeId() : "-");
+            synthetic.setDepartment(u.getDepartment() != null ? u.getDepartment() : "-");
+            synthetic.setManagerEmail(managerEmail);
+            synthetic.setCheckIn("-");
+            synthetic.setCheckOut("-");
+            // Do NOT save — just add to in-memory list for display
+            records = new ArrayList<>(records);
+            records.add(synthetic);
+            System.out.println("📋 Added synthetic absent entry for: " + u.getEmail());
+        }
+    }
+
     // Enrich each record with proper employee details
     return records.stream()
             .map(att -> {
@@ -352,13 +379,36 @@ public Attendance getByUserIdAndDate(String userId, String date) {
      * Get all attendance records with proper filtering
      */
     public List<AttendanceDTO> getAllAttendance() {
-        List<Attendance> records = attendanceRepo.findAll();
+        List<Attendance> records = new ArrayList<>(attendanceRepo.findAll());
         
         // ✅ Get current time in IST
         LocalTime currentTime = LocalTime.now(ZoneId.of("Asia/Kolkata"));
         LocalDate currentDate = LocalDate.now(ZoneId.of("Asia/Kolkata"));
         String today = currentDate.toString();
         
+        // ✅ Add synthetic absent entries for all users who have no record today
+        java.util.Set<String> userIdsWithTodayRecord = records.stream()
+                .filter(r -> today.equals(r.getDate()))
+                .map(Attendance::getUserId)
+                .collect(Collectors.toSet());
+
+        List<User> allUsers = userRepo.findAll();
+        for (User u : allUsers) {
+            if (u.getId() != null && !userIdsWithTodayRecord.contains(u.getId())) {
+                Attendance synthetic = new Attendance();
+                synthetic.setUserId(u.getId());
+                synthetic.setDate(today);
+                synthetic.setStatus("Absent");
+                synthetic.setName(u.getName() != null ? u.getName() : u.getEmail());
+                synthetic.setEmpId(u.getEmployeeId() != null ? u.getEmployeeId() : "-");
+                synthetic.setDepartment(u.getDepartment() != null ? u.getDepartment() : "-");
+                synthetic.setManagerEmail(u.getManagerEmail() != null ? u.getManagerEmail() : "-");
+                synthetic.setCheckIn("-");
+                synthetic.setCheckOut("-");
+                records.add(synthetic);
+            }
+        }
+
         // ✅ Define end of work hours (6:00 PM)
         LocalTime endOfWorkHours = LocalTime.of(18, 0);
         boolean isAfterWorkHours = currentTime.isAfter(endOfWorkHours);
