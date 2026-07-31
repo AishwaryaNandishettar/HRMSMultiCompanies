@@ -708,17 +708,31 @@ public void checkMissedCheckouts() {
             return "Missing required fields: userId, date, or managerEmail";
         }
 
-        // Verify that the manager has authority to edit this employee's attendance
+        // Try multiple lookup strategies (userId may be ObjectId, email, or employeeId)
         Optional<User> employeeOpt = userRepo.findById(userId);
+        if (employeeOpt.isEmpty()) {
+            employeeOpt = userRepo.findByEmail(userId);
+        }
+        if (employeeOpt.isEmpty()) {
+            employeeOpt = userRepo.findAll().stream()
+                    .filter(u -> userId.equals(u.getEmployeeId()))
+                    .findFirst();
+        }
         if (employeeOpt.isEmpty()) {
             return "Employee not found";
         }
 
         User employee = employeeOpt.get();
-        
-        // Check if the manager is authorized (manager's email should match employee's managerEmail)
-        if (employee.getManagerEmail() == null || 
-            !employee.getManagerEmail().equalsIgnoreCase(managerEmail)) {
+
+        // Check caller role — admins and HR can edit anyone's attendance
+        Optional<User> callerOpt = userRepo.findByEmail(managerEmail);
+        boolean isAdminOrHr = callerOpt.isPresent() &&
+                (callerOpt.get().getRole() != null &&
+                 (callerOpt.get().getRole().contains("ADMIN") || callerOpt.get().getRole().contains("HR")));
+
+        // Check if the manager is authorized (skip check for admin/HR)
+        if (!isAdminOrHr && (employee.getManagerEmail() == null || 
+            !employee.getManagerEmail().equalsIgnoreCase(managerEmail))) {
             return "Unauthorized: You are not the reporting manager for this employee";
         }
 
