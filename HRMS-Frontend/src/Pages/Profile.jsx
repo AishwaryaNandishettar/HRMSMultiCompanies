@@ -661,58 +661,112 @@ const buildDocuments = () => {
 };
 const documents = buildDocuments();
 
-// Helper: open a Base64 document as an image or PDF in a new tab
-const openDocument = (doc) => {
-  const raw = doc.data || "";
+// Helper: Get viewable URL for documents (same as BGV page - works on localhost AND Vercel)
+const getDocumentUrl = (docPath) => {
+  if (!docPath || docPath === 'N/A') return null;
 
-  // If it's already a full URL (http/https), open directly
-  if (raw.startsWith("http://") || raw.startsWith("https://")) {
-    window.open(raw, "_blank");
+  // Already a full URL — return as-is
+  if (docPath.startsWith('http://') || docPath.startsWith('https://')) return docPath;
+
+  // Base64 data URI — return as-is (works in both envs)
+  if (docPath.startsWith('data:')) return docPath;
+
+  // Just a bare filename with no path info — cannot resolve to a URL
+  if (!docPath.includes('/')) {
+    console.warn('⚠️ Document is just a filename, not a viewable URL:', docPath);
+    return null;
+  }
+
+  // Resolve against the API base URL (works on localhost AND on Render/Vercel via env var)
+  const baseUrl = (import.meta.env.VITE_API_BASE_URL || 'http://localhost:8082').replace(/\/$/, '');
+
+  if (docPath.startsWith('/uploads/')) return `${baseUrl}${docPath}`;
+  if (docPath.startsWith('uploads/')) return `${baseUrl}/${docPath}`;
+
+  // Any other relative path
+  const cleanPath = docPath.startsWith('/') ? docPath : `/${docPath}`;
+  return `${baseUrl}${cleanPath}`;
+};
+
+// Helper: View document in new tab (same as BGV page - works on localhost AND Vercel)
+const viewDocument = (docPath, docName) => {
+  console.log('🔍 Attempting to view document:', docPath);
+  const url = getDocumentUrl(docPath);
+  if (!url) {
+    if (docPath && !docPath.includes('/') && !docPath.startsWith('data:')) {
+      alert(
+        `⚠️ Document "${docPath}" cannot be viewed.\n\nThe document was uploaded but not stored on the server.\n\nTo view documents:\n1. Documents must be uploaded to the backend server\n2. Or stored as base64 data in the database\n\nCurrently, only the filename is saved.`
+      );
+    } else {
+      alert('Document not available');
+    }
     return;
   }
+  console.log('📄 Opening document:', url);
+  window.open(url, '_blank');
+};
 
-  // Detect MIME type from Base64 data URI prefix or by magic bytes
-  let mimeType = "application/octet-stream";
-  let base64Data = raw;
-
-  if (raw.startsWith("data:")) {
-    // e.g. "data:image/png;base64,iVBOR..."
-    const match = raw.match(/^data:([^;]+);base64,(.+)$/);
-    if (match) {
-      mimeType = match[1];
-      base64Data = match[2];
-    }
-  } else {
-    // Detect from raw Base64 magic bytes
-    const header = raw.substring(0, 8);
-    if (header.startsWith("JVBERi0")) {
-      mimeType = "application/pdf";          // PDF: %PDF-
-    } else if (header.startsWith("/9j/")) {
-      mimeType = "image/jpeg";               // JPEG
-    } else if (header.startsWith("iVBORw0")) {
-      mimeType = "image/png";                // PNG
-    } else if (header.startsWith("R0lGOD")) {
-      mimeType = "image/gif";                // GIF
-    } else if (header.startsWith("UklGR")) {
-      mimeType = "image/webp";               // WebP
-    }
-  }
+// Helper: Download document (same as BGV page - works on localhost AND Vercel)
+const downloadDocument = async (docPath, docName) => {
+  const url = getDocumentUrl(docPath);
+  if (!url) { alert('Document not available for download'); return; }
 
   try {
-    const byteChars = atob(base64Data);
-    const byteArray = new Uint8Array(byteChars.length);
-    for (let i = 0; i < byteChars.length; i++) {
-      byteArray[i] = byteChars.charCodeAt(i);
+    let blobUrl;
+    let fileName = docName || 'document';
+
+    if (url.startsWith('data:')) {
+      // ── Base64 data URI → Blob (bypasses browser data-URI download restrictions)
+      const [header, base64Data] = url.split(',');
+      const mimeMatch = header.match(/data:([^;]+)/);
+      const mime = mimeMatch ? mimeMatch[1] : 'application/octet-stream';
+
+      // Detect extension from MIME if filename has none
+      if (!fileName.includes('.')) {
+        const extMap = {
+          'application/pdf': '.pdf',
+          'image/jpeg': '.jpg',
+          'image/png': '.png',
+          'image/gif': '.gif',
+          'image/webp': '.webp',
+          'application/msword': '.doc',
+          'application/vnd.openxmlformats-officedocument.wordprocessingml.document': '.docx',
+        };
+        fileName += extMap[mime] || '';
+      }
+
+      const byteChars = atob(base64Data);
+      const byteArray = new Uint8Array(byteChars.length);
+      for (let i = 0; i < byteChars.length; i++) byteArray[i] = byteChars.charCodeAt(i);
+      const blob = new Blob([byteArray], { type: mime });
+      blobUrl = URL.createObjectURL(blob);
+
+    } else {
+      // ── Server URL → fetch → Blob (ensures download instead of navigation)
+      const response = await fetch(url);
+      if (!response.ok) throw new Error(`Server returned ${response.status}`);
+      const blob = await response.blob();
+      blobUrl = URL.createObjectURL(blob);
     }
-    const blob = new Blob([byteArray], { type: mimeType });
-    const url = URL.createObjectURL(blob);
-    window.open(url, "_blank");
-    // Revoke the object URL after a short delay to free memory
-    setTimeout(() => URL.revokeObjectURL(url), 10000);
-  } catch (e) {
-    console.error("Failed to open document:", e);
-    alert("Could not open document. The file data may be corrupted.");
+
+    const link = document.createElement('a');
+    link.href = blobUrl;
+    link.download = fileName;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    setTimeout(() => URL.revokeObjectURL(blobUrl), 10000);
+
+  } catch (err) {
+    console.error('Download failed:', err);
+    // Fallback: open in new tab so user can manually save
+    window.open(url, '_blank');
   }
+};
+
+// Helper: open a Base64 document as an image or PDF in a new tab
+const openDocument = (doc) => {
+  viewDocument(doc.data, doc.name);
 };
 
 const getDesignation = () => {
@@ -1404,12 +1458,21 @@ useEffect(() => {
                             <p className={styles.docName}>{doc.name}</p>
                             <span className={styles.docDate}>Uploaded</span>
                           </div>
-                          <button
-                            className={styles.downloadBtn}
-                            onClick={() => openDocument(doc)}
-                          >
-                            Download
-                          </button>
+                          <div style={{ display: "flex", gap: "8px" }}>
+                            <button
+                              className={styles.downloadBtn}
+                              onClick={() => viewDocument(doc.data, doc.name)}
+                              style={{ background: "#2563eb" }}
+                            >
+                              View
+                            </button>
+                            <button
+                              className={styles.downloadBtn}
+                              onClick={() => downloadDocument(doc.data, doc.name)}
+                            >
+                              Download
+                            </button>
+                          </div>
                         </div>
                       ))
                     )}

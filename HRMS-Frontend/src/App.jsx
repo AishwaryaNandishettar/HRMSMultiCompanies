@@ -38,7 +38,7 @@ import EmployeeCard from "./Pages/Emplyeecard";
 import Payroll from "./Pages/Payroll";
 // import Helpdesk from "./Pages/Helpdesk"; // HIDDEN
 
-// import BulkUploadEmployees from "./Pages/BulkUploadEmployees"; // HIDDEN
+import BulkUploadEmployees from "./Pages/BulkUploadEmployees";
 import UpdatePayroll from "./Pages/Payroll/UpdatePayroll";
 // import ReimbursementForm from "./Pages/ReimbursementForm"; // HIDDEN
 // import FinancialAssessment from "./Pages/financialAssessment"; // HIDDEN
@@ -388,8 +388,8 @@ const [showNotif, setShowNotif] = useState(false);
     element={<InviteAccept />}
   />
 
-  {/* BULK UPLOAD - HIDDEN */}
-  {/* <Route path="/bulk-upload" element={<BulkUploadEmployees />} /> */}
+  {/* BULK UPLOAD */}
+  <Route path="/bulk-upload" element={<BulkUploadEmployees />} />
 
               {/* SETTINGS - HIDDEN */}
               {/* <Route

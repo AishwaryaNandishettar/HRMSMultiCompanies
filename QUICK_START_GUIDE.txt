@@ -1,0 +1,152 @@
+╔═══════════════════════════════════════════════════════════════╗
+║          BULK EMPLOYEE UPLOAD - QUICK START GUIDE            ║
+╚═══════════════════════════════════════════════════════════════╝
+
+📁 FILES CREATED:
+   ✓ Bulk_Upload_Sample_Data.csv (Sample employee data - 5 employees)
+   ✓ BULK_UPLOAD_GUIDE.md (Detailed instructions)
+   ✓ This quick guide
+
+═══════════════════════════════════════════════════════════════
+
+🚀 3 SIMPLE STEPS:
+
+┌─────────────────────────────────────────────────────────────┐
+│ STEP 1: EDIT THE SAMPLE FILE                                │
+└─────────────────────────────────────────────────────────────┘
+
+   1. Open: Bulk_Upload_Sample_Data.csv
+      (Use Excel, Google Sheets, or Notepad)
+
+   2. Replace sample data with your employee data
+
+   3. Save the file
+
+   TIP: If Excel shows activation popup, just click "Close" 
+        and continue editing!
+
+┌─────────────────────────────────────────────────────────────┐
+│ STEP 2: UPLOAD TO SYSTEM                                    │
+└─────────────────────────────────────────────────────────────┘
+
+   1. Go to: http://localhost:5173/bulk-upload
+
+   2. Click "Choose File" button
+
+   3. Select your edited file
+
+   4. Employee data appears in table ✓
+
+┌─────────────────────────────────────────────────────────────┐
+│ STEP 3: ADD DOCUMENTS                                       │
+└─────────────────────────────────────────────────────────────┘
+
+   For EACH employee:
+
+   1. Click "📄 Upload Docs" button
+
+   2. Upload these documents:
+      ✓ Resume
+      ✓ Aadhaar Card
+      ✓ Offer Letter
+      ✓ PAN Card
+      ✓ Education Certificate
+
+   3. Click "Done"
+
+   4. Repeat for all employees
+
+   5. Click "Final Upload" to save everything! 🎉
+
+═══════════════════════════════════════════════════════════════
+
+📋 REQUIRED COLUMNS (Must fill):
+
+   • fullName          - Employee name
+   • employeeId        - Unique ID (EMP001, EMP002...)
+   • email             - Work email
+   • phone             - 10-digit mobile
+   • department        - IT, HR, Finance, etc.
+   • designation       - Job title
+   • location          - Bangalore, Mumbai, etc.
+   • manager           - Manager name
+   • dob               - Date of birth (YYYY-MM-DD)
+   • doj               - Date of joining (YYYY-MM-DD)
+
+═══════════════════════════════════════════════════════════════
+
+⚠️ IMPORTANT FORMATTING:
+
+   ✓ Dates: Use YYYY-MM-DD format
+     Example: 2024-01-15
+
+   ✓ Phone: 10 digits, no spaces
+     Example: 9876543210
+
+   ✓ Email: Must be unique
+     Example: employee@company.com
+
+   ✓ Employee ID: Must be unique
+     Example: EMP001
+
+═══════════════════════════════════════════════════════════════
+
+🎯 SAMPLE DATA PROVIDED:
+
+   The sample file includes 5 ready-to-use employees:
+
+   1. Rajesh Kumar    - Software Engineer (IT)
+   2. Priya Sharma    - HR Manager (HR)
+   3. Amit Patel      - Accountant (Finance)
+   4. Sneha Reddy     - Marketing Manager (Marketing)
+   5. Vikram Singh    - Senior Developer (IT)
+
+   Just replace with your actual data!
+
+═══════════════════════════════════════════════════════════════
+
+💡 ALTERNATIVE: USE GOOGLE SHEETS (FREE!)
+
+   1. Go to: sheets.google.com
+   2. Create new sheet
+   3. Copy sample data
+   4. Edit with your data
+   5. File → Download → Excel (.xlsx)
+   6. Upload to bulk upload page
+
+═══════════════════════════════════════════════════════════════
+
+🔧 TROUBLESHOOTING:
+
+   Problem: Excel activation popup
+   Solution: Click "Close" - you can still edit!
+
+   Problem: Can't upload documents
+   Solution: Check file size < 5MB, use PDF/JPG/PNG
+
+   Problem: Upload fails
+   Solution: Verify all required fields are filled
+
+═══════════════════════════════════════════════════════════════
+
+✨ FEATURES:
+
+   ✓ Upload multiple employees at once
+   ✓ Add all documents for each employee
+   ✓ Edit data in web interface
+   ✓ See which documents are uploaded (✓ checkmark)
+   ✓ Delete employees before final upload
+   ✓ Download template anytime
+
+═══════════════════════════════════════════════════════════════
+
+📞 QUESTIONS?
+
+   Read: BULK_UPLOAD_GUIDE.md (detailed guide)
+   Or contact your system administrator
+
+═══════════════════════════════════════════════════════════════
+
+Happy Uploading! 🚀
+
+Last Updated: August 1, 2026

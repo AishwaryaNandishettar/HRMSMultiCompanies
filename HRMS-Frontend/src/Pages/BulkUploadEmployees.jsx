@@ -9,8 +9,17 @@ export default function BulkUploadEmployees() {
     const navigate = useNavigate();
   const [uploadRows, setUploadRows] = useState([]);
   const [uploadSaving, setUploadSaving] = useState(false);
+  const [selectedRow, setSelectedRow] = useState(null);
+  const [showDocUploadModal, setShowDocUploadModal] = useState(false);
 
   const fileInputRef = useRef();
+  const documentInputRefs = {
+    resume: useRef(),
+    aadhaar: useRef(),
+    offerLetter: useRef(),
+    pan: useRef(),
+    education: useRef(),
+  };
   useEffect(() => {
   fetchEmployees();
 }, []);
@@ -86,12 +95,43 @@ const fetchEmployees = async () => {
 
         aadhaar: row.aadhaar || "",
         pan: row.pan || "",
+
+        // Document fields (Base64 strings)
+        resumeDocument: "",
+        aadhaarDocument: "",
+        offerLetterDocument: "",
+        panDocument: "",
+        educationDocument: "",
       }));
 
       setUploadRows((prev) => [...prev, ...normalized]);
     };
 
     reader.readAsBinaryString(file);
+  };
+
+  // Handle document upload for a specific employee row
+  const handleDocumentUpload = (rowIndex, docType, file) => {
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const base64 = e.target.result;
+      const updated = [...uploadRows];
+      updated[rowIndex][`${docType}Document`] = base64;
+      setUploadRows(updated);
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const openDocUploadModal = (index) => {
+    setSelectedRow(index);
+    setShowDocUploadModal(true);
+  };
+
+  const closeDocUploadModal = () => {
+    setSelectedRow(null);
+    setShowDocUploadModal(false);
   };
 
  const handleBulkUploadSave = async () => {
@@ -256,8 +296,8 @@ const removeRow = (index) => {
 
                 <th>Aadhaar</th>
                 <th>PAN</th>
-                  {/* ADD HERE */}
- 
+                <th>Documents</th>
+                <th>Actions</th>
               </tr>
             </thead>
 
@@ -322,6 +362,25 @@ const removeRow = (index) => {
 
                   <td>{emp.aadhaar}</td>
                   <td>{emp.pan}</td>
+                  
+                  <td>
+                    <button
+                      onClick={() => openDocUploadModal(index)}
+                      style={{
+                        background: "#2563eb",
+                        color: "white",
+                        border: "none",
+                        padding: "5px 10px",
+                        borderRadius: "4px",
+                        cursor: "pointer",
+                        fontSize: "12px"
+                      }}
+                    >
+                      📄 Upload Docs
+                      {(emp.resumeDocument || emp.aadhaarDocument || emp.offerLetterDocument || emp.panDocument || emp.educationDocument) && " ✓"}
+                    </button>
+                  </td>
+
                   <td>
   <button
     onClick={() => removeRow(index)}
@@ -343,6 +402,126 @@ const removeRow = (index) => {
           </table>
         </div>
       </div>
+
+      {/* Document Upload Modal */}
+      {showDocUploadModal && selectedRow !== null && (
+        <div style={{
+          position: "fixed",
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          background: "rgba(0,0,0,0.5)",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          zIndex: 9999
+        }}>
+          <div style={{
+            background: "white",
+            padding: "30px",
+            borderRadius: "12px",
+            maxWidth: "600px",
+            width: "90%",
+            maxHeight: "80vh",
+            overflowY: "auto"
+          }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "20px" }}>
+              <h3 style={{ margin: 0 }}>Upload Documents for {uploadRows[selectedRow]?.fullName || uploadRows[selectedRow]?.name || "Employee"}</h3>
+              <button onClick={closeDocUploadModal} style={{
+                background: "transparent",
+                border: "none",
+                fontSize: "24px",
+                cursor: "pointer",
+                color: "#666"
+              }}>×</button>
+            </div>
+
+            <div style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
+              {/* Resume */}
+              <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+                <label style={{ fontWeight: "600", fontSize: "14px" }}>
+                  Resume {uploadRows[selectedRow]?.resumeDocument && "✅"}
+                </label>
+                <input
+                  type="file"
+                  accept=".pdf,.doc,.docx,image/*"
+                  onChange={(e) => handleDocumentUpload(selectedRow, "resume", e.target.files[0])}
+                  style={{ padding: "8px", border: "1px solid #ddd", borderRadius: "4px" }}
+                />
+              </div>
+
+              {/* Aadhaar */}
+              <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+                <label style={{ fontWeight: "600", fontSize: "14px" }}>
+                  Aadhaar Card {uploadRows[selectedRow]?.aadhaarDocument && "✅"}
+                </label>
+                <input
+                  type="file"
+                  accept=".pdf,image/*"
+                  onChange={(e) => handleDocumentUpload(selectedRow, "aadhaar", e.target.files[0])}
+                  style={{ padding: "8px", border: "1px solid #ddd", borderRadius: "4px" }}
+                />
+              </div>
+
+              {/* Offer Letter */}
+              <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+                <label style={{ fontWeight: "600", fontSize: "14px" }}>
+                  Offer Letter {uploadRows[selectedRow]?.offerLetterDocument && "✅"}
+                </label>
+                <input
+                  type="file"
+                  accept=".pdf,.doc,.docx"
+                  onChange={(e) => handleDocumentUpload(selectedRow, "offerLetter", e.target.files[0])}
+                  style={{ padding: "8px", border: "1px solid #ddd", borderRadius: "4px" }}
+                />
+              </div>
+
+              {/* PAN */}
+              <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+                <label style={{ fontWeight: "600", fontSize: "14px" }}>
+                  PAN Card {uploadRows[selectedRow]?.panDocument && "✅"}
+                </label>
+                <input
+                  type="file"
+                  accept=".pdf,image/*"
+                  onChange={(e) => handleDocumentUpload(selectedRow, "pan", e.target.files[0])}
+                  style={{ padding: "8px", border: "1px solid #ddd", borderRadius: "4px" }}
+                />
+              </div>
+
+              {/* Education Certificate */}
+              <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+                <label style={{ fontWeight: "600", fontSize: "14px" }}>
+                  Education Certificate {uploadRows[selectedRow]?.educationDocument && "✅"}
+                </label>
+                <input
+                  type="file"
+                  accept=".pdf,image/*"
+                  onChange={(e) => handleDocumentUpload(selectedRow, "education", e.target.files[0])}
+                  style={{ padding: "8px", border: "1px solid #ddd", borderRadius: "4px" }}
+                />
+              </div>
+
+              <button
+                onClick={closeDocUploadModal}
+                style={{
+                  marginTop: "10px",
+                  padding: "12px",
+                  background: "linear-gradient(135deg, #1e3a5f 0%, #2563eb 100%)",
+                  color: "white",
+                  border: "none",
+                  borderRadius: "8px",
+                  cursor: "pointer",
+                  fontWeight: "600"
+                }}
+              >
+                Done
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

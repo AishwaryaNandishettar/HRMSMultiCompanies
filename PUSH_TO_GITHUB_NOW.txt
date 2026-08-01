@@ -1,47 +1,177 @@
-═══════════════════════════════════════════════════════════
-🚀 PUSH CHANGES TO GITHUB - COPY & PASTE
-═══════════════════════════════════════════════════════════
+╔══════════════════════════════════════════════════════════════════════╗
+║              📤 PUSH CODE TO GITHUB - COPY & PASTE                   ║
+╚══════════════════════════════════════════════════════════════════════╝
 
-STEP 1: Add Files
-───────────────────────────────────────────────────────────
+🎯 WHAT WILL BE PUSHED:
+
+   ✅ Profile.jsx - Document view/download fix (BGV-style)
+   ✅ BulkUploadEmployees.jsx - Document upload feature
+   ✅ App.jsx - Bulk upload route enabled
+   ✅ application.properties - Email port 587 fix
+   ✅ All fixes for localhost and Vercel deployment
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+📋 COPY & PASTE THESE COMMANDS (ONE BY ONE):
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+STEP 1: Navigate to project folder
+───────────────────────────────────────────────────────────────────────
+
+cd "d:\New folder\HRMSProject (2)\HRMSProject"
+
+───────────────────────────────────────────────────────────────────────
+
+STEP 2: Check what files changed
+───────────────────────────────────────────────────────────────────────
+
+git status
+
+───────────────────────────────────────────────────────────────────────
+
+STEP 3: Add all changes
+───────────────────────────────────────────────────────────────────────
+
 git add .
 
-═══════════════════════════════════════════════════════════
+───────────────────────────────────────────────────────────────────────
 
-STEP 2: Commit Changes
-───────────────────────────────────────────────────────────
-git commit -m "Fix Render deployment - Add Docker configuration"
+STEP 4: Commit with message
+───────────────────────────────────────────────────────────────────────
 
-═══════════════════════════════════════════════════════════
+git commit -m "Fixed: Profile documents view/download for Vercel, Bulk upload with documents, Email port 587"
 
-STEP 3: Push to GitHub
-───────────────────────────────────────────────────────────
+───────────────────────────────────────────────────────────────────────
+
+STEP 5: Push to GitHub
+───────────────────────────────────────────────────────────────────────
+
 git push origin main
 
-═══════════════════════════════════════════════════════════
+───────────────────────────────────────────────────────────────────────
 
-WHAT WAS CHANGED:
-───────────────────────────────────────────────────────────
-✅ Created render.yaml - Tells Render to use Docker
-✅ Updated AuthController - Added localhost CORS
-✅ Created localhost setup guides
+✅ DONE! Code pushed to GitHub!
 
-═══════════════════════════════════════════════════════════
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-AFTER PUSHING:
-───────────────────────────────────────────────────────────
-1. Go to Render Dashboard
-2. Update service settings:
-   - Runtime: Docker
-   - Root Directory: HRMS-Backend
-   - Dockerfile Path: ./Dockerfile
-3. Add environment variables
-4. Click "Manual Deploy"
+🚀 WHAT HAPPENS NEXT:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-═══════════════════════════════════════════════════════════
+   1. GitHub receives your code ✅
+   2. Render auto-deploys backend (2-3 minutes)
+   3. Vercel auto-deploys frontend (1-2 minutes)
+   4. All fixes live on production! 🎉
 
-ALTERNATIVE: All in One Command
-───────────────────────────────────────────────────────────
-git add . && git commit -m "Fix Render deployment - Add Docker configuration" && git push origin main
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-═══════════════════════════════════════════════════════════
+📊 FILES THAT WILL BE UPDATED:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+   FRONTEND:
+   ---------
+   ✓ HRMS-Frontend/src/Pages/Profile.jsx
+   ✓ HRMS-Frontend/src/Pages/BulkUploadEmployees.jsx
+   ✓ HRMS-Frontend/src/App.jsx
+
+   BACKEND:
+   --------
+   ✓ src/main/resources/application.properties
+
+   DOCUMENTATION:
+   --------------
+   ✓ BULK_UPLOAD_GUIDE.md
+   ✓ QUICK_START_GUIDE.txt
+   ✓ PROFILE_DOCUMENT_FIX_VERCEL.md
+   ✓ EMAIL_WORKING_SETUP_COMPLETE.md
+   ✓ EMAIL_NOT_WORKING_FIX.txt
+   ✓ And other guide files
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+⚠️ IF GIT PUSH FAILS:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+   If you get "fatal: not a git repository" error:
+   
+   Initialize git first:
+   
+   git init
+   git remote add origin https://github.com/YOUR-USERNAME/YOUR-REPO.git
+   git add .
+   git commit -m "Fixed: Profile documents, Bulk upload, Email"
+   git push -u origin main
+
+   ───────────────────────────────────────────────────────────────────
+
+   If you get authentication error:
+   
+   Use GitHub Personal Access Token:
+   
+   1. Go to: https://github.com/settings/tokens
+   2. Generate new token (classic)
+   3. Copy token
+   4. When prompted for password, paste token
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+✅ VERIFICATION:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+   After pushing, check:
+
+   1. GitHub Repository:
+      - Go to your GitHub repo
+      - Click "Commits"
+      - See your latest commit ✅
+
+   2. Render Dashboard:
+      - Go to: https://dashboard.render.com
+      - Check "Latest Deploy" status
+      - Wait for "Live" status ✅
+
+   3. Vercel Dashboard:
+      - Go to: https://vercel.com/dashboard
+      - Check deployment status
+      - Wait for "Ready" status ✅
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+🎉 AFTER DEPLOYMENT COMPLETES:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+   TEST THESE FEATURES:
+
+   ✅ Profile Page Documents:
+      - Go to profile
+      - Click "View" on any document
+      - Should open in new tab ✅
+      - Click "Download" on any document
+      - Should download properly ✅
+
+   ✅ Bulk Upload:
+      - Go to employee-card
+      - Click "⬆ Upload"
+      - Should open bulk upload page ✅
+      - Can upload employee data + documents ✅
+
+   ✅ Email Invitations:
+      - Select employees
+      - Click "Send Invitation"
+      - Check Gmail inbox
+      - Emails should arrive ✅
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+📝 SUMMARY OF ALL FIXES:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+   1. ✅ Profile document view/download - Works on Vercel
+   2. ✅ Bulk upload feature - Enabled with document upload
+   3. ✅ Email invitations - Port 587 for reliability
+   4. ✅ BGV-style document handling - Same logic everywhere
+   5. ✅ No logic changes - Only configuration updates
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Last Updated: August 1, 2026
+Ready to push: ✅ YES
