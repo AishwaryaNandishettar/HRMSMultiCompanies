@@ -125,7 +125,7 @@ public void onboard(Map<String, Object> payload) {
             emp.setDesignation((String) payload.get("designation"));
         }
 
-        emp.setStatus("INVITED");
+        emp.setStatus("ACTIVE");
 
         employeeRepo.save(emp);
 
@@ -170,7 +170,7 @@ public void onboard(Map<String, Object> payload) {
         emp.setDepartment((String) payload.get("department"));
         emp.setDesignation((String) payload.get("designation"));
         emp.setUserId(user.getId());
-        emp.setStatus("INVITED");
+        emp.setStatus("ACTIVE");
 
         employeeRepo.save(emp);
 
