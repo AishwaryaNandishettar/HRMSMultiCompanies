@@ -4,15 +4,18 @@ import com.omoikaneinnovation.hmrsbackend.dto.EmployeeDTO;
 import com.omoikaneinnovation.hmrsbackend.dto.EmployeeUpdateDTO;
 import com.omoikaneinnovation.hmrsbackend.dto.ParticipantDTO;
 import com.omoikaneinnovation.hmrsbackend.model.User;
+import com.omoikaneinnovation.hmrsbackend.model.Employee;
 import com.omoikaneinnovation.hmrsbackend.repository.UserRepository;
+import com.omoikaneinnovation.hmrsbackend.repository.EmployeeRepository;
 import com.omoikaneinnovation.hmrsbackend.service.EmployeeService;
+import com.omoikaneinnovation.hmrsbackend.service.OnboardingService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
-import com.omoikaneinnovation.hmrsbackend.model.Employee;
 import java.security.Principal;
 
 
@@ -26,6 +29,12 @@ public class EmployeeController {
     
     @Autowired
     private UserRepository userRepository;
+
+    @Autowired
+    private EmployeeRepository employeeRepository;
+
+    @Autowired
+    private OnboardingService onboardingService;
 
    @PostMapping("/create")
 public ResponseEntity<User> createEmployee(@RequestBody EmployeeDTO dto, Principal principal) {
@@ -231,6 +240,87 @@ System.out.println("Company : " + user.getCompanyId());
             ));
         } catch (Exception e) {
             return ResponseEntity.badRequest().body("Failed to update role: " + e.getMessage());
+        }
+    }
+
+    /* =========================================================
+       INVITE ALL EMPLOYEES
+       ========================================================= */
+    @PostMapping("/invite-all")
+    public ResponseEntity<?> inviteAllEmployees(
+            Principal principal
+    ) {
+
+        try {
+
+            String email = principal.getName();
+
+            User admin = userRepository.findByEmail(email)
+                    .orElseThrow(() ->
+                            new RuntimeException("Admin not found")
+                    );
+
+            String companyId = admin.getCompanyId();
+
+            List<Employee> employees =
+                    employeeRepository.findByCompanyId(companyId);
+
+            int invited = 0;
+
+            for (Employee emp : employees) {
+
+                if (
+                        emp.getEmail() == null
+                                || emp.getEmail().isBlank()
+                ) {
+                    continue;
+                }
+
+                if (
+                        "INVITED".equalsIgnoreCase(emp.getStatus())
+                                || "ACTIVE".equalsIgnoreCase(emp.getStatus())
+                ) {
+                    continue;
+                }
+
+                try {
+
+                    onboardingService.sendInvitationEmail(
+                            emp.getEmail(),
+                            emp.getFullName(),
+                            "Temp@123"
+                    );
+
+                    emp.setStatus("INVITED");
+
+                    employeeRepository.save(emp);
+
+                    invited++;
+
+                } catch (Exception ex) {
+
+                    ex.printStackTrace();
+                }
+            }
+
+            return ResponseEntity.ok(
+                    Map.of(
+                            "success", true,
+                            "message",
+                            invited + " employees invited successfully"
+                    )
+            );
+
+        } catch (Exception e) {
+
+            e.printStackTrace();
+
+            return ResponseEntity.status(500).body(
+                    Map.of(
+                            "success", false,
+                            "message", "Failed to invite employees: " + e.getMessage()
+                    )
+            );
         }
     }
 }

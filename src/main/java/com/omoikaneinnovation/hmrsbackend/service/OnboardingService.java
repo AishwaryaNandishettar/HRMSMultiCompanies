@@ -413,4 +413,59 @@ public void acceptInvite(String email, String password) {
 
         employeeRepo.save(emp);
     }
+
+    public void sendInvitationEmail(
+            String email,
+            String employeeName,
+            String tempPassword
+    ) {
+
+        try {
+
+            long expiry = 24 * 60 * 60 * 1000;
+
+            String token = jwtUtil.generateToken(
+                    email,
+                    "EMPLOYEE",
+                    expiry
+            );
+
+            // LOGIN LINK (Employee must login with credentials from email)
+            String onboardingLink = frontendUrl;
+
+            String otp = otpService.generateOtp(email);
+
+            // -------- SEND EMAIL VIA RESEND HTTP API --------
+            try {
+                log.info("📧 Sending bulk invite email via Resend HTTP API to: {}", email);
+                
+                // Build HTML email content
+                String htmlContent = buildInviteEmailHtml(email, onboardingLink, otp, tempPassword);
+                
+                // Send via Resend HTTP API (works on Render, bypasses SMTP blocking)
+                boolean sent = resendHttpEmailService.sendEmail(
+                    email,
+                    "HRMS Invitation - Welcome!",
+                    htmlContent
+                );
+                
+                if (sent) {
+                    log.info("✅ Bulk invite email successfully sent to: {}", email);
+                } else {
+                    log.error("⚠️ Bulk invite email delivery failed for {}", email);
+                }
+            } catch (Exception e) {
+                log.error("❌ Bulk invite email sending failed for {}: {}", email, e.getMessage(), e);
+                System.err.println("❌ [OnboardingService] Bulk invite email failed for " + email + ": " + e.getMessage());
+            }
+
+            log.info("📩 Bulk invite sent to: {}", email);
+
+        } catch (Exception e) {
+
+            log.error("❌ Failed sending bulk invite: {}", e.getMessage());
+
+            throw new RuntimeException(e.getMessage());
+        }
+    }
     }
