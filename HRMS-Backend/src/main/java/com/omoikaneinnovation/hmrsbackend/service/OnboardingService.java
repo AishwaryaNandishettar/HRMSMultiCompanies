@@ -45,7 +45,10 @@
         private JwtUtil jwtUtil;
 
         @Autowired
-private EmailService emailService;
+    private EmailService emailService;
+
+    @Autowired
+    private ResendHttpEmailService resendHttpEmailService;
 
         public void onboard(Map<String, Object> payload) {
 
@@ -166,16 +169,74 @@ employeeRepo.save(emp);
     // -------- LOGIN LINK (Employee must login with credentials from email) --------
     String onboardingLink = frontendUrl;
 
-    // -------- SEND EMAIL --------
+    // -------- SEND EMAIL VIA RESEND HTTP API --------
     try {
-        emailService.sendInviteEmail(email, onboardingLink, otp, "Temp@123");
-        log.info("📩 Invite email sent to: {}", email);
+        log.info("📧 Sending invite email via Resend HTTP API to: {}", email);
+        
+        // Build HTML email content
+        String htmlContent = buildInviteEmailHtml(email, onboardingLink, otp, "Temp@123");
+        
+        // Send via Resend HTTP API (works on Render, bypasses SMTP blocking)
+        boolean sent = resendHttpEmailService.sendEmail(
+            email,
+            "HRMS Invitation - Welcome!",
+            htmlContent
+        );
+        
+        if (sent) {
+            log.info("✅ Invite email successfully sent to: {}", email);
+        } else {
+            log.error("⚠️ Email delivery failed for {}", email);
+        }
     } catch (Exception e) {
         log.error("❌ Email sending failed for {}: {}", email, e.getMessage(), e);
         System.err.println("❌ [OnboardingService] Email failed for " + email + ": " + e.getMessage());
-        // Do NOT re-throw — employee was already saved, just log the email failure
-        // Frontend will still show success since employee was created successfully
     }
+}
+
+private String buildInviteEmailHtml(String email, String link, String otp, String password) {
+    return """
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <meta charset="UTF-8">
+            <style>
+                body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+                .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+                .header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 30px; text-align: center; border-radius: 10px 10px 0 0; }
+                .content { background: #f8f9fa; padding: 30px; border-radius: 0 0 10px 10px; }
+                .button { display: inline-block; padding: 12px 30px; background: #667eea; color: white; text-decoration: none; border-radius: 5px; margin: 20px 0; }
+                .info-box { background: white; padding: 15px; border-left: 4px solid #667eea; margin: 15px 0; }
+            </style>
+        </head>
+        <body>
+            <div class="container">
+                <div class="header">
+                    <h1>👋 Welcome to HRMS!</h1>
+                </div>
+                <div class="content">
+                    <h2>Welcome, New Employee!</h2>
+                    <p>We are excited to have you join our team.</p>
+                    
+                    <div class="info-box">
+                        <strong>Company:</strong> Omoikane Innovations<br>
+                        <strong>Your Email:</strong> """ + email + """
+                    </div>
+                    
+                    <div class="info-box">
+                        <strong>Temporary Credentials:</strong><br>
+                        OTP: <strong>""" + otp + """</strong><br>
+                        Password: <strong>""" + password + """</strong>
+                    </div>
+                    
+                    <p style="text-align: center;">
+                        <a href=\"""" + link + """\" class="button">Access HRMS Portal</a>
+                    </p>
+                </div>
+            </div>
+        </body>
+        </html>
+        """;
 }
 
 private String generateEmployeeId(String department) {
