@@ -6,3 +6,9 @@ build/
 .idea/
 .vscode/
 *.log
+
+# Environment variables - NEVER commit these!
+.env
+**/.env
+*.env
+HRMS-Backend/.env
