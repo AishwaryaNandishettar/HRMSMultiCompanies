@@ -17,7 +17,7 @@ public class ResendHttpEmailService {
     @Value("${resend.api.key}")
     private String resendApiKey;
 
-    @Value("${meeting.email.from-address:onboarding@resend.dev}")
+    @Value("${meeting.email.from-address:noreply@omoikaneinnovations.com}")
     private String fromAddress;
 
     private final RestTemplate restTemplate = new RestTemplate();
