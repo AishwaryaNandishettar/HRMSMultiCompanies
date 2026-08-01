@@ -169,28 +169,15 @@ employeeRepo.save(emp);
     // -------- LOGIN LINK (Employee must login with credentials from email) --------
     String onboardingLink = frontendUrl;
 
-    // -------- SEND EMAIL VIA RESEND HTTP API --------
+    // -------- SEND EMAIL VIA BREVO SMTP --------
     try {
-        log.info("📧 Sending invite email via Resend HTTP API to: {}", email);
+        log.info("📧 Sending invite email via Brevo SMTP to: {}", email);
         
-        // Build HTML email content
-        String htmlContent = buildInviteEmailHtml(email, onboardingLink, otp, "Temp@123");
+        emailService.sendInviteEmail(email, onboardingLink, otp, "Temp@123");
         
-        // Send via Resend HTTP API (works on Render, bypasses SMTP blocking)
-        boolean sent = resendHttpEmailService.sendEmail(
-            email,
-            "HRMS Invitation - Welcome!",
-            htmlContent
-        );
-        
-        if (sent) {
-            log.info("✅ Invite email successfully sent to: {}", email);
-        } else {
-            log.error("⚠️ Email delivery failed for {}", email);
-        }
+        log.info("✅ Invite email successfully sent to: {}", email);
     } catch (Exception e) {
         log.error("❌ Email sending failed for {}: {}", email, e.getMessage(), e);
-        System.err.println("❌ [OnboardingService] Email failed for " + email + ": " + e.getMessage());
     }
 }
 

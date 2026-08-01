@@ -194,29 +194,19 @@ public void onboard(Map<String, Object> payload) {
 
     try {
 
-        log.info("📧 Sending invite email via Resend HTTP API to: {}", email);
-        
-        // Build HTML email content
-        String htmlContent = buildInviteEmailHtml(email, onboardingLink, otp, "Temp@123");
-        
-        // Send via Resend HTTP API (works on Render, bypasses SMTP blocking)
-        boolean sent = resendHttpEmailService.sendEmail(
-            email,
-            "HRMS Invitation - Welcome!",
-            htmlContent
+        log.info("📧 Sending invite email via Brevo SMTP to: {}", email);
+
+        emailService.sendInviteEmail(
+                email,
+                onboardingLink,
+                otp,
+                "Temp@123"
         );
-        
-        if (sent) {
-            log.info("✅ Invite email successfully sent to: {}", email);
-        } else {
-            log.error("⚠️ Email delivery failed for {}", email);
-        }
+
+        log.info("✅ Invite email successfully sent to: {}", email);
 
     } catch (Exception e) {
 
-        // Employee/user record is already saved — log the email failure
-        // but do NOT throw so that the invite is not treated as a complete failure.
-        // The admin can resend the invitation manually.
         log.error(
                 "❌ Email sending failed for {}: {}",
                 email,
@@ -435,29 +425,10 @@ public void acceptInvite(String email, String password) {
 
             String otp = otpService.generateOtp(email);
 
-            // -------- SEND EMAIL VIA RESEND HTTP API --------
-            try {
-                log.info("📧 Sending bulk invite email via Resend HTTP API to: {}", email);
-                
-                // Build HTML email content
-                String htmlContent = buildInviteEmailHtml(email, onboardingLink, otp, tempPassword);
-                
-                // Send via Resend HTTP API (works on Render, bypasses SMTP blocking)
-                boolean sent = resendHttpEmailService.sendEmail(
-                    email,
-                    "HRMS Invitation - Welcome!",
-                    htmlContent
-                );
-                
-                if (sent) {
-                    log.info("✅ Bulk invite email successfully sent to: {}", email);
-                } else {
-                    log.error("⚠️ Bulk invite email delivery failed for {}", email);
-                }
-            } catch (Exception e) {
-                log.error("❌ Bulk invite email sending failed for {}: {}", email, e.getMessage(), e);
-                System.err.println("❌ [OnboardingService] Bulk invite email failed for " + email + ": " + e.getMessage());
-            }
+            // -------- SEND EMAIL VIA BREVO SMTP --------
+            log.info("📧 Sending bulk invite email via Brevo SMTP to: {}", email);
+            emailService.sendInviteEmail(email, onboardingLink, otp, tempPassword);
+            log.info("✅ Bulk invite email successfully sent to: {}", email);
 
             log.info("📩 Bulk invite sent to: {}", email);
 
