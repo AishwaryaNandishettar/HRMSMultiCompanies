@@ -14,7 +14,7 @@ import java.util.Map;
 @Service
 public class ResendHttpEmailService {
 
-    @Value("${resend.api.key}")
+    @Value("${resend.api.key:dummy}")
     private String resendApiKey;
 
     @Value("${meeting.email.from-address:noreply@omoikaneinnovations.com}")
