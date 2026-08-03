@@ -1,4 +1,4 @@
-package com.omoikaneinnovation.hmrsbackend.service;
+﻿package com.omoikaneinnovation.hmrsbackend.service;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -23,17 +23,20 @@ public class SendGridEmailService {
     private final RestTemplate restTemplate = new RestTemplate();
 
     public boolean sendEmail(String toEmail, String subject, String htmlContent) {
+        // SendGrid disabled - no API key configured, skip silently
+        if (sendGridApiKey == null || sendGridApiKey.isBlank()) {
+            log.warn("SendGrid API key not configured. Skipping email to: {}", toEmail);
+            return false;
+        }
         try {
             String url = "https://api.sendgrid.com/v3/mail/send";
 
-            log.info("📧 Sending email via SendGrid to: {}", toEmail);
-            log.info("🔍 From address: {}", fromAddress);
+            log.info("Sending email via SendGrid to: {}", toEmail);
 
             HttpHeaders headers = new HttpHeaders();
             headers.setContentType(MediaType.APPLICATION_JSON);
             headers.set("Authorization", "Bearer " + sendGridApiKey);
 
-            // Build SendGrid email payload
             Map<String, Object> toObj = new HashMap<>();
             toObj.put("email", toEmail);
 
@@ -58,28 +61,21 @@ public class SendGridEmailService {
             HttpEntity<Map<String, Object>> request = new HttpEntity<>(payload, headers);
 
             ResponseEntity<String> response = restTemplate.exchange(
-                url,
-                HttpMethod.POST,
-                request,
-                String.class
+                url, HttpMethod.POST, request, String.class
             );
 
-            // SendGrid returns 202 Accepted for success
-            if (response.getStatusCode() == HttpStatus.ACCEPTED || 
+            if (response.getStatusCode() == HttpStatus.ACCEPTED ||
                 response.getStatusCode() == HttpStatus.OK) {
-                log.info("✅ Email sent successfully via SendGrid to: {}", toEmail);
+                log.info("Email sent successfully via SendGrid to: {}", toEmail);
                 return true;
             } else {
-                log.error("❌ SendGrid failed. Status: {} Body: {}", 
+                log.error("SendGrid failed. Status: {} Body: {}",
                     response.getStatusCode(), response.getBody());
                 return false;
             }
 
         } catch (Exception e) {
-            log.error("❌ SendGrid error for {}: {}", toEmail, e.getMessage());
-            if (e.getCause() != null) {
-                log.error("❌ Root cause: {}", e.getCause().getMessage());
-            }
+            log.error("SendGrid error for {}: {}", toEmail, e.getMessage());
             return false;
         }
     }
