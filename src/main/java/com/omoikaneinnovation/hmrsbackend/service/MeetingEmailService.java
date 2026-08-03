@@ -27,7 +27,7 @@ public class MeetingEmailService {
     @Value("${meeting.email.from-name:HRMS Meeting System}")
     private String fromName;
 
-    @Value("${meeting.email.from-address:aishushettar95@gmail.com}")
+    @Value("${meeting.email.from-address}")
     private String fromAddress;
 
     @Value("${meeting.email.base-url:https://meet.omoikaneinnovations.com}")
