@@ -6,10 +6,10 @@ import org.springframework.context.annotation.Configuration;
 @Configuration
 public class MsgConfig91 {
 
-    @Value("${msg91.authkey}")
+    @Value("${msg91.authkey:}")
     private String authKey;
 
-    @Value("${msg91.sender.id}")
+    @Value("${msg91.sender.id:HRMSYS}")
     private String senderId;
 
     @Value("${msg91.enabled:true}")

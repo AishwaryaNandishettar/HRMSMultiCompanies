@@ -46,8 +46,7 @@
         @Autowired
 private EmailService emailService;
 
-    @Autowired
-    private SendGridEmailService sendGridEmailService;
+    
 
 public void onboard(Map<String, Object> payload) {
 
@@ -193,15 +192,18 @@ public void onboard(Map<String, Object> payload) {
     String onboardingLink = frontendUrl;
 
     try {
-        log.info("📧 Sending invite email via SendGrid to: {}", email);
-        String htmlContent = buildInviteEmailHtml(email, onboardingLink, otp, "Temp@123");
-        boolean sent = sendGridEmailService.sendEmail(email, "HRMS Invitation - Welcome!", htmlContent);
-        if (sent) {
-            log.info("✅ Invite email successfully sent to: {}", email);
-        } else {
-            log.error("⚠️ Email delivery failed for {}", email);
-        }
-    } catch (Exception e) {
+        log.info("📧 Sending invite email via Gmail SMTP to: {}", email);
+       String htmlContent = buildInviteEmailHtml(email, onboardingLink, otp, "Temp@123");
+
+emailService.sendInviteEmail(
+        email,
+        onboardingLink,
+        otp,
+        "Temp@123"
+);
+
+log.info("✅ Invite email sent using Gmail SMTP");
+    } catch (Exception e)   {
         log.error("❌ Email sending failed for {}: {}", email, e.getMessage(), e);
     }
 }

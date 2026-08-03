@@ -12,19 +12,19 @@ import java.util.List;
 @Configuration
 public class TwilioConfig {
     
- @Value("${twilio.account.sid}")
+ @Value("${twilio.account.sid:}")
 public String accountSid;
 
-@Value("${twilio.auth.token}")
+@Value("${twilio.auth.token:}")
 public String authToken;
     
- @Value("${twilio.phone.number}")
+ @Value("${twilio.phone.number:}")
     public String phoneNumber;
     
     @Value("${twilio.enabled:true}")
     public boolean enabled;
     
-   @Value("${twilio.verified.numbers}")
+   @Value("${twilio.verified.numbers:}")
     private String verifiedNumbersString;
     
     // Getters for easy access
