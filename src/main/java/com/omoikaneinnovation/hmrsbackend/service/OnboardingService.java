@@ -47,7 +47,7 @@
 private EmailService emailService;
 
     @Autowired
-    private ResendHttpEmailService resendHttpEmailService;
+    private SendGridEmailService sendGridEmailService;
 
 public void onboard(Map<String, Object> payload) {
 
@@ -193,36 +193,16 @@ public void onboard(Map<String, Object> payload) {
     String onboardingLink = frontendUrl;
 
     try {
-
-        log.info("📧 Sending invite email via Resend HTTP API to: {}", email);
-        
-        // Build HTML email content
+        log.info("📧 Sending invite email via SendGrid to: {}", email);
         String htmlContent = buildInviteEmailHtml(email, onboardingLink, otp, "Temp@123");
-        
-        // Send via Resend HTTP API (works on Render, bypasses SMTP blocking)
-        boolean sent = resendHttpEmailService.sendEmail(
-            email,
-            "HRMS Invitation - Welcome!",
-            htmlContent
-        );
-        
+        boolean sent = sendGridEmailService.sendEmail(email, "HRMS Invitation - Welcome!", htmlContent);
         if (sent) {
             log.info("✅ Invite email successfully sent to: {}", email);
         } else {
             log.error("⚠️ Email delivery failed for {}", email);
         }
-
     } catch (Exception e) {
-
-        // Employee/user record is already saved — log the email failure
-        // but do NOT throw so that the invite is not treated as a complete failure.
-        // The admin can resend the invitation manually.
-        log.error(
-                "❌ Email sending failed for {}: {}",
-                email,
-                e.getMessage(),
-                e
-        );
+        log.error("❌ Email sending failed for {}: {}", email, e.getMessage(), e);
     }
 }
 private String buildInviteEmailHtml(String email, String link, String otp, String password) {
@@ -435,28 +415,14 @@ public void acceptInvite(String email, String password) {
 
             String otp = otpService.generateOtp(email);
 
-            // -------- SEND EMAIL VIA RESEND HTTP API --------
-            try {
-                log.info("📧 Sending bulk invite email via Resend HTTP API to: {}", email);
-                
-                // Build HTML email content
-                String htmlContent = buildInviteEmailHtml(email, onboardingLink, otp, tempPassword);
-                
-                // Send via Resend HTTP API (works on Render, bypasses SMTP blocking)
-                boolean sent = resendHttpEmailService.sendEmail(
-                    email,
-                    "HRMS Invitation - Welcome!",
-                    htmlContent
-                );
-                
-                if (sent) {
-                    log.info("✅ Bulk invite email successfully sent to: {}", email);
-                } else {
-                    log.error("⚠️ Bulk invite email delivery failed for {}", email);
-                }
-            } catch (Exception e) {
-                log.error("❌ Bulk invite email sending failed for {}: {}", email, e.getMessage(), e);
-                System.err.println("❌ [OnboardingService] Bulk invite email failed for " + email + ": " + e.getMessage());
+            // -------- SEND EMAIL VIA SENDGRID --------
+            log.info("📧 Sending bulk invite email via SendGrid to: {}", email);
+            String htmlContent = buildInviteEmailHtml(email, onboardingLink, otp, tempPassword);
+            boolean sent = sendGridEmailService.sendEmail(email, "HRMS Invitation - Welcome!", htmlContent);
+            if (sent) {
+                log.info("✅ Bulk invite email successfully sent to: {}", email);
+            } else {
+                log.error("⚠️ Bulk invite email delivery failed for {}", email);
             }
 
             log.info("📩 Bulk invite sent to: {}", email);
