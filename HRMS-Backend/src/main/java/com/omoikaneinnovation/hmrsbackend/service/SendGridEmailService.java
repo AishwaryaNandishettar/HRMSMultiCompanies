@@ -14,10 +14,10 @@ import java.util.Map;
 @Service
 public class SendGridEmailService {
 
-    @Value("${sendgrid.api.key:}"")
+    @Value("${sendgrid.api.key:}")
     private String sendGridApiKey;
 
-    @Value("${meeting.email.from-address:aishushettar95@gmail.com}"")
+    @Value("${meeting.email.from-address:aishushettar95@gmail.com}")
     private String fromAddress;
 
     private final RestTemplate restTemplate = new RestTemplate();
