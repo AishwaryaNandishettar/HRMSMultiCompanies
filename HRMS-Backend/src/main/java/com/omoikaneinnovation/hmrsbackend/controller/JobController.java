@@ -121,8 +121,7 @@ public class JobController {
     }
 
     /**
-     * ✅ TEST ENDPOINT: Send SMS directly to test Twilio functionality
-     * Use this to verify SMS works without updating database
+     * ✅ TEST ENDPOINT: Test SMS functionality (placeholder)
      * GET /api/jobs/test-sms?phone=9606408912&message=Test
      */
     @GetMapping("/test-sms")
@@ -134,15 +133,14 @@ public class JobController {
             System.out.println("   - Phone: " + phone);
             System.out.println("   - Message: " + message);
 
-            // Test Twilio directly
-            SmsService smsService = service.getSmsService();
-            smsService.testTwilioDirectly(phone, message);
+            // SMS functionality placeholder
+            System.out.println("📱 SMS would be sent to: " + phone);
 
             return ResponseEntity.ok(Map.of(
                 "success", true,
-                "message", "Test SMS sent successfully!",
+                "message", "SMS test endpoint called successfully!",
                 "phone", phone,
-                "testMessage", "Check your phone for SMS"
+                "note", "SMS functionality is a placeholder - implement with Twilio/MSG91 if needed"
             ));
 
         } catch (Exception e) {
