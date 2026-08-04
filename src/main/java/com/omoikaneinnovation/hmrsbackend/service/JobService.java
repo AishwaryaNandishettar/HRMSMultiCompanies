@@ -2,6 +2,7 @@ package com.omoikaneinnovation.hmrsbackend.service;
 
 import com.omoikaneinnovation.hmrsbackend.model.Job;
 import com.omoikaneinnovation.hmrsbackend.repository.JobRepository;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -10,6 +11,9 @@ import java.util.List;
 public class JobService {
 
     private final JobRepository repo;
+    
+    @Autowired(required = false)
+    private EmailService emailService;
 
     public JobService(JobRepository repo) {
         this.repo = repo;
@@ -66,7 +70,46 @@ if ("Selected".equalsIgnoreCase(updates.getStatus())) {
 }
         return repo.save(job);
     }
+    
+    // UPDATE STATUS + SEND EMAIL AND SMS
+    public Job updateStatusWithEmailAndSms(String id, String newStatus, String comments, String candidateEmail, String candidatePhone) {
+        Job job = repo.findById(id)
+                .orElseThrow(() -> new RuntimeException("Job not found: " + id));
+
+        // Update status
+        job.setStatus(newStatus);
+        
+        // Save comments if provided
+        if (comments != null && !comments.isEmpty()) {
+            job.setComments(comments);
+        }
+        
+        Job savedJob = repo.save(job);
+        
+        // Send email notification if email provided
+        if (candidateEmail != null && !candidateEmail.isEmpty() && emailService != null) {
+            try {
+                String subject = "HRMS Application Status Update";
+                String body = "Dear Candidate,\n\nYour application status has been updated to: " + newStatus;
+                if (comments != null && !comments.isEmpty()) {
+                    body += "\n\nComments: " + comments;
+                }
+                emailService.sendEmail(candidateEmail, subject, body);
+                System.out.println("✅ Email sent to: " + candidateEmail);
+            } catch (Exception e) {
+                System.err.println("⚠️ Email sending failed: " + e.getMessage());
+            }
+        }
+        
+        // SMS functionality placeholder - can be implemented if needed
+        if (candidatePhone != null && !candidatePhone.isEmpty()) {
+            System.out.println("📱 SMS notification would be sent to: " + candidatePhone);
+        }
+        
+        return savedJob;
+    }
+    
     public void deleteJob(String id) {
-    repo.deleteById(id);
-}
+        repo.deleteById(id);
+    }
 }

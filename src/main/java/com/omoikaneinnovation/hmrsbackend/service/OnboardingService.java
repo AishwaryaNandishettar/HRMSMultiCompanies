@@ -417,10 +417,10 @@ public void acceptInvite(String email, String password) {
 
             String otp = otpService.generateOtp(email);
 
-            // -------- SEND EMAIL VIA SENDGRID --------
-            log.info("📧 Sending bulk invite email via SendGrid to: {}", email);
+            // -------- SEND EMAIL --------
+            log.info("📧 Sending bulk invite email to: {}", email);
             String htmlContent = buildInviteEmailHtml(email, onboardingLink, otp, tempPassword);
-            boolean sent = sendGridEmailService.sendEmail(email, "HRMS Invitation - Welcome!", htmlContent);
+            boolean sent = emailService.sendHtmlEmail(email, "HRMS Invitation - Welcome!", htmlContent);
             if (sent) {
                 log.info("✅ Bulk invite email successfully sent to: {}", email);
             } else {
