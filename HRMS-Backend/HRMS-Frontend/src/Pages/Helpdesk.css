@@ -1,0 +1,261 @@
+.hd-container {
+  padding: 20px;
+  background: #f4f7fc;
+  font-family: "Inter", sans-serif;
+}
+
+/* KPI */
+.hd-kpi-row {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 18px;
+}
+
+.hd-kpi {
+  flex: 1;
+  padding: 12px;
+  border-radius: 8px;
+  color: white;
+  text-align: center;
+}
+
+.hd-kpi h3 {
+  margin: 0;
+  font-size: 20px;
+}
+
+.hd-kpi span {
+  font-size: 12px;
+}
+
+.total { background:#6366f1; }
+.open { background:#f59e0b; }
+.resolved { background:#22c55e; }
+
+/* CARD */
+.hd-card {
+  background: white;
+  padding: 16px;
+  border-radius: 10px;
+  margin-bottom: 18px;
+}
+
+/* FORM */
+.hd-form {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.hd-form input,
+.hd-form select,
+.hd-form textarea {
+  padding: 9px;
+  border-radius: 6px;
+  border: 1px solid #ddd;
+}
+
+/* BUTTON */
+.hd-btn {
+  background: #6366f1;
+  color: white;
+  padding: 10px;
+  border-radius: 6px;
+  border: none;
+  cursor: pointer;
+}
+
+/* HEADER */
+.hd-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+/* FILTERS */
+.hd-filters {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.hd-filters input,
+.hd-filters select {
+  padding: 6px;
+  border-radius: 6px;
+  border: 1px solid #ddd;
+}
+
+/* CLEAR */
+.hd-clear {
+  background: #ef4444;
+  color: white;
+  border: none;
+  padding: 6px 10px;
+  border-radius: 6px;
+}
+
+/* TABLE */
+.hd-table-wrap {
+  max-height: 420px;
+  overflow-y: auto;
+  margin-top: 10px;
+}
+
+.hd-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.hd-table th {
+  position: sticky;
+  top: 0;
+  background: #1e293b;
+  color: white;
+  padding: 10px;
+}
+
+.hd-table td {
+  padding: 10px;
+  border-bottom: 1px solid #eee;
+}
+
+/* BADGE */
+.hd-badge {
+  padding: 4px 10px;
+  border-radius: 20px;
+  font-size: 12px;
+}
+
+.hd-Open { background:#fde68a; }
+.hd-Resolved { background:#bbf7d0; }
+
+/* EMPTY */
+.hd-empty {
+  text-align: center;
+  padding: 15px;
+  color: #888;
+}
+
+/* =========================================
+   HELPDESK MOBILE PERFECT FIX
+========================================= */
+
+@media only screen and (max-width: 768px) {
+
+  /* PAGE */
+  .hd-container {
+    padding: 10px !important;
+    overflow-x: hidden !important;
+  }
+
+  /* KPI */
+  .hd-kpi-row {
+    display: grid !important;
+    grid-template-columns: repeat(3, 1fr) !important;
+    gap: 8px !important;
+  }
+
+  .hd-kpi {
+    padding: 10px 6px !important;
+    border-radius: 8px !important;
+  }
+
+  .hd-kpi h3 {
+    font-size: 16px !important;
+  }
+
+  .hd-kpi span {
+    font-size: 10px !important;
+  }
+
+  /* HEADER */
+  .hd-header {
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    gap: 10px !important;
+  }
+
+  /* FILTERS */
+  .hd-filters {
+    width: 100% !important;
+    display: grid !important;
+    grid-template-columns: 1fr 1fr !important;
+    gap: 6px !important;
+  }
+
+  .hd-filters input,
+  .hd-filters select,
+  .hd-clear {
+    width: 100% !important;
+    font-size: 11px !important;
+    padding: 7px !important;
+  }
+
+  /* CARD */
+  .hd-card {
+    padding: 10px !important;
+    border-radius: 10px !important;
+  }
+
+  /* FORM */
+  .hd-form input,
+  .hd-form select,
+  .hd-form textarea {
+    font-size: 12px !important;
+    padding: 8px !important;
+  }
+
+  .hd-btn {
+    padding: 9px !important;
+    font-size: 12px !important;
+  }
+
+  /* TABLE WRAP */
+  .hd-table-wrap {
+    width: 100% !important;
+    overflow-x: auto !important;
+    overflow-y: auto !important;
+
+    -webkit-overflow-scrolling: touch !important;
+
+    max-height: 320px !important;
+
+    border-radius: 8px !important;
+  }
+
+  /* TABLE */
+  .hd-table {
+    min-width: 900px !important;
+    width: max-content !important;
+  }
+
+  /* TABLE HEADER */
+  .hd-table th {
+    padding: 8px 10px !important;
+    font-size: 11px !important;
+    white-space: nowrap !important;
+    min-width: 110px !important;
+  }
+
+  /* ISSUE TYPE HEADER FIX */
+  .hd-table th:nth-child(4) {
+    min-width: 140px !important;
+  }
+
+  /* TABLE BODY */
+  .hd-table td {
+    padding: 8px 10px !important;
+    font-size: 11px !important;
+    white-space: normal !important;
+    word-break: break-word !important;
+    min-width: 110px !important;
+  }
+
+  /* BADGES */
+  .hd-badge {
+    font-size: 10px !important;
+    padding: 3px 7px !important;
+  }
+
+}

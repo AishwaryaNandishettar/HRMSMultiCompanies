@@ -1,0 +1,4386 @@
+﻿    import React, { useState, useEffect, useRef } from "react";
+    import { useLocation } from "react-router-dom";
+    //import { getSkillsByEmployee, addSkill, updateManagerRating } from "../api/skillApi";
+    import styles from "./Profile.module.css";
+    import { fetchMyProfile } from "../api/profileApi";
+    import { useContext } from "react";
+    import { AuthContext } from "../Context/Authcontext";
+    import { getAllEmployees, updateEmployee, seedAppraisalHistory } from "../api/employeeApi";
+    import { updateJobDetails } from "../api/profileApi";
+    import { submitResignation, getResignationsByEmployee, updateResignationStatus, getAllResignations, getResignationsForApproval, getAllResignationsByManager, getResignationsForHRApproval, approveResignation, rejectResignation } from "../api/resignationApi";
+    import { getEmployeeProfileImage } from "../Utils/profileImageHelper";
+
+    export default function ProfileView() {
+      const location = useLocation();
+const profileEmployee = location.state?.employee;
+      const popupRef = useRef(null);
+      const { user } = useContext(AuthContext);
+      const [status, setStatus] = useState("Available");
+      const [view, setView] = useState("overview");
+      const [showIncrementLetter, setShowIncrementLetter] = useState(false);
+      const [selectedEmployee, setSelectedEmployee] = useState(null);
+      
+      const [allEmployees, setAllEmployees] = useState([]);
+const [filters, setFilters] = useState({});
+      const [activeFilter, setActiveFilter] = useState(null);
+const [columnFilters, setColumnFilters] = useState({});
+const [tempFilterValues, setTempFilterValues] = useState({});
+      const [showEditModal, setShowEditModal] = useState(false);
+      const [showJobModal, setShowJobModal] = useState(false);
+      const [showAppraisalEditModal, setShowAppraisalEditModal] = useState(false);
+      const [appraisalEdit, setAppraisalEdit] = useState({
+        hikeYear: "",
+        appraisalRating: "",
+        hikePercent: "",
+        hikeValue: "",
+        appraisalRemarks: "",
+        ctc: "",
+      });
+      const [earlyRelease, setEarlyRelease] = useState(false);
+const [calculatedLwd, setCalculatedLwd] = useState("");
+      const [profileImage, setProfileImage] = useState(() => {
+  // Try to get from localStorage first
+  const empId = localStorage.getItem("empId");
+  const email = user?.email || localStorage.getItem("email");
+  
+  if (empId) {
+    const localImage = localStorage.getItem(`employee-image-${empId}`);
+    if (localImage) return localImage;
+  }
+  
+  if (email) {
+    const localImage = localStorage.getItem(`employee-image-${email}`);
+    if (localImage) return localImage;
+  }
+  
+  return localStorage.getItem("profileImage") || "";
+});
+  const [jobEdit, setJobEdit] = useState({
+    designation: "",
+    department: "",
+    joiningDate: "",
+    totalExp: "",
+    currentExp: "",
+    employmentType: "Full-Time",
+    location: "Bangalore",
+    manager: "",
+    hr: "",
+    pf: "",
+    uan: "",
+    esic: "",
+    pfMemberId: "",
+    designationChanged: "",
+    designationChangedDate: "",
+  });
+      
+
+      /* ================= EXIT MODULE STATE ================= */
+
+      const [exitStage, setExitStage] = useState("form");
+      // form → manager → hr → checklist → completed
+
+      // ✅ NEW: State for managing resignations
+      const [myResignations, setMyResignations] = useState([]);
+      const [pendingManagerResignations, setPendingManagerResignations] = useState([]);
+      const [allManagerResignations, setAllManagerResignations] = useState([]);
+      const [pendingHRResignations, setPendingHRResignations] = useState([]);
+      const [allResignations, setAllResignations] = useState([]);
+      
+      // Filter states for resignation table
+      const [resignationFilters, setResignationFilters] = useState({});
+      const [resignationFilterText, setResignationFilterText] = useState("");
+      
+      // Filter states for compensation table
+      const [compensationFilters, setCompensationFilters] = useState({});
+      const [compensationFilterText, setCompensationFilterText] = useState("");
+      
+      const [exitData, setExitData] = useState({
+  reason: "",
+  notice: "60 Days",
+  lwd: "",
+  manager: [],   // ✅ now array
+  cc: [],        // ✅ now array
+  remarks: ""
+});
+const [searchTo, setSearchTo] = useState("");
+const [searchCc, setSearchCc] = useState("");
+// ✅ Use allEmployees from backend instead of hardcoded users
+    const [skills, setSkills] = useState([]);
+    const [profileData, setProfileData] = useState(null);
+    
+const Chip = ({ user, onRemove }) => (
+  <span className={styles.chip}>
+    {user.name}
+    <button onClick={onRemove}>×</button>
+  </span>
+);
+
+
+
+    const role = (localStorage.getItem("role") || "").toUpperCase(); 
+    console.log("role:", role);
+
+// ✅ NEW: Clear old localStorage data on component mount
+useEffect(() => {
+  // Clear old cached data that might have "Adhviti" or wrong employee info
+  const keysToRemove = ['personalEdit', 'jobEdit'];
+  keysToRemove.forEach(key => {
+    if (localStorage.getItem(key)) {
+      console.log(`🧹 Removing old localStorage key: ${key}`);
+      localStorage.removeItem(key);
+    }
+  });
+}, []); // Run once on mount
+
+useEffect(() => {
+  const loadEmployees = async () => {
+    try {
+      const response = await getAllEmployees();
+
+      // ✅ FIX: Handle different response formats
+      let employees = [];
+      
+      if (Array.isArray(response)) {
+        employees = response;  // Direct array
+      } else if (response?.data && Array.isArray(response.data)) {
+        employees = response.data;  // response.data is array
+      } else if (response?.data?.content && Array.isArray(response.data.content)) {
+        employees = response.data.content;  // response.data.content is array
+      } else if (response?.content && Array.isArray(response.content)) {
+        employees = response.content;  // response.content is array
+      }
+
+      console.log("✅ EMPLOYEES FROM BACKEND:", employees);
+      console.log("📊 Total employees:", employees.length);
+      
+      let filteredEmployees = [];
+
+      const userEmpId = localStorage.getItem("empId");
+      const role = (localStorage.getItem("role") || "").trim().toUpperCase();
+
+      if (!employees || employees.length === 0) {
+        console.warn("⚠️ No employees found");
+        setAllEmployees([]);
+        return;
+      }
+
+      if (role === "ADMIN") {
+        filteredEmployees = employees;  // ✅ Admin sees ALL employees
+        console.log("👤 ADMIN - showing all", filteredEmployees.length, "employees");
+      } 
+      else if (role === "MANAGER") {
+        const userTeam =
+          profileData?.teamMembers ||
+          profileData?.team ||
+          [];
+        filteredEmployees = employees.filter(emp =>
+          userTeam.includes(emp.employeeId) ||
+          userTeam.includes(emp.id)
+        );
+        console.log("👥 MANAGER - showing", filteredEmployees.length, "team members");
+      } 
+      else {
+        filteredEmployees = employees.filter(emp =>
+          emp.employeeId === userEmpId
+        );
+        console.log("👤 EMPLOYEE - showing self");
+      }
+
+      console.log("📋 Filtered employees:", filteredEmployees);
+      setAllEmployees(filteredEmployees);
+    } catch (err) {
+      console.error("❌ Employee fetch error:", err);
+      setAllEmployees([]);
+    }
+  };
+
+  loadEmployees();
+}, [profileData]);
+
+
+useEffect(() => {
+  const handleClickOutside = (e) => {
+    if (
+      popupRef.current &&
+      !popupRef.current.contains(e.target)
+    ) {
+      setActiveFilter(null);
+    }
+  };
+
+  document.addEventListener("mousedown", handleClickOutside);
+
+  return () => {
+    document.removeEventListener(
+      "mousedown",
+      handleClickOutside
+    );
+  };
+}, []);
+
+
+// ✅ ADD THIS: Load employees on component mount (don't wait for profileData)
+useEffect(() => {
+  const loadEmployeesOnMount = async () => {
+    try {
+      const response = await getAllEmployees();
+
+      let employees = [];
+      
+      if (Array.isArray(response)) {
+        employees = response;
+      } else if (response?.data && Array.isArray(response.data)) {
+        employees = response.data;
+      } else if (response?.data?.content && Array.isArray(response.data.content)) {
+        employees = response.data.content;
+      } else if (response?.content && Array.isArray(response.content)) {
+        employees = response.content;
+      }
+
+      const role = (localStorage.getItem("role") || "").trim().toUpperCase();
+
+      if (role === "ADMIN" && employees.length > 0) {
+        console.log("🚀 ADMIN - Loading all employees on mount:", employees.length);
+        setAllEmployees(employees);
+      }
+    } catch (err) {
+      console.error("❌ Error loading employees on mount:", err);
+    }
+  };
+
+  loadEmployeesOnMount();
+}, []);
+
+
+
+
+
+    const empId = localStorage.getItem("empId");
+    console.log("empId from localStorage:", empId);
+      
+      const [checklist, setChecklist] = useState({
+        laptop: false,
+        idCard: false,
+        documents: false,
+        knowledgeTransfer: false,
+      });
+
+      const [newSkill, setNewSkill] = useState({
+      name: "",
+      level: "Beginner",
+      comments: ""
+    });
+      /* ✅ SAFE API CALL */
+    useEffect(() => {
+      // Load skills from localStorage if available, otherwise use defaults
+      const empId = profileData?.employeeId || user?.employeeId || user?.empId;
+      if (empId) {
+        const stored = localStorage.getItem("skills_" + empId);
+        if (stored) {
+          try {
+            const parsed = JSON.parse(stored);
+            if (Array.isArray(parsed) && parsed.length > 0) {
+              setSkills(parsed);
+              return;
+            }
+          } catch (e) {}
+        }
+      }
+      // Default skills if nothing in localStorage
+      setSkills([
+        {
+          id: 1,
+          name: "React",
+          level: "Advanced",
+          employeeRating: 4,
+          managerRating: 3,
+        },
+        {
+          id: 2,
+          name: "JavaScript",
+          level: "Advanced",
+          employeeRating: 5,
+          managerRating: 4,
+        },
+        {
+          id: 3,
+          name: "Java",
+          level: "Intermediate",
+          employeeRating: 3,
+          managerRating: 3,
+        },
+      ]);
+    }, [profileData, user]);
+
+              
+        useEffect(() => {
+  const load = async () => {
+    const data = await fetchMyProfile();
+    console.log("PROFILE API RESPONSE:", data);
+    setProfileData(data);
+
+    // ✅ ADD THIS LINE HERE
+    if (data?.employeeId) {
+      localStorage.setItem("empId", data.employeeId);
+    }
+  };
+
+  load();
+}, []);
+
+useEffect(() => {
+  if (!exitData.notice || exitData.notice === "Custom") return; // ✅ FIX
+
+  const days = parseInt(exitData.notice);
+  if (isNaN(days)) return; // extra safety
+
+  const today = new Date();
+  if (isNaN(today.getTime())) return; // ✅ FIX
+  const lwd = new Date();
+
+  lwd.setDate(today.getDate() + days);
+ if (isNaN(lwd.getTime())) return; // ✅ FIX
+  const formatted = lwd.toISOString().split("T")[0];
+
+  setCalculatedLwd(formatted);
+
+  if (!earlyRelease) {
+    setExitData(prev => ({
+      ...prev,
+      lwd: formatted
+    }));
+  }
+
+}, [exitData.notice, earlyRelease]);
+
+// ✅ NEW: Load resignations based on role
+useEffect(() => {
+  const loadResignations = async () => {
+    try {
+      const userEmail = user?.email || localStorage.getItem("email") || "";
+      const userRole = (localStorage.getItem("role") || "").trim().toUpperCase();
+      const userEmpId = localStorage.getItem("empId");
+
+      console.log("🔍 LOADING RESIGNATIONS:");
+      console.log("  - User Email:", userEmail);
+      console.log("  - User Role:", userRole);
+      console.log("  - User Emp ID:", userEmpId);
+
+      // Load employee's own resignations
+      if (userEmpId) {
+        const myRes = await getResignationsByEmployee(userEmpId);
+        console.log("📋 My Resignations:", myRes);
+        setMyResignations(Array.isArray(myRes) ? myRes : []);
+      }
+
+      // Load resignations for manager approval
+      if (userRole === "MANAGER" && userEmail) {
+        console.log("👥 MANAGER - Fetching resignations for:", userEmail);
+        const managerRes = await getResignationsForApproval(userEmail);
+        console.log("📋 Manager Resignations Response:", managerRes);
+        console.log("📊 Number of pending resignations:", Array.isArray(managerRes) ? managerRes.length : 0);
+        setPendingManagerResignations(Array.isArray(managerRes) ? managerRes : []);
+
+        // Also load all resignations for tracking table
+        const allMgrRes = await getAllResignationsByManager(userEmail);
+        setAllManagerResignations(Array.isArray(allMgrRes) ? allMgrRes : []);
+      }
+
+      // Load resignations for HR approval
+      if (userRole === "ADMIN") {
+        const hrRes = await getResignationsForHRApproval();
+        console.log("📋 HR Resignations:", hrRes);
+        setPendingHRResignations(Array.isArray(hrRes) ? hrRes : []);
+        
+        // Also load all resignations for tracking table
+        const allRes = await getAllResignations();
+        console.log("📋 All Resignations:", allRes);
+        setAllResignations(Array.isArray(allRes) ? allRes : []);
+      }
+    } catch (err) {
+      console.error("❌ Error loading resignations:", err);
+    }
+  };
+
+  loadResignations();
+}, [user]);
+
+
+      const employee = {
+ name: profileData?.fullName ||
+       profileData?.empName ||
+       profileData?.name ||
+       user?.name ||
+       "N/A",
+
+ id:
+  profileData?.employeeId ||
+  user?.employeeId ||
+  empId ||
+  "N/A",
+
+  phone: profileData?.phone || "N/A",
+  email: profileData?.email || user?.email || "N/A",
+
+  dob: profileData?.dob || "",
+  fatherName: profileData?.fatherName || "",
+  motherName: profileData?.motherName || "",
+
+  bloodGroup: profileData?.bloodGroup || "",
+  permanentAddress: profileData?.permanentAddress || "",
+  currentAddress: profileData?.currentAddress || "",
+
+  city: profileData?.city || "",
+  taluk: profileData?.taluk || "",
+  district: profileData?.district || "",
+  state: profileData?.state || "",
+  pincode: profileData?.pincode || "",
+
+  department: profileData?.department || "N/A",
+  designation: profileData?.designation || "N/A",
+  joiningDate: profileData?.joiningDate || "N/A",
+  totalExp: profileData?.totalExp || "N/A",
+  currentExp: profileData?.currentExp || "N/A",
+  // Compensation / appraisal fields
+  ctc: profileData?.ctc || "",
+  hikeValue: profileData?.hikeValue || "",
+  hikePercent: profileData?.hikePercent || "",
+  hikeYear: profileData?.hikeYear || "",
+  appraisalRating: profileData?.appraisalRating || "",
+  appraisalRemarks: profileData?.appraisalRemarks || "",
+  // Full appraisal history array (multi-year)
+  appraisalHistory: Array.isArray(profileData?.appraisalHistory) ? profileData.appraisalHistory : [],
+  employeeId: profileData?.employeeId || user?.employeeId || "",
+};
+
+  // ✅ NEW: Update jobEdit when profileData changes (from backend)
+  useEffect(() => {
+    if (profileData) {
+      setJobEdit({
+        designation: profileData?.designation || "",
+        department: profileData?.department || "",
+        joiningDate: profileData?.joiningDate || "",
+        totalExp: profileData?.totalExp || "",
+        currentExp: profileData?.currentExp || "",
+        employmentType: profileData?.employmentType || "Full-Time",
+        location: profileData?.location || "Bangalore",
+        manager: profileData?.managerName || "",
+        hr: profileData?.hrName || "",
+        pf: profileData?.pf || "",
+        uan: profileData?.uan || "",
+        esic: profileData?.esic || "",
+        pfMemberId: profileData?.pfMemberId || "",
+        designationChanged: profileData?.designationChanged || "",
+        designationChangedDate: profileData?.designationChangedDate || "",
+      });
+    }
+  }, [profileData]);
+
+    const refreshProfile = async () => {
+    const data = await fetchMyProfile();
+    setProfileData(data);
+  };
+  
+console.log("PROFILE DATA =", profileData);
+console.log("Reporting Manager:", profileData?.reportingManager);
+console.log("Manager Name:", profileData?.managerName);
+console.log("Manager Email:", profileData?.managerEmail);
+console.log("LOCATION EMPLOYEE =", location.state?.employee);
+console.log("PROFILE EMPLOYEE =", profileEmployee);
+console.log("REPORTING MANAGER =", selectedEmployee?.reportingManager);
+ const reporting = [
+ {
+  name:
+    profileEmployee?.reportingManager ||
+    profileEmployee?.managerName ||
+    profileEmployee?.manager ||
+    profileData?.reportingManager ||
+    profileData?.managerName ||
+    profileData?.manager ||
+    profileEmployee?.managerEmail ||
+    profileData?.managerEmail ||
+    "-",
+  role: "Reporting Manager",
+},
+  {
+    name:
+      profileEmployee?.reportingHead ||
+      profileData?.reportingHead ||
+      "-",
+    role: "Reporting Head",
+  },
+  {
+    name:
+      profileEmployee?.hrName ||
+      profileData?.hrName ||
+      "-",
+    role: "HR Business Partner",
+  },
+];
+
+    // downloadPDF(emp)              → uses emp's current flat fields (latest hike)
+  // downloadPDF(emp, historyRecord) → uses a specific appraisal history year
+  const downloadPDF = (emp, historyRecord = null) => {
+    // Resolve all fields from the passed employee object (never fall back to logged-in user)
+    const empName    = emp?.fullName || emp?.empName || emp?.name || "Employee";
+    const empId      = emp?.employeeId || emp?.id || "N/A";
+    const dept       = emp?.department || "N/A";
+
+    // If a specific history record is passed, use its fields; otherwise use the employee's latest
+    const rec        = historyRecord || emp;
+    const desig      = rec?.designation || emp?.designation || "N/A";
+    const ctcBefore  = rec?.ctcAfterHike
+      ? (Number(rec.ctcAfterHike) - Number(rec.hikeValue || "0")).toString()
+      : (emp?.ctc || "N/A");
+    const ctcAfter   = rec?.ctcAfterHike || (
+      rec?.ctc && rec?.hikeValue
+        ? String(Number(rec.ctc) + Number(rec.hikeValue))
+        : "N/A"
+    );
+    const hikePercent = rec?.hikePercent || "0";
+    const hikeValue   = rec?.hikeValue || "0";
+    const hikeYear    = rec?.hikeYear || "2025";
+    const rating      = rec?.appraisalRating || "—";
+    const remarks     = rec?.appraisalRemarks || "—";
+
+    const html = `<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8"/>
+  <title>Increment Letter ${hikeYear} - ${empName}</title>
+  <style>
+    body { font-family: Arial, sans-serif; max-width: 720px; margin: 60px auto; color: #333; }
+    h2   { text-align: center; color: #1a3c6e; }
+    .sub { text-align: center; color: #888; margin-bottom: 24px; }
+    hr   { border: none; border-top: 1px solid #ccc; margin: 16px 0; }
+    p    { line-height: 1.8; }
+    .label { font-weight: bold; display: inline-block; min-width: 220px; }
+    .footer{ margin-top: 48px; }
+  </style>
+</head>
+<body>
+  <h2>Salary Revision Letter</h2>
+  <p class="sub">Human Resources Department</p>
+  <hr/>
+  <p><span class="label">Date:</span> 01 January ${hikeYear}</p>
+  <p>Dear <strong>${empName}</strong>,</p>
+  <p>We are pleased to inform you that based on your performance, your compensation has been revised as follows:</p>
+  <p><span class="label">Employee ID:</span> ${empId}</p>
+  <p><span class="label">Department:</span> ${dept}</p>
+  <p><span class="label">Designation:</span> ${desig}</p>
+  <hr/>
+  <p><span class="label">Previous CTC:</span> ₹${ctcBefore}</p>
+  <p><span class="label">Hike Percentage:</span> ${hikePercent}%</p>
+  <p><span class="label">Hike Value:</span> ₹${hikeValue}</p>
+  <hr/>
+  <p><span class="label">Revised CTC:</span> ₹${ctcAfter}</p>
+  <p><span class="label">Appraisal Rating:</span> ${rating}</p>
+  <p><span class="label">Remarks:</span> ${remarks}</p>
+  <p style="margin-top:20px;">This revision reflects your contribution and performance in the organisation.</p>
+  <div class="footer">
+    <p>Regards,<br/><strong>Human Resources Team</strong></p>
+  </div>
+</body>
+</html>`;
+
+    const blob = new Blob([html], { type: "text/html" });
+    const link = document.createElement("a");
+    link.href = URL.createObjectURL(blob);
+    link.download = `${empName}_Increment_Letter_${hikeYear}.html`;
+    link.click();
+    URL.revokeObjectURL(link.href);
+  };
+
+ const [personalEdit, setPersonalEdit] = useState({
+  name: "",
+  dob: "",
+  email: "",
+  phone: "",
+  fatherName: "",
+  motherName: "",
+  bloodGroup: "",
+  city: "",
+  district: "",
+  state: "",
+  pincode: "",
+  address: "",
+  bankAccountNumber: "",
+  ifsc: "",
+});
+
+// ✅ NEW: Update personalEdit when profileData changes (from backend)
+useEffect(() => {
+  if (profileData) {
+    setPersonalEdit({
+      name: profileData?.fullName || profileData?.empName || profileData?.name || "",
+      dob: profileData?.dob || "",
+      email: profileData?.email || "",
+      phone: profileData?.phone || "",
+      fatherName: profileData?.fatherName || "",
+      motherName: profileData?.motherName || "",
+      bloodGroup: profileData?.bloodGroup || "",
+      city: profileData?.city || "",
+      district: profileData?.district || "",
+      state: profileData?.state || "",
+      pincode: profileData?.pincode || "",
+      address: profileData?.address || profileData?.permanentAddress || profileData?.currentAddress || "",
+      bankAccountNumber: profileData?.bankAccountNumber || "",
+      ifsc: profileData?.ifsc || "",
+    });
+  }
+}, [profileData]);
+
+const bgvRecords = JSON.parse(localStorage.getItem("bgv_records")) || [];
+
+const currentBGV = bgvRecords.find(
+  (b) => b.employeeId === employee.id || b.employeeId === employee.employeeId
+);
+
+console.log("BGV Records:", bgvRecords);
+console.log("Current BGV:", currentBGV);
+
+// Build documents list from profileData fields (Base64 strings stored in backend)
+const buildDocuments = () => {
+  const docs = [];
+  if (profileData?.resumeDocument) {
+    docs.push({ name: "Resume", data: profileData.resumeDocument });
+  }
+  if (profileData?.aadhaarDocument) {
+    docs.push({ name: "Aadhaar", data: profileData.aadhaarDocument });
+  }
+  if (profileData?.offerLetterDocument) {
+    docs.push({ name: "Offer_Letter", data: profileData.offerLetterDocument });
+  }
+  if (profileData?.panDocument) {
+    docs.push({ name: "PAN", data: profileData.panDocument });
+  }
+  if (profileData?.educationDocument) {
+    docs.push({ name: "Education_Certificate", data: profileData.educationDocument });
+  }
+  return docs;
+};
+const documents = buildDocuments();
+
+// Helper: Get viewable URL for documents (same as BGV page - works on localhost AND Vercel)
+const getDocumentUrl = (docPath) => {
+  if (!docPath || docPath === 'N/A') return null;
+
+  // Already a full URL — return as-is
+  if (docPath.startsWith('http://') || docPath.startsWith('https://')) return docPath;
+
+  // Base64 data URI — return as-is (works in both envs)
+  if (docPath.startsWith('data:')) return docPath;
+
+  // Just a bare filename with no path info — cannot resolve to a URL
+  if (!docPath.includes('/')) {
+    console.warn('⚠️ Document is just a filename, not a viewable URL:', docPath);
+    return null;
+  }
+
+  // Resolve against the API base URL (works on localhost AND on Render/Vercel via env var)
+  const baseUrl = (import.meta.env.VITE_API_BASE_URL || 'http://localhost:8082').replace(/\/$/, '');
+
+  if (docPath.startsWith('/uploads/')) return `${baseUrl}${docPath}`;
+  if (docPath.startsWith('uploads/')) return `${baseUrl}/${docPath}`;
+
+  // Any other relative path
+  const cleanPath = docPath.startsWith('/') ? docPath : `/${docPath}`;
+  return `${baseUrl}${cleanPath}`;
+};
+
+// Helper: View document in new tab (same as BGV page - works on localhost AND Vercel)
+const viewDocument = (docPath, docName) => {
+  console.log('🔍 Attempting to view document:', docPath);
+  const url = getDocumentUrl(docPath);
+  if (!url) {
+    if (docPath && !docPath.includes('/') && !docPath.startsWith('data:')) {
+      alert(
+        `⚠️ Document "${docPath}" cannot be viewed.\n\nThe document was uploaded but not stored on the server.\n\nTo view documents:\n1. Documents must be uploaded to the backend server\n2. Or stored as base64 data in the database\n\nCurrently, only the filename is saved.`
+      );
+    } else {
+      alert('Document not available');
+    }
+    return;
+  }
+  console.log('📄 Opening document:', url);
+  window.open(url, '_blank');
+};
+
+// Helper: Download document (same as BGV page - works on localhost AND Vercel)
+const downloadDocument = async (docPath, docName) => {
+  const url = getDocumentUrl(docPath);
+  if (!url) { alert('Document not available for download'); return; }
+
+  try {
+    let blobUrl;
+    let fileName = docName || 'document';
+
+    if (url.startsWith('data:')) {
+      // ── Base64 data URI → Blob (bypasses browser data-URI download restrictions)
+      const [header, base64Data] = url.split(',');
+      const mimeMatch = header.match(/data:([^;]+)/);
+      const mime = mimeMatch ? mimeMatch[1] : 'application/octet-stream';
+
+      // Detect extension from MIME if filename has none
+      if (!fileName.includes('.')) {
+        const extMap = {
+          'application/pdf': '.pdf',
+          'image/jpeg': '.jpg',
+          'image/png': '.png',
+          'image/gif': '.gif',
+          'image/webp': '.webp',
+          'application/msword': '.doc',
+          'application/vnd.openxmlformats-officedocument.wordprocessingml.document': '.docx',
+        };
+        fileName += extMap[mime] || '';
+      }
+
+      const byteChars = atob(base64Data);
+      const byteArray = new Uint8Array(byteChars.length);
+      for (let i = 0; i < byteChars.length; i++) byteArray[i] = byteChars.charCodeAt(i);
+      const blob = new Blob([byteArray], { type: mime });
+      blobUrl = URL.createObjectURL(blob);
+
+    } else {
+      // ── Server URL → fetch → Blob (ensures download instead of navigation)
+      const response = await fetch(url);
+      if (!response.ok) throw new Error(`Server returned ${response.status}`);
+      const blob = await response.blob();
+      blobUrl = URL.createObjectURL(blob);
+    }
+
+    const link = document.createElement('a');
+    link.href = blobUrl;
+    link.download = fileName;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    setTimeout(() => URL.revokeObjectURL(blobUrl), 10000);
+
+  } catch (err) {
+    console.error('Download failed:', err);
+    // Fallback: open in new tab so user can manually save
+    window.open(url, '_blank');
+  }
+};
+
+// Helper: open a Base64 document as an image or PDF in a new tab
+const openDocument = (doc) => {
+  viewDocument(doc.data, doc.name);
+};
+
+const getDesignation = () => {
+  // Use actual designation from profile data, fallback to role-based
+  if (profileData?.designation) return profileData.designation;
+  if (employee.designation && employee.designation !== "N/A") return employee.designation;
+  
+  // Fallback based on role
+  if (role === "ADMIN") return "HR Manager / CEO";
+  if (role === "MANAGER") return "Engineering Manager";
+  return "Software Developer";
+};
+
+
+const compensationColumns = [
+  { key: "employeeId", label: "Emp ID" },
+  { key: "empName", label: "Employee Name" },
+ 
+  { key: "joiningDate", label: "DOJ" },
+  { key: "tenure", label: "Tenure" },
+  { key: "ctc", label: "CTC" },
+  { key: "hikeValue", label: "Hike Value" },
+  { key: "hikePercent", label: "Hike %" },
+  { key: "hikeYear", label: "Hike Year" },
+  { key: "designation", label: "Designation" },
+  { key: "department", label: "Department" },
+];
+const filteredEmployees =
+  Array.isArray(allEmployees)
+    ? allEmployees.filter((emp) => {
+        return Object.keys(columnFilters).every((key) => {
+          if (
+            !columnFilters[key] ||
+            columnFilters[key].length === 0
+          )
+            return true;
+
+          let value;
+
+          switch (key) {
+            case "employeeId":
+              value = emp.employeeId || emp.id;
+              break;
+
+            case "empName":
+              value =
+                emp.empName ||
+                emp.name ||
+                emp.fullName ||
+                "N/A";
+              break;
+
+            default:
+              value = emp[key] || "-";
+          }
+
+          return columnFilters[key].includes(value);
+        });
+      })
+    : [];
+const getUniqueValues = (key) => {
+  return [
+    ...new Set(
+      allEmployees.map(
+        (emp) =>
+          emp[key] ||
+          emp.empName ||
+          emp.name ||
+          emp.fullName ||
+          "-"
+      )
+    ),
+  ];
+};
+
+
+
+useEffect(() => {
+  const handleClick = (e) => {
+    if (
+      popupRef.current &&
+      !popupRef.current.contains(e.target)
+    ) {
+      setActiveFilter(null);
+    }
+  };
+
+  document.addEventListener("mousedown", handleClick);
+
+  return () =>
+    document.removeEventListener(
+      "mousedown",
+      handleClick
+    );
+}, []);
+
+      return (
+        <div className={styles.profilePage}>
+          <div className={styles.profileContainer}>
+            
+            {/* ================= LEFT PANEL ================= */}
+            <div className={styles.profileLeft}>
+              <div className={styles.profileCard}>
+             <div className={styles.imageWrapper}>
+  <img
+    src={
+      profileImage || 
+      getEmployeeProfileImage({
+        employeeId: employee.id,
+        email: employee.email,
+        fullName: employee.name,
+        name: employee.name
+      })
+    }
+    alt="profile"
+    className={styles.profileImage}
+  />
+
+  {/* Hidden file input */}
+  <input
+    id="profileUpload"
+    type="file"
+    accept="image/*"
+    style={{ display: "none" }}
+    onChange={(e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+
+      const reader = new FileReader();
+      reader.onload = () => {
+        setProfileImage(reader.result);
+        // Save to both old key and new key pattern for compatibility
+        localStorage.setItem("profileImage", reader.result);
+        
+        const empId = employee.id || localStorage.getItem("empId");
+        const employeeId = profileData?.employeeId || user?.employeeId;
+        const email = employee.email || user?.email || localStorage.getItem("email");
+        
+        // ✅ FIX: Save with multiple key variations for compatibility
+        if (empId) {
+          localStorage.setItem(`employee-image-${empId}`, reader.result);
+        }
+        if (employeeId && employeeId !== empId) {
+          localStorage.setItem(`employee-image-${employeeId}`, reader.result);
+        }
+        if (email) {
+          localStorage.setItem(`employee-image-${email}`, reader.result);
+        }
+        
+        console.log("✅ Profile image saved with keys:", {
+          empId: `employee-image-${empId}`,
+          employeeId: `employee-image-${employeeId}`,
+          email: `employee-image-${email}`
+        });
+      };
+      reader.readAsDataURL(file);
+    }}
+  />
+
+  {/* Edit button */}
+  <label htmlFor="profileUpload" className={styles.editImageBtn}>
+    ✎ Edit
+  </label>
+</div>
+
+                <h3>{employee.name}</h3>
+                <p className={styles.role}>{getDesignation()}</p>
+
+                <div className={styles.infoList}>
+                  <p><strong>Employee ID</strong> {employee.id}</p>
+                </div>
+
+              
+
+                <div className={styles.quickLinks}>
+                  <p onClick={() => setView("overview")}>Overview</p>
+                  <p onClick={() => setView("compensation")}>Compensation</p>
+                  <p onClick={() => setView("exit")}>Resignation Letter</p>
+                    <p onClick={() => setView("skills")}>Skill Matrix</p> {/* NEW */}
+                </div>
+              </div>
+            </div>
+
+            {/* ================= RIGHT PANEL ================= */}
+            <div className={styles.profileRight}>
+              
+              {/* HEADER */}
+              <div className={styles.profileHeader}>
+                <div>
+                 
+                </div>
+
+                <select
+                  className={styles.statusSelectLarge}
+                  value={status}
+                  onChange={(e) => setStatus(e.target.value)}
+                >
+                  <option>Available</option>
+                  <option>Active</option>
+                  <option>Offline</option>
+                  <option>Do Not Disturb</option>
+                </select>
+              </div>
+
+              {/* ================= OVERVIEW ================= */}
+              {view === "overview" && (
+                <div className={styles.profileGrid}>
+
+                <div className={styles.profileSectionCard}>
+    <div className={styles.sectionHeader}>
+      <h3>Personal Information</h3>
+     {role === "ADMIN" && (
+  <button
+    className={styles.editBtn}
+    onClick={() => setShowEditModal(true)}
+  >
+    Edit
+  </button>
+)}
+    </div>
+
+    <div className={styles.infoGrid}>
+      <p><strong>Name:</strong> {personalEdit.name}</p>
+      <p><strong>DOB:</strong> {personalEdit.dob}</p>
+      <p><strong>Email:</strong> {personalEdit.email}</p>
+      <p><strong>Phone:</strong> {personalEdit.phone}</p>
+      <p><strong>Father:</strong> {personalEdit.fatherName}</p>
+      <p><strong>Mother:</strong> {personalEdit.motherName}</p>
+      <p><strong>Blood Group:</strong> {personalEdit.bloodGroup}</p>
+      
+
+<p><strong>City:</strong> {personalEdit.city}</p>
+<p><strong>District:</strong> {personalEdit.district}</p>
+<p><strong>State:</strong> {personalEdit.state}</p>
+<p><strong>Pincode:</strong> {personalEdit.pincode}</p>
+ <p><strong>Address:</strong> {personalEdit.address}</p>
+ <p><strong>Bank Account No.:</strong> {personalEdit.bankAccountNumber || "N/A"}</p>
+ <p><strong>IFSC:</strong> {personalEdit.ifsc || "N/A"}</p>
+    </div>
+    {showEditModal && (
+    <div className={styles.modalOverlay}>
+      <div className={styles.modal}>
+        <h3>Edit Personal Information</h3>
+
+        <div className={styles.formGrid}>
+
+          <input
+            placeholder="Name"
+            value={personalEdit.name}
+            onChange={(e)=>setPersonalEdit({...personalEdit, name:e.target.value})}
+          />
+
+          <input
+            type="date"
+            placeholder="Date of Birth"
+            value={personalEdit.dob}
+            onChange={(e)=>setPersonalEdit({...personalEdit, dob:e.target.value})}
+          />
+        
+          <input
+            placeholder="Email"
+            value={personalEdit.email}
+            onChange={(e)=>setPersonalEdit({...personalEdit, email:e.target.value})}
+          />
+
+          <input
+            placeholder="Phone"
+            value={personalEdit.phone}
+            onChange={(e)=>setPersonalEdit({...personalEdit, phone:e.target.value})}
+          />
+
+          <input
+            placeholder="Father Name"
+            value={personalEdit.fatherName}
+            onChange={(e)=>setPersonalEdit({...personalEdit, fatherName:e.target.value})}
+          />
+
+          <input
+            placeholder="Mother Name"
+            value={personalEdit.motherName}
+            onChange={(e)=>setPersonalEdit({...personalEdit, motherName:e.target.value})}
+          />
+
+        <input
+    placeholder="Blood Group"
+    value={personalEdit.bloodGroup}
+    onChange={(e)=>setPersonalEdit({...personalEdit, bloodGroup:e.target.value})}
+  />
+<div className={styles.addressBox}>
+  <label className={styles.addressLabel}>📍 Address Details</label>
+
+  {/* Address Line */}
+  <textarea
+    className={styles.addressTextarea}
+    placeholder="House / Flat / Street / Area"
+    value={personalEdit.address || ""}
+    onChange={(e) =>
+      setPersonalEdit({ ...personalEdit, address: e.target.value })
+    }
+  />
+
+  {/* Row: Pincode + City */}
+  <div className={styles.addressRow}>
+    <input
+      className={styles.input}
+      placeholder="Pincode"
+      value={personalEdit.pincode || ""}
+      maxLength={6}
+      onChange={async (e) => {
+        const pin = e.target.value;
+
+        setPersonalEdit({ ...personalEdit, pincode: pin });
+
+        // ✅ Auto-fetch like Google Maps
+        if (pin.length === 6) {
+          try {
+            const res = await fetch(`https://api.postalpincode.in/pincode/${pin}`);
+            const data = await res.json();
+
+            if (data[0]?.Status === "Success") {
+              const postOffice = data[0].PostOffice[0];
+
+              setPersonalEdit(prev => ({
+                ...prev,
+                city: postOffice.District || "",
+                district: postOffice.District || "",
+                state: postOffice.State || ""
+              }));
+            }
+          } catch (err) {
+            console.error("Pincode fetch error:", err);
+          }
+        }
+      }}
+    />
+
+    <input
+      className={styles.input}
+      placeholder="City"
+      value={personalEdit.city || ""}
+      onChange={(e) =>
+        setPersonalEdit({ ...personalEdit, city: e.target.value })
+      }
+    />
+  </div>
+
+  {/* Row: District + State */}
+  <div className={styles.addressRow}>
+    <input
+      className={styles.input}
+      placeholder="District"
+      value={personalEdit.district || ""}
+      readOnly
+    />
+
+    <input
+      className={styles.input}
+      placeholder="State"
+      value={personalEdit.state || ""}
+      readOnly
+    />
+  </div>
+</div>
+
+  <input
+    placeholder="Bank Account Number"
+    value={personalEdit.bankAccountNumber || ""}
+    onChange={(e) => setPersonalEdit({ ...personalEdit, bankAccountNumber: e.target.value })}
+  />
+
+  <input
+    placeholder="IFSC Code"
+    value={personalEdit.ifsc || ""}
+    onChange={(e) => setPersonalEdit({ ...personalEdit, ifsc: e.target.value })}
+  />
+
+
+          
+ 
+
+
+        </div>
+
+        <div className={styles.modalActions}>
+          <button
+            className={styles.saveBtn}
+            onClick={async () => {
+              try {
+                // ✅ SAVE TO BACKEND instead of localStorage
+                const employeeId = employee.id || localStorage.getItem("empId");
+                if (!employeeId) {
+                  alert("❌ Employee ID not found");
+                  return;
+                }
+
+                // Update via backend API
+                await updateEmployee(employeeId, {
+                  fullName: personalEdit.name,
+                  dob: personalEdit.dob,
+                  email: personalEdit.email,
+                  phone: personalEdit.phone,
+                  fatherName: personalEdit.fatherName,
+                  motherName: personalEdit.motherName,
+                  bloodGroup: personalEdit.bloodGroup,
+                  city: personalEdit.city,
+                  district: personalEdit.district,
+                  state: personalEdit.state,
+                  pincode: personalEdit.pincode,
+                  address: personalEdit.address,
+                  bankAccountNumber: personalEdit.bankAccountNumber,
+                  ifsc: personalEdit.ifsc,
+                });
+
+                // Refresh profile data from backend
+                await refreshProfile();
+                
+                alert("✅ Personal information updated successfully!");
+                setShowEditModal(false);
+              } catch (error) {
+                console.error("❌ Failed to update personal info:", error);
+                alert("❌ Failed to update: " + (error.message || "Unknown error"));
+              }
+            }}
+          >
+            Save
+          </button>
+
+    <button
+  className={styles.cancelBtn}
+  onClick={() => {
+    // ✅ RESET to original profileData (from backend)
+    if (profileData) {
+      setPersonalEdit({
+        name: profileData?.fullName || profileData?.empName || profileData?.name || "",
+        dob: profileData?.dob || "",
+        email: profileData?.email || "",
+        phone: profileData?.phone || "",
+        fatherName: profileData?.fatherName || "",
+        motherName: profileData?.motherName || "",
+        bloodGroup: profileData?.bloodGroup || "",
+        city: profileData?.city || "",
+        district: profileData?.district || "",
+        state: profileData?.state || "",
+        pincode: profileData?.pincode || "",
+        address: profileData?.address || "",
+        bankAccountNumber: profileData?.bankAccountNumber || "",
+        ifsc: profileData?.ifsc || "",
+      });
+    }
+    setShowEditModal(false);
+  }}
+>
+  Cancel
+</button>
+        </div>
+      </div>
+    </div>
+  )}
+  {showJobModal && (
+    <div className={styles.modalOverlay}>
+      <div className={styles.modal}>
+        <h3>Edit Job Details</h3>
+
+        <div className={styles.formGrid}>
+
+          <input
+            placeholder="Designation"
+            value={jobEdit.designation}
+            onChange={(e)=>setJobEdit({...jobEdit, designation:e.target.value})}
+          />
+
+          <input
+            placeholder="Department"
+            value={jobEdit.department}
+            onChange={(e)=>setJobEdit({...jobEdit, department:e.target.value})}
+          />
+
+          <input
+            placeholder="PF (Provident Fund)"
+            value={jobEdit.pf}
+            onChange={(e)=>setJobEdit({...jobEdit, pf:e.target.value})}
+          />
+
+          <input
+            placeholder="UAN (Universal Account Number)"
+            value={jobEdit.uan}
+            onChange={(e)=>setJobEdit({...jobEdit, uan:e.target.value})}
+          />
+
+          <input
+            placeholder="ESIC (Employees' State Insurance)"
+            value={jobEdit.esic}
+            onChange={(e)=>setJobEdit({...jobEdit, esic:e.target.value})}
+          />
+
+          <input
+            type="date"
+            value={jobEdit.joiningDate}
+            onChange={(e)=>setJobEdit({...jobEdit, joiningDate:e.target.value})}
+          />
+
+          <input
+            placeholder="Total Experience"
+            value={jobEdit.totalExp}
+            onChange={(e)=>setJobEdit({...jobEdit, totalExp:e.target.value})}
+          />
+
+          <input
+            placeholder="Current Experience"
+            value={jobEdit.currentExp}
+            onChange={(e)=>setJobEdit({...jobEdit, currentExp:e.target.value})}
+          />
+
+          <input
+            placeholder="Employment Type"
+            value={jobEdit.employmentType}
+            onChange={(e)=>setJobEdit({...jobEdit, employmentType:e.target.value})}
+          />
+
+          <input
+            placeholder="Work Location"
+            value={jobEdit.location}
+            onChange={(e)=>setJobEdit({...jobEdit, location:e.target.value})}
+          />
+
+          <input
+            placeholder="Manager"
+            value={jobEdit.manager}
+            onChange={(e)=>setJobEdit({...jobEdit, manager:e.target.value})}
+          />
+
+          <input
+            placeholder="HR Partner"
+            value={jobEdit.hr}
+            onChange={(e)=>setJobEdit({...jobEdit, hr:e.target.value})}
+          />
+
+        </div>
+
+        <div className={styles.modalActions}>
+         <button
+  type="button"
+  className={styles.saveBtn}
+  onClick={async (e) => {
+    e.preventDefault();
+    console.log("🔥 SAVE CLICKED");   // ✅ ADD THIS
+
+    try {
+      console.log("Sending data:", jobEdit);  // ✅ ADD THIS
+
+      const response = await updateJobDetails({
+  designation:     jobEdit.designation,
+  department:      jobEdit.department,
+  joiningDate:     jobEdit.joiningDate,
+  totalExp:        jobEdit.totalExp,
+  currentExp:      jobEdit.currentExp,
+  pf:              jobEdit.pf,
+  uan:             jobEdit.uan,
+  esic:            jobEdit.esic,
+  employmentType:  jobEdit.employmentType,
+  location:        jobEdit.location,
+  managerName:     jobEdit.manager,   // map frontend key → backend field
+  hrName:          jobEdit.hr,        // map frontend key → backend field
+});
+
+      console.log("API RESPONSE:", response); // ✅ ADD THIS
+
+      setJobEdit({
+        designation:    response?.designation    || jobEdit.designation,
+        department:     response?.department     || jobEdit.department,
+        joiningDate:    response?.joiningDate    || jobEdit.joiningDate,
+        totalExp:       response?.totalExp       || jobEdit.totalExp,
+        currentExp:     response?.currentExp     || jobEdit.currentExp,
+        pf:             response?.pf             || jobEdit.pf,
+        uan:            response?.uan            || jobEdit.uan,
+        esic:           response?.esic           || jobEdit.esic,
+        employmentType: response?.employmentType || jobEdit.employmentType,
+        location:       response?.location       || jobEdit.location,
+        manager:        response?.managerName    || jobEdit.manager,
+        hr:             response?.hrName         || jobEdit.hr,
+      });
+
+      // ✅ Refresh profile data from backend (no need for localStorage)
+      await refreshProfile();
+
+      alert("Job details updated successfully ✅");
+      setShowJobModal(false);
+
+    } catch (err) {
+      console.error("❌ Job update error:", err);
+      alert(err.message || "Failed to update job details ❌");
+    }
+  }}
+>
+  Save
+</button>
+
+         <button
+  className={styles.cancelBtn}
+ onClick={() => {
+  // ✅ RESET to original profileData (from backend)
+  if (profileData) {
+    setJobEdit({
+      designation: profileData?.designation || "",
+      department: profileData?.department || "",
+      joiningDate: profileData?.joiningDate || "",
+      totalExp: profileData?.totalExp || "",
+      currentExp: profileData?.currentExp || "",
+      employmentType: profileData?.employmentType || "Full-Time",
+      location: profileData?.location || "Bangalore",
+      manager: profileData?.managerName || "",
+      hr: profileData?.hrName || "",
+      pf: profileData?.pf || "",
+      uan: profileData?.uan || "",
+      esic: profileData?.esic || "",
+      pfMemberId: profileData?.pfMemberId || "",
+      designationChanged: profileData?.designationChanged || "",
+      designationChangedDate: profileData?.designationChangedDate || "",
+    });
+  }
+  setShowJobModal(false);
+}}
+>
+  Cancel
+</button>
+        </div>
+      </div>
+    </div>
+  )}
+  </div>
+
+  <div className={styles.profileSectionCard}>
+    <div className={styles.sectionHeader}>
+      <h3>Job Details</h3>
+    {role === "ADMIN" && (
+  <button
+    className={styles.editBtn}
+    onClick={() => setShowJobModal(true)}
+  >
+    Edit
+  </button>
+)}
+    </div>
+
+    <div className={styles.infoGrid}>
+      <p><strong>Designation:</strong> {jobEdit.designation}</p>
+      <p><strong>Department:</strong> {jobEdit.department}</p>
+      <p><strong>PF:</strong> {jobEdit.pf || "N/A"}</p>
+      <p><strong>UAN:</strong> {jobEdit.uan || "N/A"}</p>
+      <p><strong>ESIC:</strong> {jobEdit.esic || "N/A"}</p>
+      <p><strong>PF Member ID:</strong> {jobEdit.pfMemberId || "N/A"}</p>
+      <p><strong>Designation Changed:</strong> {jobEdit.designationChanged || "N/A"}</p>
+      <p><strong>Designation Changed Date:</strong> {jobEdit.designationChangedDate || "N/A"}</p>
+      <p><strong>Date of Joining:</strong> {jobEdit.joiningDate}</p>
+      <p><strong>Total Experience:</strong> {jobEdit.totalExp}</p>
+      <p><strong>Current Experience:</strong> {jobEdit.currentExp}</p>
+      <p><strong>Employment Type:</strong> {jobEdit.employmentType}</p>
+      <p><strong>Work Location:</strong> {jobEdit.location}</p>
+      <p><strong>Manager:</strong> {jobEdit.manager}</p>
+      <p><strong>HR Partner:</strong> {jobEdit.hr}</p>
+    </div>
+
+   
+  </div>
+
+                 <div className={styles.profileSectionCard}>
+  <h3>Reporting Structure</h3>
+
+  {reporting.map((r, i) => (
+    <div key={i} className={styles.reportRow}>
+      <div className={styles.avatar}></div>
+
+      <div>
+        <p className={styles.reportName}>{r.name}</p>
+        <span>{r.role}</span>
+      </div>
+    </div>
+  ))}
+</div>
+
+                  <div className={styles.profileSectionCard}>
+                    <h3>Documents</h3>
+                    {documents.length === 0 ? (
+                      <p style={{ color: "#888", fontSize: "14px" }}>No documents uploaded yet.</p>
+                    ) : (
+                      documents.map((doc, i) => (
+                        <div key={i} className={styles.docRow}>
+                          <div>
+                            <p className={styles.docName}>{doc.name}</p>
+                            <span className={styles.docDate}>Uploaded</span>
+                          </div>
+                          <div style={{ display: "flex", gap: "8px" }}>
+                            <button
+                              className={styles.downloadBtn}
+                              onClick={() => viewDocument(doc.data, doc.name)}
+                              style={{ background: "#2563eb" }}
+                            >
+                              View
+                            </button>
+                            <button
+                              className={styles.downloadBtn}
+                              onClick={() => downloadDocument(doc.data, doc.name)}
+                            >
+                              Download
+                            </button>
+                          </div>
+                        </div>
+                      ))
+                    )}
+                  </div>
+
+                </div>
+              )}
+
+              {/* ================= COMPENSATION ================= */}
+              {view === "compensation" && (
+                <>
+                <div className={styles.profileSectionCard}>
+                  <h4 style={{ marginTop: "20px" }}>
+                    Previous Year Appraisal
+                  </h4>
+
+                  <table className={styles.table}>
+                    <thead>
+                      <tr>
+                        <th>Year</th>
+                        <th>Rating</th>
+                        <th>Hike</th>
+                        <th>Hike Value</th>
+                        <th>Revised CTC</th>
+                        <th>Remarks</th>
+                        <th>Letter</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {Array.isArray(employee.appraisalHistory) && employee.appraisalHistory.length > 0 ? (
+                        // Show full history — sorted newest first
+                        [...employee.appraisalHistory]
+                          .sort((a, b) => (b.hikeYear || "").localeCompare(a.hikeYear || ""))
+                          .map((rec, idx) => (
+                            <tr key={idx}>
+                              <td>{rec.hikeYear || "—"}</td>
+                              <td>{rec.appraisalRating || "—"}</td>
+                              <td>{rec.hikePercent ? `${rec.hikePercent}%` : "—"}</td>
+                              <td>{rec.hikeValue ? `₹${Number(rec.hikeValue).toLocaleString("en-IN")}` : "—"}</td>
+                              <td>{rec.ctcAfterHike ? `₹${Number(rec.ctcAfterHike).toLocaleString("en-IN")}` : "—"}</td>
+                              <td>{rec.appraisalRemarks || "—"}</td>
+                              <td>
+                                <button
+                                  className={styles.downloadBtn}
+                                  style={{ fontSize: "12px", padding: "4px 10px" }}
+                                  onClick={() => downloadPDF(employee, rec)}
+                                >
+                                  ⬇ Download
+                                </button>
+                              </td>
+                            </tr>
+                          ))
+                      ) : employee.hikeYear ? (
+                        // Fallback: show single flat record if no history array yet
+                        <tr>
+                          <td>{employee.hikeYear}</td>
+                          <td>{employee.appraisalRating || "—"}</td>
+                          <td>{employee.hikePercent ? `${employee.hikePercent}%` : "—"}</td>
+                          <td>{employee.hikeValue ? `₹${Number(employee.hikeValue).toLocaleString("en-IN")}` : "—"}</td>
+                          <td>{employee.ctc ? `₹${Number(employee.ctc).toLocaleString("en-IN")}` : "—"}</td>
+                          <td>{employee.appraisalRemarks || "—"}</td>
+                          <td>
+                            <button
+                              className={styles.downloadBtn}
+                              style={{ fontSize: "12px", padding: "4px 10px" }}
+                              onClick={() => downloadPDF(employee)}
+                            >
+                              ⬇ Download
+                            </button>
+                          </td>
+                        </tr>
+                      ) : (
+                        <tr>
+                          <td colSpan={7} style={{ textAlign: "center", color: "#999", padding: "16px" }}>
+                            No appraisal data available
+                          </td>
+                        </tr>
+                      )}
+                    </tbody>
+                  </table>
+
+                  {/* Appraisal Edit Modal — Admin only */}
+                  {showAppraisalEditModal && role === "ADMIN" && (
+                    <div style={{
+                      position: "fixed", inset: 0, background: "rgba(0,0,0,0.5)",
+                      display: "flex", alignItems: "center", justifyContent: "center", zIndex: 9999
+                    }}>
+                      <div style={{
+                        background: "#fff", borderRadius: "12px", padding: "28px",
+                        width: "420px", boxShadow: "0 8px 32px rgba(0,0,0,0.2)"
+                      }}>
+                        <h3 style={{ marginBottom: "4px" }}>Edit Appraisal</h3>
+                        <p style={{ fontSize: "13px", color: "#666", marginBottom: "18px" }}>
+                          {selectedEmployee?.fullName || selectedEmployee?.empName || selectedEmployee?.name || "Employee"} &nbsp;•&nbsp;
+                          {selectedEmployee?.employeeId || selectedEmployee?.id}
+                        </p>
+
+                        {[
+                          { label: "Hike Year", key: "hikeYear", placeholder: "e.g. 2024" },
+                          { label: "Rating", key: "appraisalRating", placeholder: "e.g. Exceeds Expectations" },
+                          { label: "Hike %", key: "hikePercent", placeholder: "e.g. 18" },
+                          { label: "Hike Value (₹)", key: "hikeValue", placeholder: "e.g. 90000" },
+                          { label: "Remarks", key: "appraisalRemarks", placeholder: "e.g. Outstanding performance" },
+                          { label: "CTC (₹)", key: "ctc", placeholder: "e.g. 600000" },
+                        ].map(({ label, key, placeholder }) => (
+                          <div key={key} style={{ marginBottom: "12px" }}>
+                            <label style={{ fontSize: "13px", fontWeight: 600, display: "block", marginBottom: "4px" }}>
+                              {label}
+                            </label>
+                            <input
+                              type="text"
+                              value={appraisalEdit[key]}
+                              placeholder={placeholder}
+                              onChange={(e) =>
+                                setAppraisalEdit((prev) => ({ ...prev, [key]: e.target.value }))
+                              }
+                              style={{
+                                width: "100%", padding: "8px 10px", border: "1px solid #ddd",
+                                borderRadius: "6px", fontSize: "14px", boxSizing: "border-box"
+                              }}
+                            />
+                          </div>
+                        ))}
+
+                        <div style={{ display: "flex", gap: "10px", marginTop: "18px" }}>
+                          <button
+                            style={{
+                              flex: 1, padding: "9px", background: "#4f46e5", color: "#fff",
+                              border: "none", borderRadius: "7px", cursor: "pointer", fontWeight: 600
+                            }}
+                            onClick={async () => {
+                              try {
+                                // Save to the SELECTED employee (from the table row), not the logged-in admin
+                                const empId = selectedEmployee?.employeeId || selectedEmployee?.id;
+                                await updateEmployee(empId, {
+                                  email: selectedEmployee?.email || "", // ✅ send email for backend fallback lookup
+                                  hikeYear: appraisalEdit.hikeYear,
+                                  appraisalRating: appraisalEdit.appraisalRating,
+                                  hikePercent: appraisalEdit.hikePercent,
+                                  hikeValue: appraisalEdit.hikeValue,
+                                  appraisalRemarks: appraisalEdit.appraisalRemarks,
+                                  ctc: appraisalEdit.ctc,
+                                });
+                                // Refresh the employees list so table reflects new values
+                                const updated = await getAllEmployees();
+                                const empList = Array.isArray(updated) ? updated : (updated?.data || []);
+                                setAllEmployees(empList);
+                                setShowAppraisalEditModal(false);
+                                setSelectedEmployee(null);
+                              } catch (err) {
+                                console.error("Appraisal update failed:", err);
+                                alert("Failed to save: " + err.message);
+                              }
+                            }}
+                          >
+                            Save
+                          </button>
+                          <button
+                            style={{
+                              flex: 1, padding: "9px", background: "#f3f4f6", color: "#333",
+                              border: "1px solid #ddd", borderRadius: "7px", cursor: "pointer"
+                            }}
+                            onClick={() => {
+                              setShowAppraisalEditModal(false);
+                              setSelectedEmployee(null);
+                            }}
+                          >
+                            Cancel
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Increment Letter — one entry per appraisal history year */}
+                  <h4 style={{ marginTop: "24px" }}>
+                    Increment Letters
+                  </h4>
+
+                  {(Array.isArray(employee.appraisalHistory) && employee.appraisalHistory.length > 0
+                    ? [...employee.appraisalHistory].sort((a, b) => (b.hikeYear || "").localeCompare(a.hikeYear || ""))
+                    : employee.hikeYear
+                      ? [{ hikeYear: employee.hikeYear, hikePercent: employee.hikePercent, hikeValue: employee.hikeValue, appraisalRating: employee.appraisalRating, appraisalRemarks: employee.appraisalRemarks }]
+                      : []
+                  ).map((rec, idx) => (
+                    <div key={idx} className={styles.docRow}>
+                      <div>
+                        <p className={styles.docName}>Increment_Letter_{rec.hikeYear}.html</p>
+                        <span className={styles.docDate}>Appraisal Year: {rec.hikeYear}</span>
+                      </div>
+                      <div>
+                        <button
+                          className={styles.downloadBtn}
+                          onClick={() => {
+                            setSelectedEmployee({ ...employee, ...rec, _historyRecord: rec });
+                            setShowIncrementLetter(true);
+                          }}
+                        >
+                          View
+                        </button>
+                        <button
+                          className={styles.downloadBtn}
+                          style={{ marginLeft: "8px" }}
+                          onClick={() => downloadPDF(employee, rec)}
+                        >
+                          Download
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                  {(!employee.hikeYear && !(Array.isArray(employee.appraisalHistory) && employee.appraisalHistory.length > 0)) && (
+                    <p style={{ color: "#999", fontSize: "14px" }}>No increment letters available yet.</p>
+                  )}
+                   </div>
+                 {showIncrementLetter && selectedEmployee && (
+  <div className={styles.incrementPreview}>
+    
+    <div style={{ textAlign: "center", marginBottom: "20px" }}>
+      <h2>💼 Salary Revision Letter</h2>
+      <p style={{ color: "#888" }}>Human Resources Department</p>
+      <hr />
+    </div>
+
+    <p><strong>Date:</strong> 01 January {selectedEmployee.hikeYear || new Date().getFullYear()}</p>
+
+    <p>
+      Dear <strong>{selectedEmployee.fullName || selectedEmployee.empName || selectedEmployee.name}</strong>,
+    </p>
+
+    <p>
+      We are pleased to inform you that based on your performance,
+      your compensation has been revised as follows:
+    </p>
+
+    <div style={{ marginTop: "15px", lineHeight: "1.8" }}>
+      <p><strong>Employee ID:</strong> {selectedEmployee.employeeId || selectedEmployee.id}</p>
+      <p><strong>Department:</strong> {selectedEmployee.department}</p>
+      <p><strong>Designation:</strong> {selectedEmployee.designation}</p>
+
+      <hr />
+
+      <p><strong>Hike Percentage:</strong> {selectedEmployee.hikePercent ? `${selectedEmployee.hikePercent}%` : "0%"}</p>
+      <p><strong>Hike Value:</strong> {selectedEmployee.hikeValue ? `₹${Number(selectedEmployee.hikeValue).toLocaleString("en-IN")}` : "0"}</p>
+
+      <hr />
+
+      <p>
+        <strong>Revised CTC:</strong>{" "}
+        {selectedEmployee.ctcAfterHike
+          ? `₹${Number(selectedEmployee.ctcAfterHike).toLocaleString("en-IN")}`
+          : selectedEmployee.ctc && selectedEmployee.hikeValue
+            ? `₹${(Number(selectedEmployee.ctc) + Number(selectedEmployee.hikeValue)).toLocaleString("en-IN")}`
+            : "N/A"}
+      </p>
+      {selectedEmployee.appraisalRating && (
+        <p><strong>Appraisal Rating:</strong> {selectedEmployee.appraisalRating}</p>
+      )}
+      {selectedEmployee.appraisalRemarks && (
+        <p><strong>Remarks:</strong> {selectedEmployee.appraisalRemarks}</p>
+      )}
+    </div>
+
+    <p style={{ marginTop: "20px" }}>
+      This revision reflects your contribution and performance in the organization.
+    </p>
+
+    <p>
+      Regards,<br />
+      <strong>Human Resources Team</strong>
+    </p>
+
+    <button
+      className={styles.closePreviewBtn}
+      onClick={() => {
+        setShowIncrementLetter(false);
+        setSelectedEmployee(null);
+      }}
+    >
+      Close
+    </button>
+  </div>
+)}
+
+                  {role === "ADMIN" && (
+    <>
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginTop: "20px", marginBottom: "12px" }}>
+        <h4 style={{ margin: 0 }}>Employee Compensation Tracking</h4>
+        <button
+          style={{
+            padding: "5px 12px", background: "transparent", color: "#6b7280",
+            border: "1px solid #d1d5db", borderRadius: "6px", cursor: "pointer",
+            fontSize: "12px", fontWeight: 500, display: "flex", alignItems: "center", gap: "4px"
+          }}
+          onClick={async () => {
+            if (!window.confirm("Seed last 2 years (2024 & 2025) dummy appraisal data for all employees?")) return;
+            try {
+              const result = await seedAppraisalHistory();
+              alert(`Done! ${result.employeesUpdated} employees updated with years: ${result.yearsAdded?.join(", ")}`);
+              // Refresh employee list
+              const updated = await getAllEmployees();
+              const empList = Array.isArray(updated) ? updated : (updated?.data || []);
+              setAllEmployees(empList);
+            } catch (err) {
+              alert("Seed failed: " + err.message);
+            }
+          }}
+        >
+          🌱 Seed Test Data
+        </button>
+      </div>
+     <div className={styles.compensationTableWrapper}>
+      <table className={styles.table}>
+      <thead>
+  <tr>
+
+    <th className={styles.filterHeader}>
+      Emp ID
+     <span
+     
+  className={styles.filterIcon}
+  onClick={(e) => {
+    e.stopPropagation();
+    setActiveFilter(
+      activeFilter === "employeeId"
+        ? null
+        : "employeeId"
+    )
+  }}
+>
+  ▼
+</span>
+{activeFilter === "employeeId" && (
+    <div
+        ref={popupRef}
+      className={styles.popup}
+    >
+      <input
+        className={styles.excelSearch}
+        placeholder="Search"
+        value={compensationFilterText}
+        onChange={(e) => setCompensationFilterText(e.target.value)}
+      />
+
+     <div className={styles.excelList}>
+  <label className={styles.excelItem}>
+    <input 
+      type="checkbox"
+      checked={!columnFilters.employeeId || columnFilters.employeeId?.length === [...new Set(allEmployees.map(e => e.employeeId || e.id))].length}
+      onChange={(e) => {
+        if (e.target.checked) {
+          setColumnFilters({...columnFilters, employeeId: [...new Set(allEmployees.map(emp => emp.employeeId || emp.id))]});
+        } else {
+          setColumnFilters({...columnFilters, employeeId: []});
+        }
+      }}
+    />
+    <span>(Select All)</span>
+  </label>
+
+  {Array.isArray(allEmployees) &&
+    [...new Set(allEmployees.map(e => e.employeeId || e.id))]
+      .filter(v => String(v).toLowerCase().includes(compensationFilterText.toLowerCase()))
+      .map((empId, index) => {
+        const selectedValues = columnFilters.employeeId || [...new Set(allEmployees.map(e => e.employeeId || e.id))];
+        return (
+          <label
+            key={index}
+            className={styles.excelItem}
+          >
+            <input 
+              type="checkbox"
+              checked={selectedValues.includes(empId)}
+              onChange={(e) => {
+                let updated = [...selectedValues];
+                if (e.target.checked) {
+                  updated.push(empId);
+                } else {
+                  updated = updated.filter((v) => v !== empId);
+                }
+                setColumnFilters({...columnFilters, employeeId: updated});
+              }}
+            />
+            <span>{empId}</span>
+          </label>
+        );
+      })}
+</div>
+
+      <div className={styles.excelActions}>
+  <button
+    onClick={() => setActiveFilter(null)}
+  >
+    OK
+  </button>
+
+  <button
+    onClick={() => {
+      const newFilters = {...columnFilters};
+      delete newFilters.employeeId;
+      setColumnFilters(newFilters);
+      setActiveFilter(null);
+    }}
+  >
+    Cancel
+  </button>
+</div>
+    </div>
+  )}
+</th>
+   
+
+    <th className={styles.filterHeader}>
+      Employee Name
+     <span
+  className={styles.filterIcon}
+  onClick={(e) => {
+    e.stopPropagation();
+    setActiveFilter(
+      activeFilter === "empName"
+        ? null
+        : "empName"
+    )
+  }}
+>
+  ▼
+</span>
+{activeFilter === "empName" && (
+    <div
+       ref={popupRef}
+      className={styles.popup}
+    >
+      <input
+        className={styles.excelSearch}
+        placeholder="Search"
+        value={compensationFilterText}
+        onChange={(e) => setCompensationFilterText(e.target.value)}
+      />
+
+    <div className={styles.excelList}>
+  <label className={styles.excelItem}>
+    <input
+      type="checkbox"
+      checked={!columnFilters.empName || columnFilters.empName?.length === [...new Set(allEmployees.map(e => e.empName || e.name || e.fullName))].length}
+      onChange={(e) => {
+        if (e.target.checked) {
+          setColumnFilters({...columnFilters, empName: [...new Set(allEmployees.map(emp => emp.empName || emp.name || emp.fullName))]});
+        } else {
+          setColumnFilters({...columnFilters, empName: []});
+        }
+      }}
+    />
+    <span>(Select All)</span>
+  </label>
+
+  {Array.isArray(allEmployees) &&
+    [...new Set(allEmployees.map(e => e.empName || e.name || e.fullName))]
+      .filter(v => String(v).toLowerCase().includes(compensationFilterText.toLowerCase()))
+      .map((empName, index) => {
+        const selectedValues = columnFilters.empName || [...new Set(allEmployees.map(e => e.empName || e.name || e.fullName))];
+        return (
+          <label
+            key={index}
+            className={styles.excelItem}
+          >
+            <input
+              type="checkbox"
+              checked={selectedValues.includes(empName)}
+              onChange={(e) => {
+                let updated = [...selectedValues];
+                if (e.target.checked) {
+                  updated.push(empName);
+                } else {
+                  updated = updated.filter((v) => v !== empName);
+                }
+                setColumnFilters({...columnFilters, empName: updated});
+              }}
+            />
+            <span>{empName}</span>
+          </label>
+        );
+      })}
+</div>
+
+      <div className={styles.excelActions}>
+  <button
+    onClick={() => setActiveFilter(null)}
+  >
+    OK
+  </button>
+
+  <button
+    onClick={() => {
+      const newFilters = {...columnFilters};
+      delete newFilters.empName;
+      setColumnFilters(newFilters);
+      setActiveFilter(null);
+    }}
+  >
+    Cancel
+  </button>
+</div>
+    </div>
+  )}
+</th>
+   
+
+
+    <th className={styles.filterHeader}>
+      DOJ
+    <span
+  className={styles.filterIcon}
+   onClick={(e) => {
+    e.stopPropagation();
+    setActiveFilter(
+      activeFilter === "doj"
+        ? null
+        : "doj"
+    )
+  }}
+>
+  ▼
+</span>
+{activeFilter === "doj" && (
+    <div
+        ref={popupRef}
+      className={styles.popup}
+    >
+      <input
+        className={styles.excelSearch}
+        placeholder="Search"
+      />
+
+      <div className={styles.excelList}>
+  <label className={styles.excelItem}>
+    <input type="checkbox" />
+    Select All
+  </label>
+
+  {Array.isArray(allEmployees) &&
+    allEmployees.map((emp, index) => (
+      <label
+        key={index}
+        className={styles.excelItem}
+      >
+        <input type="checkbox" />
+        {emp.employeeId || emp.id}
+      </label>
+    ))}
+</div>
+
+      <div className={styles.excelActions}>
+       <div className={styles.excelActions}>
+  <button
+    onClick={() => setActiveFilter(null)}
+  >
+    OK
+  </button>
+
+  <button
+    onClick={() => setActiveFilter(null)}
+  >
+    Cancel
+  </button>
+</div>
+      </div>
+    </div>
+  )}
+</th>
+
+    <th className={styles.filterHeader}>
+      Tenure
+    <span
+  className={styles.filterIcon}
+   onClick={(e) => {
+    e.stopPropagation();
+    setActiveFilter(
+      activeFilter === "tenure"
+        ? null
+        : "tenure"
+    )
+  }}
+>
+  ▼
+</span>
+{activeFilter === "tenure" && (
+    <div
+       ref={popupRef}
+      className={styles.popup}
+    >
+      <input
+        className={styles.excelSearch}
+        placeholder="Search"
+      />
+
+    <div className={styles.excelList}>
+  <label className={styles.excelItem}>
+    <input type="checkbox" />
+    Select All
+  </label>
+
+  {Array.isArray(allEmployees) &&
+    allEmployees.map((emp, index) => (
+      <label
+        key={index}
+        className={styles.excelItem}
+      >
+        <input type="checkbox" />
+        {emp.employeeId || emp.id}
+      </label>
+    ))}
+</div>
+
+      <div className={styles.excelActions}>
+       <div className={styles.excelActions}>
+  <button
+    onClick={() => setActiveFilter(null)}
+  >
+    OK
+  </button>
+
+  <button
+    onClick={() => setActiveFilter(null)}
+  >
+    Cancel
+  </button>
+</div>
+      </div>
+    </div>
+  )}
+</th>
+
+    <th className={styles.filterHeader}>
+      CTC
+     <span
+  className={styles.filterIcon}
+  onClick={(e) => {
+    e.stopPropagation();
+    setActiveFilter(
+      activeFilter === "ctc"
+        ? null
+        : "ctc"
+    )
+  }}
+>
+  ▼
+</span>
+
+   {activeFilter === "ctc" && (
+    <div
+       ref={popupRef}  
+      className={styles.popup}
+    >
+      <input
+        className={styles.excelSearch}
+        placeholder="Search"
+      />
+
+     <div className={styles.excelList}>
+  <label className={styles.excelItem}>
+    <input type="checkbox" />
+    Select All
+  </label>
+
+  {Array.isArray(allEmployees) &&
+    allEmployees.map((emp, index) => (
+      <label
+        key={index}
+        className={styles.excelItem}
+      >
+        <input type="checkbox" />
+        {emp.employeeId || emp.id}
+      </label>
+    ))}
+</div>
+
+      <div className={styles.excelActions}>
+      <div className={styles.excelActions}>
+  <button
+    onClick={() => setActiveFilter(null)}
+  >
+    OK
+  </button>
+
+  <button
+    onClick={() => setActiveFilter(null)}
+  >
+    Cancel
+  </button>
+</div>
+      </div>
+    </div>
+  )}
+</th>
+
+    <th className={styles.filterHeader}>
+      Hike Value
+      <span
+  className={styles.filterIcon}
+  onClick={(e) => {
+    e.stopPropagation();
+    setActiveFilter(
+      activeFilter === "hike value"
+        ? null
+        : "hike value"
+    )
+  }}
+>
+  ▼
+</span>
+{activeFilter === "hike value" && (
+    <div
+      ref={popupRef}
+      className={styles.popup}
+    >
+      <input
+        className={styles.excelSearch}
+        placeholder="Search"
+      />
+
+    <div className={styles.excelList}>
+  <label className={styles.excelItem}>
+    <input type="checkbox" />
+    Select All
+  </label>
+
+  {Array.isArray(allEmployees) &&
+    allEmployees.map((emp, index) => (
+      <label
+        key={index}
+        className={styles.excelItem}
+      >
+        <input type="checkbox" />
+        {emp.employeeId || emp.id}
+      </label>
+    ))}
+</div>
+
+      <div className={styles.excelActions}>
+<div className={styles.excelActions}>
+  <button
+    onClick={() => setActiveFilter(null)}
+  >
+    OK
+  </button>
+
+  <button
+    onClick={() => setActiveFilter(null)}
+  >
+    Cancel
+  </button>
+</div>
+      </div>
+    </div>
+  )}
+</th>
+
+    <th className={styles.filterHeader}>
+      Hike %
+     <span
+  className={styles.filterIcon}
+  onClick={(e) => {
+    e.stopPropagation();
+    setActiveFilter(
+      activeFilter === "hike %"
+        ? null
+        : "hike %"
+    )
+  }}
+>
+  ▼
+</span>
+{activeFilter === "hike %" && (
+    <div
+      ref={popupRef}
+      className={styles.popup}
+    >
+      <input
+        className={styles.excelSearch}
+        placeholder="Search"
+      />
+
+    <div className={styles.excelList}>
+  <label className={styles.excelItem}>
+    <input type="checkbox" />
+    Select All
+  </label>
+
+  {Array.isArray(allEmployees) &&
+    allEmployees.map((emp, index) => (
+      <label
+        key={index}
+        className={styles.excelItem}
+      >
+        <input type="checkbox" />
+        {emp.employeeId || emp.id}
+      </label>
+    ))}
+</div>
+
+      <div className={styles.excelActions}>
+<div className={styles.excelActions}>
+  <button
+    onClick={() => setActiveFilter(null)}
+  >
+    OK
+  </button>
+
+  <button
+    onClick={() => setActiveFilter(null)}
+  >
+    Cancel
+  </button>
+</div>
+      </div>
+    </div>
+  )}
+</th>
+    <th className={styles.filterHeader}>
+      Hike Year
+    <span
+  className={styles.filterIcon}
+  onClick={(e) => {
+    e.stopPropagation();
+    setActiveFilter(
+      activeFilter === "hike year"
+        ? null
+        : "hike year"
+    )
+  }}
+>
+  ▼
+</span>
+{activeFilter === "hike year" && (
+    <div
+        ref={popupRef}
+      className={styles.popup}
+    >
+      <input
+        className={styles.excelSearch}
+        placeholder="Search"
+      />
+
+    <div className={styles.excelList}>
+  <label className={styles.excelItem}>
+    <input type="checkbox" />
+    Select All
+  </label>
+
+  {Array.isArray(allEmployees) &&
+    allEmployees.map((emp, index) => (
+      <label
+        key={index}
+        className={styles.excelItem}
+      >
+        <input type="checkbox" />
+        {emp.employeeId || emp.id}
+      </label>
+    ))}
+</div>
+
+      <div className={styles.excelActions}>
+       <div className={styles.excelActions}>
+  <button
+    onClick={() => setActiveFilter(null)}
+  >
+    OK
+  </button>
+
+  <button
+    onClick={() => setActiveFilter(null)}
+  >
+    Cancel
+  </button>
+</div>
+      </div>
+    </div>
+  )}
+</th>
+
+    <th className={styles.filterHeader}>
+      Designation
+     <span
+  className={styles.filterIcon}
+  onClick={(e) => {
+    e.stopPropagation();
+    setActiveFilter(
+      activeFilter === "designation"
+        ? null
+        : "designation"
+    )
+  }}
+>
+  ▼
+</span>
+{activeFilter === "designation" && (
+    <div
+       ref={popupRef}
+      className={styles.popup}
+    >
+      <input
+        className={styles.excelSearch}
+        placeholder="Search"
+      />
+
+    <div className={styles.excelList}>
+  <label className={styles.excelItem}>
+    <input type="checkbox" />
+    Select All
+  </label>
+
+  {Array.isArray(allEmployees) &&
+    allEmployees.map((emp, index) => (
+      <label
+        key={index}
+        className={styles.excelItem}
+      >
+        <input type="checkbox" />
+        {emp.employeeId || emp.id}
+      </label>
+    ))}
+</div>
+
+      <div className={styles.excelActions}>
+       <div className={styles.excelActions}>
+  <button
+    onClick={() => setActiveFilter(null)}
+  >
+    OK
+  </button>
+
+  <button
+    onClick={() => setActiveFilter(null)}
+  >
+    Cancel
+  </button>
+</div>
+      </div>
+    </div>
+  )}
+</th>
+
+    <th className={styles.filterHeader}>
+      Department
+      <span
+  className={styles.filterIcon}
+  onClick={(e) => {
+    e.stopPropagation();
+    setActiveFilter(
+      activeFilter === "department"
+        ? null
+        : "department"
+    )
+  }}
+>
+  ▼
+</span>
+{activeFilter === "department" && (
+    <div
+       ref={popupRef}
+      className={styles.popup}
+    >
+      <input
+        className={styles.excelSearch}
+        placeholder="Search"
+      />
+
+     <div className={styles.excelList}>
+  <label className={styles.excelItem}>
+    <input type="checkbox" />
+    Select All
+  </label>
+
+  {Array.isArray(allEmployees) &&
+    allEmployees.map((emp, index) => (
+      <label
+        key={index}
+        className={styles.excelItem}
+      >
+        <input type="checkbox" />
+        {emp.employeeId || emp.id}
+      </label>
+    ))}
+</div>
+
+      <div className={styles.excelActions}>
+      <button>OK</button>
+      <div className={styles.excelActions}>
+  <button
+    onClick={() => setActiveFilter(null)}
+  >
+    OK
+  </button>
+
+  <button
+    onClick={() => setActiveFilter(null)}
+  >
+    Cancel
+  </button>
+</div>
+      </div>
+    </div>
+  )}
+</th>
+
+    <th>Increment Letter</th>
+    <th>Actions</th>
+  </tr>
+</thead>
+
+        <tbody>
+  {Array.isArray(allEmployees) &&
+filteredEmployees.map((emp, i) => (
+      <tr key={i}>
+       <td>{emp.employeeId || emp.id}</td>
+       
+      <td>{emp.empName || emp.name || emp.fullName || "N/A"}</td>
+       
+        <td>{emp.doj || emp.joiningDate}</td>
+        <td>{emp.tenure}</td>
+       
+         {/* NEW VALUES (adjust field names if backend differs) */}
+              <td>{emp.ctc || "-"}</td>
+              <td>{emp.hikeValue || "-"}</td>
+              <td>{emp.hikePercent || "-"}</td>
+              <td>{emp.hikeYear || "-"}</td>
+        <td>{emp.designation}</td>
+        <td>{emp.department}</td>
+
+        <td>{emp.incrementLetter || "Available"}</td>
+
+       <td>
+  <div className={styles.actionGroup}>
+    <button
+      className={styles.viewBtn}
+     onClick={() => {
+  setSelectedEmployee(emp || {});
+  setTimeout(() => {
+    setShowIncrementLetter(true);
+  }, 0);
+}}
+    >
+      👁 View
+    </button>
+
+    <button
+      className={styles.downloadBtn}
+      onClick={() => downloadPDF(emp)}
+    >
+      ⬇ Download
+    </button>
+
+    {role === "ADMIN" && (
+      <button
+        className={styles.viewBtn}
+        style={{ background: "#4f46e5", color: "#fff", border: "none" }}
+        onClick={() => {
+          setSelectedEmployee(emp || {});
+          setAppraisalEdit({
+            hikeYear: emp.hikeYear || "",
+            appraisalRating: emp.appraisalRating || "",
+            hikePercent: emp.hikePercent || "",
+            hikeValue: emp.hikeValue || "",
+            appraisalRemarks: emp.appraisalRemarks || "",
+            ctc: emp.ctc || "",
+          });
+          setShowAppraisalEditModal(true);
+        }}
+      >
+        ✏ Edit
+      </button>
+    )}
+  </div>
+</td>
+      </tr>
+    ))}
+  </tbody>
+      </table>
+      </div>
+    </>
+  )}
+                </>
+              )}
+
+              
+
+              {/* ================= RESIGNATION LETTER ================= */}
+              {view === "exit" && (
+                <div className={styles.profileSectionCard}>
+                  <h3>Resignation Letter</h3>
+
+                  {/* ===== EMPLOYEE VIEW ===== */}
+                  {role === "EMPLOYEE" && (
+                    <>
+                      {/* FORM - Only show if no resignation submitted */}
+                      {myResignations.length === 0 ? (
+                        <form className={styles.exitForm}>
+                          <label>Reason for Resignation</label>
+                          <textarea
+                            className={styles.input}
+                            required
+                            value={exitData.reason}
+                            onChange={(e) =>
+                              setExitData({ ...exitData, reason: e.target.value })
+                            }
+                          />
+
+                          <label>Remarks</label>
+                          <textarea
+                            className={styles.input}
+                            placeholder="Additional comments"
+                            value={exitData.remarks || ""}
+                            onChange={(e) =>
+                              setExitData({ ...exitData, remarks: e.target.value })
+                            }
+                          />
+
+                          <label>TO (Reporting Manager)</label>
+                          <div className={styles.gmailInputContainer}>
+                            <div className={styles.gmailChips}>
+                              {exitData.manager.map((u, idx) => (
+                                <span key={idx} className={styles.gmailChip}>
+                                  {u.name} &lt;{u.email}&gt;
+                                  <button 
+                                    type="button"
+                                    onClick={() => {
+                                      const updated = exitData.manager.filter((_, i) => i !== idx);
+                                      setExitData({ ...exitData, manager: updated });
+                                    }}
+                                  >
+                                    ×
+                                  </button>
+                                </span>
+                              ))}
+                              <input
+                                type="text"
+                                className={styles.gmailInput}
+                                placeholder={exitData.manager.length === 0 ? "Add recipients..." : ""}
+                                value={searchTo}
+                                onChange={(e) => setSearchTo(e.target.value)}
+                                onFocus={() => setSearchTo("")}
+                              />
+                            </div>
+
+                            {searchTo && searchTo.length >= 2 && (
+                              <div className={styles.gmailSuggestions}>
+                                {users
+                                  .filter(u =>
+                                    u.name.toLowerCase().includes(searchTo.toLowerCase()) ||
+                                    u.email.toLowerCase().includes(searchTo.toLowerCase())
+                                  )
+                                  .filter(u => !exitData.manager.find(x => x.id === u.id))
+                                  .slice(0, 5)
+                                  .map(u => (
+                                    <div
+                                      key={u.id}
+                                      className={styles.gmailSuggestionItem}
+                                      onClick={() => {
+                                        setExitData({
+                                          ...exitData,
+                                          manager: [...exitData.manager, u]
+                                        });
+                                        setSearchTo("");
+                                      }}
+                                    >
+                                      <div className={styles.suggestionName}>{u.name}</div>
+                                      <div className={styles.suggestionEmail}>{u.email}</div>
+                                    </div>
+                                  ))}
+                              </div>
+                            )}
+                          </div>
+
+                          <label>CC</label>
+                          <div className={styles.gmailInputContainer}>
+                            <div className={styles.gmailChips}>
+                              {exitData.cc.map((u, idx) => (
+                                <span key={idx} className={styles.gmailChip}>
+                                  {u.name} &lt;{u.email}&gt;
+                                  <button 
+                                    type="button"
+                                    onClick={() => {
+                                      const updated = exitData.cc.filter((_, i) => i !== idx);
+                                      setExitData({ ...exitData, cc: updated });
+                                    }}
+                                  >
+                                    ×
+                                  </button>
+                                </span>
+                              ))}
+                              <input
+                                type="text"
+                                className={styles.gmailInput}
+                                placeholder={exitData.cc.length === 0 ? "Add CC recipients..." : ""}
+                                value={searchCc}
+                                onChange={(e) => setSearchCc(e.target.value)}
+                                onFocus={() => setSearchCc("")}
+                              />
+                            </div>
+
+                            {searchCc && searchCc.length >= 2 && (
+                              <div className={styles.gmailSuggestions}>
+                                {users
+                                  .filter(u =>
+                                    u.name.toLowerCase().includes(searchCc.toLowerCase()) ||
+                                    u.email.toLowerCase().includes(searchCc.toLowerCase())
+                                  )
+                                  .filter(u => !exitData.cc.find(x => x.id === u.id))
+                                  .slice(0, 5)
+                                  .map(u => (
+                                    <div
+                                      key={u.id}
+                                      className={styles.gmailSuggestionItem}
+                                      onClick={() => {
+                                        setExitData({
+                                          ...exitData,
+                                          cc: [...exitData.cc, u]
+                                        });
+                                        setSearchCc("");
+                                      }}
+                                    >
+                                      <div className={styles.suggestionName}>{u.name}</div>
+                                      <div className={styles.suggestionEmail}>{u.email}</div>
+                                    </div>
+                                  ))}
+                              </div>
+                            )}
+                          </div>
+
+                          <label>Notice Period</label>
+                          <select
+                            className={styles.input}
+                            value={exitData.notice}
+                            onChange={(e) =>
+                              setExitData({ ...exitData, notice: e.target.value })
+                            }
+                          >
+                            <option>30 Days</option>
+                            <option>45 Days</option>
+                            <option>60 Days</option>
+                            <option>90 Days</option>
+                          </select>
+
+                          <label>
+                            <input
+                              type="checkbox"
+                              checked={earlyRelease}
+                              onChange={() => setEarlyRelease(!earlyRelease)}
+                            />
+                            Request Early Release
+                          </label>
+
+                          {earlyRelease && (
+                            <>
+                              <label>Select Early Release Date</label>
+                              <input
+                                type="date"
+                                className={styles.input}
+                                value={exitData.lwd}
+                                onChange={(e) =>
+                                  setExitData({ ...exitData, lwd: e.target.value })
+                                }
+                              />
+                            </>
+                          )}
+
+                          <label>Last Working Day</label>
+                          <input
+                            type="date"
+                            className={styles.input}
+                            required
+                            value={exitData.lwd}
+                            onChange={(e) =>
+                              setExitData({ ...exitData, lwd: e.target.value })
+                            }
+                          />
+
+                          <div className={styles.noticeBox}>
+                            ⚠️ Request will go to your manager for approval
+                          </div>
+
+                          <button
+                            type="button"
+                            className={styles.submitBtn}
+                            onClick={async (e) => {
+                              e.preventDefault();
+                              try {
+                                // ✅ FIX: Use manager's EMAIL instead of name
+                                const resignationData = {
+                                  empId: employee.id,
+                                  empName: employee.name,
+                                  department: employee.department,
+                                  managerName: exitData.manager[0]?.email || profileData?.managerEmail || profileData?.managerName || "",
+                                  reason: exitData.reason,
+                                  remarks: exitData.remarks,
+                                  resignationDate: new Date().toISOString().split('T')[0],
+                                  lastWorkingDay: exitData.lwd,
+                                  status: "PENDING_MANAGER"
+                                };
+
+                                console.log("📤 Submitting resignation with manager email:", resignationData.managerName);
+
+                                const result = await submitResignation(resignationData);
+                                alert("✅ Resignation submitted successfully!");
+                                
+                                // Reload resignations
+                                const myRes = await getResignationsByEmployee(employee.id);
+                                setMyResignations(Array.isArray(myRes) ? myRes : []);
+                                
+                                // Reset form
+                                setExitData({
+                                  reason: "",
+                                  notice: "60 Days",
+                                  lwd: "",
+                                  manager: [],
+                                  cc: [],
+                                  remarks: ""
+                                });
+                              } catch (err) {
+                                console.error("Resignation submission error:", err);
+                                alert("❌ Failed to submit resignation");
+                              }
+                            }}
+                          >
+                            Submit Resignation
+                          </button>
+                        </form>
+                      ) : (
+                        <>
+                          <div className={styles.exitStatusBox}>
+                            <p><strong>Your Resignation Status:</strong></p>
+                            {myResignations.map((res, idx) => (
+                              <div key={idx} style={{ marginTop: "10px", padding: "10px", border: "1px solid #ddd", borderRadius: "4px" }}>
+                                <p><strong>Submitted:</strong> {res.resignationDate}</p>
+                                <p><strong>Last Working Day:</strong> {res.lastWorkingDay}</p>
+                                <p><strong>Reason:</strong> {res.reason}</p>
+                                <p><strong>Status:</strong> 
+                                  <span style={{ 
+                                    marginLeft: "10px",
+                                    padding: "4px 8px",
+                                    borderRadius: "4px",
+                                    backgroundColor: res.status === "APPROVED" ? "#d4edda" : res.status === "REJECTED" ? "#f8d7da" : "#fff3cd",
+                                    color: res.status === "APPROVED" ? "#155724" : res.status === "REJECTED" ? "#721c24" : "#856404"
+                                  }}>
+                                    {res.status}
+                                  </span>
+                                </p>
+                                {res.rejectionReason && (
+                                  <p><strong>Rejection Reason:</strong> {res.rejectionReason}</p>
+                                )}
+                              </div>
+                            ))}
+                          </div>
+
+                          {/* Employee Resignation Tracking Table */}
+                          <div style={{ marginTop: "30px" }}>
+                            <h4>📋 My Resignation Tracking</h4>
+                            <table className={styles.table}>
+                              <thead>
+                                <tr>
+                                  <th>Submitted Date</th>
+                                  <th>Reason</th>
+                                  <th>Last Working Day</th>
+                                  <th>Status</th>
+                                  <th>Manager Approval</th>
+                                  <th>HR Approval</th>
+                                </tr>
+                              </thead>
+                              <tbody>
+                                {myResignations.map((res, idx) => (
+                                  <tr key={idx}>
+                                    <td>{res.resignationDate}</td>
+                                    <td>{res.reason}</td>
+                                    <td>{res.lastWorkingDay}</td>
+                                    <td>
+                                      <span style={{
+                                        padding: "4px 8px",
+                                        borderRadius: "4px",
+                                        backgroundColor: 
+                                          res.status === "APPROVED" ? "#d4edda" : 
+                                          res.status === "REJECTED" ? "#f8d7da" : 
+                                          res.status === "PENDING_HR" ? "#cce5ff" : "#fff3cd",
+                                        color: 
+                                          res.status === "APPROVED" ? "#155724" : 
+                                          res.status === "REJECTED" ? "#721c24" : 
+                                          res.status === "PENDING_HR" ? "#004085" : "#856404"
+                                      }}>
+                                        {res.status}
+                                      </span>
+                                    </td>
+                                    <td>{res.approvedByManager || "Pending"}</td>
+                                    <td>{res.approvedByHR || "Pending"}</td>
+                                  </tr>
+                                ))}
+                              </tbody>
+                            </table>
+                          </div>
+                        </>
+                      )}
+                    </>
+                  )}
+
+                  {/* ===== MANAGER VIEW ===== */}
+                  {role === "MANAGER" && (
+                    <>
+                      {/* ===== MANAGER OWN RESIGNATION FORM ===== */}
+                      {myResignations.length === 0 ? (
+                        <form className={styles.exitForm}>
+                          <label>Reason for Resignation</label>
+                          <textarea
+                            className={styles.input}
+                            required
+                            value={exitData.reason}
+                            onChange={(e) => setExitData({ ...exitData, reason: e.target.value })}
+                          />
+
+                          <label>Remarks</label>
+                          <textarea
+                            className={styles.input}
+                            placeholder="Additional comments"
+                            value={exitData.remarks || ""}
+                            onChange={(e) => setExitData({ ...exitData, remarks: e.target.value })}
+                          />
+
+                          <label>TO (Reporting Head / Board)</label>
+                          <div className={styles.gmailInputContainer}>
+                            <div className={styles.gmailChips}>
+                              {exitData.manager.map((u, idx) => (
+                                <span key={idx} className={styles.gmailChip}>
+                                  {u.name} &lt;{u.email}&gt;
+                                  <button type="button" onClick={() => {
+                                    const updated = exitData.manager.filter((_, i) => i !== idx);
+                                    setExitData({ ...exitData, manager: updated });
+                                  }}>×</button>
+                                </span>
+                              ))}
+                              <input
+                                type="text"
+                                className={styles.gmailInput}
+                                placeholder={exitData.manager.length === 0 ? "Add recipients..." : ""}
+                                value={searchTo}
+                                onChange={(e) => setSearchTo(e.target.value)}
+                                onFocus={() => setSearchTo("")}
+                              />
+                            </div>
+                            {searchTo && searchTo.length >= 2 && (
+                              <div className={styles.gmailSuggestions}>
+                                {users
+                                  .filter(u =>
+                                    u.name.toLowerCase().includes(searchTo.toLowerCase()) ||
+                                    u.email.toLowerCase().includes(searchTo.toLowerCase())
+                                  )
+                                  .filter(u => !exitData.manager.find(x => x.id === u.id))
+                                  .slice(0, 5)
+                                  .map(u => (
+                                    <div key={u.id} className={styles.gmailSuggestionItem}
+                                      onClick={() => {
+                                        setExitData({ ...exitData, manager: [...exitData.manager, u] });
+                                        setSearchTo("");
+                                      }}>
+                                      <div className={styles.suggestionName}>{u.name}</div>
+                                      <div className={styles.suggestionEmail}>{u.email}</div>
+                                    </div>
+                                  ))}
+                              </div>
+                            )}
+                          </div>
+
+                          <label>CC</label>
+                          <div className={styles.gmailInputContainer}>
+                            <div className={styles.gmailChips}>
+                              {exitData.cc.map((u, idx) => (
+                                <span key={idx} className={styles.gmailChip}>
+                                  {u.name} &lt;{u.email}&gt;
+                                  <button type="button" onClick={() => {
+                                    const updated = exitData.cc.filter((_, i) => i !== idx);
+                                    setExitData({ ...exitData, cc: updated });
+                                  }}>×</button>
+                                </span>
+                              ))}
+                              <input
+                                type="text"
+                                className={styles.gmailInput}
+                                placeholder={exitData.cc.length === 0 ? "Add CC recipients..." : ""}
+                                value={searchCc}
+                                onChange={(e) => setSearchCc(e.target.value)}
+                                onFocus={() => setSearchCc("")}
+                              />
+                            </div>
+                            {searchCc && searchCc.length >= 2 && (
+                              <div className={styles.gmailSuggestions}>
+                                {users
+                                  .filter(u =>
+                                    u.name.toLowerCase().includes(searchCc.toLowerCase()) ||
+                                    u.email.toLowerCase().includes(searchCc.toLowerCase())
+                                  )
+                                  .filter(u => !exitData.cc.find(x => x.id === u.id))
+                                  .slice(0, 5)
+                                  .map(u => (
+                                    <div key={u.id} className={styles.gmailSuggestionItem}
+                                      onClick={() => {
+                                        setExitData({ ...exitData, cc: [...exitData.cc, u] });
+                                        setSearchCc("");
+                                      }}>
+                                      <div className={styles.suggestionName}>{u.name}</div>
+                                      <div className={styles.suggestionEmail}>{u.email}</div>
+                                    </div>
+                                  ))}
+                              </div>
+                            )}
+                          </div>
+
+                          <label>Notice Period</label>
+                          <select
+                            className={styles.input}
+                            value={exitData.notice}
+                            onChange={(e) => setExitData({ ...exitData, notice: e.target.value })}
+                          >
+                            <option>30 Days</option>
+                            <option>45 Days</option>
+                            <option>60 Days</option>
+                            <option>90 Days</option>
+                          </select>
+
+                          <label>
+                            <input
+                              type="checkbox"
+                              checked={earlyRelease}
+                              onChange={() => setEarlyRelease(!earlyRelease)}
+                            />
+                            Request Early Release
+                          </label>
+
+                          {earlyRelease && (
+                            <>
+                              <label>Select Early Release Date</label>
+                              <input
+                                type="date"
+                                className={styles.input}
+                                value={exitData.lwd}
+                                onChange={(e) => setExitData({ ...exitData, lwd: e.target.value })}
+                              />
+                            </>
+                          )}
+
+                          <label>Last Working Day</label>
+                          <input
+                            type="date"
+                            className={styles.input}
+                            required
+                            value={exitData.lwd}
+                            onChange={(e) => setExitData({ ...exitData, lwd: e.target.value })}
+                          />
+
+                          <div className={styles.noticeBox}>
+                            ⚠️ Request will go to the board / reporting authority for approval
+                          </div>
+
+                          <button
+                            type="button"
+                            className={styles.submitBtn}
+                            onClick={async (e) => {
+                              e.preventDefault();
+                              try {
+                                const resignationData = {
+                                  empId: employee.id,
+                                  empName: employee.name,
+                                  department: employee.department,
+                                  managerName: exitData.manager[0]?.email || profileData?.managerEmail || profileData?.managerName || "",
+                                  reason: exitData.reason,
+                                  remarks: exitData.remarks,
+                                  resignationDate: new Date().toISOString().split('T')[0],
+                                  lastWorkingDay: exitData.lwd,
+                                  status: "PENDING_MANAGER"
+                                };
+                                await submitResignation(resignationData);
+                                alert("✅ Resignation submitted successfully!");
+                                const myRes = await getResignationsByEmployee(employee.id);
+                                setMyResignations(Array.isArray(myRes) ? myRes : []);
+                                setExitData({ reason: "", notice: "60 Days", lwd: "", manager: [], cc: [], remarks: "" });
+                              } catch (err) {
+                                console.error("Resignation submission error:", err);
+                                alert("❌ Failed to submit resignation");
+                              }
+                            }}
+                          >
+                            Submit Resignation
+                          </button>
+                        </form>
+                      ) : (
+                        <>
+                          <div className={styles.exitStatusBox}>
+                            <p><strong>Your Resignation Status:</strong></p>
+                            {myResignations.map((res, idx) => (
+                              <div key={idx} style={{ marginTop: "10px", padding: "10px", border: "1px solid #ddd", borderRadius: "4px" }}>
+                                <p><strong>Submitted:</strong> {res.resignationDate}</p>
+                                <p><strong>Last Working Day:</strong> {res.lastWorkingDay}</p>
+                                <p><strong>Reason:</strong> {res.reason}</p>
+                                <p><strong>Status:</strong>
+                                  <span style={{
+                                    marginLeft: "10px", padding: "4px 8px", borderRadius: "4px",
+                                    backgroundColor: res.status === "APPROVED" ? "#d4edda" : res.status === "REJECTED" ? "#f8d7da" : "#fff3cd",
+                                    color: res.status === "APPROVED" ? "#155724" : res.status === "REJECTED" ? "#721c24" : "#856404"
+                                  }}>
+                                    {res.status}
+                                  </span>
+                                </p>
+                              </div>
+                            ))}
+                          </div>
+
+                          {/* Manager's Own Resignation Tracking Table */}
+                          <div style={{ marginTop: "20px" }}>
+                            <h4>📋 My Resignation Tracking</h4>
+                            <table className={styles.table}>
+                              <thead>
+                                <tr>
+                                  <th>Submitted Date</th>
+                                  <th>Reason</th>
+                                  <th>Last Working Day</th>
+                                  <th>Status</th>
+                                  <th>Manager Approval</th>
+                                  <th>HR Approval</th>
+                                </tr>
+                              </thead>
+                              <tbody>
+                                {myResignations.map((res, idx) => (
+                                  <tr key={idx}>
+                                    <td>{res.resignationDate}</td>
+                                    <td>{res.reason}</td>
+                                    <td>{res.lastWorkingDay}</td>
+                                    <td>
+                                      <span style={{
+                                        padding: "4px 8px", borderRadius: "4px",
+                                        backgroundColor:
+                                          res.status === "APPROVED" ? "#d4edda" :
+                                          res.status === "REJECTED" ? "#f8d7da" :
+                                          res.status === "PENDING_HR" ? "#cce5ff" : "#fff3cd",
+                                        color:
+                                          res.status === "APPROVED" ? "#155724" :
+                                          res.status === "REJECTED" ? "#721c24" :
+                                          res.status === "PENDING_HR" ? "#004085" : "#856404"
+                                      }}>
+                                        {res.status}
+                                      </span>
+                                    </td>
+                                    <td>{res.approvedByManager || "Pending"}</td>
+                                    <td>{res.approvedByHR || "Pending"}</td>
+                                  </tr>
+                                ))}
+                              </tbody>
+                            </table>
+                          </div>
+                        </>
+                      )}
+
+                      <hr style={{ margin: "24px 0", borderColor: "#e0e0e0" }} />
+
+                      {/* PENDING APPROVALS */}
+                      <h4>Pending Resignations for Approval</h4>
+                      {pendingManagerResignations.length === 0 ? (
+                        <p style={{ color: "#666" }}>No pending resignations</p>
+                      ) : (
+                        <table className={styles.table}>
+                          <thead>
+                            <tr>
+                              <th>Emp ID</th>
+                              <th>Employee Name</th>
+                              <th>Department</th>
+                              <th>Reason</th>
+                              <th>Last Working Day</th>
+                              <th>Submitted Date</th>
+                              <th>Actions</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {pendingManagerResignations.map((res, idx) => (
+                              <tr key={idx}>
+                                <td>{res.empId}</td>
+                                <td>{res.empName}</td>
+                                <td>{res.department}</td>
+                                <td>{res.reason}</td>
+                                <td>{res.lastWorkingDay}</td>
+                                <td>{res.resignationDate}</td>
+                                <td>
+                                  <button
+                                    className={styles.approveBtn}
+                                    onClick={async () => {
+                                      try {
+                                        const userEmail = user?.email || localStorage.getItem("email") || "";
+                                        await approveResignation(res.id, userEmail);
+                                        alert("✅ Resignation approved! Forwarded to HR.");
+
+                                        // Reload both pending and tracking
+                                        const managerRes = await getResignationsForApproval(userEmail);
+                                        setPendingManagerResignations(Array.isArray(managerRes) ? managerRes : []);
+                                        const allMgrRes = await getAllResignationsByManager(userEmail);
+                                        setAllManagerResignations(Array.isArray(allMgrRes) ? allMgrRes : []);
+                                      } catch (err) {
+                                        console.error("Approval error:", err);
+                                        alert("❌ Failed to approve resignation");
+                                      }
+                                    }}
+                                    style={{ marginRight: "5px" }}
+                                  >
+                                    ✓ Approve
+                                  </button>
+                                  <button
+                                    className={styles.rejectBtn}
+                                    onClick={async () => {
+                                      const reason = prompt("Enter rejection reason:");
+                                      if (!reason) return;
+
+                                      try {
+                                        const userEmail = user?.email || localStorage.getItem("email") || "";
+                                        await rejectResignation(res.id, reason);
+                                        alert("✅ Resignation rejected!");
+
+                                        // Reload both pending and tracking
+                                        const managerRes = await getResignationsForApproval(userEmail);
+                                        setPendingManagerResignations(Array.isArray(managerRes) ? managerRes : []);
+                                        const allMgrRes = await getAllResignationsByManager(userEmail);
+                                        setAllManagerResignations(Array.isArray(allMgrRes) ? allMgrRes : []);
+                                      } catch (err) {
+                                        console.error("Rejection error:", err);
+                                        alert("❌ Failed to reject resignation");
+                                      }
+                                    }}
+                                  >
+                                    ✗ Reject
+                                  </button>
+                                </td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      )}
+
+                      {/* RESIGNATION TRACKING TABLE */}
+                      <div style={{ marginTop: "30px" }}>
+                        <h4>Resignation Tracking</h4>
+                        {allManagerResignations.length === 0 ? (
+                          <p style={{ color: "#666" }}>No resignations to track</p>
+                        ) : (
+                          <table className={styles.table}>
+                            <thead>
+                              <tr>
+                                <th>Emp ID</th>
+                                <th>Name</th>
+                                <th>Dept</th>
+                                <th>Reason</th>
+                                <th>Submitted Date</th>
+                                <th>Last Working Day</th>
+                                <th>Status</th>
+                                <th>Approved By Manager</th>
+                                <th>Approved By HR</th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                              {allManagerResignations.map((res, idx) => (
+                                <tr key={idx}>
+                                  <td>{res.empId}</td>
+                                  <td>{res.empName}</td>
+                                  <td>{res.department}</td>
+                                  <td>{res.reason}</td>
+                                  <td>{res.resignationDate}</td>
+                                  <td>{res.lastWorkingDay}</td>
+                                  <td>
+                                    <span style={{
+                                      padding: "4px 8px",
+                                      borderRadius: "4px",
+                                      backgroundColor:
+                                        res.status === "APPROVED" ? "#d4edda" :
+                                        res.status === "REJECTED" ? "#f8d7da" :
+                                        res.status === "PENDING_HR" ? "#cce5ff" : "#fff3cd",
+                                      color:
+                                        res.status === "APPROVED" ? "#155724" :
+                                        res.status === "REJECTED" ? "#721c24" :
+                                        res.status === "PENDING_HR" ? "#004085" : "#856404"
+                                    }}>
+                                      {res.status}
+                                    </span>
+                                  </td>
+                                  <td>{res.approvedByManager || "-"}</td>
+                                  <td>{res.approvedByHR || "-"}</td>
+                                </tr>
+                              ))}
+                            </tbody>
+                          </table>
+                        )}
+                      </div>
+                    </>
+                  )}
+
+                  {/* ===== ADMIN VIEW ===== */}
+                  {role === "ADMIN" && (
+                    <>
+                      {/* ===== ADMIN OWN RESIGNATION FORM ===== */}
+                      {myResignations.length === 0 ? (
+                        <form className={styles.exitForm}>
+                          <label>Reason for Resignation</label>
+                          <textarea
+                            className={styles.input}
+                            required
+                            value={exitData.reason}
+                            onChange={(e) => setExitData({ ...exitData, reason: e.target.value })}
+                          />
+
+                          <label>Remarks</label>
+                          <textarea
+                            className={styles.input}
+                            placeholder="Additional comments"
+                            value={exitData.remarks || ""}
+                            onChange={(e) => setExitData({ ...exitData, remarks: e.target.value })}
+                          />
+
+                          <label>TO (Reporting Head / Board)</label>
+                          <div className={styles.gmailInputContainer}>
+                            <div className={styles.gmailChips}>
+                              {exitData.manager.map((u, idx) => (
+                                <span key={idx} className={styles.gmailChip}>
+                                  {u.name} &lt;{u.email}&gt;
+                                  <button type="button" onClick={() => {
+                                    const updated = exitData.manager.filter((_, i) => i !== idx);
+                                    setExitData({ ...exitData, manager: updated });
+                                  }}>×</button>
+                                </span>
+                              ))}
+                              <input
+                                type="text"
+                                className={styles.gmailInput}
+                                placeholder={exitData.manager.length === 0 ? "Add recipients..." : ""}
+                                value={searchTo}
+                                onChange={(e) => setSearchTo(e.target.value)}
+                                onFocus={() => setSearchTo("")}
+                              />
+                            </div>
+                            {searchTo && searchTo.length >= 2 && (
+                              <div className={styles.gmailSuggestions}>
+                                {users
+                                  .filter(u =>
+                                    u.name.toLowerCase().includes(searchTo.toLowerCase()) ||
+                                    u.email.toLowerCase().includes(searchTo.toLowerCase())
+                                  )
+                                  .filter(u => !exitData.manager.find(x => x.id === u.id))
+                                  .slice(0, 5)
+                                  .map(u => (
+                                    <div key={u.id} className={styles.gmailSuggestionItem}
+                                      onClick={() => {
+                                        setExitData({ ...exitData, manager: [...exitData.manager, u] });
+                                        setSearchTo("");
+                                      }}>
+                                      <div className={styles.suggestionName}>{u.name}</div>
+                                      <div className={styles.suggestionEmail}>{u.email}</div>
+                                    </div>
+                                  ))}
+                              </div>
+                            )}
+                          </div>
+
+                          <label>CC</label>
+                          <div className={styles.gmailInputContainer}>
+                            <div className={styles.gmailChips}>
+                              {exitData.cc.map((u, idx) => (
+                                <span key={idx} className={styles.gmailChip}>
+                                  {u.name} &lt;{u.email}&gt;
+                                  <button type="button" onClick={() => {
+                                    const updated = exitData.cc.filter((_, i) => i !== idx);
+                                    setExitData({ ...exitData, cc: updated });
+                                  }}>×</button>
+                                </span>
+                              ))}
+                              <input
+                                type="text"
+                                className={styles.gmailInput}
+                                placeholder={exitData.cc.length === 0 ? "Add CC recipients..." : ""}
+                                value={searchCc}
+                                onChange={(e) => setSearchCc(e.target.value)}
+                                onFocus={() => setSearchCc("")}
+                              />
+                            </div>
+                            {searchCc && searchCc.length >= 2 && (
+                              <div className={styles.gmailSuggestions}>
+                                {users
+                                  .filter(u =>
+                                    u.name.toLowerCase().includes(searchCc.toLowerCase()) ||
+                                    u.email.toLowerCase().includes(searchCc.toLowerCase())
+                                  )
+                                  .filter(u => !exitData.cc.find(x => x.id === u.id))
+                                  .slice(0, 5)
+                                  .map(u => (
+                                    <div key={u.id} className={styles.gmailSuggestionItem}
+                                      onClick={() => {
+                                        setExitData({ ...exitData, cc: [...exitData.cc, u] });
+                                        setSearchCc("");
+                                      }}>
+                                      <div className={styles.suggestionName}>{u.name}</div>
+                                      <div className={styles.suggestionEmail}>{u.email}</div>
+                                    </div>
+                                  ))}
+                              </div>
+                            )}
+                          </div>
+
+                          <label>Notice Period</label>
+                          <select
+                            className={styles.input}
+                            value={exitData.notice}
+                            onChange={(e) => setExitData({ ...exitData, notice: e.target.value })}
+                          >
+                            <option>30 Days</option>
+                            <option>45 Days</option>
+                            <option>60 Days</option>
+                            <option>90 Days</option>
+                          </select>
+
+                          <label>
+                            <input
+                              type="checkbox"
+                              checked={earlyRelease}
+                              onChange={() => setEarlyRelease(!earlyRelease)}
+                            />
+                            Request Early Release
+                          </label>
+
+                          {earlyRelease && (
+                            <>
+                              <label>Select Early Release Date</label>
+                              <input
+                                type="date"
+                                className={styles.input}
+                                value={exitData.lwd}
+                                onChange={(e) => setExitData({ ...exitData, lwd: e.target.value })}
+                              />
+                            </>
+                          )}
+
+                          <label>Last Working Day</label>
+                          <input
+                            type="date"
+                            className={styles.input}
+                            required
+                            value={exitData.lwd}
+                            onChange={(e) => setExitData({ ...exitData, lwd: e.target.value })}
+                          />
+
+                          <div className={styles.noticeBox}>
+                            ⚠️ Request will go to the board / reporting authority for approval
+                          </div>
+
+                          <button
+                            type="button"
+                            className={styles.submitBtn}
+                            onClick={async (e) => {
+                              e.preventDefault();
+                              try {
+                                const resignationData = {
+                                  empId: employee.id,
+                                  empName: employee.name,
+                                  department: employee.department,
+                                  managerName: exitData.manager[0]?.email || profileData?.managerEmail || profileData?.managerName || "",
+                                  reason: exitData.reason,
+                                  remarks: exitData.remarks,
+                                  resignationDate: new Date().toISOString().split('T')[0],
+                                  lastWorkingDay: exitData.lwd,
+                                  status: "PENDING_MANAGER"
+                                };
+                                await submitResignation(resignationData);
+                                alert("✅ Resignation submitted successfully!");
+                                const myRes = await getResignationsByEmployee(employee.id);
+                                setMyResignations(Array.isArray(myRes) ? myRes : []);
+                                setExitData({ reason: "", notice: "60 Days", lwd: "", manager: [], cc: [], remarks: "" });
+                              } catch (err) {
+                                console.error("Resignation submission error:", err);
+                                alert("❌ Failed to submit resignation");
+                              }
+                            }}
+                          >
+                            Submit Resignation
+                          </button>
+                        </form>
+                      ) : (
+                        <>
+                          <div className={styles.exitStatusBox}>
+                            <p><strong>Your Resignation Status:</strong></p>
+                            {myResignations.map((res, idx) => (
+                              <div key={idx} style={{ marginTop: "10px", padding: "10px", border: "1px solid #ddd", borderRadius: "4px" }}>
+                                <p><strong>Submitted:</strong> {res.resignationDate}</p>
+                                <p><strong>Last Working Day:</strong> {res.lastWorkingDay}</p>
+                                <p><strong>Reason:</strong> {res.reason}</p>
+                                <p><strong>Status:</strong>
+                                  <span style={{
+                                    marginLeft: "10px", padding: "4px 8px", borderRadius: "4px",
+                                    backgroundColor: res.status === "APPROVED" ? "#d4edda" : res.status === "REJECTED" ? "#f8d7da" : "#fff3cd",
+                                    color: res.status === "APPROVED" ? "#155724" : res.status === "REJECTED" ? "#721c24" : "#856404"
+                                  }}>
+                                    {res.status}
+                                  </span>
+                                </p>
+                              </div>
+                            ))}
+                          </div>
+
+                          {/* Admin's Own Resignation Tracking Table */}
+                          <div style={{ marginTop: "20px" }}>
+                            <h4>📋 My Resignation Tracking</h4>
+                            <table className={styles.table}>
+                              <thead>
+                                <tr>
+                                  <th>Submitted Date</th>
+                                  <th>Reason</th>
+                                  <th>Last Working Day</th>
+                                  <th>Status</th>
+                                  <th>Manager Approval</th>
+                                  <th>HR Approval</th>
+                                </tr>
+                              </thead>
+                              <tbody>
+                                {myResignations.map((res, idx) => (
+                                  <tr key={idx}>
+                                    <td>{res.resignationDate}</td>
+                                    <td>{res.reason}</td>
+                                    <td>{res.lastWorkingDay}</td>
+                                    <td>
+                                      <span style={{
+                                        padding: "4px 8px", borderRadius: "4px",
+                                        backgroundColor:
+                                          res.status === "APPROVED" ? "#d4edda" :
+                                          res.status === "REJECTED" ? "#f8d7da" :
+                                          res.status === "PENDING_HR" ? "#cce5ff" : "#fff3cd",
+                                        color:
+                                          res.status === "APPROVED" ? "#155724" :
+                                          res.status === "REJECTED" ? "#721c24" :
+                                          res.status === "PENDING_HR" ? "#004085" : "#856404"
+                                      }}>
+                                        {res.status}
+                                      </span>
+                                    </td>
+                                    <td>{res.approvedByManager || "Pending"}</td>
+                                    <td>{res.approvedByHR || "Pending"}</td>
+                                  </tr>
+                                ))}
+                              </tbody>
+                            </table>
+                          </div>
+                        </>
+                      )}
+
+                      <hr style={{ margin: "24px 0", borderColor: "#e0e0e0" }} />
+
+                      <h4>Pending HR Approvals</h4>
+                      {pendingHRResignations.length === 0 ? (
+                        <p style={{ color: "#666" }}>No pending HR approvals</p>
+                      ) : (
+                        <table className={styles.table}>
+                          <thead>
+                            <tr>
+                              <th>Emp ID</th>
+                              <th>Employee Name</th>
+                              <th>Department</th>
+                              <th>Manager Approved</th>
+                              <th>Reason</th>
+                              <th>Last Working Day</th>
+                              <th>Actions</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {pendingHRResignations.map((res, idx) => (
+                              <tr key={idx}>
+                                <td>{res.empId}</td>
+                                <td>{res.empName}</td>
+                                <td>{res.department}</td>
+                                <td>{res.approvedByManager || "-"}</td>
+                                <td>{res.reason}</td>
+                                <td>{res.lastWorkingDay}</td>
+                                <td>
+                                  <button
+                                    className={styles.approveBtn}
+                                    onClick={async () => {
+                                      try {
+                                        const userEmail = user?.email || localStorage.getItem("email") || "";
+                                        await approveResignation(res.id, userEmail);
+                                        alert("✅ Resignation approved!");
+                                        
+                                        // Reload resignations
+                                        const hrRes = await getResignationsForHRApproval();
+                                        setPendingHRResignations(Array.isArray(hrRes) ? hrRes : []);
+                                        
+                                        const allRes = await getAllResignations();
+                                        setAllResignations(Array.isArray(allRes) ? allRes : []);
+                                      } catch (err) {
+                                        console.error("Approval error:", err);
+                                        alert("❌ Failed to approve resignation");
+                                      }
+                                    }}
+                                    style={{ marginRight: "5px" }}
+                                  >
+                                    ✓ Approve
+                                  </button>
+                                  <button
+                                    className={styles.rejectBtn}
+                                    onClick={async () => {
+                                      const reason = prompt("Enter rejection reason:");
+                                      if (!reason) return;
+                                      
+                                      try {
+                                        await rejectResignation(res.id, reason);
+                                        alert("✅ Resignation rejected!");
+                                        
+                                        // Reload resignations
+                                        const hrRes = await getResignationsForHRApproval();
+                                        setPendingHRResignations(Array.isArray(hrRes) ? hrRes : []);
+                                        
+                                        const allRes = await getAllResignations();
+                                        setAllResignations(Array.isArray(allRes) ? allRes : []);
+                                      } catch (err) {
+                                        console.error("Rejection error:", err);
+                                        alert("❌ Failed to reject resignation");
+                                      }
+                                    }}
+                                  >
+                                    ✗ Reject
+                                  </button>
+                                </td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      )}
+
+                      {/* ===== RESIGNATION TRACKING TABLE (ADMIN ONLY) ===== */}
+                      <div style={{ marginTop: "30px" }}>
+                        <h4>All Resignations Tracking</h4>
+                        <div className={styles.resignationTableWrapper}>
+                        <table className={styles.table}>
+                          <thead>
+                            <tr>
+                              <th className={styles.filterHeader}>
+                                Emp ID
+                                <span
+                                  className={styles.filterIcon}
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    setActiveFilter(activeFilter === "resignEmpId" ? null : "resignEmpId");
+                                  }}
+                                >
+                                  ▼
+                                </span>
+                                {activeFilter === "resignEmpId" && (
+                                  <div ref={popupRef} className={styles.popup}>
+                                    <input 
+                                      className={styles.excelSearch} 
+                                      placeholder="Search" 
+                                      value={resignationFilterText}
+                                      onChange={(e) => setResignationFilterText(e.target.value)}
+                                    />
+                                    <div className={styles.excelList}>
+                                      <label className={styles.excelItem}>
+                                        <input 
+                                          type="checkbox"
+                                          checked={!resignationFilters.empId || resignationFilters.empId?.length === [...new Set(allResignations.map(r => r.empId))].length}
+                                          onChange={(e) => {
+                                            if (e.target.checked) {
+                                              setResignationFilters({...resignationFilters, empId: [...new Set(allResignations.map(r => r.empId))]});
+                                            } else {
+                                              setResignationFilters({...resignationFilters, empId: []});
+                                            }
+                                          }}
+                                        />
+                                        <span>(Select All)</span>
+                                      </label>
+                                      {[...new Set(allResignations.map(r => r.empId))]
+                                        .filter(v => String(v).toLowerCase().includes(resignationFilterText.toLowerCase()))
+                                        .map((empId) => {
+                                          const selectedValues = resignationFilters.empId || [...new Set(allResignations.map(r => r.empId))];
+                                          return (
+                                            <label key={empId} className={styles.excelItem}>
+                                              <input
+                                                type="checkbox"
+                                                checked={selectedValues.includes(empId)}
+                                                onChange={(e) => {
+                                                  let updated = [...selectedValues];
+                                                  if (e.target.checked) {
+                                                    updated.push(empId);
+                                                  } else {
+                                                    updated = updated.filter((v) => v !== empId);
+                                                  }
+                                                  setResignationFilters({...resignationFilters, empId: updated});
+                                                }}
+                                              />
+                                              <span>{empId}</span>
+                                            </label>
+                                          );
+                                        })}
+                                    </div>
+                                    <div className={styles.excelActions}>
+                                      <button onClick={() => setActiveFilter(null)}>OK</button>
+                                      <button onClick={() => {
+                                        const newFilters = {...resignationFilters};
+                                        delete newFilters.empId;
+                                        setResignationFilters(newFilters);
+                                        setActiveFilter(null);
+                                      }}>Cancel</button>
+                                    </div>
+                                  </div>
+                                )}
+                              </th>
+                              <th className={styles.filterHeader}>
+                                Name
+                                <span
+                                  className={styles.filterIcon}
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    setActiveFilter(activeFilter === "resignName" ? null : "resignName");
+                                  }}
+                                >
+                                  ▼
+                                </span>
+                                {activeFilter === "resignName" && (
+                                  <div ref={popupRef} className={styles.popup}>
+                                    <input 
+                                      className={styles.excelSearch} 
+                                      placeholder="Search" 
+                                      value={resignationFilterText}
+                                      onChange={(e) => setResignationFilterText(e.target.value)}
+                                    />
+                                    <div className={styles.excelList}>
+                                      <label className={styles.excelItem}>
+                                        <input 
+                                          type="checkbox"
+                                          checked={!resignationFilters.empName || resignationFilters.empName?.length === [...new Set(allResignations.map(r => r.empName))].length}
+                                          onChange={(e) => {
+                                            if (e.target.checked) {
+                                              setResignationFilters({...resignationFilters, empName: [...new Set(allResignations.map(r => r.empName))]});
+                                            } else {
+                                              setResignationFilters({...resignationFilters, empName: []});
+                                            }
+                                          }}
+                                        />
+                                        <span>(Select All)</span>
+                                      </label>
+                                      {[...new Set(allResignations.map(r => r.empName))]
+                                        .filter(v => String(v).toLowerCase().includes(resignationFilterText.toLowerCase()))
+                                        .map((name) => {
+                                          const selectedValues = resignationFilters.empName || [...new Set(allResignations.map(r => r.empName))];
+                                          return (
+                                            <label key={name} className={styles.excelItem}>
+                                              <input
+                                                type="checkbox"
+                                                checked={selectedValues.includes(name)}
+                                                onChange={(e) => {
+                                                  let updated = [...selectedValues];
+                                                  if (e.target.checked) {
+                                                    updated.push(name);
+                                                  } else {
+                                                    updated = updated.filter((v) => v !== name);
+                                                  }
+                                                  setResignationFilters({...resignationFilters, empName: updated});
+                                                }}
+                                              />
+                                              <span>{name}</span>
+                                            </label>
+                                          );
+                                        })}
+                                    </div>
+                                    <div className={styles.excelActions}>
+                                      <button onClick={() => setActiveFilter(null)}>OK</button>
+                                      <button onClick={() => {
+                                        const newFilters = {...resignationFilters};
+                                        delete newFilters.empName;
+                                        setResignationFilters(newFilters);
+                                        setActiveFilter(null);
+                                      }}>Cancel</button>
+                                    </div>
+                                  </div>
+                                )}
+                              </th>
+                              <th className={styles.filterHeader}>
+                                Dept
+                                <span
+                                  className={styles.filterIcon}
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    setActiveFilter(activeFilter === "resignDept" ? null : "resignDept");
+                                  }}
+                                >
+                                  ▼
+                                </span>
+                                {activeFilter === "resignDept" && (
+                                  <div ref={popupRef} className={styles.popup}>
+                                    <input className={styles.excelSearch} placeholder="Search" />
+                                    <div className={styles.excelList}>
+                                      <label className={styles.excelItem}>
+                                        <input type="checkbox" /> Select All
+                                      </label>
+                                    </div>
+                                    <div className={styles.excelActions}>
+                                      <button onClick={() => setActiveFilter(null)}>OK</button>
+                                      <button onClick={() => setActiveFilter(null)}>Cancel</button>
+                                    </div>
+                                  </div>
+                                )}
+                              </th>
+                              <th className={styles.filterHeader}>
+                                Manager
+                                <span
+                                  className={styles.filterIcon}
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    setActiveFilter(activeFilter === "resignManager" ? null : "resignManager");
+                                  }}
+                                >
+                                  ▼
+                                </span>
+                                {activeFilter === "resignManager" && (
+                                  <div ref={popupRef} className={styles.popup}>
+                                    <input className={styles.excelSearch} placeholder="Search" />
+                                    <div className={styles.excelList}>
+                                      <label className={styles.excelItem}>
+                                        <input type="checkbox" /> Select All
+                                      </label>
+                                    </div>
+                                    <div className={styles.excelActions}>
+                                      <button onClick={() => setActiveFilter(null)}>OK</button>
+                                      <button onClick={() => setActiveFilter(null)}>Cancel</button>
+                                    </div>
+                                  </div>
+                                )}
+                              </th>
+                              <th className={styles.filterHeader}>
+                                Reason
+                                <span
+                                  className={styles.filterIcon}
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    setActiveFilter(activeFilter === "resignReason" ? null : "resignReason");
+                                  }}
+                                >
+                                  ▼
+                                </span>
+                                {activeFilter === "resignReason" && (
+                                  <div ref={popupRef} className={styles.popup}>
+                                    <input className={styles.excelSearch} placeholder="Search" />
+                                    <div className={styles.excelList}>
+                                      <label className={styles.excelItem}>
+                                        <input type="checkbox" /> Select All
+                                      </label>
+                                    </div>
+                                    <div className={styles.excelActions}>
+                                      <button onClick={() => setActiveFilter(null)}>OK</button>
+                                      <button onClick={() => setActiveFilter(null)}>Cancel</button>
+                                    </div>
+                                  </div>
+                                )}
+                              </th>
+                              <th className={styles.filterHeader}>
+                                Submitted Date
+                                <span
+                                  className={styles.filterIcon}
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    setActiveFilter(activeFilter === "resignSubmitted" ? null : "resignSubmitted");
+                                  }}
+                                >
+                                  ▼
+                                </span>
+                                {activeFilter === "resignSubmitted" && (
+                                  <div ref={popupRef} className={styles.popup}>
+                                    <input className={styles.excelSearch} placeholder="Search" />
+                                    <div className={styles.excelList}>
+                                      <label className={styles.excelItem}>
+                                        <input type="checkbox" /> Select All
+                                      </label>
+                                    </div>
+                                    <div className={styles.excelActions}>
+                                      <button onClick={() => setActiveFilter(null)}>OK</button>
+                                      <button onClick={() => setActiveFilter(null)}>Cancel</button>
+                                    </div>
+                                  </div>
+                                )}
+                              </th>
+                              <th className={styles.filterHeader}>
+                                Last Working Day
+                                <span
+                                  className={styles.filterIcon}
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    setActiveFilter(activeFilter === "resignLastDay" ? null : "resignLastDay");
+                                  }}
+                                >
+                                  ▼
+                                </span>
+                                {activeFilter === "resignLastDay" && (
+                                  <div ref={popupRef} className={styles.popup}>
+                                    <input className={styles.excelSearch} placeholder="Search" />
+                                    <div className={styles.excelList}>
+                                      <label className={styles.excelItem}>
+                                        <input type="checkbox" /> Select All
+                                      </label>
+                                    </div>
+                                    <div className={styles.excelActions}>
+                                      <button onClick={() => setActiveFilter(null)}>OK</button>
+                                      <button onClick={() => setActiveFilter(null)}>Cancel</button>
+                                    </div>
+                                  </div>
+                                )}
+                              </th>
+                              <th className={styles.filterHeader}>
+                                Status
+                                <span
+                                  className={styles.filterIcon}
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    setActiveFilter(activeFilter === "resignStatus" ? null : "resignStatus");
+                                  }}
+                                >
+                                  ▼
+                                </span>
+                                {activeFilter === "resignStatus" && (
+                                  <div ref={popupRef} className={styles.popup}>
+                                    <input className={styles.excelSearch} placeholder="Search" />
+                                    <div className={styles.excelList}>
+                                      <label className={styles.excelItem}>
+                                        <input type="checkbox" /> Select All
+                                      </label>
+                                    </div>
+                                    <div className={styles.excelActions}>
+                                      <button onClick={() => setActiveFilter(null)}>OK</button>
+                                      <button onClick={() => setActiveFilter(null)}>Cancel</button>
+                                    </div>
+                                  </div>
+                                )}
+                              </th>
+                              <th className={styles.filterHeader}>
+                                Manager Approved By
+                                <span
+                                  className={styles.filterIcon}
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    setActiveFilter(activeFilter === "resignMgrApproved" ? null : "resignMgrApproved");
+                                  }}
+                                >
+                                  ▼
+                                </span>
+                                {activeFilter === "resignMgrApproved" && (
+                                  <div ref={popupRef} className={styles.popup}>
+                                    <input className={styles.excelSearch} placeholder="Search" />
+                                    <div className={styles.excelList}>
+                                      <label className={styles.excelItem}>
+                                        <input type="checkbox" /> Select All
+                                      </label>
+                                    </div>
+                                    <div className={styles.excelActions}>
+                                      <button onClick={() => setActiveFilter(null)}>OK</button>
+                                      <button onClick={() => setActiveFilter(null)}>Cancel</button>
+                                    </div>
+                                  </div>
+                                )}
+                              </th>
+                              <th className={styles.filterHeader}>
+                                HR Approved By
+                                <span
+                                  className={styles.filterIcon}
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    setActiveFilter(activeFilter === "resignHRApproved" ? null : "resignHRApproved");
+                                  }}
+                                >
+                                  ▼
+                                </span>
+                                {activeFilter === "resignHRApproved" && (
+                                  <div ref={popupRef} className={styles.popup}>
+                                    <input className={styles.excelSearch} placeholder="Search" />
+                                    <div className={styles.excelList}>
+                                      <label className={styles.excelItem}>
+                                        <input type="checkbox" /> Select All
+                                      </label>
+                                    </div>
+                                    <div className={styles.excelActions}>
+                                      <button onClick={() => setActiveFilter(null)}>OK</button>
+                                      <button onClick={() => setActiveFilter(null)}>Cancel</button>
+                                    </div>
+                                  </div>
+                                )}
+                              </th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {allResignations
+                              .filter((res) => {
+                                // Apply filters
+                                if (resignationFilters.empId && resignationFilters.empId.length > 0) {
+                                  if (!resignationFilters.empId.includes(res.empId)) return false;
+                                }
+                                if (resignationFilters.empName && resignationFilters.empName.length > 0) {
+                                  if (!resignationFilters.empName.includes(res.empName)) return false;
+                                }
+                                return true;
+                              })
+                              .map((res, idx) => (
+                              <tr key={idx}>
+                                <td>{res.empId}</td>
+                                <td>{res.empName}</td>
+                                <td>{res.department}</td>
+                                <td>{res.managerName}</td>
+                                <td>{res.reason}</td>
+                                <td>{res.resignationDate}</td>
+                                <td>{res.lastWorkingDay}</td>
+                                <td>
+                                  <span style={{
+                                    padding: "4px 8px",
+                                    borderRadius: "4px",
+                                    backgroundColor: res.status === "APPROVED" ? "#d4edda" : res.status === "REJECTED" ? "#f8d7da" : "#fff3cd",
+                                    color: res.status === "APPROVED" ? "#155724" : res.status === "REJECTED" ? "#721c24" : "#856404"
+                                  }}>
+                                    {res.status}
+                                  </span>
+                                </td>
+                                <td>{res.approvedByManager || "-"}</td>
+                                <td>{res.approvedByHR || "-"}</td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                        </div>
+                      </div>
+                    </>
+                  )}
+
+                  {/* CHECKLIST */}
+                  {exitStage === "checklist" && (
+                    <div>
+                      <h4>Exit Clearance Checklist</h4>
+
+                      <div className={styles.exitForm}>
+                        <label>
+                          <input
+                            type="checkbox"
+                            checked={checklist.laptop}
+                            onChange={() =>
+                              setChecklist({
+                                ...checklist,
+                                laptop: !checklist.laptop,
+                              })
+                            }
+                          />
+                          Laptop Returned
+                        </label>
+
+                        <label>
+                          <input
+                            type="checkbox"
+                            checked={checklist.idCard}
+                            onChange={() =>
+                              setChecklist({
+                                ...checklist,
+                                idCard: !checklist.idCard,
+                              })
+                            }
+                          />
+                          ID Card Returned
+                        </label>
+
+                        <label>
+                          <input
+                            type="checkbox"
+                            checked={checklist.documents}
+                            onChange={() =>
+                              setChecklist({
+                                ...checklist,
+                                documents: !checklist.documents,
+                              })
+                            }
+                          />
+                          Documents Submitted
+                        </label>
+
+                        <label>
+                          <input
+                            type="checkbox"
+                            checked={checklist.knowledgeTransfer}
+                            onChange={() =>
+                              setChecklist({
+                                ...checklist,
+                                knowledgeTransfer: !checklist.knowledgeTransfer,
+                              })
+                            }
+                          />
+                          Knowledge Transfer Completed
+                        </label>
+
+                        <button
+                          className={styles.submitBtn}
+                          onClick={() => setExitStage("completed")}
+                        >
+                          Submit Clearance
+                        </button>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* COMPLETED */}
+                  {exitStage === "completed" && (
+                    <div className={styles.exitStatusBox}>
+                      <p><strong>Status:</strong> Exit Completed</p>
+                      <p>Full & Final Settlement in progress.</p>
+
+                      <button className={styles.downloadBtn}>
+                        Download Relieving Letter
+                      </button>
+
+                      <button
+                        className={styles.downloadBtn}
+                        style={{ marginLeft: "8px" }}
+                      >
+                        Download Experience Letter
+                      </button>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* ================= SKILL MATRIX ================= */}
+              {view === "skills" && (
+                <div className={styles.profileSectionCard}>
+                  <div className={styles.skillsHeader}>
+                    <h3>🎯 Skill Matrix</h3>
+                  </div>
+
+                  {/* Add New Skill Form - Available for all roles */}
+                  <div style={{ marginBottom: "20px" }}>
+                    <h4>Add New Skill</h4>
+
+                    <div className={styles.skillForm}>
+                      <input
+                        type="text"
+                        placeholder="Skill Name (e.g., Java, React, Python)"
+                        className={styles.input}
+                        value={newSkill.name}
+                        onChange={(e) =>
+                          setNewSkill({ ...newSkill, name: e.target.value })
+                        }
+                      />
+
+                      <select
+                        className={styles.input}
+                        value={newSkill.level}
+                        onChange={(e) =>
+                          setNewSkill({ ...newSkill, level: e.target.value })
+                        }
+                      >
+                        <option>Beginner</option>
+                        <option>Intermediate</option>
+                        <option>Advanced</option>
+                        <option>Expert</option>
+                      </select>
+
+                     
+
+                      <button
+                        className={styles.submitBtn}
+                        onClick={() => {
+                          if (!newSkill.name) {
+                            alert("Enter skill name");
+                            return;
+                          }
+
+                          const newEntry = {
+                            id: Date.now(),
+                            name: newSkill.name,
+                            level: newSkill.level,
+                            comments: newSkill.comments || "",
+                            employeeRating: 0,
+                            managerRating: 0
+                          };
+
+                          const updatedSkills = [...skills, newEntry];
+                          setSkills(updatedSkills);
+                          localStorage.setItem("skills_" + employee.id, JSON.stringify(updatedSkills));
+
+                          setNewSkill({
+                            name: "",
+                            level: "Beginner",
+                            comments: ""
+                          });
+                        }}
+                      >
+                        Add Skill
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Skills Table */}
+                  <table className={styles.table}>
+                    <thead>
+                      <tr>
+                        <th>Skill</th>
+                        <th>Level</th>
+                        <th>Comments</th>
+                        <th>Employee Rating</th>
+                        {(role === "MANAGER" || role === "ADMIN") && <th>Manager Rating</th>}
+                      </tr>
+                    </thead>
+
+                    <tbody>
+                      {(skills || []).map((skill, index) => (
+                        <tr key={skill.id || index}>
+                          <td>{skill.name}</td>
+
+                          {/* LEVEL */}
+                          <td>
+                            <select
+                              value={skill.level || "Beginner"}
+                              onChange={(e) => {
+                                const updated = [...skills];
+                                updated[index].level = e.target.value;
+                                setSkills(updated);
+                                localStorage.setItem("skills_" + employee.id, JSON.stringify(updated));
+                              }}
+                            >
+                              <option>Beginner</option>
+                              <option>Intermediate</option>
+                              <option>Advanced</option>
+                              <option>Expert</option>
+                            </select>
+                          </td>
+
+                          {/* COMMENTS */}
+                          <td>
+                            <textarea
+                              value={skill.comments || ""}
+                              placeholder="Add comments about expertise..."
+                              className={styles.commentInput}
+                              onChange={(e) => {
+                                const updated = [...skills];
+                                updated[index].comments = e.target.value;
+                                setSkills(updated);
+                                localStorage.setItem("skills_" + employee.id, JSON.stringify(updated));
+                              }}
+                            />
+                          </td>
+
+                          {/* EMPLOYEE RATING */}
+                          <td>
+                            {[1,2,3,4,5].map((star) => (
+                              <span
+                                key={star}
+                                style={{
+                                  color: star <= (skill.employeeRating || 0) ? "gold" : "#ccc",
+                                  cursor: "pointer",
+                                  fontSize: "18px"
+                                }}
+                                onClick={() => {
+                                  const updated = [...skills];
+                                  updated[index].employeeRating = star;
+                                  setSkills(updated);
+                                  localStorage.setItem("skills_" + employee.id, JSON.stringify(updated));
+                                }}
+                              >
+                                ★
+                              </span>
+                            ))}
+                          </td>
+
+                          {/* MANAGER RATING */}
+                          {(role === "MANAGER" || role === "ADMIN") && (
+                            <td>
+                              {[1,2,3,4,5].map((star) => (
+                                <span
+                                  key={star}
+                                  style={{
+                                    color: star <= (skill.managerRating || 0) ? "green" : "#ccc",
+                                    cursor: "pointer",
+                                    fontSize: "18px"
+                                  }}
+                                  onClick={() => {
+                                    const updated = [...skills];
+                                    updated[index].managerRating = star;
+                                    setSkills(updated);
+                                    localStorage.setItem("skills_" + employee.id, JSON.stringify(updated));
+                                  }}
+                                >
+                                  ★
+                                </span>
+                              ))}
+                            </td>
+                          )}
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+
+                  {/* Skills Tracking Table for Managers and Admins */}
+                  {(role === "MANAGER" || role === "ADMIN") && (
+                    <div style={{ marginTop: "30px" }}>
+                      <h4>📊 Team Skills Tracking</h4>
+                      <table className={styles.table}>
+                        <thead>
+                          <tr>
+                            <th>Emp ID</th>
+                            <th>Employee Name</th>
+                            <th>Skills</th>
+                            <th>Skill Level</th>
+                            <th>Employee Rating</th>
+                            <th>Manager Rating</th>
+                            <th>Comments</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {(() => {
+                            // Get skills for team members based on role
+                            const teamMembers = role === "ADMIN" ? allEmployees : 
+                              allEmployees.filter(emp => 
+                                emp.department === employee.department && emp.id !== employee.id
+                              );
+
+                            // Debug: log all localStorage keys that start with "skills_"
+                            const allSkillKeys = Object.keys(localStorage).filter(k => k.startsWith("skills_"));
+                            console.log("🔑 All skill keys in localStorage:", allSkillKeys);
+                            console.log("👥 Team members:", teamMembers.map(e => ({ id: e.id, _id: e._id, employeeId: e.employeeId, empId: e.empId, name: e.fullName || e.name })));
+
+                            const teamSkills = [];
+                            teamMembers.forEach(emp => {
+                              // Try all possible key variations to find skills
+                              const possibleKeys = [
+                                "skills_" + emp.employeeId,
+                                "skills_" + emp.id,
+                                "skills_" + emp._id,
+                                "skills_" + emp.empId,
+                              ].filter(Boolean);
+                              
+                              console.log(`🔍 Looking for skills for ${emp.fullName || emp.name} with keys:`, possibleKeys);
+                              
+                              let empSkills = [];
+                              for (const key of possibleKeys) {
+                                const stored = localStorage.getItem(key);
+                                if (stored) {
+                                  try {
+                                    const parsed = JSON.parse(stored);
+                                    if (Array.isArray(parsed) && parsed.length > 0) {
+                                      empSkills = parsed;
+                                      console.log(`✅ Found skills for ${emp.fullName || emp.name} at key: ${key}`, parsed);
+                                      break;
+                                    }
+                                  } catch (e) {}
+                                }
+                              }
+                              empSkills.forEach(skill => {
+                                teamSkills.push({
+                                  empId: emp.employeeId || emp.id,
+                                  empName: emp.fullName || emp.name,
+                                  ...skill
+                                });
+                              });
+                            });
+
+                            return teamSkills.length > 0 ? teamSkills.map((skill, index) => (
+                              <tr key={index}>
+                                <td>{skill.empId}</td>
+                                <td>{skill.empName}</td>
+                                <td>{skill.name}</td>
+                                <td>{skill.level}</td>
+                                <td>
+                                  {[1,2,3,4,5].map((star) => (
+                                    <span
+                                      key={star}
+                                      style={{
+                                        color: star <= (skill.employeeRating || 0) ? "gold" : "#ccc",
+                                        fontSize: "16px"
+                                      }}
+                                    >
+                                      ★
+                                    </span>
+                                  ))}
+                                </td>
+                                <td>
+                                  {[1,2,3,4,5].map((star) => (
+                                    <span
+                                      key={star}
+                                      style={{
+                                        color: star <= (skill.managerRating || 0) ? "green" : "#ccc",
+                                        fontSize: "16px"
+                                      }}
+                                    >
+                                      ★
+                                    </span>
+                                  ))}
+                                </td>
+                                <td>{skill.comments || "-"}</td>
+                              </tr>
+                            )) : (
+                              <tr>
+                                <td colSpan="7" style={{ textAlign: "center", color: "#666" }}>
+                                  No team skills data available
+                                </td>
+                              </tr>
+                            );
+                          })()}
+                        </tbody>
+                      </table>
+                    </div>
+                  )}
+                </div>
+              )}
+
+            </div>
+          </div>
+        </div>
+        
+
+      );
+    }

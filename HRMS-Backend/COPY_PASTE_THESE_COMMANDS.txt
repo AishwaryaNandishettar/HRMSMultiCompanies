@@ -1,0 +1,90 @@
+═══════════════════════════════════════════════════════════════
+COPY/PASTE THESE COMMANDS - FIX AISHWARYA LOGIN
+═══════════════════════════════════════════════════════════════
+
+TERMINAL 1: UPDATE DATABASE
+───────────────────────────────────────────────────────────────
+
+mongosh
+
+[Then paste this entire block:]
+
+use hrms_db
+
+db.users.updateOne({email:"Aishwarya@company.com"},{$set:{companyId:"omoikaneinnovations"}})
+
+db.users.updateMany({email:{$in:["nikita@omoi.com","mahesh@omoi.com","vishnu@omoi.com","padmanabh@omoi.com","shambuling@omoi.com","lata@omoi.com"]}},{$set:{companyId:"omoikaneinnovations"}})
+
+db.users.findOne({email:"Aishwarya@company.com"},{email:1,companyId:1})
+
+exit
+
+[You should see: companyId: "omoikaneinnovations"]
+
+═══════════════════════════════════════════════════════════════
+
+TERMINAL 2: RESTART BACKEND
+───────────────────────────────────────────────────────────────
+
+[Stop current backend if running - Press Ctrl+C]
+
+cd HRMS-Backend
+
+mvnw.cmd clean install -DskipTests
+
+mvnw.cmd spring-boot:run
+
+[Wait for: "Started HmrsbackendApplication"]
+
+═══════════════════════════════════════════════════════════════
+
+BROWSER: TEST LOGIN
+───────────────────────────────────────────────────────────────
+
+1. Open Incognito window: Ctrl + Shift + N
+
+2. Go to: http://localhost:5176
+
+3. Login with:
+   Email: Aishwarya@company.com
+   Password: admin123
+
+4. EXPECTED RESULT:
+   ❌ Access denied: You do not have permission to access 
+      this company portal. Please use the correct company URL.
+
+═══════════════════════════════════════════════════════════════
+
+IF YOU SEE "ACCESS DENIED" - SUCCESS! ✅
+═══════════════════════════════════════════════════════════════
+
+Repeat the test for:
+- WorkForce Pro: http://localhost:5177
+- PeopleSync:    http://localhost:5178
+
+All should show "Access denied" for Aishwarya.
+
+═══════════════════════════════════════════════════════════════
+
+BACKEND LOGS SHOULD SHOW:
+───────────────────────────────────────────────────────────────
+
+EMAIL: Aishwarya@company.com
+TENANT ID: company-a
+🔍 TENANT VALIDATION:
+  Request Tenant ID: company-a
+  User Company ID: omoikaneinnovations
+❌ Login denied: Tenant mismatch
+
+═══════════════════════════════════════════════════════════════
+
+IF STILL NOT WORKING:
+───────────────────────────────────────────────────────────────
+
+Run diagnosis:
+
+  CHECK_WHY_STILL_LOGGING_IN.bat
+
+This will tell you what's wrong.
+
+═══════════════════════════════════════════════════════════════

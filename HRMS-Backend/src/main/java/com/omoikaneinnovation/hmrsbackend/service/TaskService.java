@@ -19,12 +19,24 @@ public class TaskService {
 
     // ── CREATE ──
     public Task createTask(Task task) {
+        if (task.getAssigneeName() != null) {
+    userRepo.findAll().stream()
+            .filter(u -> task.getAssigneeName().equalsIgnoreCase(u.getFullName()))
+            .findFirst()
+            .ifPresent(user -> task.setAssigneeId(user.getEmployeeId()));
+}
         task.setStatus("ASSIGNED");
         task.setProgress(0);
         task.setCreatedAt(new Date());
         task.setUpdatedAt(new Date());
         if (task.getHistory() == null) task.setHistory(new java.util.ArrayList<>());
         task.getHistory().add("Task created and assigned");
+
+System.out.println("========== TASK SAVE ==========");
+System.out.println("Assigned By : " + task.getAssignedBy());
+System.out.println("Assigned To : " + task.getAssignee());
+System.out.println("Assignee Name : " + task.getAssigneeName());
+System.out.println("================================");
         return repo.save(task);
     }
 
@@ -40,6 +52,15 @@ public class TaskService {
 
     // ── GET BY MANAGER (manager sees tasks they assigned OR tasks assigned to their team) ──
     public List<Task> getTasksByManager(String managerEmail) {
+        System.out.println("Logged Manager : " + managerEmail);
+
+List<Task> assignedByManager = repo.findByAssignedBy(managerEmail);
+
+System.out.println("Tasks Assigned By Manager : " + assignedByManager.size());
+
+assignedByManager.forEach(t ->
+    System.out.println(t.getTitle() + " -> " + t.getAssignedBy())
+);
         // Strategy 1: Get all team members under this manager (via managerEmail field on User)
         List<User> team = userRepo.findByManagerEmail(managerEmail);
         List<String> teamEmails = team.stream()
@@ -48,7 +69,7 @@ public class TaskService {
 
         // Strategy 2: Also get tasks directly assigned BY this manager (assignedBy field)
         // This ensures tasks are visible even if the employee's managerEmail field is not set
-        List<Task> assignedByManager = repo.findByAssignedBy(managerEmail);
+      
 
         // Collect all tasks assigned to team members
         List<Task> teamTasks = teamEmails.isEmpty()
@@ -82,18 +103,18 @@ public class TaskService {
         if (updated.getRejectReason() != null) {
             existing.setRejectReason(updated.getRejectReason());
         }
-        if (updated.getAttachmentUrl() != null) {
-    existing.setAttachmentUrl(updated.getAttachmentUrl());
-}
-
-if (updated.getAttachmentName() != null) {
-    existing.setAttachmentName(updated.getAttachmentName());
-}
         if (updated.getTitle() != null) existing.setTitle(updated.getTitle());
         if (updated.getDescription() != null) existing.setDescription(updated.getDescription());
         if (updated.getPriority() != null) existing.setPriority(updated.getPriority());
         if (updated.getAssignee() != null) existing.setAssignee(updated.getAssignee());
         if (updated.getDueDate() != null) existing.setDueDate(updated.getDueDate());
+// SAVE ACCEPT / REJECT ACTION
+if (updated.getTaskAction() != null) {
+    existing.setTaskAction(updated.getTaskAction());
+    existing.getHistory().add(
+        "Task action changed to: " + updated.getTaskAction()
+    );
+}
 
         existing.setUpdatedAt(new Date());
         return repo.save(existing);
@@ -145,4 +166,5 @@ if (updated.getAttachmentName() != null) {
         task.setUpdatedAt(new Date());
         return repo.save(task);
     }
+    
 }

@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HRMS Email Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #333;
+            margin-bottom: 30px;
+        }
+        .form-group {
+            margin-bottom: 20px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+            color: #555;
+        }
+        input {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 16px;
+            box-sizing: border-box;
+        }
+        button {
+            background: #4CAF50;
+            color: white;
+            padding: 12px 30px;
+            border: none;
+            border-radius: 5px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+        button:hover {
+            background: #45a049;
+        }
+        button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+        .result {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 5px;
+            display: none;
+        }
+        .result.success {
+            background: #d4edda;
+            border: 1px solid #c3e6cb;
+            color: #155724;
+            display: block;
+        }
+        .result.error {
+            background: #f8d7da;
+            border: 1px solid #f5c6cb;
+            color: #721c24;
+            display: block;
+        }
+        .result.loading {
+            background: #d1ecf1;
+            border: 1px solid #bee5eb;
+            color: #0c5460;
+            display: block;
+        }
+        pre {
+            background: #f4f4f4;
+            padding: 10px;
+            border-radius: 5px;
+            overflow-x: auto;
+            margin-top: 10px;
+        }
+        .note {
+            background: #fff3cd;
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+            border-left: 4px solid #ffc107;
+        }
+        .checklist {
+            background: #e7f3ff;
+            padding: 15px;
+            border-radius: 5px;
+            margin-top: 20px;
+        }
+        .checklist h3 {
+            margin-top: 0;
+            color: #004085;
+        }
+        .checklist ul {
+            list-style-position: inside;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔧 HRMS Email Test Tool</h1>
+        
+        <div class="note">
+            <strong>⚠️ Important:</strong> Make sure your backend is running on <code>http://localhost:8082</code>
+        </div>
+
+        <div class="form-group">
+            <label for="backendUrl">Backend URL:</label>
+            <input type="text" id="backendUrl" value="http://localhost:8082" placeholder="http://localhost:8082">
+        </div>
+
+        <div class="form-group">
+            <label for="email">Email Address to Test:</label>
+            <input type="email" id="email" placeholder="your.email@gmail.com" value="aishwarya.n@omoikaneinnovations.com">
+        </div>
+
+        <button id="testBtn" onclick="testEmail()">📧 Send Test Email</button>
+
+        <div id="result" class="result"></div>
+
+        <div class="checklist">
+            <h3>✅ After clicking "Send Test Email":</h3>
+            <ul>
+                <li>Watch your <strong>backend console</strong> for logs</li>
+                <li>Check <strong>Gmail Inbox</strong></li>
+                <li>Check <strong>Gmail Spam</strong> folder</li>
+                <li>Check <strong>Promotions</strong> and <strong>Updates</strong> tabs</li>
+                <li>Wait 1-2 minutes for email to arrive</li>
+            </ul>
+        </div>
+    </div>
+
+    <script>
+        async function testEmail() {
+            const emailInput = document.getElementById('email');
+            const backendUrl = document.getElementById('backendUrl').value;
+            const result = document.getElementById('result');
+            const testBtn = document.getElementById('testBtn');
+            const email = emailInput.value;
+
+            // Validation
+            if (!email) {
+                showResult('error', 'Please enter an email address');
+                return;
+            }
+
+            if (!email.includes('@')) {
+                showResult('error', 'Please enter a valid email address');
+                return;
+            }
+
+            // Show loading
+            testBtn.disabled = true;
+            showResult('loading', '⏳ Sending email... Please wait and watch backend console...');
+
+            try {
+                const response = await fetch(`${backendUrl}/api/employee/test-email`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ email: email })
+                });
+
+                const data = await response.json();
+
+                if (response.ok && data.success) {
+                    showResult('success', 
+                        `✅ ${data.message}\n\n` +
+                        `📋 Next Steps:\n` +
+                        `1. Check your Gmail inbox for "${email}"\n` +
+                        `2. Check Spam folder if not in inbox\n` +
+                        `3. Check Promotions and Updates tabs\n` +
+                        `4. Look at backend console for detailed logs\n\n` +
+                        `Full Response:\n` + JSON.stringify(data, null, 2)
+                    );
+                } else {
+                    showResult('error', 
+                        `❌ Email sending failed!\n\n` +
+                        `Error: ${data.error || data.message}\n\n` +
+                        `🔍 What to check:\n` +
+                        `1. Look at backend console for detailed error\n` +
+                        `2. Verify Gmail App Password in application.properties\n` +
+                        `3. Check if 2-Step Verification is enabled on Gmail\n` +
+                        `4. Try generating new App Password\n\n` +
+                        `Full Response:\n` + JSON.stringify(data, null, 2)
+                    );
+                }
+
+            } catch (error) {
+                showResult('error', 
+                    `❌ Connection Error!\n\n` +
+                    `Error: ${error.message}\n\n` +
+                    `🔍 Possible Causes:\n` +
+                    `1. Backend is not running on ${backendUrl}\n` +
+                    `2. Backend URL is incorrect\n` +
+                    `3. CORS issue (backend not allowing requests)\n` +
+                    `4. Firewall blocking connection\n\n` +
+                    `💡 Make sure backend is running: cd HRMSProject/HRMS-Backend && ./mvnw spring-boot:run`
+                );
+            } finally {
+                testBtn.disabled = false;
+            }
+        }
+
+        function showResult(type, message) {
+            const result = document.getElementById('result');
+            result.className = `result ${type}`;
+            result.innerHTML = `<pre>${message}</pre>`;
+        }
+
+        // Allow Enter key to submit
+        document.getElementById('email').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                testEmail();
+            }
+        });
+    </script>
+</body>
+</html>

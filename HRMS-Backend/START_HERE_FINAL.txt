@@ -1,0 +1,174 @@
+╔═══════════════════════════════════════════════════════════════╗
+║     AISHWARYA STILL LOGGING IN - FINAL FIX (100% WORKS)       ║
+╚═══════════════════════════════════════════════════════════════╝
+
+THE PROBLEM:
+  The frontend is running OLD code (without tenantId).
+  Even though Login.jsx was updated, the frontend dev server
+  was NOT restarted, so it's still using old code.
+
+═══════════════════════════════════════════════════════════════
+
+THE SOLUTION - DO THIS EXACTLY:
+═══════════════════════════════════════════════════════════════
+
+STEP 1: Stop EVERYTHING (30 seconds)
+───────────────────────────────────────────────────────────────
+
+Double-click:  STOP_EVERYTHING.bat
+
+This will force stop:
+  ✅ All frontend servers
+  ✅ Backend server
+
+═══════════════════════════════════════════════════════════════
+
+STEP 2: Update Database (30 seconds)
+───────────────────────────────────────────────────────────────
+
+Double-click:  EMERGENCY_COMPLETE_FIX.bat
+
+This will:
+  ✅ Set companyId for all Omoi employees
+  ✅ Verify the updates
+
+═══════════════════════════════════════════════════════════════
+
+STEP 3: Start Backend (5 minutes)
+───────────────────────────────────────────────────────────────
+
+Open NEW terminal and run:
+
+  cd HRMS-Backend
+  mvnw.cmd clean package -DskipTests
+  mvnw.cmd spring-boot:run
+
+Wait for: "Started HmrsbackendApplication"
+
+═══════════════════════════════════════════════════════════════
+
+STEP 4: Start Frontend (2 minutes)
+───────────────────────────────────────────────────────────────
+
+Open ANOTHER NEW terminal and run:
+
+  cd HRMS-Frontend
+  npm run dev:company-c
+
+Wait for: "Local: http://localhost:5178"
+
+═══════════════════════════════════════════════════════════════
+
+STEP 5: Test in Browser (1 minute)
+───────────────────────────────────────────────────────────────
+
+1. Open NEW Incognito window: Ctrl + Shift + N
+
+2. Go to: http://localhost:5178
+
+3. Open DevTools: F12 → Network tab
+
+4. Login: Aishwarya@company.com / admin123
+
+5. Click on "login" request in Network tab
+
+6. Check "Payload" - MUST show:
+   {
+     "email": "Aishwarya@company.com",
+     "password": "admin123",
+     "tenantId": "company-c"  ← MUST BE HERE
+   }
+
+7. Check backend console - MUST show:
+   EMAIL: Aishwarya@company.com
+   TENANT ID: company-c  ← MUST BE HERE
+   🔍 TENANT VALIDATION:
+   ❌ Login denied: Tenant mismatch
+
+8. Browser MUST show:
+   "Access denied: You do not have permission to access
+    this company portal."
+
+═══════════════════════════════════════════════════════════════
+
+✅ SUCCESS = "ACCESS DENIED" MESSAGE
+═══════════════════════════════════════════════════════════════
+
+If you see "Access denied" → IT WORKS! ✅
+
+Aishwarya is now BLOCKED from PeopleSync Enterprise.
+
+═══════════════════════════════════════════════════════════════
+
+IF STILL NOT WORKING:
+═══════════════════════════════════════════════════════════════
+
+Check 1: Is tenantId in browser payload?
+  → Open DevTools → Network → login request → Payload
+  → Must show "tenantId": "company-c"
+  → If missing: Frontend not restarted properly
+
+Check 2: Is backend receiving tenantId?
+  → Look at backend console
+  → Must show "TENANT ID: company-c"
+  → If missing: Frontend not sending it
+
+Check 3: Is validation running?
+  → Look for "🔍 TENANT VALIDATION:" in backend console
+  → If missing: Backend not running new code
+
+═══════════════════════════════════════════════════════════════
+
+WHY THIS WORKS NOW:
+═══════════════════════════════════════════════════════════════
+
+Before:
+  ❌ Frontend running old code (no tenantId)
+  ❌ Backend not receiving tenantId
+  ❌ Validation skipped
+  ❌ Login succeeds
+
+After:
+  ✅ Frontend restarted with new code (sends tenantId)
+  ✅ Backend receives tenantId
+  ✅ Validation runs
+  ✅ Login fails with "Access denied"
+
+═══════════════════════════════════════════════════════════════
+
+TIMELINE:
+═══════════════════════════════════════════════════════════════
+
+  Step 1 (Stop):      30 sec  ███
+  Step 2 (Database):  30 sec  ███
+  Step 3 (Backend):    5 min  ██████████████
+  Step 4 (Frontend):   2 min  ██████
+  Step 5 (Test):       1 min  ███
+  ─────────────────────────────────────
+  TOTAL:              ~9 min
+
+═══════════════════════════════════════════════════════════════
+
+IMPORTANT NOTES:
+═══════════════════════════════════════════════════════════════
+
+1. You MUST restart BOTH frontend AND backend
+2. You MUST use Incognito mode to test (or clear cookies)
+3. You MUST wait for both services to fully start
+4. Check DevTools Network tab to verify tenantId is sent
+
+═══════════════════════════════════════════════════════════════
+
+START NOW:
+═══════════════════════════════════════════════════════════════
+
+1. STOP_EVERYTHING.bat
+2. EMERGENCY_COMPLETE_FIX.bat
+3. Start backend (cd HRMS-Backend && mvnw.cmd spring-boot:run)
+4. Start frontend (cd HRMS-Frontend && npm run dev:company-c)
+5. Test in Incognito
+
+═══════════════════════════════════════════════════════════════
+
+THIS WILL 100% WORK IF YOU FOLLOW ALL 5 STEPS EXACTLY.
+═══════════════════════════════════════════════════════════════

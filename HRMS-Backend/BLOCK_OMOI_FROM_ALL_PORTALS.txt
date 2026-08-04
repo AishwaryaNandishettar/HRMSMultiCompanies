@@ -1,0 +1,231 @@
+╔═══════════════════════════════════════════════════════════════╗
+║          BLOCK OMOI EMPLOYEES FROM ALL CLIENT PORTALS         ║
+╚═══════════════════════════════════════════════════════════════╝
+
+PROBLEM:
+  Omoikaneinnovations employees can login to:
+  ❌ TalentHub Solutions (localhost:5176)
+  ❌ WorkForce Pro (localhost:5177)
+  ❌ PeopleSync Enterprise (localhost:5178)
+
+  They should NOT be able to access ANY client portal!
+
+═══════════════════════════════════════════════════════════════
+
+SOLUTION - 3 STEPS:
+
+┌───────────────────────────────────────────────────────────┐
+│ STEP 1: FIX DATABASE (2 minutes)                          │
+└───────────────────────────────────────────────────────────┘
+
+Run this command:
+
+  mongosh < fix-all-companies.js
+
+Or manually:
+
+  mongosh
+  use hrms_db
+  
+  db.users.updateMany(
+    { email: { $regex: "@(omoi|company)\\.com$", $options: "i" }},
+    { $set: { companyId: "omoikaneinnovations" }}
+  )
+
+Verify:
+  
+  db.users.find(
+    { companyId: "omoikaneinnovations" },
+    { email: 1, companyId: 1 }
+  )
+
+Expected: All Omoi emails with companyId: "omoikaneinnovations"
+
+┌───────────────────────────────────────────────────────────┐
+│ STEP 2: RESTART BACKEND (5 minutes)                       │
+└───────────────────────────────────────────────────────────┘
+
+Double-click:  restart-backend.bat
+
+Or manually:
+  
+  taskkill /F /IM java.exe
+  cd HRMS-Backend
+  mvnw.cmd clean install -DskipTests
+  mvnw.cmd spring-boot:run
+
+Wait for: "Started HmrsbackendApplication"
+
+┌───────────────────────────────────────────────────────────┐
+│ STEP 3: TEST ALL PORTALS (5 minutes)                      │
+└───────────────────────────────────────────────────────────┘
+
+═══════════════════════════════════════════════════════════════
+
+TEST 1: TalentHub Solutions
+─────────────────────────────────────────────────────────────
+
+  URL: http://localhost:5176
+  Try: Aishwarya@company.com / admin123
+  
+  Expected Result:
+  ❌ "Access denied: You do not have permission to access 
+      this company portal."
+
+─────────────────────────────────────────────────────────────
+
+TEST 2: WorkForce Pro
+─────────────────────────────────────────────────────────────
+
+  URL: http://localhost:5177
+  Try: Aishwarya@company.com / admin123
+  
+  Expected Result:
+  ❌ "Access denied: You do not have permission to access 
+      this company portal."
+
+─────────────────────────────────────────────────────────────
+
+TEST 3: PeopleSync Enterprise
+─────────────────────────────────────────────────────────────
+
+  URL: http://localhost:5178
+  Try: Aishwarya@company.com / admin123
+  
+  Expected Result:
+  ❌ "Access denied: You do not have permission to access 
+      this company portal."
+
+═══════════════════════════════════════════════════════════════
+
+AUTOMATED TEST:
+─────────────────────────────────────────────────────────────
+
+After Step 2, run:
+
+  test-all-portals.bat
+
+Expected output:
+  TEST 1: HTTP Status: 403 ✅
+  TEST 2: HTTP Status: 403 ✅
+  TEST 3: HTTP Status: 403 ✅
+
+═══════════════════════════════════════════════════════════════
+
+VERIFICATION:
+─────────────────────────────────────────────────────────────
+
+Backend logs should show for EACH portal:
+
+  EMAIL: Aishwarya@company.com
+  TENANT ID: company-a (or b or c)
+  🔍 TENANT VALIDATION:
+    Request Tenant ID: company-a (or b or c)
+    User Company ID: omoikaneinnovations
+  ❌ Login denied: Tenant mismatch
+
+═══════════════════════════════════════════════════════════════
+
+WHAT EMPLOYEES SHOULD SEE:
+
+┌───────────────────────────────────────────────────────────┐
+│ Aishwarya tries TalentHub (localhost:5176)               │
+├───────────────────────────────────────────────────────────┤
+│ [Email: Aishwarya@company.com]                           │
+│ [Password: ********]                                      │
+│ [Login Button]                                            │
+├───────────────────────────────────────────────────────────┤
+│ ❌ Access denied: You do not have permission to access   │
+│    this company portal. Please use the correct company   │
+│    URL.                                                   │
+└───────────────────────────────────────────────────────────┘
+
+SAME for WorkForce Pro (5177) and PeopleSync (5178)!
+
+═══════════════════════════════════════════════════════════════
+
+AFFECTED EMPLOYEES:
+─────────────────────────────────────────────────────────────
+
+All Omoikaneinnovations employees will be blocked:
+  - Aishwarya@company.com
+  - nikita@omoi.com
+  - mahesh@omoi.com
+  - vishnu@omoi.com
+  - padmanabh@omoi.com
+  - shambuling@omoi.com
+  - lata@omoi.com
+  - (any other @omoi.com or @company.com users)
+
+═══════════════════════════════════════════════════════════════
+
+COMPANY MAPPING:
+─────────────────────────────────────────────────────────────
+
+Portal              URL              Tenant    Who Can Login?
+─────────────────────────────────────────────────────────────
+TalentHub Solutions localhost:5176   company-a  company-a only
+WorkForce Pro       localhost:5177   company-b  company-b only
+PeopleSync          localhost:5178   company-c  company-c only
+Omoikaneinnovations localhost:5173   (varies)   omoi only
+
+═══════════════════════════════════════════════════════════════
+
+CHECKLIST:
+─────────────────────────────────────────────────────────────
+
+Before testing:
+  [ ] Database updated (fix-all-companies.js)
+  [ ] Backend restarted (restart-backend.bat)
+  [ ] Browser cache cleared (use Incognito)
+
+After testing:
+  [ ] TalentHub blocks Omoi employees
+  [ ] WorkForce Pro blocks Omoi employees
+  [ ] PeopleSync blocks Omoi employees
+  [ ] Backend logs show "Tenant mismatch"
+  [ ] Error message displays correctly
+
+═══════════════════════════════════════════════════════════════
+
+QUICK COMMANDS:
+─────────────────────────────────────────────────────────────
+
+  # 1. Fix database
+  mongosh < fix-all-companies.js
+
+  # 2. Verify database
+  mongosh < verify-companies.js
+
+  # 3. Restart backend
+  restart-backend.bat
+
+  # 4. Test all portals
+  test-all-portals.bat
+
+═══════════════════════════════════════════════════════════════
+
+TIMELINE:
+─────────────────────────────────────────────────────────────
+
+  Database setup:   2 min  ██████░░░░░░░░░░
+  Backend restart:  5 min  ████████████████
+  Test 3 portals:   5 min  ████████████████
+  ────────────────────────────────────────
+  TOTAL:           12 min
+
+═══════════════════════════════════════════════════════════════
+
+Ready? Run these commands in order:
+
+1. mongosh < fix-all-companies.js
+2. restart-backend.bat
+3. test-all-portals.bat
+
+Then manually test each portal with Aishwarya's login.
+
+═══════════════════════════════════════════════════════════════
+
+✅ SUCCESS = All 3 portals show "Access denied" for Omoi users!
+
+═══════════════════════════════════════════════════════════════

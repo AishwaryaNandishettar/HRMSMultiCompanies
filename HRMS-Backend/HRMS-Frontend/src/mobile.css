@@ -1,0 +1,575 @@
+/* =========================================================
+   HRMS MOBILE RESPONSIVE FIX
+   Makes entire application work perfectly on mobile devices
+   WITHOUT changing any component logic
+========================================================= */
+
+/* ═══════════════════════════════════════════════════════
+   BREAKPOINT: ≤ 768px (MOBILE - PHONE / SMALL TABLET)
+   ═══════════════════════════════════════════════════════ */
+
+@media only screen and (max-width: 768px) {
+
+  /* ─────────────────────────────────────────────────────
+     GLOBAL PAGE FIXES
+  ───────────────────────────────────────────────────── */
+  
+  html, body {
+    overflow-x: hidden !important;
+    width: 100% !important;
+    max-width: 100vw !important;
+  }
+
+  /* All pages get mobile padding */
+  .page-content,
+  .profilePage,
+  .payroll-page,
+  .home-page,
+  .attendance-page,
+  .leave-page {
+    padding: 10px !important;
+  }
+
+  /* ─────────────────────────────────────────────────────
+     SIDEBAR - MOBILE DRAWER
+  ───────────────────────────────────────────────────── */
+  
+  .sidebarContainer,
+  .sidebar {
+    position: fixed !important;
+    top: 0 !important;
+    left: -100% !important;
+    width: 260px !important;
+    min-width: 260px !important;
+    max-width: 260px !important;
+    height: 100dvh !important;
+    z-index: 9999 !important;
+    transition: left 0.3s ease !important;
+  }
+
+  .sidebarContainer.open,
+  .sidebar.open {
+    left: 0 !important;
+  }
+
+  .sidebarTitle {
+    font-size: 18px !important;
+    white-space: nowrap !important;
+  }
+
+  /* ─────────────────────────────────────────────────────
+     NAVBAR - MOBILE COMPACT
+  ───────────────────────────────────────────────────── */
+  
+  .navbarContainer {
+    padding: 0 10px !important;
+    height: 50px !important;
+  }
+
+  .hamburger {
+    display: flex !important;
+  }
+
+  .userInfo {
+    display: none !important;
+  }
+
+  .logo {
+    height: 32px !important;
+  }
+
+  /* ─────────────────────────────────────────────────────
+     KPI CARDS / STATS - STACK VERTICALLY
+  ───────────────────────────────────────────────────── */
+  
+  .kpi-row,
+  .kpiRow,
+  .payroll-stats,
+  .stat-row,
+  .stats,
+  .fa-kpis,
+  .kpi-grid,
+  .claim-dashboard {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 10px !important;
+  }
+
+  .kpi-card,
+  .stat-card {
+    width: 100% !important;
+    min-width: 100% !important;
+  }
+
+  /* ─────────────────────────────────────────────────────
+     LAYOUT GRIDS - SINGLE COLUMN
+  ───────────────────────────────────────────────────── */
+  
+  .main-grid,
+  .bottom-grid,
+  .chart-row,
+  .charts-grid,
+  .fa-grid,
+  .content,
+  .form-grid,
+  .grid-2,
+  .dual-box,
+  .salary-layout,
+  .profileContainer,
+  .profileGrid {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 12px !important;
+  }
+
+  .profileLeft,
+  .profileRight {
+    width: 100% !important;
+  }
+
+  /* ─────────────────────────────────────────────────────
+     PAYROLL - MOBILE LAYOUT
+  ───────────────────────────────────────────────────── */
+  
+  .payroll-content {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 14px !important;
+  }
+
+  .payroll-left,
+  .payroll-right {
+    width: 100% !important;
+  }
+
+  .payroll-right {
+    position: static !important;
+    order: 2;
+  }
+
+  .profile-card {
+    position: static !important;
+    width: 100% !important;
+  }
+
+  /* Toolbar wraps horizontally */
+  .payroll-toolbar {
+    display: flex !important;
+    flex-wrap: nowrap !important;
+    overflow-x: auto !important;
+    gap: 8px !important;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+  }
+
+  .payroll-toolbar::-webkit-scrollbar {
+    display: none;
+  }
+
+  .payroll-toolbar input,
+  .payroll-toolbar select,
+  .payroll-toolbar button {
+    flex-shrink: 0 !important;
+    min-width: 120px;
+  }
+
+  /* ─────────────────────────────────────────────────────
+     TABLES - HORIZONTAL SCROLL INSIDE WRAPPER
+  ───────────────────────────────────────────────────── */
+  
+  .table-wrapper,
+  .table-box,
+  .payroll-table-wrapper,
+  .payroll-table-container,
+  .table-container,
+  .tableWrap {
+    width: 100% !important;
+    max-width: 100% !important;
+    overflow-x: auto !important;
+    overflow-y: hidden !important;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  table,
+  .payroll-table,
+  .table,
+  .claim-table,
+  .leave-table {
+    min-width: 800px !important;
+  }
+
+  /* Compact table cells */
+  table th,
+  table td {
+    padding: 8px 6px !important;
+    font-size: 11px !important;
+    white-space: nowrap;
+  }
+
+  /* ─────────────────────────────────────────────────────
+     MODALS - FULL-WIDTH ON MOBILE
+  ───────────────────────────────────────────────────── */
+  
+  .modal,
+  .payslip-modal,
+  .payslip-modal.large,
+  .salary-calc-modal,
+  .modal-content {
+    width: 95% !important;
+    max-width: 95% !important;
+    max-height: 90vh !important;
+    margin: 10px auto !important;
+  }
+
+  .modal-body,
+  .payslip-body {
+    overflow-y: auto !important;
+    max-height: 70vh !important;
+  }
+
+  /* Payslip A4 sheet responsive */
+  .salary-slip,
+  .payslip-sheet,
+  .payslip-a4 {
+    width: 100% !important;
+    padding: 16px !important;
+  }
+
+  .payslip-body-grid,
+  .salary-grid {
+    grid-template-columns: 1fr !important;
+  }
+
+  /* ─────────────────────────────────────────────────────
+     FORMS - STACK INPUTS VERTICALLY
+  ───────────────────────────────────────────────────── */
+  
+  .form-row,
+  .input-group,
+  .field-group {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 10px !important;
+  }
+
+  .form-row input,
+  .form-row select,
+  .form-row textarea {
+    width: 100% !important;
+  }
+
+  /* ─────────────────────────────────────────────────────
+     FOOTER / PAGINATION - STACK VERTICALLY
+  ───────────────────────────────────────────────────── */
+  
+  .payroll-footer,
+  .footer,
+  .table-footer {
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    gap: 10px !important;
+  }
+
+  .pagination {
+    width: 100%;
+    overflow-x: auto;
+    flex-wrap: nowrap;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .pagination button {
+    min-width: 36px;
+    padding: 0 10px;
+  }
+
+  /* ─────────────────────────────────────────────────────
+     BUTTONS - FULL WIDTH
+  ───────────────────────────────────────────────────── */
+  
+  .btn-primary,
+  .btn-secondary,
+  .submit-btn,
+  .save-btn {
+    width: 100% !important;
+    justify-content: center !important;
+  }
+
+  .action-buttons,
+  .button-group {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 8px !important;
+  }
+
+  .action-buttons button {
+    width: 100% !important;
+  }
+
+  /* ─────────────────────────────────────────────────────
+     CHARTS - FULL WIDTH
+  ───────────────────────────────────────────────────── */
+  
+  .chart-container,
+  .recharts-wrapper {
+    width: 100% !important;
+    max-width: 100% !important;
+  }
+
+  /* ─────────────────────────────────────────────────────
+     FILTERS / DROPDOWNS - MOBILE FRIENDLY
+  ───────────────────────────────────────────────────── */
+  
+  .filter-popup,
+  .dropdown-menu,
+  .action-menu {
+    position: fixed !important;
+    left: 5% !important;
+    right: 5% !important;
+    width: 90% !important;
+    max-width: 90% !important;
+  }
+
+  /* ─────────────────────────────────────────────────────
+     SPECIFIC PAGE FIXES
+  ───────────────────────────────────────────────────── */
+
+  /* Home page */
+  .home-header {
+    flex-direction: column !important;
+    align-items: flex-start !important;
+  }
+
+  /* Attendance */
+  .attendance-header,
+  .attendance-filters {
+    flex-wrap: wrap !important;
+  }
+
+  /* Leave Management */
+  .leave-summary {
+    grid-template-columns: 1fr !important;
+  }
+
+  /* Profile */
+  .profileLeft {
+    order: 1;
+  }
+
+  .profileRight {
+    order: 2;
+  }
+
+  /* Recruitment pipeline */
+  .pipeline-card {
+    width: 100% !important;
+  }
+
+  /* Financial Assessment */
+  .fa-span-2,
+  .fa-full {
+    grid-column: span 1 !important;
+  }
+
+  /* Insurance / Loan */
+  .claim-card,
+  .loan-card {
+    width: 100% !important;
+  }
+
+  /* Settings */
+  .settings-grid {
+    grid-template-columns: 1fr !important;
+  }
+
+  /* Tasks */
+  .task-board {
+    flex-direction: column !important;
+  }
+
+  .task-column {
+    width: 100% !important;
+  }
+
+  /* ─────────────────────────────────────────────────────
+     UTILITY OVERRIDES
+  ───────────────────────────────────────────────────── */
+  
+  .hide-mobile {
+    display: none !important;
+  }
+
+  .show-mobile {
+    display: block !important;
+  }
+
+  /* Text sizes */
+  h1 { font-size: 20px !important; }
+  h2 { font-size: 18px !important; }
+  h3 { font-size: 16px !important; }
+  h4 { font-size: 14px !important; }
+
+  /* Compact spacing */
+  .section-gap {
+    gap: 10px !important;
+  }
+
+  .card {
+    padding: 14px !important;
+  }
+}
+
+/* ═══════════════════════════════════════════════════════
+   BREAKPOINT: 769px - 1024px (TABLET)
+   ═══════════════════════════════════════════════════════ */
+
+@media only screen and (min-width: 769px) and (max-width: 1024px) {
+
+  /* 2-column grids */
+  .kpi-row,
+  .kpiRow,
+  .payroll-stats,
+  .fa-kpis {
+    grid-template-columns: repeat(2, 1fr) !important;
+  }
+
+  /* Table responsive */
+  .table-wrapper {
+    overflow-x: auto;
+  }
+
+  /* Payroll keeps 2-col layout */
+  .payroll-content {
+    grid-template-columns: 2fr 1fr;
+  }
+
+  /* Profile stays 2-col */
+  .profileContainer {
+    gap: 20px;
+  }
+
+  .profileLeft {
+    width: 240px;
+  }
+}
+
+/* ═══════════════════════════════════════════════════════
+   BREAKPOINT: ≤ 1280px (SMALL LAPTOP)
+   ═══════════════════════════════════════════════════════ */
+
+@media only screen and (max-width: 1280px) {
+
+  /* Home / Dashboard grids */
+  .main-grid,
+  .bottom-grid {
+    grid-template-columns: 1fr !important;
+  }
+
+  .chart-row {
+    grid-template-columns: 1fr 1fr !important;
+  }
+
+  /* Recruitment */
+  .content {
+    grid-template-columns: 1fr !important;
+  }
+
+  /* Financial grids */
+  .fa-grid {
+    grid-template-columns: 1fr 1fr !important;
+  }
+}
+
+/* ═══════════════════════════════════════════════════════
+   HOME DASHBOARD — TABLE HORIZONTAL SCROLL (MOBILE)
+   These override the global "table min-width" + "overflow-x:hidden"
+   so the payroll & employee directory tables scroll correctly.
+   ═══════════════════════════════════════════════════════ */
+
+@media only screen and (max-width: 768px) {
+
+  /* Allow panels to not clip inner scroll boxes */
+  .panel,
+  .emp-panel,
+  .small-panel {
+    overflow: visible !important;
+  }
+
+  /* Employee Directory scroll wrapper */
+  .emp-scroll,
+  .scrollable-box.emp-scroll {
+    display: block !important;
+    width: 100% !important;
+    max-height: 300px !important;
+    overflow-x: auto !important;
+    overflow-y: auto !important;
+    -webkit-overflow-scrolling: touch !important;
+    position: relative !important;
+  }
+
+  /* Payroll scroll wrapper */
+  .payroll-scroll,
+  .scrollable-box.payroll-scroll {
+    display: block !important;
+    width: 100% !important;
+    max-height: 220px !important;
+    overflow-x: auto !important;
+    overflow-y: auto !important;
+    -webkit-overflow-scrolling: touch !important;
+    position: relative !important;
+  }
+
+  /* Tables inside those wrappers — keep their min-width
+     so the container actually gets a scrollbar */
+  .emp-scroll table,
+  .emp-scroll .emp-table {
+    min-width: 560px !important;
+    width: max-content !important;
+    max-width: none !important;
+  }
+
+  .payroll-scroll table,
+  .payroll-scroll .emp-table {
+    min-width: 520px !important;
+    width: max-content !important;
+    max-width: none !important;
+  }
+
+  /* Charts — each on its own row, full width, tall enough to render */
+  .chart-row {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 12px !important;
+  }
+
+  .chart-box {
+    width: 100% !important;
+    min-height: 300px !important;
+  }
+
+  /* Make recharts fill the chart-box */
+  .chart-box .recharts-responsive-container {
+    width: 100% !important;
+    min-height: 220px !important;
+  }
+
+}
+
+/* ═══════════════════════════════════════════════════════
+   SAFARI iOS SPECIFIC FIXES
+   ═══════════════════════════════════════════════════════ */
+
+@supports (-webkit-touch-callout: none) {
+  
+  /* Fix 100vh issue on mobile Safari */
+  .app-container,
+  .content-area,
+  .sidebar {
+    min-height: -webkit-fill-available;
+  }
+
+  /* Smooth scroll */
+  .page-content,
+  .table-wrapper {
+    -webkit-overflow-scrolling: touch;
+  }
+}

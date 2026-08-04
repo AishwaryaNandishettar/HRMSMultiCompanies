@@ -2,118 +2,104 @@ package com.omoikaneinnovation.hmrsbackend.service;
 
 import com.omoikaneinnovation.hmrsbackend.dto.AttendanceSummary;
 import com.omoikaneinnovation.hmrsbackend.model.Attendance;
+import com.omoikaneinnovation.hmrsbackend.model.TimesheetSummary;
 import com.omoikaneinnovation.hmrsbackend.repository.AttendanceRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDate;
 import java.time.YearMonth;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 public class AttendanceIntegrationService {
 
     @Autowired
     private AttendanceRepository attendanceRepository;
+    
+    @Autowired
+    private TimesheetService timesheetService;
 
     /**
      * Get monthly attendance summary for an employee
+     * Uses Timesheet data instead of raw Attendance records
      * @param employeeId Employee ID
      * @param month Month in format "May-2026"
      * @return AttendanceSummary
      */
     public AttendanceSummary getMonthlyAttendance(String employeeId, String month) {
         try {
-            // Parse month (e.g., "July-2026" -> 2026-07)
-            String[] parts = month.split("-");
-            String monthName = parts[0];
-            int year = Integer.parseInt(parts[1]);
+            // Use TimesheetService to get aggregated monthly summary
+            TimesheetSummary timesheetSummary = timesheetService.getMonthlySummary(employeeId, month);
             
-            DateTimeFormatter inputFormatter = DateTimeFormatter.ofPattern("MMMM-yyyy");
-            YearMonth yearMonth = YearMonth.parse(month, inputFormatter);
-            
-            // Convert to YYYY-MM format for efficient DB query (e.g., "2026-07")
-            String yearMonthStr = String.format("%d-%02d", year, yearMonth.getMonthValue());
-            
-            int totalWorkingDays = yearMonth.lengthOfMonth(); // Simplified: all days are working days
-            
-            // ✅ FIX: Query by empId (employee code) first, fallback to userId
-            List<Attendance> monthlyAttendance = attendanceRepository.findByEmpIdAndDateStartingWith(employeeId, yearMonthStr);
-            
-            System.out.println("🔍 Searching attendance for employeeId: " + employeeId);
-            System.out.println("📅 Month: " + month + " (Year-Month: " + yearMonthStr + ")");
-            System.out.println("📋 Attendance records found by empId: " + monthlyAttendance.size());
-            
-            // Fallback: try userId if empId query returns nothing
-            if (monthlyAttendance.isEmpty()) {
-                System.out.println("⚠️ No records found by empId, trying userId...");
-                monthlyAttendance = attendanceRepository.findByUserIdAndDateStartingWith(employeeId, yearMonthStr);
-                System.out.println("📋 Attendance records found by userId: " + monthlyAttendance.size());
+            if (timesheetSummary == null) {
+                System.err.println("No timesheet data found for employeeId: " + employeeId + ", month: " + month);
+                return createDefaultSummary(employeeId, month);
             }
             
-            // Debug output
-            monthlyAttendance.forEach(att -> 
-                System.out.println("✅ Record: " + att.getDate() + " | CheckIn: " + att.getCheckIn() + " | empId: " + att.getEmpId())
-            );
+            // Convert TimesheetSummary to AttendanceSummary
+            int presentDays = timesheetSummary.getPresent() != null ? timesheetSummary.getPresent() : 0;
+            int absentDays = timesheetSummary.getAbsent() != null ? timesheetSummary.getAbsent() : 0;
+            int lopDays = timesheetSummary.getLop() != null ? timesheetSummary.getLop() : 0;
+            int workingDays = timesheetSummary.getWorkingDays() != null ? timesheetSummary.getWorkingDays() : 30;
+            int lateArrivals = timesheetSummary.getLateCount() != null ? timesheetSummary.getLateCount() : 0;
             
-            System.out.println("📊 Final monthly attendance count: " + monthlyAttendance.size());
-            
-            int presentDays = monthlyAttendance.size();
-            int absentDays = totalWorkingDays - presentDays;
-            
-            // Calculate late arrivals (check-in after 10:00 AM)
-            int lateArrivals = (int) monthlyAttendance.stream()
-                .filter(att -> {
-                    if (att.getCheckIn() == null) return false;
-                    try {
-                        String[] timeParts = att.getCheckIn().split(":");
-                        int hour = Integer.parseInt(timeParts[0]);
-                        return hour >= 10; // Late if after 10 AM
-                    } catch (Exception e) {
-                        return false;
-                    }
-                })
-                .count();
-            
-            // Calculate total worked minutes
-            int totalWorkedMinutes = monthlyAttendance.stream()
-                .mapToInt(Attendance::getWorkedMinutes)
-                .sum();
-            
-            // Calculate overtime (if worked more than 8 hours per day)
-            int expectedMinutes = presentDays * 8 * 60; // 8 hours per day
-            int overtimeMinutes = Math.max(0, totalWorkedMinutes - expectedMinutes);
-            
-            double attendancePercentage = totalWorkingDays > 0 
-                ? (presentDays * 100.0) / totalWorkingDays 
+            // Calculate attendance percentage
+            double attendancePercentage = workingDays > 0 
+                ? (presentDays * 100.0) / workingDays 
                 : 0.0;
+            
+            System.out.println("✅ TIMESHEET DATA USED:");
+            System.out.println("   Employee: " + employeeId);
+            System.out.println("   Month: " + month);
+            System.out.println("   Present: " + presentDays);
+            System.out.println("   Absent: " + absentDays);
+            System.out.println("   LOP: " + lopDays);
+            System.out.println("   Working Days: " + workingDays);
+            System.out.println("   Late Arrivals: " + lateArrivals);
+            System.out.println("   Attendance %: " + attendancePercentage);
             
             return AttendanceSummary.builder()
                 .employeeId(employeeId)
                 .month(month)
-                .totalWorkingDays(totalWorkingDays)
+                .totalWorkingDays(workingDays)
                 .presentDays(presentDays)
                 .absentDays(absentDays)
+                .lopDays(lopDays)
                 .halfDays(0) // Can be enhanced later
                 .lateArrivals(lateArrivals)
                 .earlyDepartures(0) // Can be enhanced later
                 .attendancePercentage(Math.round(attendancePercentage * 100.0) / 100.0)
-                .totalWorkedMinutes(totalWorkedMinutes)
-                .overtimeMinutes(overtimeMinutes)
+                .totalWorkedMinutes(presentDays * 8 * 60) // Estimate: 8 hours per present day
+                .overtimeMinutes(0) // Can be enhanced later
                 .build();
                 
         } catch (Exception e) {
-            System.err.println("Error calculating attendance summary: " + e.getMessage());
+            System.err.println("Error calculating attendance summary from timesheet: " + e.getMessage());
+            e.printStackTrace();
             // Return default summary
-            return AttendanceSummary.builder()
-                .employeeId(employeeId)
-                .month(month)
-                .totalWorkingDays(30)
-                .presentDays(0)
-                .absentDays(30)
-                .attendancePercentage(0.0)
-                .build();
+            return createDefaultSummary(employeeId, month);
         }
+    }
+    
+    /**
+     * Helper method to create a default attendance summary when no data is found
+     */
+    private AttendanceSummary createDefaultSummary(String employeeId, String month) {
+        return AttendanceSummary.builder()
+            .employeeId(employeeId)
+            .month(month)
+            .totalWorkingDays(30)
+            .presentDays(0)
+            .absentDays(30)
+            .lopDays(0)
+            .attendancePercentage(0.0)
+            .lateArrivals(0)
+            .totalWorkedMinutes(0)
+            .overtimeMinutes(0)
+            .build();
     }
 
     /**

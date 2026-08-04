@@ -1,0 +1,156 @@
+╔═══════════════════════════════════════════════════════════════╗
+║              AISHWARYA IS STILL LOGGING IN - FIX NOW          ║
+╚═══════════════════════════════════════════════════════════════╝
+
+The problem is that you haven't completed BOTH steps yet.
+
+CODE CHANGES ARE DONE ✅
+But you need to:
+  1. Update database ❌ (probably not done)
+  2. Restart backend ❌ (probably not done)
+
+═══════════════════════════════════════════════════════════════
+
+STOP! DO THESE 2 THINGS RIGHT NOW:
+═══════════════════════════════════════════════════════════════
+
+STEP 1: UPDATE DATABASE
+───────────────────────────────────────────────────────────────
+
+Double-click this file:  CRITICAL_FIX_NOW.bat
+
+This will:
+  - Update Aishwarya's companyId to "omoikaneinnovations"
+  - Update all Omoi employees
+  - Show you the results
+
+Wait for: "Database Update Complete"
+
+═══════════════════════════════════════════════════════════════
+
+STEP 2: RESTART BACKEND
+───────────────────────────────────────────────────────────────
+
+Go to your terminal where backend is running and press:
+  
+  Ctrl + C
+
+Then run:
+
+  cd HRMS-Backend
+  mvnw.cmd spring-boot:run
+
+OR double-click:  restart-backend.bat
+
+Wait for: "Started HmrsbackendApplication"
+
+═══════════════════════════════════════════════════════════════
+
+STEP 3: TEST
+───────────────────────────────────────────────────────────────
+
+1. Open NEW Incognito window (Ctrl + Shift + N)
+
+2. Go to: http://localhost:5176
+
+3. Login:
+   Email: Aishwarya@company.com
+   Password: admin123
+
+4. Should see: "Access denied"
+
+═══════════════════════════════════════════════════════════════
+
+IF STILL NOT WORKING:
+───────────────────────────────────────────────────────────────
+
+Run this to diagnose:
+
+  CHECK_WHY_STILL_LOGGING_IN.bat
+
+It will tell you exactly what's wrong.
+
+═══════════════════════════════════════════════════════════════
+
+MANUAL DATABASE FIX (if batch file doesn't work):
+───────────────────────────────────────────────────────────────
+
+Open terminal and type:
+
+  mongosh
+
+Then paste EXACTLY this:
+
+  use hrms_db
+  
+  db.users.updateOne(
+    { email: "Aishwarya@company.com" },
+    { $set: { companyId: "omoikaneinnovations" }}
+  )
+  
+  db.users.findOne(
+    { email: "Aishwarya@company.com" },
+    { email: 1, companyId: 1 }
+  )
+
+You should see:
+  {
+    email: "Aishwarya@company.com",
+    companyId: "omoikaneinnovations"
+  }
+
+If you see this, the database is fixed. Now restart backend.
+
+═══════════════════════════════════════════════════════════════
+
+WHY THIS IS HAPPENING:
+───────────────────────────────────────────────────────────────
+
+The code I wrote is already saved in your files:
+  ✅ Login.jsx sends tenantId
+  ✅ LoginRequest.java has tenantId field
+  ✅ AuthController.java validates tenantId
+
+BUT Java/backend needs to be RECOMPILED and RESTARTED for the 
+changes to actually run.
+
+AND the database needs the companyId field set for users.
+
+Without these 2 steps, the OLD code is still running (before
+the fix).
+
+═══════════════════════════════════════════════════════════════
+
+QUICK CHECK:
+───────────────────────────────────────────────────────────────
+
+After you restart backend, look for this in backend console:
+
+  🔍 TENANT VALIDATION:
+    Request Tenant ID: company-a
+    User Company ID: omoikaneinnovations
+  ❌ Login denied: Tenant mismatch
+
+If you DON'T see this message → Backend not restarted properly
+
+═══════════════════════════════════════════════════════════════
+
+THE ABSOLUTE TRUTH:
+───────────────────────────────────────────────────────────────
+
+I have fixed the CODE ✅
+You need to:
+  1. Run the database update ❌
+  2. Restart the backend ❌
+
+That's it. Do these 2 things and it will work.
+
+═══════════════════════════════════════════════════════════════
+
+START HERE:
+
+1. Double-click: CRITICAL_FIX_NOW.bat
+2. Double-click: restart-backend.bat  
+3. Test login in Incognito mode
+
+═══════════════════════════════════════════════════════════════

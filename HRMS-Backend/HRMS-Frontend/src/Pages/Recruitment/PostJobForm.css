@@ -1,0 +1,249 @@
+
+/* ===== MODAL OVERLAY ===== */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  padding: 20px;
+
+  display: flex;
+  justify-content: center;
+  align-items: center;
+
+  overflow: hidden;
+}
+.modal-content {
+  background: transparent;
+ 
+  overflow: hidden;
+}
+
+
+
+
+
+
+
+
+.postjob-card {
+  width: 100%;
+  max-width: 700px;
+ 
+  max-height: 90vh;
+ border-radius: 0;
+  background: #fff;
+
+  
+
+  display: flex;
+  flex-direction: column;
+
+  overflow: visible;
+
+  position: relative;
+
+  box-shadow:
+    0 20px 40px rgba(0,0,0,.08),
+    0 10px 20px rgba(0,0,0,.05);
+}
+
+.postjob-actions {
+  flex-shrink: 0;
+}
+
+.postjob-header {
+  flex-shrink: 0;
+}
+/* ===== CLOSE BUTTON ===== */
+.close-btn {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  width: 32px;
+  height: 32px;
+  border: none;
+  border-radius: 50%;
+  background: #ef4444;
+  color: white;
+  cursor: pointer;
+  font-size: 18px;
+  font-weight: bold;
+  z-index: 1000;
+  transition: background 0.2s ease;
+}
+
+.close-btn:hover {
+  background: #dc2626;
+}
+
+/* ===== HEADER ===== */
+.postjob-header {
+  position: sticky;
+  top: 0;
+  background: #fff;
+  z-index: 10;
+  padding: 14px 16px;
+  border-bottom: 1px solid #eee;
+  border-top-left-radius: 0;
+  border-top-right-radius: 0;
+  
+}
+
+.postjob-header h2 {
+  margin: 0 35px 0 0;
+  font-size: 18px; /* Reduced font size */
+}
+
+.postjob-header p {
+  font-size: 11px; /* Reduced font size */
+  color: #666;
+  margin-top: 3px;
+}
+/* ===== GRID/FORM FIELDS ===== */
+.postjob-grid {
+  flex: unset;
+  overflow: visible;
+  min-height: auto;
+  padding-right: 12px;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  box-sizing: border-box;
+}
+
+
+
+
+
+
+
+.field {
+  display: flex;
+  flex-direction: column;
+}
+
+.field label {
+  font-size: 12px;
+  color: #444;
+  margin-bottom: 5px;
+}
+
+.field input,
+.field select,
+.field textarea {
+  width: 100%;
+  padding: 8px; /* Reduced padding */
+  border: 1px solid #ddd;
+  border-radius: 0; /* Slightly smaller radius */
+  font-size: 12px; /* Reduced font size */
+  box-sizing: border-box;
+}
+
+.field textarea {
+  min-height: 70px; /* Reduced height */
+}
+
+.field.full {
+  grid-column: span 2;
+}
+
+/* ===== JSON PREVIEW ===== */
+.postjob-preview {
+  margin: 0 14px 10px 14px; /* Reduced margins */
+  background: #0f172a;
+  color: #e2e8f0;
+  padding: 8px; /* Reduced padding */
+  border-radius: 0;
+  font-size: 10px; /* Reduced font size */
+  overflow-x: auto;
+  max-height: 100px; /* Reduced height */
+}
+
+.postjob-preview h4 {
+  margin: 0 0 5px 0;
+  font-size: 11px; /* Reduced font size */
+  color: #94a3b8;
+}
+
+.postjob-preview pre {
+  margin: 0;
+  font-size: 9px; /* Reduced font size */
+}
+
+.postjob-preview {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+/* ===== ACTION BUTTONS ===== */
+.postjob-actions {
+  position: sticky;
+  bottom: 0;
+  background: #fff;
+  padding: 10px 14px;
+  border-top: 1px solid #eee;
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+ border-bottom-left-radius: 0;
+  border-bottom-right-radius: 0;
+ 
+}
+
+.postjob-actions .primary {
+  background: #2563eb;
+  color: white;
+  padding: 8px 16px; /* Reduced padding */
+  border: none;
+  border-radius: 0; /* Slightly smaller radius */
+  font-size: 12px; /* Reduced font size */
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+
+.postjob-actions .primary:hover {
+  background: #1d4ed8;
+}
+
+.postjob-actions .secondary {
+  background: #e5e7eb;
+  color: #374151;
+  padding: 8px 16px; /* Reduced padding */
+  border: none;
+  border-radius: 0; /* Slightly smaller radius */
+  font-size: 12px; /* Reduced font size */
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+
+.postjob-actions .secondary:hover {
+  background: #d1d5db;
+}
+
+/* ===== RESPONSIVE ===== */
+@media (max-width: 768px) {
+  .postjob-card {
+    width: 100vw;
+    height: 100vh;
+    max-height: 100vh;
+    border-radius: 0; /* Keep consistent border radius */
+  }
+
+ .postjob-grid {
+  flex: unset;
+  overflow: visible;
+  min-height: auto;
+  padding-right: 12px;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  box-sizing: border-box;
+}
+
+  .modal-overlay {
+    padding: 0;
+  }
+
+  .postjob-actions {
+    position: sticky;
+  }
+}

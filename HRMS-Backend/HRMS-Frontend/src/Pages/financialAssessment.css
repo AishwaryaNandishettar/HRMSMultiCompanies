@@ -1,0 +1,516 @@
+/* PAGE */
+.financial-assessment-page{
+padding:25px;
+background:#f6f7fb;
+min-height:100vh;
+font-family:Inter;
+}
+
+/* TITLE */
+.fa-title{
+margin-bottom:30px;
+font-size:28px;
+font-weight:700;
+color:#2d1153;
+}
+
+
+
+/* KPI CARD */
+.fa-kpis {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px;
+  margin-bottom: 20px;
+}
+
+/* Apply Home page gradient colors */
+.fa-kpi-revenue {
+  background: linear-gradient(135deg, #3b82f6, #2563eb);
+}
+
+.fa-kpi-expense {
+  background: linear-gradient(135deg, #ef4444, #dc2626);
+}
+
+.fa-kpi-profit {
+  background: linear-gradient(135deg, #fb923c, #f97316);
+}
+
+.fa-kpi-loss {
+  background: linear-gradient(135deg, #facc15, #eab308);
+}
+
+/* MAIN GRID */
+.fa-grid{
+display:grid;
+grid-template-columns:1fr 1fr;
+gap:25px;
+}
+
+/* CARD */
+.fa-card{
+background:white;
+padding:20px;
+border-radius:10px;
+box-shadow:0 4px 12px rgba(0,0,0,0.08);
+transition:transform 0.2s, box-shadow 0.2s;
+cursor:pointer;
+}
+
+.fa-card:hover{
+transform:translateY(-4px);
+box-shadow:0 8px 20px rgba(123,44,255,0.25);
+}
+
+.fa-card h4{
+margin-bottom:15px;
+font-size:18px;
+font-weight:600;
+color:#2d1153;
+}
+.fa-search-box input{
+width:100%;
+padding:10px 12px;
+border-radius:6px;
+border:1px solid #ddd;
+margin-bottom:15px;
+outline:none;
+}
+/* FULL WIDTH */
+.fa-full {
+  grid-column: span 3;
+}
+
+/* TWO WIDTH */
+.fa-span-2 {
+  grid-column: span 2;
+}
+
+/* LIST */
+.fa-dept-list{
+list-style:none;
+padding:0;
+margin:0;
+}
+
+.fa-dept-list li{
+display:flex;
+justify-content:space-between;
+padding:12px 0;
+border-bottom:1px solid #eee;
+font-size:15px;
+}
+
+.fa-dept-list li:hover{
+color:#7b2cff;
+}
+
+/* FORM */
+.fa-expense-form {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-bottom: 12px;
+}
+
+.fa-expense-form input,
+.fa-expense-form select {
+  padding: 7px;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+}
+
+.fa-expense-form button {
+  background: #2563eb;
+  color: #fff;
+  border: none;
+  padding: 7px 12px;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+/* ACTION BUTTONS */
+.fa-actions {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.fa-actions button {
+  background: #0f172a;
+  color: #fff;
+  padding: 8px 12px;
+  border-radius: 6px;
+  border: none;
+  cursor: pointer;
+}
+
+/* TABLE */
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+
+th {
+  text-align: left;
+  padding: 8px;
+  background: #f1f5f9;
+}
+
+td {
+  padding: 8px;
+  border-top: 1px solid #eee;
+}
+
+/* DELETE */
+.fa-delete-btn {
+  background: #ef4444;
+  color: #fff;
+  border: none;
+  padding: 5px 8px;
+  border-radius: 5px;
+}
+.fa-workforce {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 12px;
+}
+
+.fa-work-item {
+  background: #f8fafc;
+  padding: 12px;
+  border-radius: 8px;
+  text-align: center;
+}
+
+.fa-actions {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.fa-actions button {
+  background: #0f172a;
+  color: white;
+  border: none;
+  padding: 10px;
+  border-radius: 8px;
+  cursor: pointer;
+}
+/* KPI CARD BASE */
+/* BASE KPI CARD - Match Home page style */
+.fa-kpi-card {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 18px 20px;
+  border-radius: 14px;
+  cursor: pointer;
+  height: 90px;
+  border: none;
+  transition: transform 0.25s ease, box-shadow 0.25s ease;
+  color: #ffffff;
+}
+
+/* hover effect - Match Home page */
+.fa-kpi-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 16px 36px rgba(0,0,0,0.22);
+}
+
+/* KPI text styling - Match Home page */
+.fa-kpi-content {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  flex: 1;
+}
+
+.fa-kpi-content h3 {
+  margin: 0;
+  font-size: 24px;
+  font-weight: 700;
+  color: #ffffff !important;
+  line-height: 1.2;
+}
+
+.fa-kpi-content p {
+  margin: 4px 0 0;
+  font-size: 15px;
+  font-weight: 600;
+  color: #ffffff !important;
+  letter-spacing: 0.3px;
+}
+
+
+/* GRID FIX */
+.fa-kpis {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(210px, 1fr));
+  gap: 10px;
+  margin-bottom: 28px;
+  width: 100%;
+}
+.fa-card{
+background:white;
+padding:20px;
+border-radius:10px;
+box-shadow:0 4px 12px rgba(0,0,0,0.08);
+transition:transform 0.2s, box-shadow 0.2s;
+cursor:pointer;
+}
+
+.fa-card:hover{
+transform:translateY(-4px);
+box-shadow:0 8px 20px rgba(123,44,255,0.25);
+}
+/* SEARCH BOX */
+.fa-search-box {
+  margin-bottom: 10px;
+}
+
+.fa-search-box input {
+  width: 100%;
+  padding: 8px 10px;
+  border-radius: 8px;
+  border: 1px solid #e2e8f0;
+  outline: none;
+  font-size: 13px;
+  transition: 0.2s;
+}
+
+.fa-search-box input:focus {
+  border-color: #2563eb;
+  box-shadow: 0 0 0 2px rgba(37,99,235,0.15);
+}
+
+/* LIST IMPROVEMENT */
+.fa-dept-list li {
+  display: flex;
+  justify-content: space-between;
+  padding: 8px 6px;
+  border-bottom: 1px solid #f1f5f9;
+  font-size: 13px;
+}
+
+.fa-dept-list li:hover {
+  background: #f8fafc;
+  border-radius: 6px;
+}
+/* PNL CARD LAYOUT */
+.fa-pnl-wrapper {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+/* DONUT WRAPPER */
+.fa-pnl-chart {
+  position: relative;
+  width: 50%;
+}
+
+/* CENTER TEXT */
+.fa-pnl-center {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  text-align: center;
+}
+
+.fa-pnl-center h3 {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 600;
+}
+
+.fa-pnl-center p {
+  font-size: 12px;
+  color: #64748b;
+}
+
+/* LEGEND */
+.fa-pnl-legend{
+display:flex;
+flex-direction:column;
+gap:12px;
+margin-top:15px;
+}
+
+.fa-legend-item{
+display:flex;
+align-items:center;
+justify-content:space-between;
+gap:10px;
+}
+
+.fa-legend-dot{
+width:14px;
+height:14px;
+border-radius:50%;
+}
+
+/* ALIGN TEXT */
+.fa-legend-item span {
+  flex: 1;
+  margin-left: 6px;
+}
+
+@media(max-width:992px){
+
+.fa-kpis{
+grid-template-columns: repeat(2, 1fr);
+gap: 8px;
+}
+
+.fa-grid{
+grid-template-columns:1fr;
+}
+
+}
+
+@media(max-width:600px){
+
+.fa-kpis{
+grid-template-columns:1fr;
+}
+
+}
+
+/* =========================================================
+   FINAL FORCE MOBILE FIX
+   2 KPI CARDS PER ROW + 2 GRAPH CARDS PER ROW
+   ========================================================= */
+
+@media screen and (max-width:768px){
+
+  /* PAGE */
+  .financial-assessment-page{
+    padding:10px !important;
+    overflow-x:hidden !important;
+  }
+
+  /* =====================================================
+     KPI SECTION
+  ===================================================== */
+
+  .fa-kpis{
+
+    display:flex !important;
+    flex-wrap:wrap !important;
+
+    gap:8px !important;
+
+    width:100% !important;
+  }
+
+  .fa-kpis .fa-kpi-card{
+
+    width:calc(50% - 4px) !important;
+    flex:0 0 calc(50% - 4px) !important;
+
+    min-width:calc(50% - 4px) !important;
+    max-width:calc(50% - 4px) !important;
+
+    height:82px !important;
+
+    padding:12px !important;
+
+    border-radius:12px !important;
+
+    overflow:hidden !important;
+  }
+
+  .fa-kpi-content h3{
+    font-size:18px !important;
+    line-height:1.1 !important;
+  }
+
+  .fa-kpi-content p{
+    font-size:11px !important;
+    margin-top:3px !important;
+  }
+
+  /* =====================================================
+     MAIN GRID
+  ===================================================== */
+
+  .fa-grid{
+
+    display:flex !important;
+    flex-wrap:wrap !important;
+
+    gap:10px !important;
+
+    width:100% !important;
+  }
+
+  /* FORCE 2 CARDS IN ROW */
+  .fa-grid > .fa-card{
+
+    width:calc(50% - 5px) !important;
+    flex:0 0 calc(50% - 5px) !important;
+
+    min-width:calc(50% - 5px) !important;
+    max-width:calc(50% - 5px) !important;
+
+    padding:10px !important;
+
+    overflow:hidden !important;
+  }
+
+  /* FULL WIDTH CARDS */
+  .fa-grid > .fa-full,
+  .fa-grid > .fa-span-2{
+
+    width:100% !important;
+    flex:0 0 100% !important;
+
+    max-width:100% !important;
+  }
+
+  /* CARD TITLE */
+  .fa-card h4{
+    font-size:13px !important;
+    margin-bottom:8px !important;
+  }
+
+  /* CHART AREA */
+  .fa-pnl-wrapper{
+    display:flex !important;
+    flex-direction:column !important;
+    align-items:center !important;
+
+    width:100% !important;
+  }
+
+  .fa-pnl-chart{
+    width:100% !important;
+    max-width:100% !important;
+  }
+
+  /* CANVAS */
+  .fa-card canvas{
+    max-width:100% !important;
+    height:auto !important;
+  }
+
+  /* WORKFORCE */
+  .fa-workforce{
+    grid-template-columns:repeat(2,1fr) !important;
+  }
+
+  /* TABLE */
+  table{
+    font-size:10px !important;
+  }
+
+  th,
+  td{
+    padding:5px !important;
+  }
+}

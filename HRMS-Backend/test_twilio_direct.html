@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Twilio Direct Test</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 50px; }
+        .test-btn { background: #007bff; color: white; padding: 15px 25px; border: none; border-radius: 5px; cursor: pointer; font-size: 16px; margin: 10px; }
+        .test-btn:hover { background: #0056b3; }
+        .result { margin: 20px 0; padding: 15px; border-radius: 5px; background: #f8f9fa; border-left: 4px solid #007bff; }
+        .error { background: #f8d7da; border-left-color: #dc3545; }
+        .success { background: #d4edda; border-left-color: #28a745; }
+    </style>
+</head>
+<body>
+    <h1>🚀 Twilio Direct Test</h1>
+    <p><strong>Your Phone:</strong> 9606408912</p>
+    
+    <button class="test-btn" onclick="testTwilio()">📱 Test Twilio SMS</button>
+    <button class="test-btn" onclick="checkLogs()">📋 Check Backend Status</button>
+    
+    <div id="result"></div>
+    
+    <h3>📋 Instructions:</h3>
+    <ol>
+        <li><strong>Make sure your backend is running</strong> on http://localhost:8082</li>
+        <li><strong>Click "Test Twilio SMS"</strong> - this will send SMS directly via Twilio</li>
+        <li><strong>Check your phone (9606408912)</strong> for the SMS message</li>
+        <li><strong>Check your backend logs</strong> in the console for detailed error messages</li>
+    </ol>
+    
+    <h3>🔧 Troubleshooting:</h3>
+    <ul>
+        <li>If you get "Network Error" - backend is not running</li>
+        <li>If you get Twilio errors - check credentials in application.properties</li>
+        <li>If Fast2SMS errors appear - ignore them, we're using Twilio only now</li>
+    </ul>
+
+    <script>
+        async function testTwilio() {
+            const resultDiv = document.getElementById('result');
+            
+            try {
+                resultDiv.innerHTML = '🔄 Testing Twilio SMS...';
+                resultDiv.className = 'result';
+                
+                const response = await fetch('http://localhost:8082/api/jobs/test-sms?phone=9606408912&message=Hello! This is a Twilio test from HRMS system at ' + new Date().toLocaleTimeString());
+                const data = await response.json();
+                
+                if (data.success) {
+                    resultDiv.innerHTML = `
+                        ✅ <strong>Twilio SMS Test SUCCESS!</strong><br>
+                        📱 SMS sent to: ${data.phone}<br>
+                        💬 Message: Test message sent<br>
+                        🔍 Check your phone and backend logs for confirmation
+                    `;
+                    resultDiv.className = 'result success';
+                } else {
+                    throw new Error(data.error || 'Unknown error');
+                }
+                
+            } catch (error) {
+                resultDiv.innerHTML = `
+                    ❌ <strong>Twilio Test Failed</strong><br>
+                    Error: ${error.message}<br><br>
+                    <strong>Next Steps:</strong><br>
+                    1. Check if backend is running on port 8082<br>
+                    2. Check backend console logs for detailed Twilio errors<br>
+                    3. Verify Twilio credentials in application.properties
+                `;
+                resultDiv.className = 'result error';
+            }
+        }
+        
+        async function checkLogs() {
+            const resultDiv = document.getElementById('result');
+            
+            try {
+                resultDiv.innerHTML = '🔄 Checking backend status...';
+                resultDiv.className = 'result';
+                
+                const response = await fetch('http://localhost:8082/api/jobs/all');
+                
+                if (response.ok) {
+                    resultDiv.innerHTML = `
+                        ✅ <strong>Backend is Running</strong><br>
+                        🌐 Server: http://localhost:8082<br>
+                        📊 Status: Connected to database<br>
+                        🔧 Twilio: Should be configured<br><br>
+                        <strong>Ready to test Twilio!</strong>
+                    `;
+                    resultDiv.className = 'result success';
+                } else {
+                    throw new Error(`Server returned ${response.status}`);
+                }
+                
+            } catch (error) {
+                resultDiv.innerHTML = `
+                    ❌ <strong>Backend Not Running</strong><br>
+                    Error: ${error.message}<br><br>
+                    <strong>Start your backend server:</strong><br>
+                    1. Open terminal in HRMS-Backend folder<br>
+                    2. Run: mvn spring-boot:run<br>
+                    3. Wait for "Started HrmsBackendApplication" message<br>
+                    4. Try again
+                `;
+                resultDiv.className = 'result error';
+            }
+        }
+    </script>
+</body>
+</html>

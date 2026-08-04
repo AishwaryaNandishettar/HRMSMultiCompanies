@@ -1,0 +1,21 @@
+{
+  "companyId": "company-a",
+  "companyName": "TalentHub Solutions",
+  "initials": "TH",
+  "colors": {
+    "primary": "#1E40AF",
+    "secondary": "#3B82F6",
+    "accent": "#DBEAFE",
+    "text": "#1F2937",
+    "background": "#FFFFFF",
+    "border": "#E5E7EB",
+    "hover": "#1E3A8A",
+    "active": "#1E3A8A",
+    "disabled": "#9CA3AF"
+  },
+  "logos": {
+    "navigationLogo": "/logos/company-a/logo.png",
+    "loginLogo": "/logos/company-a/logo-large.png",
+    "faviconPath": "/logos/company-a/favicon.ico"
+  }
+}

@@ -13,9 +13,6 @@ public class ReimbursementService {
 
     private final ReimbursementRepository repo;
 
-    @org.springframework.beans.factory.annotation.Value("${app.backend.url:http://localhost:8082}")
-    private String backendUrl;
-
     public ReimbursementService(ReimbursementRepository repo){
         this.repo = repo;
     }
@@ -38,7 +35,7 @@ if (files != null) {   // ✅ ADD THIS LINE
             Files.createDirectories(path.getParent());
             Files.write(path, file.getBytes());
 
-            fileUrls.add(backendUrl + "/uploads/" + fileName);
+            fileUrls.add("http://localhost:8082/uploads/" + fileName);
 
         } catch (Exception e) {
             e.printStackTrace();

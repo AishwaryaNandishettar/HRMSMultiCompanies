@@ -1,0 +1,156 @@
+╔══════════════════════════════════════════════════════════════════════╗
+║                  EMAIL INVITATION FIX - QUICK START                  ║
+╚══════════════════════════════════════════════════════════════════════╝
+
+🎯 PROBLEM:
+   - Frontend says "Invitations sent successfully"
+   - But NO emails received in Gmail
+   - Backend shows 500 errors
+
+🔍 ROOT CAUSE:
+   - Missing SMTP credentials in .env file
+   - Backend can't authenticate with email server
+
+✅ SOLUTION (10 minutes):
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+📋 STEP 1: CREATE BREVO ACCOUNT (5 min)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+   1. Go to: https://www.brevo.com/
+   2. Click "Sign up free"
+   3. Enter email & create password
+   4. Verify email
+   5. Login to dashboard
+
+   ✓ FREE: 300 emails/day
+   ✓ No credit card required
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+📋 STEP 2: GET SMTP CREDENTIALS (2 min)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+   1. In Brevo Dashboard:
+      - Click your name (top right)
+      - Click "SMTP & API"
+      - Click "SMTP" tab
+
+   2. You'll see:
+      Login:       your-email@gmail.com
+      SMTP Server: smtp-relay.brevo.com
+      Port:        587
+
+   3. Click "Generate a new SMTP key"
+      Copy the key (looks like: xsmtpsib-a1b2c3d4...)
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+📋 STEP 3: UPDATE .ENV FILE (1 min)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+   File Location:
+   d:\New folder\HRMSProject (2)\HRMSProject\HRMS-Backend\.env
+
+   Open this file and update:
+
+   ┌────────────────────────────────────────────────────────────────┐
+   │ BREVO_SMTP_USERNAME=your-email@gmail.com                       │
+   │ BREVO_SMTP_KEY=xsmtpsib-your-actual-key-here                   │
+   └────────────────────────────────────────────────────────────────┘
+
+   Example:
+   ┌────────────────────────────────────────────────────────────────┐
+   │ BREVO_SMTP_USERNAME=aishwarya@omoikaneinnovations.com          │
+   │ BREVO_SMTP_KEY=xsmtpsib-a1b2c3d4e5f6g7h8i9j0                   │
+   └────────────────────────────────────────────────────────────────┘
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+📋 STEP 4: RESTART BACKEND (1 min)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+   Stop your backend (Ctrl+C), then run:
+
+   cd "d:\New folder\HRMSProject (2)\HRMSProject"
+   mvnw spring-boot:run
+
+   Wait for: "Started HmrsBackendApplication"
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+📋 STEP 5: TEST EMAIL SENDING (1 min)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+   1. Go to: http://localhost:5173/employee-card
+   2. Select employees (check checkboxes)
+   3. Click "Send Invitation" button
+   4. Check Gmail inbox (wait 1-2 minutes)
+
+   ✅ You should receive invitation emails!
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+🚀 FOR VERCEL DEPLOYMENT:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+   Add these to Vercel Environment Variables:
+
+   BREVO_SMTP_USERNAME  = your-email@gmail.com
+   BREVO_SMTP_KEY       = xsmtpsib-your-key-here
+   MAIL_FROM_ADDRESS    = noreply@omoikaneinnovations.com
+
+   ✓ Same configuration works on localhost AND Vercel!
+   ✓ No code changes needed!
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+🔧 TROUBLESHOOTING:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+   ❌ Still not receiving emails?
+
+   ✓ Check .env file for typos
+   ✓ Make sure no extra spaces in credentials
+   ✓ SMTP key should start with "xsmtpsib-"
+   ✓ Check Gmail spam folder
+   ✓ Verify backend restarted successfully
+   ✓ Check backend console for success logs
+
+   Backend should show:
+   ✅ Email sent successfully to: email@example.com
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+📞 DETAILED GUIDE:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+   Read: EMAIL_INVITATION_FIX_GUIDE.md
+   (Complete step-by-step guide with screenshots)
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+✅ CHECKLIST:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+   [ ] Created Brevo account
+   [ ] Generated SMTP key
+   [ ] Updated .env file
+   [ ] Restarted backend
+   [ ] Tested sending invitation
+   [ ] Received email in Gmail
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+🎯 SUMMARY:
+
+   Problem: Missing SMTP credentials
+   Solution: Add Brevo credentials to .env file
+   Time: ~10 minutes
+   Code Changes: NONE ✅
+   Works on: Localhost & Vercel ✅
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Last Updated: August 1, 2026

@@ -15,6 +15,7 @@ public class AttendanceSummary {
     private Integer totalWorkingDays;
     private Integer presentDays;
     private Integer absentDays;
+    private Integer lopDays; // ✅ Loss of Pay days from Timesheet
     private Integer halfDays;
     private Integer lateArrivals;
     private Integer earlyDepartures;

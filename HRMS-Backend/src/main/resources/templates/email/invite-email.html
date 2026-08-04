@@ -143,20 +143,24 @@
     <div class="company-info">
 
         <p>
-            <span class="label">Application Link:</span>
+            <span class="label">Login Page:</span>
             <span class="value">
                 <a th:href="${inviteLink}" th:text="${inviteLink}"></a>
             </span>
         </p>
 
         <p>
-            <span class="label">Username:</span>
+            <span class="label">Username (Email):</span>
             <span class="value" th:text="${email}"></span>
         </p>
 
         <p>
-            <span class="label">Temporary Password:</span>
+            <span class="label">Password:</span>
             <span class="value" th:text="${password}"></span>
+        </p>
+
+        <p style="color: #dc2626; font-weight: bold;">
+            ⚠️ Please enter these credentials manually on the login page. The link will NOT auto-login you.
         </p>
 
     </div>
@@ -164,10 +168,10 @@
 
     <p>
        <a th:href="${inviteLink}" class="action-button">
-            Complete Your Profile
+            Go to Login Page
        </a>
     </p>
-   
+
     <p>If you have any questions or need assistance getting started, please don't hesitate to reach out to the HR team.</p>
 
     <div class="footer">

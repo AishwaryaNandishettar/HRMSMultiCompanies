@@ -1,0 +1,408 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Clear HRMS localStorage - Remove Adhviti Hardcoding</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 20px;
+    }
+
+    .container {
+      background: white;
+      border-radius: 20px;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+      max-width: 800px;
+      width: 100%;
+      padding: 40px;
+    }
+
+    h1 {
+      color: #667eea;
+      margin-bottom: 10px;
+      font-size: 28px;
+    }
+
+    .subtitle {
+      color: #666;
+      margin-bottom: 30px;
+      font-size: 14px;
+    }
+
+    .info-box {
+      background: #f0f4ff;
+      border-left: 4px solid #667eea;
+      padding: 15px;
+      margin-bottom: 25px;
+      border-radius: 5px;
+    }
+
+    .info-box h3 {
+      color: #667eea;
+      margin-bottom: 10px;
+      font-size: 16px;
+    }
+
+    .info-box ul {
+      margin-left: 20px;
+      color: #444;
+    }
+
+    .info-box li {
+      margin-bottom: 5px;
+    }
+
+    .warning-box {
+      background: #fff3cd;
+      border-left: 4px solid #ffc107;
+      padding: 15px;
+      margin-bottom: 25px;
+      border-radius: 5px;
+    }
+
+    .warning-box h3 {
+      color: #856404;
+      margin-bottom: 10px;
+      font-size: 16px;
+    }
+
+    .btn-container {
+      display: flex;
+      gap: 15px;
+      margin-bottom: 30px;
+    }
+
+    .btn {
+      flex: 1;
+      padding: 15px 30px;
+      border: none;
+      border-radius: 10px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+    }
+
+    .btn-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 10px 25px rgba(102, 126, 234, 0.4);
+    }
+
+    .btn-secondary {
+      background: #f44336;
+      color: white;
+    }
+
+    .btn-secondary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 10px 25px rgba(244, 67, 54, 0.4);
+    }
+
+    .btn:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+      transform: none !important;
+    }
+
+    .result-box {
+      background: #f8f9fa;
+      border-radius: 10px;
+      padding: 20px;
+      margin-top: 20px;
+      display: none;
+    }
+
+    .result-box.show {
+      display: block;
+      animation: slideIn 0.3s ease;
+    }
+
+    @keyframes slideIn {
+      from {
+        opacity: 0;
+        transform: translateY(-10px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .result-box h3 {
+      margin-bottom: 15px;
+      color: #333;
+    }
+
+    .key-item {
+      background: white;
+      padding: 10px 15px;
+      margin-bottom: 8px;
+      border-radius: 5px;
+      border-left: 3px solid #667eea;
+      font-family: 'Courier New', monospace;
+      font-size: 14px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .key-item.removed {
+      border-left-color: #4caf50;
+      background: #e8f5e9;
+    }
+
+    .key-item.kept {
+      border-left-color: #2196f3;
+      background: #e3f2fd;
+    }
+
+    .badge {
+      padding: 4px 8px;
+      border-radius: 4px;
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+    }
+
+    .badge-removed {
+      background: #4caf50;
+      color: white;
+    }
+
+    .badge-kept {
+      background: #2196f3;
+      color: white;
+    }
+
+    .success-message {
+      background: #d4edda;
+      color: #155724;
+      padding: 15px;
+      border-radius: 10px;
+      margin-top: 20px;
+      border: 1px solid #c3e6cb;
+      display: none;
+    }
+
+    .success-message.show {
+      display: block;
+      animation: slideIn 0.3s ease;
+    }
+
+    .success-message h3 {
+      margin-bottom: 10px;
+    }
+
+    .error-message {
+      background: #f8d7da;
+      color: #721c24;
+      padding: 15px;
+      border-radius: 10px;
+      margin-top: 20px;
+      border: 1px solid #f5c6cb;
+      display: none;
+    }
+
+    .error-message.show {
+      display: block;
+      animation: slideIn 0.3s ease;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>🧹 Clear HRMS localStorage</h1>
+    <p class="subtitle">Remove old cached data that's causing "Adhviti" to appear for all employees</p>
+
+    <div class="info-box">
+      <h3>📋 What This Does:</h3>
+      <ul>
+        <li>Removes <code>personalEdit</code> key (contains old personal info with "Adhviti")</li>
+        <li>Removes <code>jobEdit</code> key (contains old job details)</li>
+        <li>Keeps important keys: <code>token</code>, <code>empId</code>, <code>email</code>, <code>role</code></li>
+        <li>Keeps profile images: <code>employee-image-*</code> keys</li>
+      </ul>
+    </div>
+
+    <div class="warning-box">
+      <h3>⚠️ Important:</h3>
+      <ul>
+        <li>After clearing, you'll need to <strong>refresh the Profile page</strong></li>
+        <li>Your login session will remain active (token is kept)</li>
+        <li>Profile pictures will be preserved</li>
+      </ul>
+    </div>
+
+    <div class="btn-container">
+      <button class="btn btn-primary" id="scanBtn">
+        🔍 Scan localStorage
+      </button>
+      <button class="btn btn-secondary" id="clearBtn" disabled>
+        🗑️ Clear Old Data
+      </button>
+    </div>
+
+    <div id="resultBox" class="result-box">
+      <h3>📦 localStorage Contents:</h3>
+      <div id="resultContent"></div>
+    </div>
+
+    <div id="successMessage" class="success-message">
+      <h3>✅ Success!</h3>
+      <p>Old cached data has been cleared. Now follow these steps:</p>
+      <ol style="margin-left: 20px; margin-top: 10px;">
+        <li>Close this page</li>
+        <li>Go back to your HRMS application</li>
+        <li>Press <strong>Ctrl + Shift + R</strong> to hard refresh</li>
+        <li>Check your Profile page - name should now be correct!</li>
+      </ol>
+    </div>
+
+    <div id="errorMessage" class="error-message">
+      <h3>❌ Error</h3>
+      <p id="errorText"></p>
+    </div>
+  </div>
+
+  <script>
+    const scanBtn = document.getElementById('scanBtn');
+    const clearBtn = document.getElementById('clearBtn');
+    const resultBox = document.getElementById('resultBox');
+    const resultContent = document.getElementById('resultContent');
+    const successMessage = document.getElementById('successMessage');
+    const errorMessage = document.getElementById('errorMessage');
+    const errorText = document.getElementById('errorText');
+
+    // Keys to remove (old cached data)
+    const keysToRemove = ['personalEdit', 'jobEdit'];
+
+    // Keys to keep (important data)
+    const keysToKeep = ['token', 'empId', 'email', 'role', 'user'];
+
+    scanBtn.addEventListener('click', () => {
+      try {
+        resultContent.innerHTML = '';
+        successMessage.classList.remove('show');
+        errorMessage.classList.remove('show');
+
+        const allKeys = Object.keys(localStorage);
+        
+        if (allKeys.length === 0) {
+          resultContent.innerHTML = '<p style="color: #666;">localStorage is empty</p>';
+          resultBox.classList.add('show');
+          return;
+        }
+
+        let foundKeysToRemove = [];
+        let foundKeysToKeep = [];
+
+        allKeys.forEach(key => {
+          if (keysToRemove.includes(key)) {
+            foundKeysToRemove.push(key);
+          } else if (keysToKeep.includes(key) || key.startsWith('employee-image-')) {
+            foundKeysToKeep.push(key);
+          }
+        });
+
+        // Display keys to remove
+        if (foundKeysToRemove.length > 0) {
+          const section = document.createElement('div');
+          section.innerHTML = '<h4 style="color: #f44336; margin-bottom: 10px;">🗑️ Keys to Remove (Old Data):</h4>';
+          foundKeysToRemove.forEach(key => {
+            const keyItem = document.createElement('div');
+            keyItem.className = 'key-item';
+            keyItem.innerHTML = `
+              <span>${key}</span>
+              <span class="badge badge-removed">Will Remove</span>
+            `;
+            section.appendChild(keyItem);
+          });
+          resultContent.appendChild(section);
+          clearBtn.disabled = false;
+        } else {
+          const noOldData = document.createElement('p');
+          noOldData.style.color = '#4caf50';
+          noOldData.style.fontWeight = '600';
+          noOldData.innerHTML = '✅ No old data found! localStorage is already clean.';
+          resultContent.appendChild(noOldData);
+          clearBtn.disabled = true;
+        }
+
+        // Display keys to keep
+        if (foundKeysToKeep.length > 0) {
+          const section = document.createElement('div');
+          section.style.marginTop = '20px';
+          section.innerHTML = '<h4 style="color: #2196f3; margin-bottom: 10px;">✅ Keys to Keep (Important Data):</h4>';
+          foundKeysToKeep.forEach(key => {
+            const keyItem = document.createElement('div');
+            keyItem.className = 'key-item kept';
+            keyItem.innerHTML = `
+              <span>${key}</span>
+              <span class="badge badge-kept">Keep</span>
+            `;
+            section.appendChild(keyItem);
+          });
+          resultContent.appendChild(section);
+        }
+
+        resultBox.classList.add('show');
+      } catch (err) {
+        errorText.textContent = err.message;
+        errorMessage.classList.add('show');
+      }
+    });
+
+    clearBtn.addEventListener('click', () => {
+      try {
+        let removedCount = 0;
+        
+        keysToRemove.forEach(key => {
+          if (localStorage.getItem(key)) {
+            localStorage.removeItem(key);
+            removedCount++;
+            console.log(`✅ Removed: ${key}`);
+          }
+        });
+
+        console.log(`🧹 Total keys removed: ${removedCount}`);
+
+        // Update UI
+        clearBtn.disabled = true;
+        resultBox.classList.remove('show');
+        successMessage.classList.add('show');
+
+      } catch (err) {
+        errorText.textContent = err.message;
+        errorMessage.classList.add('show');
+      }
+    });
+
+    // Auto-scan on page load
+    window.addEventListener('load', () => {
+      setTimeout(() => {
+        scanBtn.click();
+      }, 500);
+    });
+  </script>
+</body>
+</html>

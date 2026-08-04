@@ -1,0 +1,584 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🚀 HRMS SMS Complete Test</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f8f9fa;
+        }
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            border-radius: 10px;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .test-card {
+            background: white;
+            padding: 25px;
+            margin: 20px 0;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            border-left: 5px solid #007bff;
+        }
+        .test-card.success {
+            border-left-color: #28a745;
+        }
+        .test-card.error {
+            border-left-color: #dc3545;
+        }
+        .btn {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            margin: 8px 5px;
+            transition: all 0.3s ease;
+        }
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,123,255,0.3);
+        }
+        .btn.success {
+            background: #28a745;
+        }
+        .btn.danger {
+            background: #dc3545;
+        }
+        .btn.warning {
+            background: #ffc107;
+            color: #212529;
+        }
+        input, textarea, select {
+            width: 100%;
+            padding: 10px;
+            margin: 8px 0;
+            border: 2px solid #e9ecef;
+            border-radius: 6px;
+            font-size: 14px;
+            transition: border-color 0.3s ease;
+        }
+        input:focus, textarea:focus, select:focus {
+            outline: none;
+            border-color: #007bff;
+            box-shadow: 0 0 0 3px rgba(0,123,255,0.1);
+        }
+        .result {
+            margin: 15px 0;
+            padding: 15px;
+            border-radius: 6px;
+            border-left: 4px solid #007bff;
+            background: #f8f9fa;
+            font-family: 'Courier New', monospace;
+            font-size: 13px;
+        }
+        .result.success {
+            background: #d4edda;
+            border-left-color: #28a745;
+            color: #155724;
+        }
+        .result.error {
+            background: #f8d7da;
+            border-left-color: #dc3545;
+            color: #721c24;
+        }
+        .result.info {
+            background: #d1ecf1;
+            border-left-color: #17a2b8;
+            color: #0c5460;
+        }
+        .phone-display {
+            font-size: 24px;
+            font-weight: bold;
+            color: #28a745;
+            text-align: center;
+            margin: 10px 0;
+            padding: 15px;
+            background: #f8fff9;
+            border: 2px solid #28a745;
+            border-radius: 8px;
+        }
+        .status-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin: 20px 0;
+        }
+        .status-option {
+            padding: 15px;
+            border: 2px solid #e9ecef;
+            border-radius: 8px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        .status-option:hover {
+            border-color: #007bff;
+            background: #f8f9fa;
+        }
+        .status-option.selected {
+            border-color: #28a745;
+            background: #d4edda;
+        }
+        .loading {
+            display: none;
+            text-align: center;
+            color: #6c757d;
+        }
+        .spinner {
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #007bff;
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 10px;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>🚀 HRMS SMS Testing Dashboard</h1>
+        <p>Complete Twilio SMS Testing for Recruitment System</p>
+        <div class="phone-display">📱 Your Phone: +91 9606408912</div>
+    </div>
+
+    <!-- Test 1: Server Status Check -->
+    <div class="test-card" id="serverTest">
+        <h3>🌐 Test 1: Backend Server Status</h3>
+        <p>Check if your HRMS backend is running and accessible</p>
+        <button class="btn" onclick="checkServerStatus()">Check Server Status</button>
+        <div id="serverResult" class="result" style="display:none;"></div>
+    </div>
+
+    <!-- Test 2: Direct Twilio SMS Test -->
+    <div class="test-card" id="twilioTest">
+        <h3>📱 Test 2: Direct Twilio SMS Test</h3>
+        <p>Send a simple test SMS directly via Twilio</p>
+        <input type="text" id="directMessage" value="🚀 Hello Aishwarya! This is a direct Twilio test from HRMS system at " placeholder="Custom message">
+        <button class="btn success" onclick="testDirectTwilio()">Send Direct SMS</button>
+        <div class="loading" id="directLoading">
+            <div class="spinner"></div>
+            Sending SMS via Twilio...
+        </div>
+        <div id="directResult" class="result" style="display:none;"></div>
+    </div>
+
+    <!-- Test 3: Candidate Status SMS Templates -->
+    <div class="test-card" id="templateTest">
+        <h3>👥 Test 3: Candidate Status SMS Templates</h3>
+        <p>Test different recruitment status messages</p>
+        
+        <input type="text" id="candidateName" value="Aishwarya Test" placeholder="Candidate Name">
+        <input type="text" id="jobPosition" value="Software Engineer" placeholder="Job Position">
+        
+        <p><strong>Select Status to Test:</strong></p>
+        <div class="status-grid">
+            <div class="status-option" data-status="Shortlisted" onclick="selectStatus('Shortlisted')">
+                <h4>🎯 Shortlisted</h4>
+                <p>Congratulations! Profile shortlisted</p>
+            </div>
+            <div class="status-option" data-status="Interview Stage" onclick="selectStatus('Interview Stage')">
+                <h4>📅 Interview Stage</h4>
+                <p>Selected for interview round</p>
+            </div>
+            <div class="status-option" data-status="Selected" onclick="selectStatus('Selected')">
+                <h4>🎉 Selected</h4>
+                <p>Final selection - offer coming</p>
+            </div>
+            <div class="status-option" data-status="Rejected" onclick="selectStatus('Rejected')">
+                <h4>❌ Rejected</h4>
+                <p>Application not successful</p>
+            </div>
+        </div>
+        
+        <button class="btn warning" onclick="testStatusSMS()" id="statusBtn" disabled>Select Status First</button>
+        <div class="loading" id="statusLoading">
+            <div class="spinner"></div>
+            Sending status SMS...
+        </div>
+        <div id="statusResult" class="result" style="display:none;"></div>
+    </div>
+
+    <!-- Test 4: Full Integration Test -->
+    <div class="test-card" id="integrationTest">
+        <h3>🔗 Test 4: Full Recruitment SMS Integration</h3>
+        <p>Test the complete workflow: Database + Email + SMS</p>
+        
+        <select id="candidateSelect">
+            <option value="">Select a candidate from database...</option>
+        </select>
+        <button class="btn" onclick="loadCandidates()">Load Candidates from Database</button>
+        
+        <textarea id="integrationComments" rows="3" placeholder="Enter comments (e.g., Great interview performance, technical skills excellent)">Excellent performance in technical round. Moving to final stage.</textarea>
+        
+        <button class="btn success" onclick="testFullIntegration()" id="integrationBtn" disabled>Run Full Integration Test</button>
+        <div class="loading" id="integrationLoading">
+            <div class="spinner"></div>
+            Updating database and sending notifications...
+        </div>
+        <div id="integrationResult" class="result" style="display:none;"></div>
+    </div>
+
+    <!-- Instructions -->
+    <div class="test-card">
+        <h3>📋 How to Use This Test Suite</h3>
+        <ol>
+            <li><strong>Start with Test 1</strong> - Verify your backend server is running</li>
+            <li><strong>Run Test 2</strong> - Check if Twilio SMS works directly</li>
+            <li><strong>Try Test 3</strong> - Test different recruitment message templates</li>
+            <li><strong>Complete with Test 4</strong> - Test full integration with database</li>
+            <li><strong>Check your phone (9606408912)</strong> for SMS messages after each test</li>
+        </ol>
+        
+        <h4>🔧 Troubleshooting:</h4>
+        <ul>
+            <li><strong>Network Error:</strong> Backend server not running on port 8082</li>
+            <li><strong>405 Method Not Allowed:</strong> Restart backend after code changes</li>
+            <li><strong>Twilio Errors:</strong> Check credentials in application.properties</li>
+            <li><strong>No SMS Received:</strong> Verify phone number 9606408912 in Twilio console</li>
+        </ul>
+        
+        <div class="result info">
+            <strong>💡 Pro Tip:</strong> Keep your backend console logs open to see detailed SMS sending logs and any errors in real-time.
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = 'http://localhost:8082/api/jobs';
+        let selectedStatus = '';
+        
+        // Utility functions
+        function showLoading(id) {
+            document.getElementById(id).style.display = 'block';
+        }
+        
+        function hideLoading(id) {
+            document.getElementById(id).style.display = 'none';
+        }
+        
+        function showResult(id, content, type = 'info') {
+            const resultDiv = document.getElementById(id);
+            resultDiv.innerHTML = content;
+            resultDiv.className = `result ${type}`;
+            resultDiv.style.display = 'block';
+        }
+        
+        // Test 1: Check Server Status
+        async function checkServerStatus() {
+            try {
+                showResult('serverResult', '🔄 Checking backend server status...', 'info');
+                
+                const response = await fetch(`${API_BASE}/all`);
+                
+                if (response.ok) {
+                    const candidates = await response.json();
+                    showResult('serverResult', `
+                        ✅ <strong>Backend Server is Running!</strong><br>
+                        🌐 URL: ${API_BASE}<br>
+                        📊 Database: Connected (${candidates.length} candidates found)<br>
+                        🔧 Status: Ready for SMS testing<br>
+                        📱 Twilio: Configuration loaded<br><br>
+                        <strong>✨ Server is ready for SMS tests!</strong>
+                    `, 'success');
+                    
+                    // Enable other tests
+                    document.getElementById('serverTest').className = 'test-card success';
+                } else {
+                    throw new Error(`Server returned ${response.status}: ${response.statusText}`);
+                }
+                
+            } catch (error) {
+                showResult('serverResult', `
+                    ❌ <strong>Backend Server Issue</strong><br>
+                    Error: ${error.message}<br><br>
+                    <strong>🔧 To Fix:</strong><br>
+                    1. Open terminal in HRMS-Backend folder<br>
+                    2. Run: <code>mvn spring-boot:run</code><br>
+                    3. Wait for "Started HrmsBackendApplication" message<br>
+                    4. Try this test again
+                `, 'error');
+                
+                document.getElementById('serverTest').className = 'test-card error';
+            }
+        }
+        
+        // Test 2: Direct Twilio SMS
+        async function testDirectTwilio() {
+            try {
+                showLoading('directLoading');
+                hideResult('directResult');
+                
+                const message = document.getElementById('directMessage').value + new Date().toLocaleTimeString();
+                
+                const url = `${API_BASE}/test-sms?phone=9606408912&message=${encodeURIComponent(message)}`;
+                console.log('Testing URL:', url);
+                
+                const response = await fetch(url);
+                const data = await response.json();
+                
+                hideLoading('directLoading');
+                
+                if (data.success) {
+                    showResult('directResult', `
+                        ✅ <strong>Twilio SMS Sent Successfully!</strong><br>
+                        📱 Phone: ${data.phone}<br>
+                        💬 Message: Direct test message<br>
+                        🕒 Time: ${new Date().toLocaleTimeString()}<br><br>
+                        <strong>📲 Check your phone (9606408912) for the SMS!</strong><br>
+                        <small>💡 Also check your backend console logs for Twilio details</small>
+                    `, 'success');
+                    
+                    document.getElementById('twilioTest').className = 'test-card success';
+                } else {
+                    throw new Error(data.error || 'Unknown error from server');
+                }
+                
+            } catch (error) {
+                hideLoading('directLoading');
+                showResult('directResult', `
+                    ❌ <strong>Twilio Test Failed</strong><br>
+                    Error: ${error.message}<br><br>
+                    <strong>🔍 Check:</strong><br>
+                    1. Backend console logs for detailed Twilio errors<br>
+                    2. Twilio credentials in application.properties<br>
+                    3. Phone number verification in Twilio console<br>
+                    4. Internet connection for Twilio API calls
+                `, 'error');
+                
+                document.getElementById('twilioTest').className = 'test-card error';
+            }
+        }
+        
+        function hideResult(id) {
+            document.getElementById(id).style.display = 'none';
+        }
+        
+        // Test 3: Status Selection
+        function selectStatus(status) {
+            selectedStatus = status;
+            
+            // Remove selected class from all options
+            document.querySelectorAll('.status-option').forEach(option => {
+                option.classList.remove('selected');
+            });
+            
+            // Add selected class to clicked option
+            document.querySelector(`[data-status="${status}"]`).classList.add('selected');
+            
+            // Enable the button
+            const btn = document.getElementById('statusBtn');
+            btn.disabled = false;
+            btn.textContent = `Send ${status} SMS`;
+            btn.className = 'btn success';
+        }
+        
+        // Test 3: Status SMS Test
+        async function testStatusSMS() {
+            if (!selectedStatus) {
+                alert('Please select a status first');
+                return;
+            }
+            
+            try {
+                showLoading('statusLoading');
+                hideResult('statusResult');
+                
+                const candidateName = document.getElementById('candidateName').value || 'Test Candidate';
+                const jobPosition = document.getElementById('jobPosition').value || 'Software Engineer';
+                
+                // Create status-specific message
+                let message = '';
+                switch(selectedStatus) {
+                    case 'Shortlisted':
+                        message = `Congratulations ${candidateName}! You have been SHORTLISTED for ${jobPosition}. Our team will contact you shortly with interview details. - HR Team`;
+                        break;
+                    case 'Interview Stage':
+                        message = `Good news ${candidateName}! You are selected for INTERVIEW STAGE for ${jobPosition}. Please check your email for interview schedule. - HR Team`;
+                        break;
+                    case 'Selected':
+                        message = `Congratulations ${candidateName}! You have been SELECTED for ${jobPosition}! Our HR team will contact you shortly with offer details. Welcome aboard! - HR Team`;
+                        break;
+                    case 'Rejected':
+                        message = `Dear ${candidateName}, Thank you for your interest in ${jobPosition}. We have decided not to proceed at this time. Best wishes for future opportunities. - HR Team`;
+                        break;
+                }
+                
+                const response = await fetch(`${API_BASE}/test-sms?phone=9606408912&message=${encodeURIComponent(message)}`);
+                const data = await response.json();
+                
+                hideLoading('statusLoading');
+                
+                if (data.success) {
+                    showResult('statusResult', `
+                        ✅ <strong>${selectedStatus} SMS Sent!</strong><br>
+                        👤 Candidate: ${candidateName}<br>
+                        🏢 Position: ${jobPosition}<br>
+                        📊 Status: ${selectedStatus}<br>
+                        📱 Phone: 9606408912<br><br>
+                        <strong>📲 Check your phone for the ${selectedStatus} message!</strong><br>
+                        <small>💬 Message preview: ${message.substring(0, 100)}...</small>
+                    `, 'success');
+                    
+                    document.getElementById('templateTest').className = 'test-card success';
+                } else {
+                    throw new Error(data.error || 'Unknown error');
+                }
+                
+            } catch (error) {
+                hideLoading('statusLoading');
+                showResult('statusResult', `
+                    ❌ <strong>Status SMS Test Failed</strong><br>
+                    Status: ${selectedStatus}<br>
+                    Error: ${error.message}<br><br>
+                    <strong>🔧 Troubleshoot:</strong><br>
+                    • Check backend console for detailed errors<br>
+                    • Verify Twilio configuration<br>
+                    • Ensure phone number is verified
+                `, 'error');
+                
+                document.getElementById('templateTest').className = 'test-card error';
+            }
+        }
+        
+        // Load Candidates
+        async function loadCandidates() {
+            try {
+                const response = await fetch(`${API_BASE}/all`);
+                const candidates = await response.json();
+                
+                const select = document.getElementById('candidateSelect');
+                select.innerHTML = '<option value="">Select a candidate...</option>';
+                
+                candidates.forEach((candidate, index) => {
+                    const option = document.createElement('option');
+                    option.value = JSON.stringify({
+                        id: candidate.id,
+                        name: candidate.jobTitle || `Candidate ${index + 1}`,
+                        email: candidate.email || `candidate${index + 1}@example.com`,
+                        phone: '9606408912', // Your test phone
+                        status: candidate.status || 'Applied'
+                    });
+                    option.textContent = `${candidate.jobTitle || `Candidate ${index + 1}`} (${candidate.status || 'Applied'})`;
+                    select.appendChild(option);
+                });
+                
+                // Enable integration test
+                document.getElementById('integrationBtn').disabled = false;
+                document.getElementById('integrationBtn').textContent = 'Select Candidate First';
+                
+                alert(`✅ Loaded ${candidates.length} candidates from database`);
+                
+            } catch (error) {
+                alert(`❌ Failed to load candidates: ${error.message}`);
+            }
+        }
+        
+        // Enable integration button when candidate selected
+        document.getElementById('candidateSelect').addEventListener('change', function() {
+            const btn = document.getElementById('integrationBtn');
+            if (this.value) {
+                btn.disabled = false;
+                btn.textContent = 'Run Full Integration Test';
+                btn.className = 'btn success';
+            } else {
+                btn.disabled = true;
+                btn.textContent = 'Select Candidate First';
+                btn.className = 'btn';
+            }
+        });
+        
+        // Test 4: Full Integration
+        async function testFullIntegration() {
+            const select = document.getElementById('candidateSelect');
+            const comments = document.getElementById('integrationComments').value;
+            
+            if (!select.value) {
+                alert('Please select a candidate first');
+                return;
+            }
+            
+            try {
+                showLoading('integrationLoading');
+                hideResult('integrationResult');
+                
+                const candidate = JSON.parse(select.value);
+                
+                const requestData = {
+                    candidateId: candidate.id,
+                    candidateName: candidate.name,
+                    candidateEmail: candidate.email,
+                    candidatePhone: candidate.phone,
+                    newStatus: 'Selected',
+                    comments: comments
+                };
+                
+                console.log('Sending integration test:', requestData);
+                
+                const response = await fetch(`${API_BASE}/update-status`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(requestData)
+                });
+                
+                const data = await response.json();
+                
+                hideLoading('integrationLoading');
+                
+                if (data.success) {
+                    showResult('integrationResult', `
+                        ✅ <strong>Full Integration Test SUCCESS!</strong><br>
+                        👤 Candidate: ${candidate.name}<br>
+                        📊 Status Updated: Selected<br>
+                        📧 Email Sent: ${data.emailSent ? 'Yes' : 'No'}<br>
+                        📱 SMS Sent: ${data.smsSent ? 'Yes' : 'No'}<br>
+                        💬 Comments: ${comments}<br><br>
+                        <strong>🎉 Complete workflow tested successfully!</strong><br>
+                        <small>📲 Check your phone (9606408912) for SMS<br>
+                        📧 Check email (${candidate.email}) for notification</small>
+                    `, 'success');
+                    
+                    document.getElementById('integrationTest').className = 'test-card success';
+                } else {
+                    throw new Error(data.error || 'Integration test failed');
+                }
+                
+            } catch (error) {
+                hideLoading('integrationLoading');
+                showResult('integrationResult', `
+                    ❌ <strong>Integration Test Failed</strong><br>
+                    Error: ${error.message}<br><br>
+                    <strong>🔍 Check:</strong><br>
+                    • Backend console logs for detailed errors<br>
+                    • Database connection<br>
+                    • Email/SMS service configurations<br>
+                    • API endpoint availability
+                `, 'error');
+                
+                document.getElementById('integrationTest').className = 'test-card error';
+            }
+        }
+        
+        // Auto-run server check on page load
+        window.onload = function() {
+            setTimeout(checkServerStatus, 1000);
+        };
+    </script>
+</body>
+</html>

@@ -1,0 +1,2179 @@
+import React, { useState, useMemo, useEffect , useRef} from "react";
+import { useContext } from "react";
+import { AuthContext } from "../Context/Authcontext";
+import axios from "axios";
+import * as XLSX from "xlsx";
+import { useNavigate , useLocation} from "react-router-dom";
+import { getAllEmployees, updateEmployee } from "../api/employeeApi";
+import "./Employeedirectory.css";
+import InviteEmployee from "../Components/InviteEmployee";
+import api from "../api/axios";
+
+
+function formatDateForCompare(d) {
+  if (!d || d === "-") return null;
+  const date = new Date(d);
+  return isNaN(date.getTime()) ? null : date;
+}
+
+export default function EmployeeDirectory() {
+
+  const navigate = useNavigate();
+  const { user } = useContext(AuthContext);
+  const location = useLocation();
+  // Filters
+  const [search, setSearch] = useState("");
+  const [tempSelections, setTempSelections] = useState({});
+  const [departmentFilter, setDepartmentFilter] = useState("");
+  const [locationFilter, setLocationFilter] = useState("");
+  const [statusFilter, setStatusFilter] = useState("");
+  const [managerFilter, setManagerFilter] = useState("");
+  const [managerEmailFilter, setManagerEmailFilter] = useState("");
+  const [dojFrom, setDojFrom] = useState("");
+  const [dojTo, setDojTo] = useState("");
+  const [exitFrom, setExitFrom] = useState("");
+  const [exitTo, setExitTo] = useState("");
+  const [viewMode, setViewMode] = useState("all");
+  const [showInvite, setShowInvite] = useState(false);
+  const [inviteEmail, setInviteEmail] = useState("");
+const [tempPassword, setTempPassword] = useState("");
+
+
+
+const [employees, setEmployees] = useState([]);
+const [activeFilter, setActiveFilter] = useState(null);
+const [filterText, setFilterText] = useState("");
+const [columnFilters, setColumnFilters] = useState({});
+const popupRef = useRef();
+
+// ── Update modal state (admin only) ──
+const [showUpdateModal, setShowUpdateModal] = useState(false);
+const [updateTarget, setUpdateTarget] = useState(null); // the employee being edited
+const [updateForm, setUpdateForm] = useState({});
+const [updateSaving, setUpdateSaving] = useState(false);
+const [selectedImage, setSelectedImage] = useState(null);
+// ── Bulk Invite state ──
+const [showBulkInvite, setShowBulkInvite] = useState(false);
+const [bulkInviteList, setBulkInviteList] = useState([]);
+const [bulkInviteSending, setBulkInviteSending] = useState(false);
+const [bulkInviteResult, setBulkInviteResult] = useState(null);
+
+// ── Bulk Upload state ──
+const [showBulkUpload, setShowBulkUpload] = useState(false);
+const [uploadRows, setUploadRows] = useState([]);
+const [uploadSaving, setUploadSaving] = useState(false);
+const [uploadResult, setUploadResult] = useState(null);
+const fileInputRef = useRef();
+
+ // ✅ ADD HERE (IMPORTANT)
+  const fieldMap = {
+    employeename: "fullName",
+  employeeId: "employeeId",
+    employeedepartment: "department",
+    employeedesignation: "designation",
+    employeelocation: "location",
+    employeeemail: "email",
+    employeereportingmanager: "manager",
+    employeestatus: "status",
+    employeeDOB: "dob",
+    employeeDOJ: "doj",
+    employeeexitdate: "exitDate",
+  };
+
+
+  useEffect(() => {
+  fetchEmployees();
+}, []);
+
+useEffect(() => {
+  if (location.state?.refresh) {
+    fetchEmployees();
+  }
+}, [location.state]);
+
+useEffect(() => {
+  fetchEmployees();
+}, [location]);
+useEffect(() => {
+  const handleClick = (e) => {
+    if (popupRef.current && !popupRef.current.contains(e.target)) {
+      setActiveFilter(null);
+    }
+  };
+  document.addEventListener("mousedown", handleClick);
+  return () => document.removeEventListener("mousedown", handleClick);
+}, []);
+
+ const fetchEmployees = async () => {
+  try {
+    const employees = await getAllEmployees();
+    console.log("Employees response:", employees);
+    // Ensure response is an array
+    if (Array.isArray(employees)) {
+      setEmployees(employees);
+    } else {
+      console.error("Expected array, got:", typeof employees);
+      setEmployees([]);
+    }
+  } catch (err) {
+    console.error("Error fetching employees", err);
+    setEmployees([]);
+  }
+};
+
+const getUnique = (key) => {
+  return [...new Set(employees.map((e) => e[key]).filter(Boolean))];
+};
+
+const suggestions =
+  activeFilter &&
+  getUnique(fieldMap[activeFilter] || activeFilter).filter((v) =>
+    String(v)
+      .toLowerCase()
+      .includes(filterText.toLowerCase())
+  );
+
+  const handleCheckboxChange = (column, value) => {
+  setTempSelections((prev) => {
+    const current = prev[column] || [];
+
+    if (current.includes(value)) {
+      return {
+        ...prev,
+        [column]: current.filter((x) => x !== value),
+      };
+    }
+
+    return {
+      ...prev,
+      [column]: [...current, value],
+    };
+  });
+};
+
+ // const employees = sampleEmployees;
+
+const styles = {
+  input: {
+    padding: "8px",
+    marginTop: "10px",
+    width: "100%",
+    borderRadius: "6px",
+    border: "1px solid #ccc"
+  }
+};
+const sendInviteEmployee = async () => {
+  try {
+    // Get fullName from inviteEmail (simple fallback)
+    const emailPrefix = inviteEmail.split("@")[0];
+    const fullName =
+      emailPrefix.charAt(0).toUpperCase() + emailPrefix.slice(1);
+
+    console.log("Sending invite to:", inviteEmail);
+    console.log("API URL:", import.meta.env.VITE_API_BASE_URL);
+
+    const res = await axios.post(
+      `${import.meta.env.VITE_API_BASE_URL}/api/onboarding/invite`,
+      {
+        email: inviteEmail,
+        password: tempPassword,
+        fullName: fullName,
+        department: "General",
+        designation: "Employee",
+      }
+    );
+
+    console.log("Invite response:", res.data);
+
+    alert("Invite sent successfully");
+
+    setInviteEmail("");
+    setShowInvite(false);
+
+  } catch (err) {
+    console.error("FULL ERROR:", err);
+
+    if (err.response) {
+      console.error("STATUS:", err.response.status);
+      console.error("DATA:", err.response.data);
+
+      alert(
+        "Failed to send invite: " +
+          (err.response.data?.message ||
+            err.response.data ||
+            "Server error")
+      );
+    } else if (err.request) {
+      alert(
+        "Request reached the server, but no response was received. Please check backend/server."
+      );
+    } else {
+      alert("Failed to send invite: " + err.message);
+    }
+  }
+};
+  // Derived options
+  const departments = useMemo(
+    () => Array.from(new Set(employees.map((e) => e.department))).sort(),
+    [employees]
+  );
+  const locations = useMemo(
+    () => Array.from(new Set(employees.map((e) => e.location))).sort(),
+    [employees]
+  );
+  const managers = useMemo(
+    () => Array.from(new Set(employees.map((e) => e.manager))).sort(),
+    [employees]
+  );
+  const managerEmails = useMemo(
+    () => Array.from(new Set(employees.map((e) => e.managerEmail))).sort(),
+    [employees]
+  );
+  const statuses = useMemo(
+    () => Array.from(new Set(employees.map((e) => e.status))).sort(),
+    [employees]
+  );
+
+  const today = new Date();
+  const currentMonth = today.getMonth() + 1;
+  const currentDay = today.getDate();
+
+  const filteredEmployees = useMemo(() => {
+      return employees.filter((emp) => {
+
+    // ✅ ROLE BASED FILTER
+if (user?.role === "manager") {
+  if (emp.managerEmail !== user?.email) return false;
+}
+
+if (user?.role === "employee") {
+  if (emp.email !== user?.email) return false;
+}
+ const matchesColumnFilters = Object.keys(columnFilters).every((key) => {
+  if (!columnFilters[key]) return true;
+
+  const actualField = fieldMap[key];
+
+  const empValue = emp[actualField];
+
+  const selectedValues = String(columnFilters[key] || "")
+    .split("|")
+    .filter(Boolean);
+
+  if (selectedValues.length === 0) return true;
+
+  return selectedValues.some(
+    (v) =>
+      String(empValue ?? "").toLowerCase() ===
+      v.toLowerCase()
+  );
+});
+if (!matchesColumnFilters) return false;
+  
+      const empDOB = formatDateForCompare(emp.dob);
+      const empDOJ = formatDateForCompare(emp.doj);
+      const empExit =
+        emp.exitDate && emp.exitDate !== "-" ? formatDateForCompare(emp.exitDate) : null;
+
+      const isBirthday =
+        empDOB && empDOB.getMonth() + 1 === currentMonth && empDOB.getDate() === currentDay;
+      const isAnniversary =
+        empDOJ && empDOJ.getMonth() + 1 === currentMonth && empDOJ.getDate() === currentDay;
+
+      if (viewMode === "birthday" && !isBirthday) return false;
+      if (viewMode === "anniversary" && !isAnniversary) return false;
+      if (viewMode === "resigned" && (emp.status || "").toUpperCase() === "ACTIVE") return false;
+
+      const lowerSearch = search.trim().toLowerCase();
+      if (lowerSearch) {
+      const matches =
+  (emp.fullName || "").toLowerCase().includes(lowerSearch) ||
+  (emp.employeeId || "").toLowerCase().includes(lowerSearch) ||
+  (emp.designation || "").toLowerCase().includes(lowerSearch) ||
+  (emp.email || "").toLowerCase().includes(lowerSearch);
+        if (!matches) return false;
+      }
+
+      if (departmentFilter && emp.department !== departmentFilter) return false;
+      if (locationFilter && emp.location !== locationFilter) return false;
+      if (statusFilter && (emp.status || "").toUpperCase() !== (statusFilter || "").toUpperCase()) return false;
+      if (managerFilter && emp.manager !== managerFilter) return false;
+      if (managerEmailFilter && emp.managerEmail !== managerEmailFilter) return false;
+
+      if (dojFrom) {
+        const from = formatDateForCompare(dojFrom);
+        if (!empDOJ || empDOJ < from) return false;
+      }
+      if (dojTo) {
+        const to = formatDateForCompare(dojTo);
+        if (!empDOJ || empDOJ > new Date(new Date(to).setHours(23, 59, 59))) return false;
+      }
+      if (exitFrom) {
+        const from = formatDateForCompare(exitFrom);
+        if (!empExit || empExit < from) return false;
+      }
+      if (exitTo) {
+        const to = formatDateForCompare(exitTo);
+        if (!empExit || empExit > new Date(new Date(to).setHours(23, 59, 59))) return false;
+      }
+
+      return true;
+    });
+  }, [
+    employees,
+    search,
+    departmentFilter,
+    locationFilter,
+    statusFilter,
+    managerFilter,
+    managerEmailFilter,
+    dojFrom,
+    dojTo,
+    exitFrom,
+    exitTo,
+    viewMode,
+    currentMonth,
+    currentDay,
+    columnFilters, // ✅ ADD THIS
+  ]);
+
+  const clearAll = () => {
+    setSearch("");
+    setDepartmentFilter("");
+    setLocationFilter("");
+    setStatusFilter("");
+    setManagerFilter("");
+    setManagerEmailFilter("");
+    setDojFrom("");
+    setDojTo("");
+    setExitFrom("");
+    setExitTo("");
+    setViewMode("all");
+    setColumnFilters({});
+    setTempSelections({});
+  };
+
+  const exportExcel = () => {
+    const tableData = filteredEmployees.map((emp) => ({
+      ID: emp.id,
+      Name: emp.name,
+      Department: emp.department,
+      Designation: emp.designation,
+      Location: emp.location,
+      Email: emp.email,
+      Manager: emp.manager,
+      ManagerEmail: emp.managerEmail,
+      DOB: emp.dob,
+      DOJ: emp.doj,
+      ExitDate: emp.exitDate,
+      Status: emp.status,
+    }));
+
+    const worksheet = XLSX.utils.json_to_sheet(tableData);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, "Employees");
+    XLSX.writeFile(
+      workbook,
+      `Employee_Directory_${new Date().toISOString().slice(0, 10)}.xlsx`
+    );
+  };
+
+  const handleAddEmployee = () => {
+    navigate("/onboarding"); // redirect to onboarding page
+  };
+
+  // ── Open update modal pre-filled with employee data ──
+  const openUpdateModal = (emp) => {
+    setUpdateTarget(emp);
+     setSelectedImage(null);
+    setUpdateForm({
+      fullName:             emp.fullName             || "",
+      department:           emp.department           || "",
+      designation:          emp.designation          || "",
+      email:                emp.email                || "",
+      location:             emp.location             || "",
+      manager:              emp.manager              || "",
+      managerEmail:         emp.managerEmail         || "",
+      dob:                  emp.dob                  || "",
+      doj:                  emp.doj                  || "",
+      exitDate:             emp.exitDate             || "",
+      status:               emp.status               || "",
+      bankAccountNumber:    emp.bankAccountNumber    || "",
+      ifsc:                 emp.ifsc                 || "",
+      uan:                  emp.uan                  || "",
+      pfMemberId:           emp.pfMemberId           || "",
+      pf:                   emp.pf                   || "",
+      esic:                 emp.esic                 || "",
+      designationChanged:   emp.designationChanged   || "",
+      designationChangedDate: emp.designationChangedDate || "",
+    });
+    setShowUpdateModal(true);
+  };
+
+  const handleUpdateSave = async () => {
+    if (!updateTarget) return;
+    setUpdateSaving(true);
+    try {
+      // ✅ FIX: Use the correct ID field for the update
+      // The backend expects employeeId (custom ID like "IT-EMP-0001"), not MongoDB _id
+      const idToUse = updateTarget.employeeId || updateTarget.id;
+      
+      console.log("🔍 Update Target:", updateTarget);
+      console.log("🔍 Using ID:", idToUse);
+      console.log("🔍 Update Form:", updateForm);
+      
+      if (!idToUse) {
+        throw new Error("Employee ID not found in employee data");
+      }
+      
+      const formData = new FormData();
+
+Object.keys(updateForm).forEach((key) => {
+  formData.append(key, updateForm[key]);
+});
+
+if (selectedImage) {
+  formData.append("image", selectedImage);
+}
+
+const updatedEmployee = await updateEmployee(idToUse, formData);
+console.log(formData instanceof FormData);
+console.log(idToUse);
+
+setEmployees((prev) =>
+  prev.map((emp) =>
+    emp.employeeId === idToUse
+      ? {
+          ...emp,
+          ...updatedEmployee,
+        }
+      : emp
+  )
+);
+
+alert("✅ Employee updated successfully!");
+setShowUpdateModal(false);
+
+await fetchEmployees();
+    } catch (err) {
+      console.error("Update failed:", err);
+      console.error("Error details:", {
+        message: err.message,
+        response: err.response?.data,
+        status: err.response?.status,
+        updateTarget: updateTarget,
+        updateForm: updateForm
+      });
+      alert("❌ Failed to update: " + (err.response?.data || err.message));
+    } finally {
+      setUpdateSaving(false);
+    }
+  };
+
+  // ── Bulk Invite: load all employees into the invite list ──
+  const openBulkInvite = () => {
+   console.log("EMPLOYEES DATA:", employees);
+
+const list = employees
+  .filter(emp => emp.email && emp.email.includes("@"))
+  .map(emp => ({
+    email: emp.email,
+    fullName: emp.fullName || emp.name || "",
+    department: emp.department || "IT",
+    designation: emp.designation || "Employee",
+    password: "Temp@123",
+    selected: true,
+  }));
+
+console.log("BULK LIST:", list);
+    setBulkInviteList(list);
+    setBulkInviteResult(null);
+    setShowBulkInvite(true);
+  };
+const handleBulkInviteSend = async () => {
+  const selectedEmployees = bulkInviteList.filter(
+    (emp) => emp.selected && emp.email
+  );
+
+  if (selectedEmployees.length === 0) {
+    alert("Please select at least one employee");
+    return;
+  }
+
+  setBulkInviteSending(true);
+
+  // Track succeeded and failed invites
+  const results = await Promise.allSettled(
+    selectedEmployees.map((emp) =>
+      axios.post(
+        `${import.meta.env.VITE_API_BASE_URL}/api/onboarding/invite`,
+        {
+          email: emp.email,
+          password: emp.password || "Temp@123", // ✅ Fallback default password
+          fullName: emp.fullName,
+          department: emp.department || "General",
+          designation: emp.designation || "Employee",
+        }
+      )
+    )
+  );
+
+  const successful = results.filter((r) => r.status === "fulfilled").length;
+  const failedResults = results
+    .map((r, i) => ({ result: r, emp: selectedEmployees[i] }))
+    .filter(({ result }) => result.status === "rejected");
+
+  setBulkInviteSending(false);
+
+  if (failedResults.length === 0) {
+    alert(`✅ Invitations sent successfully to all ${successful} employee(s).`);
+    setShowBulkInvite(false);
+  } else {
+    const failedEmails = failedResults
+      .map(({ emp, result }) => {
+        const reason =
+          result.reason?.response?.data?.message ||
+          result.reason?.response?.data ||
+          result.reason?.message ||
+          "Unknown error";
+        return `• ${emp.email} — ${reason}`;
+      })
+      .join("\n");
+
+    console.error("Bulk Invite Failures:", failedResults);
+    alert(
+      `⚠️ Sent ${successful} invitation(s) successfully.\n` +
+      `❌ ${failedResults.length} failed:\n\n${failedEmails}`
+    );
+  }
+};
+  // ── Bulk Upload: parse Excel file ──
+  const handleExcelUpload = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (evt) => {
+      const wb = XLSX.read(evt.target.result, { type: "binary" });
+      const ws = wb.Sheets[wb.SheetNames[0]];
+      const json = XLSX.utils.sheet_to_json(ws, { defval: "" });
+      // Normalize column names (trim spaces, lowercase keys)
+      const normalized = json.map(row => {
+        const obj = {};
+        Object.keys(row).forEach(k => { obj[k.trim()] = row[k]; });
+        return {
+          fullName:    obj["fullName"]    || obj["Full Name"]    || obj["name"]        || "",
+          email:       obj["email"]       || obj["Email"]        || obj["Email ID"]    || "",
+          department:  obj["department"]  || obj["Department"]   || "",
+          designation: obj["designation"] || obj["Designation"]  || "",
+          location:    obj["location"]    || obj["Location"]     || "",
+          manager:     obj["manager"]     || obj["Manager"]      || obj["Reporting Manager"] || "",
+          managerEmail:obj["managerEmail"]|| obj["Manager Email"]|| "",
+          dob:         obj["dob"]         || obj["DOB"]          || obj["Date of Birth"]|| "",
+          doj:         obj["doj"]         || obj["DOJ"]          || obj["Date of Joining"]|| "",
+        };
+      });
+      setUploadRows(normalized);
+      setUploadResult(null);
+    };
+    reader.readAsBinaryString(file);
+  };
+
+  const handleBulkUploadSave = async () => {
+    if (uploadRows.length === 0) { alert("No data to upload."); return; }
+    setUploadSaving(true);
+    setUploadResult(null);
+    try {
+      const res = await api.post("/api/employee/bulk-upload", uploadRows);
+      setUploadResult(res.data);
+      if (res.data.success > 0) fetchEmployees();
+    } catch (err) {
+      alert("❌ Upload failed: " + (err.response?.data?.message || err.message));
+    } finally {
+      setUploadSaving(false);
+    }
+  };
+const downloadSampleTemplate = () => {
+  const headers = [
+    "fullName",
+    "email",
+    "department",
+    "designation",
+    "location",
+    "manager",
+    "managerEmail",
+    "dob",
+    "doj"
+  ];
+
+  // Create empty sheet but force headers only
+  const ws = XLSX.utils.json_to_sheet([], { header: headers });
+
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, "Employees");
+
+  XLSX.writeFile(wb, "Employee_Upload_Template.xlsx");
+};
+const removeRow = (index) => {
+  const updated = uploadRows.filter((_, i) => i !== index);
+
+  setUploadRows(updated);
+};
+ 
+
+const getAvatarColor = (name) => {
+  if (!name) return "cccccc"; // ✅ prevent crash
+
+  const colors = ["1abc9c", "3498db", "9b59b6", "e67e22", "e74c3c", "2ecc71"];
+  let hash = 0;
+
+  for (let i = 0; i < name.length; i++) {
+    hash = name.charCodeAt(i) + ((hash << 5) - hash);
+  }
+
+  return colors[Math.abs(hash) % colors.length];
+};
+
+// ✅ Get profile image prioritizing localStorage (updated profiles)
+const getEmployeeProfileImage = (emp) => {
+  console.log(
+    "Employee:",
+    emp.fullName,
+    "EmployeeId:",
+    emp.employeeId,
+    "ID:",
+    emp.id,
+    "Email:",
+    emp.email
+  );
+  // Always prefer DB image
+  if (emp.image) {
+    return emp.image;
+  }
+
+  if (emp.profileImage) {
+    return emp.profileImage;
+  }
+
+  // ✅ FIX: Try multiple key variations to match Profile.jsx
+  const localStorageImage =
+    localStorage.getItem(`employee-image-${emp.employeeId}`) ||
+    localStorage.getItem(`employee-image-${emp.id}`) ||  // ✅ ADD THIS - matches Profile.jsx
+    localStorage.getItem(`employee-image-${emp.email}`) ||
+    localStorage.getItem("profileImage"); // ✅ ADD THIS - fallback for current user
+
+  if (localStorageImage) {
+    console.log("✅ Found image in localStorage for", emp.fullName);
+    return localStorageImage;
+  }
+
+  // Check database fields
+  if (emp.image || emp.profileImage) {
+    console.log("✅ Found image in database for", emp.fullName);
+    return emp.image || emp.profileImage;
+  }
+
+  // Fallback to avatar API
+  console.log("⚠️ No image found, using avatar API for", emp.fullName);
+  return `https://ui-avatars.com/api/?name=${encodeURIComponent(
+    emp.fullName || emp.name || ""
+  )}&background=${getAvatarColor(
+    emp.fullName || emp.name
+  )}&color=fff&size=128`;
+};
+  return (
+    <div className="directory-container">
+      {/* Top Add Employee button */}
+      <div className="header-actions" style={{ marginBottom: "10px" }}>
+        <button className="add-btn-top" onClick={handleAddEmployee}>
+          ➕ Add Employee
+        </button>
+      {/* Single Invite */}
+<button
+  className="invite-btn-top"
+  onClick={() => setShowInvite(true)}
+>
+  📩 Invite Employee
+</button>
+
+{/* Bulk Invite */}
+<button
+  className="invite-btn-top"
+  onClick={() => {
+    console.log("BULK INVITE BUTTON CLICKED");
+    openBulkInvite();
+  }}
+>
+  📨 Bulk Invite
+</button>
+      </div>
+
+   {showInvite && (
+  <div className="invite-modal-overlay">
+    <div className="invite-modal">
+      <h3>Invite Employee</h3>
+
+      <input
+        type="email"
+        placeholder="Enter employee email "
+        value={inviteEmail}
+  onChange={(e) => setInviteEmail(e.target.value)}
+      />
+
+     <input
+  type="text"
+  placeholder="Enter Temporary Password "
+  value={tempPassword}
+  onChange={(e) => setTempPassword(e.target.value)}
+/>
+
+    <div className="invite-info">
+  The employee will receive an email with a secure onboarding link.
+  <br /><br />
+  They need to click the link and set their password to access the HRMS portal.
+</div>
+
+      <div className="invite-actions">
+        <button
+  className="send-btn"
+  type="button"
+  onClick={(e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    console.log("SEND INVITE CLICKED");
+    sendInviteEmployee();
+  }}
+>
+  Send Invite
+</button>
+        <button className="cancel-btn" onClick={() => setShowInvite(false)}>
+          Cancel
+        </button>
+      </div>
+    </div>
+  </div>
+)}
+
+{showBulkInvite && (
+  <div
+    style={{
+      position: "fixed",
+      inset: 0,
+      background: "rgba(0,0,0,0.5)",
+      zIndex: 9999,
+      display: "flex",
+      justifyContent: "center",
+      alignItems: "center",
+    }}
+  >
+    <div
+      style={{
+        background: "#fff",
+        padding: "20px",
+        borderRadius: "10px",
+        width: "600px",
+        maxHeight: "80vh",
+        overflowY: "auto",
+      }}
+    >
+      <h2>Bulk Employee Invitation</h2>
+
+      <table
+        style={{
+          width: "100%",
+          borderCollapse: "collapse",
+          marginTop: "15px",
+        }}
+      >
+        <thead>
+          <tr>
+            <th>Select</th>
+            <th>Name</th>
+            <th>Email</th>
+          </tr>
+        </thead>
+
+        <tbody>
+          {bulkInviteList.map((emp, index) => (
+            <tr key={index}>
+              <td>
+                <input
+                  type="checkbox"
+                  checked={emp.selected}
+                  onChange={(e) => {
+                    const updated = [...bulkInviteList];
+
+                    updated[index].selected = e.target.checked;
+
+                    setBulkInviteList(updated);
+                  }}
+                />
+              </td>
+
+              <td>{emp.fullName}</td>
+
+              <td>{emp.email}</td>
+
+            </tr>
+          ))}
+        </tbody>
+      </table>
+
+      <div
+        style={{
+          marginTop: "20px",
+          display: "flex",
+          gap: "10px",
+          justifyContent: "flex-end",
+        }}
+      >
+        <button
+          onClick={() => setShowBulkInvite(false)}
+          style={{
+            padding: "10px 15px",
+            border: "none",
+            background: "gray",
+            color: "white",
+            borderRadius: "5px",
+            cursor: "pointer",
+          }}
+        >
+          Cancel
+        </button>
+
+        <button
+          onClick={handleBulkInviteSend}
+          disabled={bulkInviteSending}
+          style={{
+            padding: "10px 15px",
+            border: "none",
+            background: "#2563eb",
+            color: "white",
+            borderRadius: "5px",
+            cursor: "pointer",
+          }}
+        >
+          {bulkInviteSending ? "Sending..." : "Send Bulk Invites"}
+        </button>
+      </div>
+
+      {bulkInviteResult && (
+        <div style={{ marginTop: "15px" }}>
+          ✅ Invitations Sent Successfully
+        </div>
+      )}
+    </div>
+  </div>
+)}
+      {/* ── Update Employee Modal (admin only) ── */}
+      {showUpdateModal && updateTarget && (
+        <div style={{
+          position: "fixed", inset: 0,
+          background: "rgba(15,23,42,0.55)",
+          backdropFilter: "blur(4px)",
+          zIndex: 9999, display: "flex", alignItems: "center", justifyContent: "center",
+          padding: "16px"
+        }}>
+          <div style={{
+            background: "#fff",
+            borderRadius: 16,
+            width: "100%",
+            maxWidth: 720,
+            maxHeight: "92vh",
+            overflowY: "auto",
+            boxShadow: "0 24px 64px rgba(0,0,0,0.25)",
+            display: "flex",
+            flexDirection: "column"
+          }}>
+            {/* Modal Header */}
+            <div style={{
+              background: "linear-gradient(135deg, #1e3a5f 0%, #2563eb 100%)",
+              borderRadius: "16px 16px 0 0",
+              padding: "20px 28px",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "space-between",
+              flexShrink: 0
+            }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                <div style={{
+                  width: 42, height: 42, borderRadius: "50%",
+                  background: "rgba(255,255,255,0.2)",
+                  display: "flex", alignItems: "center", justifyContent: "center",
+                  fontSize: 20
+                }}>✏️</div>
+                <div>
+                  <div style={{ color: "#fff", fontWeight: 700, fontSize: 17 }}>
+                    Update Employee
+                  </div>
+                  <div style={{ color: "rgba(255,255,255,0.75)", fontSize: 13 }}>
+                    {updateTarget.fullName} &nbsp;·&nbsp; {updateTarget.employeeId}
+                  </div>
+                </div>
+              </div>
+              <button
+                onClick={() => setShowUpdateModal(false)}
+                style={{
+                  background: "rgba(255,255,255,0.15)", border: "none",
+                  color: "#fff", width: 32, height: 32, borderRadius: "50%",
+                  cursor: "pointer", fontSize: 18, display: "flex",
+                  alignItems: "center", justifyContent: "center", lineHeight: 1
+                }}
+              >×</button>
+            </div>
+
+            {/* Modal Body */}
+            <div style={{ padding: "24px 28px", overflowY: "auto" }}>
+                 
+                 {/* Modal Body */}
+<div style={{ padding: "24px 28px", overflowY: "auto" }}>
+
+  {/* PROFILE PHOTO */}
+{/* PROFILE PHOTO */}
+<div
+  style={{
+    marginBottom: "20px",
+    textAlign: "center",
+    position: "relative",
+    display: "inline-block",
+    width: "120px",
+    margin: "0 auto"
+  }}
+>
+  <img
+    src={
+      selectedImage
+        ? URL.createObjectURL(selectedImage)
+        : getEmployeeProfileImage(updateTarget)
+    }
+    alt="Profile"
+    style={{
+      width: "100px",
+      height: "100px",
+      borderRadius: "50%",
+      objectFit: "cover",
+      border: "2px solid #ddd"
+    }}
+  />
+
+  {/* Hidden file input */}
+  <input
+    id="profileUpload"
+    type="file"
+    accept="image/*"
+    style={{ display: "none" }}
+    onChange={(e) => setSelectedImage(e.target.files[0])}
+  />
+
+  {/* Edit button */}
+  <label
+    htmlFor="profileUpload"
+    style={{
+      position: "absolute",
+      bottom: "0",
+      right: "0",
+      background: "#2563eb",
+      color: "#fff",
+      padding: "6px 10px",
+      borderRadius: "20px",
+      cursor: "pointer",
+      fontSize: "12px",
+      fontWeight: "600"
+    }}
+  >
+    ✎ Edit
+  </label>
+</div>
+</div>
+              {/* Section: Basic Info */}
+              <div style={{ marginBottom: 20 }}>
+                <div style={{
+                  fontSize: 11, fontWeight: 700, color: "#2563eb",
+                  textTransform: "uppercase", letterSpacing: 1,
+                  borderBottom: "2px solid #e0eaff", paddingBottom: 6, marginBottom: 14
+                }}>👤 Basic Information</div>
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px 16px" }}>
+                  {[
+                    { label: "Full Name",    key: "fullName",    icon: "👤" },
+                    { label: "Department",   key: "department",  icon: "🏢" },
+                    { label: "Designation",  key: "designation", icon: "💼" },
+                    { label: "Email",        key: "email",       icon: "📧" },
+                    { label: "Location",     key: "location",    icon: "📍" },
+                    { label: "Reporting Manager", key: "manager", icon: "👔" },
+                    { label: "Manager Email", key: "managerEmail", icon: "📨" },
+                  ].map(({ label, key, icon }) => (
+                    <div key={key}>
+                      <label style={{ fontSize: 11, fontWeight: 600, color: "#64748b", display: "block", marginBottom: 5 }}>
+                        {icon} {label}
+                      </label>
+                      <input
+                        value={updateForm[key] || ""}
+                        onChange={(e) => setUpdateForm({ ...updateForm, [key]: e.target.value })}
+                        style={{
+                          width: "100%", padding: "9px 12px", borderRadius: 8,
+                          border: "1.5px solid #e2e8f0", fontSize: 13,
+                          boxSizing: "border-box", outline: "none",
+                          transition: "border-color 0.2s",
+                          background: "#f8fafc"
+                        }}
+                        onFocus={e => e.target.style.borderColor = "#2563eb"}
+                        onBlur={e => e.target.style.borderColor = "#e2e8f0"}
+                      />
+                    </div>
+                  ))}
+                  {/* Status dropdown */}
+                  <div>
+                    <label style={{ fontSize: 11, fontWeight: 600, color: "#64748b", display: "block", marginBottom: 5 }}>
+                      🔘 Status
+                    </label>
+                    <select
+                      value={updateForm.status || ""}
+                      onChange={(e) => setUpdateForm({ ...updateForm, status: e.target.value })}
+                      style={{
+                        width: "100%", padding: "9px 12px", borderRadius: 8,
+                        border: "1.5px solid #e2e8f0", fontSize: 13,
+                        boxSizing: "border-box", background: "#f8fafc",
+                        outline: "none", cursor: "pointer"
+                      }}
+                    >
+                     <option value="ACTIVE">ACTIVE</option>
+<option value="INACTIVE">INACTIVE</option>
+<option value="INVITED">INVITED</option>
+<option value="SERVING NOTICE">SERVING NOTICE</option>
+<option value="RESIGNED">RESIGNED</option>
+<option value="DISABLED">DISABLED</option>
+                    </select>
+                  </div>
+                </div>
+              </div>
+
+              {/* Section: Dates */}
+              <div style={{ marginBottom: 20 }}>
+                <div style={{
+                  fontSize: 11, fontWeight: 700, color: "#7c3aed",
+                  textTransform: "uppercase", letterSpacing: 1,
+                  borderBottom: "2px solid #ede9fe", paddingBottom: 6, marginBottom: 14
+                }}>📅 Dates</div>
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "12px 16px" }}>
+                  {[
+                    { label: "Date of Birth",   key: "dob" },
+                    { label: "Date of Joining", key: "doj" },
+                    { label: "Exit Date",        key: "exitDate" },
+                  ].map(({ label, key }) => (
+                    <div key={key}>
+                      <label style={{ fontSize: 11, fontWeight: 600, color: "#64748b", display: "block", marginBottom: 5 }}>
+                        {label}
+                      </label>
+                      <input
+                        type="date"
+                        value={updateForm[key] || ""}
+                        onChange={(e) => setUpdateForm({ ...updateForm, [key]: e.target.value })}
+                        style={{
+                          width: "100%", padding: "9px 12px", borderRadius: 8,
+                          border: "1.5px solid #e2e8f0", fontSize: 13,
+                          boxSizing: "border-box", background: "#f8fafc", outline: "none"
+                        }}
+                        onFocus={e => e.target.style.borderColor = "#7c3aed"}
+                        onBlur={e => e.target.style.borderColor = "#e2e8f0"}
+                      />
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Section: Bank & Statutory */}
+              <div style={{ marginBottom: 20 }}>
+                <div style={{
+                  fontSize: 11, fontWeight: 700, color: "#059669",
+                  textTransform: "uppercase", letterSpacing: 1,
+                  borderBottom: "2px solid #d1fae5", paddingBottom: 6, marginBottom: 14
+                }}>🏦 Bank & Statutory Details</div>
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px 16px" }}>
+                  {[
+                    { label: "Bank Account Number", key: "bankAccountNumber" },
+                    { label: "IFSC Code",           key: "ifsc" },
+                    { label: "UAN",                 key: "uan" },
+                    { label: "PF Member ID",        key: "pfMemberId" },
+                    { label: "PF Number",           key: "pf" },
+                    { label: "ESIC Number",         key: "esic" },
+                  ].map(({ label, key }) => (
+                    <div key={key}>
+                      <label style={{ fontSize: 11, fontWeight: 600, color: "#64748b", display: "block", marginBottom: 5 }}>
+                        {label}
+                      </label>
+                      <input
+                        value={updateForm[key] || ""}
+                        onChange={(e) => setUpdateForm({ ...updateForm, [key]: e.target.value })}
+                        style={{
+                          width: "100%", padding: "9px 12px", borderRadius: 8,
+                          border: "1.5px solid #e2e8f0", fontSize: 13,
+                          boxSizing: "border-box", background: "#f8fafc", outline: "none"
+                        }}
+                        onFocus={e => e.target.style.borderColor = "#059669"}
+                        onBlur={e => e.target.style.borderColor = "#e2e8f0"}
+                      />
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Section: Designation Change */}
+              <div style={{ marginBottom: 8 }}>
+                <div style={{
+                  fontSize: 11, fontWeight: 700, color: "#d97706",
+                  textTransform: "uppercase", letterSpacing: 1,
+                  borderBottom: "2px solid #fef3c7", paddingBottom: 6, marginBottom: 14
+                }}>🔄 Designation Change</div>
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px 16px" }}>
+                  <div>
+                    <label style={{ fontSize: 11, fontWeight: 600, color: "#64748b", display: "block", marginBottom: 5 }}>
+                      New Designation
+                    </label>
+                    <input
+                      value={updateForm.designationChanged || ""}
+                      onChange={(e) => setUpdateForm({ ...updateForm, designationChanged: e.target.value })}
+                      style={{
+                        width: "100%", padding: "9px 12px", borderRadius: 8,
+                        border: "1.5px solid #e2e8f0", fontSize: 13,
+                        boxSizing: "border-box", background: "#f8fafc", outline: "none"
+                      }}
+                      onFocus={e => e.target.style.borderColor = "#d97706"}
+                      onBlur={e => e.target.style.borderColor = "#e2e8f0"}
+                    />
+                  </div>
+                  <div>
+                    <label style={{ fontSize: 11, fontWeight: 600, color: "#64748b", display: "block", marginBottom: 5 }}>
+                      Change Effective Date
+                    </label>
+                    <input
+                      type="date"
+                      value={updateForm.designationChangedDate || ""}
+                      onChange={(e) => setUpdateForm({ ...updateForm, designationChangedDate: e.target.value })}
+                      style={{
+                        width: "100%", padding: "9px 12px", borderRadius: 8,
+                        border: "1.5px solid #e2e8f0", fontSize: 13,
+                        boxSizing: "border-box", background: "#f8fafc", outline: "none"
+                      }}
+                      onFocus={e => e.target.style.borderColor = "#d97706"}
+                      onBlur={e => e.target.style.borderColor = "#e2e8f0"}
+                    />
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Modal Footer */}
+            <div style={{
+              padding: "16px 28px",
+              borderTop: "1px solid #f1f5f9",
+              display: "flex", gap: 10, justifyContent: "flex-end",
+              flexShrink: 0, background: "#fafbfc",
+              borderRadius: "0 0 16px 16px"
+            }}>
+              <button
+                onClick={() => setShowUpdateModal(false)}
+                style={{
+                  padding: "10px 24px", borderRadius: 8,
+                  border: "1.5px solid #e2e8f0",
+                  background: "#fff", cursor: "pointer",
+                  fontSize: 13, fontWeight: 600, color: "#64748b",
+                  transition: "all 0.2s"
+                }}
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleUpdateSave}
+                disabled={updateSaving}
+                style={{
+                  padding: "10px 28px", borderRadius: 8, border: "none",
+                  background: updateSaving
+                    ? "#93c5fd"
+                    : "linear-gradient(135deg, #1e3a5f 0%, #2563eb 100%)",
+                  color: "#fff", cursor: updateSaving ? "not-allowed" : "pointer",
+                  fontSize: 13, fontWeight: 700,
+                  boxShadow: updateSaving ? "none" : "0 4px 12px rgba(37,99,235,0.35)",
+                  transition: "all 0.2s",
+                  display: "flex", alignItems: "center", gap: 8
+                }}
+              >
+                {updateSaving ? "⏳ Saving..." : "💾 Save Changes"}
+              </button>
+            </div>
+          </div>
+        </div>
+        )}
+
+        {/* Main Header */}
+        <div className="directory-header">
+          <h2>Employee Directory</h2>
+
+          <div className="header-actions">
+            <div className="mode-buttons">
+              <button
+                className={viewMode === "all" ? "active-mode" : ""}
+                onClick={() => setViewMode("all")}
+              >
+                📋 View All
+              </button>
+              <button
+                className={viewMode === "birthday" ? "active-mode" : ""}
+                onClick={() => setViewMode("birthday")}
+              >
+                🎂 Birthdays
+              </button>
+              <button
+                className={viewMode === "anniversary" ? "active-mode" : ""}
+                onClick={() => setViewMode("anniversary")}
+              >
+                🎉 Anniversary
+              </button>
+              <button
+                className={viewMode === "resigned" ? "active-mode" : ""}
+                onClick={() => setViewMode("resigned")}
+              >
+                🚪 Resigned
+              </button>
+            </div>
+
+            <div className="action-buttons">
+              <button className="clear-btn" onClick={clearAll}>
+                Clear Filters
+              </button>
+              <button className="export-btn" onClick={exportExcel}>
+                ⬇ Download
+              </button>
+              <button
+    className="export-btn"
+    onClick={() => navigate("/bulk-upload")}
+  >
+    ⬆ Upload
+  </button>
+            </div>
+          </div>
+        </div>
+
+        {/* Employee Table */}
+        <div className="table-wrapper">
+        
+    <table className="employee-table">
+            <thead>
+              <tr className="table-head">
+                <th>
+    <div className="th-header">
+      S.No.
+    </div>
+  </th>
+              <th>
+    <div className="th-header">
+      Profile
+    
+    </div>
+
+    {activeFilter === "profile" && (
+      <div ref={popupRef} className="popup">
+        <input
+          placeholder="Search..."
+          value={filterText}
+          onChange={(e) => setFilterText(e.target.value)}
+        />
+
+        <div className="list">
+          {suggestions.map((s) => (
+            <div
+              key={s}
+              onClick={() => {
+                setColumnFilters({
+                  ...columnFilters,
+                  profile: s,
+                });
+                setActiveFilter(null);
+                setFilterText("");
+              }}
+            >
+              {s}
+            </div>
+          ))}
+        </div>
+      </div>
+    )}
+  </th>
+                <th>
+    <div className="th-header">
+      Employee Name
+      <span onClick={() => setActiveFilter("employeename")}>⏷</span>
+    </div>
+
+
+  {activeFilter === "employeename" && (
+    <div ref={popupRef} className="excel-filter-popup">
+
+      <input
+        type="text"
+        placeholder="Search"
+        value={filterText}
+        onChange={(e) => setFilterText(e.target.value)}
+        className="filter-search"
+      />
+
+      <div className="filter-list">
+
+        <label className="filter-item">
+          <input
+            type="checkbox"
+            checked={
+              (tempSelections.employeename || []).length ===
+              suggestions.length
+            }
+            onChange={(e) =>
+              setTempSelections({
+                ...tempSelections,
+                employeename: e.target.checked
+                  ? suggestions
+                  : [],
+              })
+            }
+          />
+          (Select All)
+        </label>
+
+        {suggestions.map((item) => (
+          <label key={item} className="filter-item">
+            <input
+              type="checkbox"
+              checked={
+                (tempSelections.employeename || []).includes(item)
+              }
+              onChange={() =>
+                handleCheckboxChange("employeename", item)
+              }
+            />
+            {item}
+          </label>
+        ))}
+      </div>
+
+      <div className="filter-footer">
+        <button
+          onClick={() => {
+            setColumnFilters({
+              ...columnFilters,
+              employeename:
+                (tempSelections.employeename || []).join("|"),
+            });
+
+            setActiveFilter(null);
+          }}
+        >
+          OK
+        </button>
+
+        <button onClick={() => setActiveFilter(null)}>
+          Cancel
+        </button>
+      </div>
+    </div>
+  )}
+  </th>
+              <th>
+    <div className="th-header">
+      Emp ID
+      <span onClick={() => setActiveFilter("employeeId")}>⏷</span>
+    </div>
+  {activeFilter === "employeeId" && (
+    <div ref={popupRef} className="excel-filter-popup">
+
+      <input
+        type="text"
+        placeholder="Search"
+        value={filterText}
+        onChange={(e) => setFilterText(e.target.value)}
+        className="filter-search"
+      />
+
+      <div className="filter-list">
+
+        <label className="filter-item">
+          <input
+            type="checkbox"
+            checked={
+              (tempSelections.employeeId || []).length ===
+              suggestions.length
+            }
+            onChange={(e) =>
+              setTempSelections({
+                ...tempSelections,
+                employeeId: e.target.checked ? suggestions : [],
+              })
+            }
+          />
+          (Select All)
+        </label>
+
+        {suggestions.map((item) => (
+          <label key={item} className="filter-item">
+            <input
+              type="checkbox"
+              checked={
+                (tempSelections.employeeId || []).includes(item)
+              }
+              onChange={() =>
+                handleCheckboxChange("employeeId", item)
+              }
+            />
+            {item}
+          </label>
+        ))}
+      </div>
+
+      <div className="filter-footer">
+        <button
+          onClick={() => {
+            setColumnFilters({
+              ...columnFilters,
+              employeeId:
+                (tempSelections.employeeId || []).join("|"),
+            });
+            setActiveFilter(null);
+          }}
+        >
+          OK
+        </button>
+
+        <button onClick={() => setActiveFilter(null)}>
+          Cancel
+        </button>
+      </div>
+    </div>
+  )}
+  </th>
+              <th>
+    <div className="th-header">
+      Department
+      <span onClick={() => setActiveFilter("employeedepartment")}>⏷</span>
+    </div>
+  {activeFilter === "employeedepartment" && (
+    <div ref={popupRef} className="excel-filter-popup">
+
+      <input
+        type="text"
+        placeholder="Search"
+        value={filterText}
+        onChange={(e) => setFilterText(e.target.value)}
+        className="filter-search"
+      />
+
+      <div className="filter-list">
+
+        <label className="filter-item">
+          <input
+            type="checkbox"
+            checked={
+              (tempSelections.employeedepartment || []).length ===
+              suggestions.length
+            }
+            onChange={(e) =>
+              setTempSelections({
+                ...tempSelections,
+                employeedepartment: e.target.checked
+                  ? suggestions
+                  : [],
+              })
+            }
+          />
+          (Select All)
+        </label>
+
+        {suggestions.map((item) => (
+          <label key={item} className="filter-item">
+            <input
+              type="checkbox"
+              checked={
+                (tempSelections.employeedepartment || []).includes(item)
+              }
+              onChange={() =>
+                handleCheckboxChange("employeedepartment", item)
+              }
+            />
+            {item}
+          </label>
+        ))}
+      </div>
+
+      <div className="filter-footer">
+        <button
+          onClick={() => {
+            setColumnFilters({
+              ...columnFilters,
+              employeedepartment:
+                (tempSelections.employeedepartment || []).join("|"),
+            });
+
+            setActiveFilter(null);
+          }}
+        >
+          OK
+        </button>
+
+        <button onClick={() => setActiveFilter(null)}>
+          Cancel
+        </button>
+      </div>
+    </div>
+  )}
+  </th>
+              <th>
+    <div className="th-header">
+      Designation
+      <span onClick={() => setActiveFilter("employeedesignation")}>⏷</span>
+    </div>
+  {activeFilter === "employeedesignation" && (
+    <div ref={popupRef} className="excel-filter-popup">
+
+      <input
+        type="text"
+        placeholder="Search"
+        value={filterText}
+        onChange={(e) => setFilterText(e.target.value)}
+        className="filter-search"
+      />
+
+      <div className="filter-list">
+
+        <label className="filter-item">
+          <input
+            type="checkbox"
+            checked={
+              (tempSelections.employeedesignation || []).length ===
+              suggestions.length
+            }
+            onChange={(e) =>
+              setTempSelections({
+                ...tempSelections,
+                employeedesignation: e.target.checked
+                  ? suggestions
+                  : [],
+              })
+            }
+          />
+          (Select All)
+        </label>
+
+        {suggestions.map((item) => (
+          <label key={item} className="filter-item">
+            <input
+              type="checkbox"
+              checked={
+                (tempSelections.employeedesignation || []).includes(item)
+              }
+              onChange={() =>
+                handleCheckboxChange(
+                  "employeedesignation",
+                  item
+                )
+              }
+            />
+            {item}
+          </label>
+        ))}
+      </div>
+
+      <div className="filter-footer">
+        <button
+          onClick={() => {
+            setColumnFilters({
+              ...columnFilters,
+              employeedesignation:
+                (tempSelections.employeedesignation || []).join("|"),
+            });
+
+            setActiveFilter(null);
+          }}
+        >
+          OK
+        </button>
+
+        <button onClick={() => setActiveFilter(null)}>
+          Cancel
+        </button>
+      </div>
+    </div>
+  )}
+  </th>
+            <th>
+    <div className="th-header">
+      Location
+      <span onClick={() => setActiveFilter("employeelocation")}>⏷</span>
+    </div>
+  {activeFilter === "employeelocation" && (
+    <div ref={popupRef} className="excel-filter-popup">
+      <input
+        type="text"
+        placeholder="Search"
+        value={filterText}
+        onChange={(e) => setFilterText(e.target.value)}
+        className="filter-search"
+      />
+
+      <div className="filter-list">
+        <label className="filter-item">
+          <input
+            type="checkbox"
+            checked={
+              (tempSelections.employeelocation || []).length ===
+              suggestions.length
+            }
+            onChange={(e) =>
+              setTempSelections({
+                ...tempSelections,
+                employeelocation: e.target.checked ? suggestions : [],
+              })
+            }
+          />
+          (Select All)
+        </label>
+
+        {suggestions.map((item) => (
+          <label key={item} className="filter-item">
+            <input
+              type="checkbox"
+              checked={
+                (tempSelections.employeelocation || []).includes(item)
+              }
+              onChange={() =>
+                handleCheckboxChange("employeelocation", item)
+              }
+            />
+            {item}
+          </label>
+        ))}
+      </div>
+
+      <div className="filter-footer">
+        <button
+          onClick={() => {
+            setColumnFilters({
+              ...columnFilters,
+              employeelocation:
+                (tempSelections.employeelocation || []).join("|"),
+            });
+            setActiveFilter(null);
+          }}
+        >
+          OK
+        </button>
+
+        <button onClick={() => setActiveFilter(null)}>
+          Cancel
+        </button>
+      </div>
+    </div>
+  )}
+  </th>
+              <th>
+    <div className="th-header">
+      <span>Employee Email</span>
+      <span onClick={() => setActiveFilter("employeeemail")}>⏷</span>
+    </div>
+  {activeFilter === "employeeemail" && (
+    <div ref={popupRef} className="excel-filter-popup">
+      <input
+        type="text"
+        placeholder="Search"
+        value={filterText}
+        onChange={(e) => setFilterText(e.target.value)}
+        className="filter-search"
+      />
+
+      <div className="filter-list">
+        <label className="filter-item">
+          <input
+            type="checkbox"
+            checked={
+              (tempSelections.employeeemail || []).length ===
+              suggestions.length
+            }
+            onChange={(e) =>
+              setTempSelections({
+                ...tempSelections,
+                employeeemail: e.target.checked ? suggestions : [],
+              })
+            }
+          />
+          (Select All)
+        </label>
+
+        {suggestions.map((item) => (
+          <label key={item} className="filter-item">
+            <input
+              type="checkbox"
+              checked={
+                (tempSelections.employeeemail || []).includes(item)
+              }
+              onChange={() =>
+                handleCheckboxChange("employeeemail", item)
+              }
+            />
+            {item}
+          </label>
+        ))}
+      </div>
+
+      <div className="filter-footer">
+        <button
+          onClick={() => {
+            setColumnFilters({
+              ...columnFilters,
+              employeeemail:
+                (tempSelections.employeeemail || []).join("|"),
+            });
+            setActiveFilter(null);
+          }}
+        >
+          OK
+        </button>
+
+        <button onClick={() => setActiveFilter(null)}>
+          Cancel
+        </button>
+      </div>
+    </div>
+  )}
+  </th>
+
+  <th>
+    <div className="th-header">
+      Reporting Manager
+      <span onClick={() => setActiveFilter("employeereportingmanager")}>⏷</span>
+    </div>
+
+    {activeFilter === "employeereportingmanager" && (
+      <div ref={popupRef} className="excel-filter-popup">
+
+        <input
+          type="text"
+          placeholder="Search"
+          value={filterText}
+          onChange={(e) => setFilterText(e.target.value)}
+          className="filter-search"
+        />
+
+        <div className="filter-list">
+
+          <label className="filter-item">
+            <input
+              type="checkbox"
+              checked={
+                (tempSelections.employeereportingmanager || []).length ===
+                suggestions.length
+              }
+              onChange={(e) =>
+                setTempSelections({
+                  ...tempSelections,
+                  employeereportingmanager: e.target.checked
+                    ? suggestions
+                    : [],
+                })
+              }
+            />
+            (Select All)
+          </label>
+
+          {suggestions.map((item) => (
+            <label key={item} className="filter-item">
+              <input
+                type="checkbox"
+                checked={
+                  (tempSelections.employeereportingmanager || []).includes(item)
+                }
+                onChange={() =>
+                  handleCheckboxChange(
+                    "employeereportingmanager",
+                    item
+                  )
+                }
+              />
+              {item}
+            </label>
+          ))}
+        </div>
+
+        <div className="filter-footer">
+          <button
+            onClick={() => {
+              setColumnFilters({
+                ...columnFilters,
+                employeereportingmanager:
+                  (tempSelections.employeereportingmanager || []).join("|"),
+              });
+
+              setActiveFilter(null);
+            }}
+          >
+            OK
+          </button>
+
+          <button onClick={() => setActiveFilter(null)}>
+            Cancel
+          </button>
+        </div>
+      </div>
+    )}
+  </th>
+              <th>
+    <div className="th-header">
+      Employee DOB
+      <span onClick={() => setActiveFilter("employeeDOB")}>⏷</span>
+    </div>
+
+    {activeFilter === "employeeDOB" && (
+      <div ref={popupRef} className="excel-filter-popup">
+
+        <input
+          type="text"
+          placeholder="Search"
+          value={filterText}
+          onChange={(e) => setFilterText(e.target.value)}
+          className="filter-search"
+        />
+
+        <div className="filter-list">
+
+          <label className="filter-item">
+            <input
+              type="checkbox"
+              checked={
+                (tempSelections.employeeDOB || []).length ===
+                suggestions.length
+              }
+              onChange={(e) =>
+                setTempSelections({
+                  ...tempSelections,
+                  employeeDOB: e.target.checked ? suggestions : [],
+                })
+              }
+            />
+            (Select All)
+          </label>
+
+          {suggestions.map((item) => (
+            <label key={item} className="filter-item">
+              <input
+                type="checkbox"
+                checked={
+                  (tempSelections.employeeDOB || []).includes(item)
+                }
+                onChange={() =>
+                  handleCheckboxChange("employeeDOB", item)
+                }
+              />
+              {item}
+            </label>
+          ))}
+        </div>
+
+        <div className="filter-footer">
+          <button
+            onClick={() => {
+              setColumnFilters({
+                ...columnFilters,
+                employeeDOB:
+                  (tempSelections.employeeDOB || []).join("|"),
+              });
+
+              setActiveFilter(null);
+            }}
+          >
+            OK
+          </button>
+
+          <button onClick={() => setActiveFilter(null)}>
+            Cancel
+          </button>
+        </div>
+      </div>
+    )}
+  </th>
+              <th>
+    <div className="th-header">
+      Employee DOJ
+      <span onClick={() => setActiveFilter("employeeDOJ")}>⏷</span>
+    </div>
+
+    {activeFilter === "employeeDOJ" && (
+      <div ref={popupRef} className="popup">
+        <input
+          placeholder="Search..."
+          value={filterText}
+          onChange={(e) => setFilterText(e.target.value)}
+        />
+
+        <div className="list">
+          {suggestions.map((s) => (
+            <div
+              key={s}
+              onClick={() => {
+                setColumnFilters({
+                  ...columnFilters,
+                  employeeDOJ: s,
+                });
+                setActiveFilter(null);
+                setFilterText("");
+              }}
+            >
+              {s}
+            </div>
+          ))}
+        </div>
+      </div>
+    )}
+  </th>
+              <th>
+    <div className="th-header">
+      Employee ExitDate
+      <span onClick={() => setActiveFilter("employeeexitdate")}>⏷</span>
+    </div>
+
+    {activeFilter === "employeeexitdate" && (
+      <div ref={popupRef} className="popup">
+        <input
+          placeholder="Search..."
+          value={filterText}
+          onChange={(e) => setFilterText(e.target.value)}
+        />
+
+        <div className="list">
+          {suggestions.map((s) => (
+            <div
+              key={s}
+              onClick={() => {
+                setColumnFilters({
+                  ...columnFilters,
+                  employeeexitdate: s,
+                });
+                setActiveFilter(null);
+                setFilterText("");
+              }}
+            >
+              {s}
+            </div>
+          ))}
+        </div>
+      </div>
+    )}
+  </th>
+  <th>
+    <div className="th-header">
+      Status
+      <span onClick={() => setActiveFilter("employeestatus")}>⏷</span>
+    </div>
+
+    {activeFilter === "employeestatus" && (
+      <div ref={popupRef} className="excel-filter-popup">
+
+        <input
+          type="text"
+          placeholder="Search"
+          value={filterText}
+          onChange={(e) => setFilterText(e.target.value)}
+          className="filter-search"
+        />
+
+        <div className="filter-list">
+
+          <label className="filter-item">
+            <input
+              type="checkbox"
+              checked={
+                (tempSelections.employeestatus || []).length ===
+                suggestions.length
+              }
+              onChange={(e) =>
+                setTempSelections({
+                  ...tempSelections,
+                  employeestatus: e.target.checked
+                    ? suggestions
+                    : [],
+                })
+              }
+            />
+            (Select All)
+          </label>
+
+          {suggestions.map((item) => (
+            <label key={item} className="filter-item">
+              <input
+                type="checkbox"
+                checked={
+                  (tempSelections.employeestatus || []).includes(item)
+                }
+                onChange={() =>
+                  handleCheckboxChange("employeestatus", item)
+                }
+              />
+              {item}
+            </label>
+          ))}
+        </div>
+
+        <div className="filter-footer">
+          <button
+            onClick={() => {
+              setColumnFilters({
+                ...columnFilters,
+                employeestatus:
+                  (tempSelections.employeestatus || []).join("|"),
+              });
+
+              setActiveFilter(null);
+            }}
+          >
+            OK
+          </button>
+
+          <button onClick={() => setActiveFilter(null)}>
+            Cancel
+          </button>
+        </div>
+      </div>
+    )}
+  </th>
+                <th><div className="th-header">Bank Account No.</div></th>
+                <th><div className="th-header">IFSC</div></th>
+                <th><div className="th-header">UAN</div></th>
+                <th><div className="th-header">PF Member ID</div></th>
+                <th><div className="th-header">PF</div></th>
+                <th><div className="th-header">ESIC</div></th>
+                <th><div className="th-header">Designation Changed</div></th>
+                <th><div className="th-header">Desig. Changed Date</div></th>
+                
+                {user?.role === "admin" && <th>Action</th>}
+
+              </tr>
+
+              {/* Filter row */}
+              <tr className="filter-row">
+                
+              
+              
+                
+              
+          
+              
+              
+              </tr>
+            </thead>
+
+            <tbody>
+              {filteredEmployees.length === 0 ? (
+                <tr>
+                  <td colSpan="12" className="no-data">
+                    No employees found
+                  </td>
+                </tr>
+              ) : (
+                filteredEmployees.map((emp, index) => (
+                  <tr key={`${emp.employeeId}-${emp.email}-${index}`}>
+                    {/* Serial Number */}
+      <td>{index + 1}</td>
+                  <td>
+    {getEmployeeProfileImage(emp) ? (
+      <img
+        src={getEmployeeProfileImage(emp)}
+        alt={emp.fullName}
+        className="profile-pic"
+        style={{ cursor: "pointer" }}
+        onClick={() =>
+          navigate("/employee-profile", {
+            state: { employee: emp },
+          })
+        }
+      />
+    ) : (
+      <div
+        className="employee-initials"
+        style={{ cursor: "pointer" }}
+        onClick={() =>
+          navigate("/employee-profile", {
+            state: { employee: emp },
+          })
+        }
+      >
+        {emp.fullName?.charAt(0)}
+      </div>
+    )}
+  </td>
+                    <td>{emp.fullName}</td> 
+                    <td>{emp.employeeId}</td>
+                    <td>{emp.department}</td>
+                    <td>{emp.designation}</td>
+                    <td>{emp.location}</td>
+                    <td>{emp.email}</td>
+                    <td>
+                      {emp.manager}
+                      <div className="mgr-email">{emp.managerEmail}</div>
+                    </td>
+                    <td>{emp.dob}</td>
+                    <td>{emp.doj}</td>
+                    <td>{emp.exitDate}</td>
+                    <td>
+                      <span
+                        className={`status ${
+                        (emp.status || "").toUpperCase() === "ACTIVE"
+    ? "active"
+    : (emp.status || "").toUpperCase() === "INACTIVE"
+    ? "inactive"
+    : (emp.status || "").toUpperCase() === "SERVING NOTICE"
+    ? "notice"
+    : "resigned"
+                        }`}
+                      >
+                        {emp.status}
+                      </span>
+                    </td>
+                    <td>{emp.bankAccountNumber || "-"}</td>
+                    <td>{emp.ifsc || "-"}</td>
+                    <td>{emp.uan || "-"}</td>
+                    <td>{emp.pfMemberId || "-"}</td>
+                    <td>{emp.pf || "-"}</td>
+                    <td>{emp.esic || "-"}</td>
+                    <td>{emp.designationChanged || "-"}</td>
+                    <td>{emp.designationChangedDate || "-"}</td>
+                    {user?.role === "admin" && (
+                      <td>
+                        <button
+                          onClick={() => openUpdateModal(emp)}
+                          style={{
+                            padding: "6px 14px",
+                            background: "linear-gradient(135deg, #1e3a5f 0%, #2563eb 100%)",
+                            color: "#fff",
+                            border: "none",
+                            borderRadius: 6,
+                            cursor: "pointer",
+                            fontSize: 12,
+                            fontWeight: 600,
+                            whiteSpace: "nowrap",
+                            boxShadow: "0 2px 8px rgba(37,99,235,0.3)",
+                            display: "flex",
+                            alignItems: "center",
+                            gap: 5,
+                            transition: "all 0.2s"
+                          }}
+                          onMouseEnter={e => e.currentTarget.style.boxShadow = "0 4px 14px rgba(37,99,235,0.5)"}
+                          onMouseLeave={e => e.currentTarget.style.boxShadow = "0 2px 8px rgba(37,99,235,0.3)"}
+                        >
+                          ✏️ Update
+                        </button>
+                      </td>
+                    )}
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
+          </div>
+          
+          
+        </div>
+      
+    );
+  }

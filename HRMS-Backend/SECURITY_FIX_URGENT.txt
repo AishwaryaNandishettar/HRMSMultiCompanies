@@ -1,0 +1,157 @@
+╔══════════════════════════════════════════════════════════════════════╗
+║        🚨 CRITICAL SECURITY ALERT - IMMEDIATE ACTION REQUIRED        ║
+╚══════════════════════════════════════════════════════════════════════╝
+
+⚠️ WHAT HAPPENED:
+
+   GitGuardian detected that SMTP credentials (email password) were
+   accidentally pushed to GitHub in the code.
+   
+   This means ANYONE can see your email password on GitHub!
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+🔥 IMMEDIATE ACTIONS (DO THIS NOW - 5 MINUTES):
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+STEP 1: REVOKE THE EXPOSED PASSWORD (MOST IMPORTANT!)
+───────────────────────────────────────────────────────────────────────
+
+   1. Go to: https://myaccount.google.com/apppasswords
+   
+   2. Find the app password for HRMS
+   
+   3. Click "Remove" or delete icon
+   
+   4. Generate a NEW app password:
+      - Click "Create"
+      - Select "Mail" and device
+      - Copy the NEW 16-character password
+      - Save it somewhere safe (NOT in code!)
+
+───────────────────────────────────────────────────────────────────────
+
+STEP 2: UPDATE RENDER ENVIRONMENT VARIABLES
+───────────────────────────────────────────────────────────────────────
+
+   1. Go to: https://dashboard.render.com
+   
+   2. Select your backend service
+   
+   3. Go to Environment variables
+   
+   4. Update SPRING_MAIL_PASSWORD with NEW password:
+   
+      Key:   SPRING_MAIL_PASSWORD
+      Value: [YOUR NEW 16-CHAR PASSWORD]
+   
+   5. Click "Save Changes"
+
+───────────────────────────────────────────────────────────────────────
+
+STEP 3: PUSH SECURITY FIX TO GITHUB
+───────────────────────────────────────────────────────────────────────
+
+   I've already removed exposed credentials from code.
+   
+   Now push the fix:
+
+   cd "d:\New folder\HRMSProject (2)\HRMSProject"
+   git add .
+   git commit -m "Security fix: Removed exposed credentials"
+   git push origin main
+
+───────────────────────────────────────────────────────────────────────
+
+STEP 4: SET ENVIRONMENT VARIABLES LOCALLY
+───────────────────────────────────────────────────────────────────────
+
+   For localhost, create a .env file in backend folder:
+
+   File: HRMS-Backend\.env
+
+   SPRING_MAIL_USERNAME=aishushettar95@gmail.com
+   SPRING_MAIL_PASSWORD=[YOUR NEW PASSWORD HERE]
+   SPRING_MAIL_HOST=smtp.gmail.com
+
+   ⚠️ IMPORTANT: Make sure .env is in .gitignore!
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+✅ WHAT I FIXED IN THE CODE:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+   BEFORE (INSECURE):
+   ------------------
+   #spring.mail.username=aishushettar95@gmail.com
+   #spring.mail.password=ryyfhpprixvtzzer  ← EXPOSED!
+
+   AFTER (SECURE):
+   ---------------
+   spring.mail.username=${SPRING_MAIL_USERNAME}
+   spring.mail.password=${SPRING_MAIL_PASSWORD}
+   
+   # SECURITY: Set these as environment variables!
+   # DO NOT commit actual email/password to GitHub
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+🔒 SECURITY BEST PRACTICES (REMEMBER FOR FUTURE):
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+   ❌ NEVER DO THIS:
+   -----------------
+   - Commit passwords/API keys to GitHub
+   - Hardcode credentials in code files
+   - Share .env files
+   - Leave commented credentials in code
+
+   ✅ ALWAYS DO THIS:
+   ------------------
+   - Use environment variables
+   - Add .env to .gitignore
+   - Store credentials securely (not in code)
+   - Rotate passwords regularly
+   - Use different passwords for dev/prod
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+📋 CHECKLIST (COMPLETE ALL STEPS):
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+   [ ] Revoked old app password in Gmail
+   [ ] Generated NEW app password
+   [ ] Updated Render environment variable
+   [ ] Created .env file locally (not committed)
+   [ ] Pushed security fix to GitHub
+   [ ] Verified emails still work
+   [ ] Checked .gitignore includes .env
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+🎯 AFTER FIXING:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+   1. Localhost:
+      - Reads from .env file ✅
+      - Credentials secure ✅
+   
+   2. Production (Render):
+      - Reads from environment variables ✅
+      - Credentials secure ✅
+   
+   3. GitHub:
+      - No credentials in code ✅
+      - Security issue resolved ✅
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+⏰ TIME SENSITIVE:
+
+   DO THIS IMMEDIATELY! The longer exposed credentials stay active,
+   the higher the security risk.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Last Updated: August 1, 2026
+Priority: 🚨 CRITICAL - DO NOW

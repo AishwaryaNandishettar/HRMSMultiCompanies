@@ -1,0 +1,1164 @@
+/* Container */
+.directory-container {
+  width: 100%;
+  padding: 20px;
+  font-family: "Inter", sans-serif;
+  box-sizing: border-box;
+}
+
+/* Header */
+.directory-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  margin-bottom: 20px;
+}
+
+.directory-header h2 {
+  font-size: 24px;
+  font-weight: 600;
+  color: #1b1b1b;
+  margin: 0;
+}
+
+/* Top header actions */
+.header-actions {
+  display: flex;
+  gap: 15px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.add-btn-top {
+  background: #4caf50;
+  color: #fff;
+  border: none;
+  padding: 8px 14px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 14px;
+  transition: 0.2s;
+}
+.add-btn-top:hover {
+  background: #43a047;
+}
+
+/* Mode buttons */
+.mode-buttons button {
+  padding: 6px 12px;
+  border: 1px solid #d1d1d1;
+  border-radius: 6px;
+  background: #fff;
+  cursor: pointer;
+  font-size: 13px;
+  transition: 0.2s;
+}
+.mode-buttons button:hover {
+  background: #f0f0f0;
+}
+.mode-buttons button.active-mode {
+  background: #007bff;
+  color: #fff;
+  border-color: #007bff;
+}
+
+/* Action buttons */
+.action-buttons button {
+  padding: 8px 14px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 14px;
+  border: none;
+  transition: 0.2s;
+}
+
+.clear-btn {
+  background: #f44336;
+  color: #fff;
+}
+.clear-btn:hover {
+  background: #d32f2f;
+}
+
+.export-btn {
+  background: #4caf50;
+  color: #fff;
+}
+.export-btn:hover {
+  background: #388e3c;
+}
+
+/* Table wrapper */
+.table-wrapper {
+ width: 100%;
+  height: calc(100vh - 280px);
+  max-height: 500px;
+  overflow: auto;
+  position: relative;
+  background: #fff;
+  border: 1px solid #ddd;
+  border-radius: 10px;
+
+  overscroll-behavior: contain;
+  isolation: isolate;
+}
+
+
+/* Scrollbar styling */
+.tableWrap::-webkit-scrollbar {
+  height: 12px;
+  width: 12px;
+}
+
+.tableWrap::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 6px;
+}
+
+.tableWrap::-webkit-scrollbar-thumb {
+  background: #888;
+  border-radius: 6px;
+}
+
+.tableWrap::-webkit-scrollbar-thumb:hover {
+  background: #555;
+}
+
+/* =========================================
+   FIX STICKY BLEEDING DURING SCROLL
+========================================= */
+.employee-table {
+  overflow: visible;
+}
+
+.employee-table th,
+.employee-table td {
+  background-clip: padding-box;
+}
+
+.employee-table tbody tr:hover td:nth-child(1),
+.employee-table tbody tr:hover td:nth-child(2) {
+  background: #f8fdff;
+}
+
+.employee-table thead {
+  display: table-header-group !important;
+}
+
+.employee-table tbody {
+  display: table-row-group !important;
+}
+
+.employee-table tr {
+  display: table-row !important;
+}
+
+.employee-table th,
+.employee-table td {
+  display: table-cell !important;
+  box-sizing: border-box;
+}
+
+/* Employee table */
+.employee-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+}
+
+/* =========================================================
+   HEADER CELLS - STICKY AT TOP
+========================================================= */
+.employee-table thead th {
+  position: sticky;
+  top: 0;
+  z-index: 200;
+  background: #0d3b66;
+  color: white;
+  padding: 12px 10px;
+  text-align: center;
+  font-size: 14px;
+  font-weight: 600;
+  white-space: nowrap;
+  border-right: 1px solid rgba(255,255,255,0.2);
+  border-bottom: 2px solid #16306d;
+  border-top: 1px solid rgba(255,255,255,0.2);
+}
+
+.employee-table thead th:first-child {
+  border-left: 1px solid rgba(255,255,255,0.2);
+}
+
+
+/* =========================================================
+   FROZEN COLUMN 1 - EMP ID (STICKY LEFT)
+========================================================= */
+.employee-table th:nth-child(1),
+.employee-table td:nth-child(1) {
+  position: sticky;
+  left: 0;
+  width: 140px;
+  min-width: 140px;
+  max-width: 140px;
+  z-index: 300;
+  background: white;
+}
+
+.employee-table thead th:nth-child(1) {
+  z-index: 500;
+  background: #0d3b66 !important;
+  box-shadow: 2px 0 5px rgba(0,0,0,0.15);
+}
+.employee-table tbody td:nth-child(1) {
+  background: #fff;
+  box-shadow: 2px 0 4px -1px rgba(0,0,0,0.1);
+}
+
+/* =========================================================
+   FROZEN COLUMN 2 - EMP NAME (STICKY LEFT)
+========================================================= */
+.employee-table th:nth-child(2),
+.employee-table td:nth-child(2) {
+  position: sticky;
+  left: 140px;
+  width: 220px;
+  min-width: 220px;
+  max-width: 220px;
+  z-index: 300;
+  background: white;
+}
+
+.employee-table thead th:nth-child(2) {
+  z-index: 500;
+  background: #0d3b66 !important;
+  box-shadow: 2px 0 5px rgba(0,0,0,0.15);
+}
+.employee-table tbody td:nth-child(2) {
+  background: #fff;
+  box-shadow: 2px 0 4px -1px rgba(0,0,0,0.1);
+}
+
+/* =========================================================
+   SCROLLABLE COLUMNS (3 onwards) - DEPARTMENT, etc.
+========================================================= */
+.employee-table th:nth-child(n+3),
+.employee-table td:nth-child(n+3) {
+  min-width: 160px;
+  width: 160px;
+}
+
+/* =========================================================
+   MAINTAIN BACKGROUND ON HOVER FOR FROZEN COLUMNS
+========================================================= */
+.employee-table tbody tr:hover td:nth-child(1),
+.employee-table tbody tr:hover td:nth-child(2) {
+  background: #f8fdff;
+  box-shadow: 2px 0 4px -1px rgba(0, 0, 0, 0.1);
+}
+.employee-table th,
+.employee-table td {
+  padding: 12px;
+  text-align: left;
+  color: #444;
+  border-bottom: 1px solid #eee;
+}
+
+
+
+/* Profile picture */
+.profile-pic {
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+/* No data */
+.no-data {
+  text-align: center;
+  padding: 20px;
+  font-size: 15px;
+  color: #777;
+}
+
+
+/* Filter row */
+.filter-row th {
+  background: #fafafa;
+  padding: 6px 8px;
+  position: relative;
+}
+
+.filter-row input,
+.filter-row select {
+  width: 100%;
+  padding: 5px 8px;
+  font-size: 13px;
+  border-radius: 5px;
+  border: 1px solid #ccc;
+  outline: none;
+  background: #fff;
+  transition: 0.2s;
+}
+.filter-row input:focus,
+.filter-row select:focus {
+  border-color: #007bff;
+}
+
+/* Date range */
+.date-range {
+  display: flex;
+  gap: 4px;
+}
+.date-range input {
+  width: 50%;
+  padding: 5px;
+  font-size: 13px;
+}
+
+/* Manager email */
+.mgr-email {
+  font-size: 12px;
+  color: #777;
+  margin-top: 2px;
+}
+
+/* Status badges */
+.status {
+  padding: 6px 10px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 600;
+  text-align: center;
+  display: inline-block;
+}
+
+.status.active {
+  background: #e7f7e7;
+  color: #1a8f1a;
+}
+.status.notice {
+  background: #fff7e0;
+  color: #c69500;
+}
+.status.resigned {
+  background: #ffe5e5;
+  color: #d9534f;
+}
+
+/* Popup calendar (DOJ / Exit) */
+.popup-calendar {
+  position: absolute;
+  top: 36px;
+  left: 0;
+  background: #fff;
+  border: 1px solid #ccc;
+  padding: 8px;
+  border-radius: 6px;
+  display: flex;
+  gap: 4px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  z-index: 10;
+}
+
+.popup-calendar input {
+  width: 100px;
+  padding: 4px 6px;
+  font-size: 13px;
+}
+
+.popup-calendar button {
+  background: #007bff;
+  color: #fff;
+  border: none;
+  padding: 4px 8px;
+  border-radius: 4px;
+  cursor: pointer;
+}
+.popup-calendar button:hover {
+  background: #0069d9;
+}
+/* Invite button */
+.invite-btn-top {
+  background: #2196f3;
+  color: #fff;
+  border: none;
+  padding: 8px 14px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 14px;
+}
+.invite-btn-top:hover {
+  background: #1976d2;
+}
+
+/* Modal overlay */
+.invite-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0,0,0,0.4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 999;
+}
+
+/* Modal box */
+.invite-modal {
+  background: #fff;
+  padding: 20px;
+  width: 350px;
+  border-radius: 10px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+}
+
+.invite-modal h3 {
+  margin-bottom: 15px;
+}
+
+/* Inputs */
+.invite-modal input {
+  width: 100%;
+  margin-bottom: 10px;
+  padding: 8px;
+  border-radius: 6px;
+  border: 1px solid #ccc;
+}
+
+/* Info text */
+.invite-info {
+  font-size: 12px;
+  color: #555;
+  margin-bottom: 10px;
+}
+
+/* Buttons */
+.invite-actions {
+  display: flex;
+  justify-content: space-between;
+}
+
+.send-btn {
+  background: #4caf50;
+  color: #fff;
+  border: none;
+  padding: 6px 12px;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.cancel-btn {
+  background: #f44336;
+  color: #fff;
+  border: none;
+  padding: 6px 12px;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.employee-table thead tr.filter-row th {
+  background: #f8fbff !important;
+  color: #333 !important;
+}
+.employee-table thead tr.table-head th:first-child {
+  border-top-left-radius: 10px;
+}
+
+.employee-table thead tr.table-head th:last-child {
+  border-top-right-radius: 10px;
+}
+.th-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 6px;
+  white-space: nowrap;
+}
+.employee-table td {
+  white-space: nowrap;
+}
+
+.th-header span {
+  cursor: pointer;
+  margin-left: 5px;
+}
+
+.popup {
+  position: absolute;
+  background: #fff;
+  border: 1px solid #ccc;
+  padding: 8px;
+  z-index: 10;
+  width: 180px;
+}
+
+.list div {
+  padding: 5px;
+  cursor: pointer;
+}
+
+.list div:hover {
+  background: #f0f0f0;
+}
+.table-scroll {
+  max-height: 420px;   /* shows ~5–6 rows */
+   overflow-x: auto;
+  overflow-y: visible;
+  position: relative;
+  border: 1px solid #e5e7eb;
+}
+.employee-table thead th {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  background: #0d3b66;   /* reimbursement-style header */
+  color: white;
+}
+/* FINAL HEADER STYLE (REIMBURSEMENT MATCH) */
+.employee-table thead {
+  background: #e2f3ff;
+}
+
+.employee-table th {
+  position: relative;
+}
+.employee-table thead th {
+  background: #0d3b66 !important;
+  color: white !important;
+  font-weight: 600;
+  text-transform: uppercase;
+  font-size: 13px;
+  border-bottom: none;
+}
+.excel-filter-popup {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  z-index: 9999;
+
+  width: 220px;
+  background: #fff;
+
+  border: 1px solid #dcdcdc;
+  border-radius: 6px;
+
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+
+  display: flex;
+  flex-direction: column;
+}
+.filter-list {
+  max-height: 220px;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+/* =========================================
+   TABLE GRID LINES
+========================================= */
+
+.employee-table th,
+.employee-table td {
+  border-right: 1px solid #e5e7eb;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+/* left border */
+
+.employee-table th:first-child,
+.employee-table td:first-child {
+  border-left: 1px solid #e5e7eb;
+}
+
+/* top border */
+
+.employee-table thead th {
+  border-top: 1px solid #1e4f85;
+   position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+/* prevent double dark borders on sticky columns */
+
+.employee-table th:nth-child(1),
+.employee-table td:nth-child(1),
+.employee-table th:nth-child(2),
+.employee-table td:nth-child(2) {
+  background-clip: padding-box;
+}
+/* =========================================================
+   FILTER POPUP FIX FOR EMPLOYEE DIRECTORY
+========================================================= */
+
+/* allow popup outside sticky header */
+.employee-table thead th {
+  overflow: visible !important;
+}
+
+/* popup */
+.popup {
+  position: absolute;
+  top: 38px;
+  left: 0;
+
+  width: 220px;
+
+  background: #fff !important;
+  color: #111 !important;
+
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+
+  padding: 10px;
+
+  z-index: 99999 !important;
+
+  box-shadow: 0 4px 18px rgba(0,0,0,0.15);
+}
+
+/* search input */
+.popup input {
+  width: 100%;
+
+  padding: 8px;
+
+  border: 1px solid #cbd5e1;
+  border-radius: 6px;
+
+  background: #fff !important;
+  color: #111 !important;
+}
+
+.popup input::placeholder {
+  color: #666 !important;
+}
+
+/* suggestion list */
+.list {
+  max-height: 180px;
+  overflow-y: auto;
+  margin-top: 8px;
+}
+
+/* suggestion item */
+.list div {
+  padding: 8px;
+  border-radius: 6px;
+
+  color: #111 !important;
+  background: #fff !important;
+
+  cursor: pointer;
+}
+
+/* hover */
+.list div:hover {
+  background: #f1f5f9 !important;
+  color: #111 !important;
+}
+
+/* IMPORTANT FIX FOR STICKY COLUMN OVERLAP */
+.employee-table th:nth-child(2),
+.employee-table td:nth-child(2) {
+  z-index: 20 !important;
+}
+
+.employee-table thead th:nth-child(2) {
+  z-index: 30 !important;
+}
+/* =========================================================
+   FILTER POPUP FIX FOR EMPLOYEE DIRECTORY
+========================================================= */
+
+/* allow popup outside sticky header */
+.employee-table thead th {
+  overflow: visible !important;
+}
+
+/* popup */
+.popup {
+  position: absolute;
+  top: 38px;
+  left: 0;
+
+  width: 220px;
+
+  background: #fff !important;
+  color: #111 !important;
+
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+
+  padding: 10px;
+
+  z-index: 999999 !important;
+
+  box-shadow: 0 4px 18px rgba(0,0,0,0.15);
+}
+
+/* search input */
+.popup input {
+  width: 100%;
+  padding: 8px;
+
+  border: 1px solid #cbd5e1;
+  border-radius: 6px;
+
+  background: #fff !important;
+  color: #111 !important;
+}
+
+.popup input::placeholder {
+  color: #666 !important;
+}
+
+/* suggestion list */
+.list {
+  max-height: 180px;
+  overflow-y: auto;
+  margin-top: 8px;
+
+  background: #fff !important;
+}
+
+/* suggestion item */
+.list div {
+  padding: 8px;
+  border-radius: 6px;
+
+  background: #fff !important;
+  color: #111 !important;
+
+  cursor: pointer;
+
+  position: relative;
+  z-index: 999999 !important;
+}
+
+/* hover */
+.list div:hover {
+  background: #f1f5f9 !important;
+}
+
+/* =========================================================
+   FIX STICKY COLUMN OVERLAP
+========================================================= */
+
+/* reduce sticky column z-index */
+.employee-table th:nth-child(1),
+.employee-table td:nth-child(1),
+.employee-table th:nth-child(2),
+.employee-table td:nth-child(2) {
+  z-index: 5 !important;
+}
+
+/* keep header above rows but below popup */
+.employee-table thead th {
+  z-index: 10 !important;
+}
+
+/* popup always top */
+.employee-table .popup {
+  z-index: 999999 !important;
+}
+/* =========================================================
+   FINAL FIX FOR PROFILE HEADER STICKY
+========================================================= */
+
+/* PROFILE COLUMN HEADER */
+.employee-table thead th:nth-child(1) {
+  position: sticky !important;
+  left: 0 !important;
+  top: 0 !important;
+
+  z-index: 1000 !important;
+
+  background: #0d3b66 !important;
+}
+
+/* PROFILE COLUMN BODY */
+.employee-table tbody td:nth-child(1) {
+  position: sticky !important;
+  left: 0 !important;
+
+  z-index: 100 !important;
+
+  background: #fff !important;
+}
+
+/* EMPLOYEE NAME HEADER */
+.employee-table thead th:nth-child(2) {
+  position: sticky !important;
+  left: 140px !important;
+  top: 0 !important;
+
+  z-index: 999 !important;
+
+  background: #0d3b66 !important;
+}
+
+/* EMPLOYEE NAME BODY */
+.employee-table tbody td:nth-child(2) {
+  position: sticky !important;
+  left: 140px !important;
+
+  z-index: 99 !important;
+
+  background: #fff !important;
+}
+
+/* NORMAL HEADERS */
+.employee-table thead th {
+  top: 0;
+  z-index: 50;
+}
+
+/* POPUP ALWAYS ABOVE EVERYTHING */
+.popup {
+  z-index: 999999 !important;
+}
+/* =========================================================
+   MOBILE EMPLOYEE TABLE FIX
+========================================================= */
+
+@media (max-width: 768px) {
+
+  html,
+  body {
+    overflow-x: hidden;
+  }
+
+  .table-wrapper {
+    width: 100%;
+    overflow-x: auto;
+    overflow-y: auto;
+  }
+
+  .employee-table {
+    width: max-content !important;
+    min-width: 100% !important;
+  }
+
+  /* =========================
+     COLUMN 1 - PROFILE
+  ========================= */
+
+  .employee-table th:nth-child(1),
+  .employee-table td:nth-child(1) {
+    min-width: 85px !important;
+    width: 85px !important;
+    max-width: 85px !important;
+
+    left: 0 !important;
+  }
+
+  /* =========================
+     COLUMN 2 - EMPLOYEE NAME
+  ========================= */
+
+  .employee-table th:nth-child(2),
+  .employee-table td:nth-child(2) {
+    min-width: 140px !important;
+    width: 140px !important;
+    max-width: 140px !important;
+
+    left: 85px !important;
+  }
+
+  /* =========================
+     REMAINING COLUMNS
+  ========================= */
+
+  .employee-table th:nth-child(n+3),
+  .employee-table td:nth-child(n+3) {
+    min-width: 130px !important;
+    width: 130px !important;
+  }
+
+  /* =========================
+     STICKY HEADER FIX
+  ========================= */
+
+  .employee-table thead th:nth-child(1) {
+    left: 0 !important;
+    z-index: 1000 !important;
+  }
+
+  .employee-table thead th:nth-child(2) {
+    left: 85px !important;
+    z-index: 999 !important;
+  }
+
+  .employee-table tbody td:nth-child(1) {
+    left: 0 !important;
+  }
+
+  .employee-table tbody td:nth-child(2) {
+    left: 85px !important;
+  }
+
+  /* prevent text overlap */
+  .employee-table th,
+  .employee-table td {
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+}
+.excel-filter-popup {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  width: 220px;
+  background: #f2f2f2;
+  border: 1px solid #999;
+  z-index: 9999;
+  padding: 6px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+}
+
+.filter-search {
+  width: 100%;
+  padding: 4px;
+  margin-bottom: 6px;
+}
+
+.filter-list {
+  max-height: 180px;
+  overflow-y: auto;
+  border: 1px solid #bbb;
+  background: white;
+  padding: 4px;
+}
+
+.filter-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 2px 0;
+  font-size: 12px;
+}
+
+.filter-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 6px;
+  margin-top: 6px;
+}
+
+.filter-footer button {
+  padding: 2px 12px;
+  font-size: 12px;
+}
+.excel-filter-popup {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  width: 190px;
+  background: #fff;
+  border: 1px solid #bfbfbf;
+  z-index: 9999;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+  padding: 5px;
+}
+
+.filter-search {
+  width: 100%;
+  padding: 4px;
+  border: 1px solid #bfbfbf;
+  margin-bottom: 5px;
+}
+
+.filter-list {
+  max-height: 180px;
+  overflow-y: auto;
+  border: 1px solid #d0d0d0;
+  padding: 4px;
+}
+
+.filter-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  padding: 2px 0;
+}
+
+.filter-footer {
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+  margin-top: 6px;
+}
+
+.filter-footer button {
+  min-width: 55px;
+  padding: 3px 8px;
+  cursor: pointer;
+}
+.excel-filter-popup {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  z-index: 999999 !important;
+}
+
+.employee-table thead th {
+  overflow: visible !important;
+}
+
+.table-wrapper {
+  overflow: auto;
+  position: relative;
+}
+.filter-footer {
+  position: sticky;
+  bottom: 0;
+  background: #fff;
+  padding: 6px;
+  border-top: 1px solid #ddd;
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+}
+
+.filter-list {
+  max-height: 180px;
+  overflow-y: auto;
+}
+/* Profile column center */
+.employee-table th:first-child,
+.employee-table td:first-child {
+  text-align: center;
+  vertical-align: middle;
+}
+
+.profile-pic {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  object-fit: cover;
+  display: block;
+  margin: 0 auto; /* centers image */
+}
+/* ===== BULK UPLOAD TABLE ONLY ===== */
+.directory-container .table-wrapper .table-scroll .employee-table {
+    table-layout: auto;
+    min-width: max-content;
+}
+
+/* Only Bulk Upload inputs */
+.directory-container .table-wrapper .table-scroll .employee-table td .bulk-input {
+    width: 100%;
+    min-width: 140px;
+    max-width: 220px;
+
+    box-sizing: border-box;
+    padding: 6px 8px;
+
+    border: 1px solid #d1d5db;
+    border-radius: 4px;
+
+    font-size: 13px;
+}
+
+/* Employee Name */
+.directory-container .table-wrapper .table-scroll .employee-table
+th:nth-child(1),
+.directory-container .table-wrapper .table-scroll .employee-table
+td:nth-child(1) {
+    min-width: 180px;
+}
+
+/* Employee ID */
+.directory-container .table-wrapper .table-scroll .employee-table
+th:nth-child(2),
+.directory-container .table-wrapper .table-scroll .employee-table
+td:nth-child(2) {
+    min-width: 160px;
+}
+
+/* Email */
+.directory-container .table-wrapper .table-scroll .employee-table
+th:nth-child(3),
+.directory-container .table-wrapper .table-scroll .employee-table
+td:nth-child(3) {
+    min-width: 220px;
+}
+
+/* Department */
+.directory-container .table-wrapper .table-scroll .employee-table
+th:nth-child(5),
+.directory-container .table-wrapper .table-scroll .employee-table
+td:nth-child(5) {
+    min-width: 180px;
+}
+
+/* Keep horizontal scrolling */
+.directory-container .table-wrapper .table-scroll {
+    overflow-x: auto;
+    overflow-y: auto;
+}
+.bulk-upload-page .employee-table td .bulk-input {
+    width: 100%;
+    min-width: 140px;
+    max-width: 220px;
+    box-sizing: border-box;
+}
+
+.bulk-upload-page .employee-table th:nth-child(1),
+.bulk-upload-page .employee-table td:nth-child(1) {
+    min-width: 180px;
+}
+
+.bulk-upload-page .employee-table th:nth-child(2),
+.bulk-upload-page .employee-table td:nth-child(2) {
+    min-width: 160px;
+}
+
+.bulk-upload-page .employee-table th:nth-child(3),
+.bulk-upload-page .employee-table td:nth-child(3) {
+    min-width: 220px;
+}
+
+.bulk-upload-page .employee-table th:nth-child(5),
+.bulk-upload-page .employee-table td:nth-child(5) {
+    min-width: 180px;
+}
+.status.inactive {
+  background: #f3f4f6;
+  color: #6b7280;
+  border: 1px solid #d1d5db;
+}
+/* Employee Directory - clear column separation */
+.employee-table {
+  border-collapse: separate;
+  border-spacing: 0;
+}
+
+/* Clear vertical lines between all columns */
+.employee-table th,
+.employee-table td {
+  border-right: 1px solid #d1d5db;
+  border-bottom: 1px solid #d1d5db;
+}
+
+/* Left border of the table */
+.employee-table th:first-child,
+.employee-table td:first-child {
+  border-left: 1px solid #d1d5db;
+}
+
+/* Stronger header column separation */
+.employee-table th {
+  border-right: 1px solid rgba(255, 255, 255, 0.35);
+}
+
+/* Keep the last column clean */
+.employee-table th:last-child,
+.employee-table td:last-child {
+  border-right: none;
+}

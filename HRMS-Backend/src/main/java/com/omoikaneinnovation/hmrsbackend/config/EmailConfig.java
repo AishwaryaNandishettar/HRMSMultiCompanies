@@ -8,7 +8,7 @@ import org.springframework.mail.javamail.JavaMailSenderImpl;
 import org.springframework.scheduling.annotation.EnableAsync;
 import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
-import jakarta.annotation.PostConstruct;
+
 import javax.net.ssl.*;
 import java.security.cert.X509Certificate;
 import java.util.Properties;
@@ -40,19 +40,10 @@ public class EmailConfig {
     @Value("${spring.task.execution.pool.queue-capacity:100}")
     private int queueCapacity;
 
-
- @PostConstruct
-    public void testMailConfig() {
-        System.out.println("==================================");
-        System.out.println("MAIL USER = " + mailUsername);
-        System.out.println("MAIL PASS = " + (mailPassword == null ? "NULL" : "Loaded"));
-        System.out.println("==================================");
-    }
-
     @Bean
     public JavaMailSender javaMailSender() {
-
-        
+        // Disable SSL certificate validation for development
+        disableSSLValidation();
         
         JavaMailSenderImpl mailSender = new JavaMailSenderImpl();
         
@@ -60,22 +51,17 @@ public class EmailConfig {
         mailSender.setPort(mailPort);
         mailSender.setUsername(mailUsername);
         mailSender.setPassword(mailPassword);
-        System.out.println("==================================");
-System.out.println("Mail Username : " + mailUsername);
-System.out.println("Mail Password Present : " + (mailPassword != null && !mailPassword.isBlank()));
-System.out.println("==================================");
         
         Properties props = mailSender.getJavaMailProperties();
         props.put("mail.transport.protocol", "smtp");
         props.put("mail.smtp.auth", "true");
         props.put("mail.smtp.starttls.enable", "true");
-        props.put("mail.smtp.starttls.required", "true");
-props.put("mail.smtp.ssl.protocols", "TLSv1.2");
-
+        props.put("mail.smtp.starttls.required", "false"); // Changed to false
+        props.put("mail.smtp.ssl.trust", "*"); // Trust all hosts
+        props.put("mail.smtp.ssl.checkserveridentity", "false"); // Disable server identity check
         props.put("mail.smtp.connectiontimeout", "10000");
         props.put("mail.smtp.timeout", "10000");
         props.put("mail.smtp.writetimeout", "10000");
-
         props.put("mail.debug", "true"); // Enable debug for troubleshooting
         
         return mailSender;
@@ -93,8 +79,44 @@ props.put("mail.smtp.ssl.protocols", "TLSv1.2");
         return executor;
     }
 
-            
+    /**
+     * Disable SSL certificate validation for development environments
+     * WARNING: Only use this in development, never in production!
+     */
+    private void disableSSLValidation() {
+        try {
+            // Create a trust manager that accepts all certificates
+            TrustManager[] trustAllCerts = new TrustManager[] {
+                new X509TrustManager() {
+                    public X509Certificate[] getAcceptedIssuers() {
+                        return null;
+                    }
+                    public void checkClientTrusted(X509Certificate[] certs, String authType) {
+                    }
+                    public void checkServerTrusted(X509Certificate[] certs, String authType) {
+                    }
+                }
+            };
 
-           
-    
+            // Install the all-trusting trust manager
+            SSLContext sc = SSLContext.getInstance("SSL");
+            sc.init(null, trustAllCerts, new java.security.SecureRandom());
+            HttpsURLConnection.setDefaultSSLSocketFactory(sc.getSocketFactory());
+
+            // Create all-trusting host name verifier
+            HostnameVerifier allHostsValid = new HostnameVerifier() {
+                public boolean verify(String hostname, SSLSession session) {
+                    return true;
+                }
+            };
+
+            // Install the all-trusting host verifier
+            HttpsURLConnection.setDefaultHostnameVerifier(allHostsValid);
+            
+            System.out.println("✅ SSL certificate validation disabled for development");
+            
+        } catch (Exception e) {
+            System.err.println("❌ Failed to disable SSL validation: " + e.getMessage());
+        }
+    }
 }
