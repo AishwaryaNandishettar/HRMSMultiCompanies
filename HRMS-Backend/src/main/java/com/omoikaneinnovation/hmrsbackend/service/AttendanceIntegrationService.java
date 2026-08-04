@@ -32,7 +32,13 @@ public class AttendanceIntegrationService {
     public AttendanceSummary getMonthlyAttendance(String employeeId, String month) {
         try {
             // Use TimesheetService to get aggregated monthly summary
-            TimesheetSummary timesheetSummary = timesheetService.getMonthlySummary(employeeId, month);
+            List<TimesheetSummary> summaries = timesheetService.getMonthlySummary(month);
+            
+            // Find the specific employee's summary
+            TimesheetSummary timesheetSummary = summaries.stream()
+                .filter(s -> employeeId.equals(s.getEmpId()))
+                .findFirst()
+                .orElse(null);
             
             if (timesheetSummary == null) {
                 System.err.println("No timesheet data found for employeeId: " + employeeId + ", month: " + month);

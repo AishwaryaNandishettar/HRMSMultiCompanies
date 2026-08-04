@@ -422,13 +422,8 @@ public void acceptInvite(String email, String password) {
 
             // -------- SEND EMAIL --------
             log.info("📧 Sending bulk invite email to: {}", email);
-            String htmlContent = buildInviteEmailHtml(email, onboardingLink, otp, tempPassword);
-            boolean sent = emailService.sendHtmlEmail(email, "HRMS Invitation - Welcome!", htmlContent);
-            if (sent) {
-                log.info("✅ Bulk invite email successfully sent to: {}", email);
-            } else {
-                log.error("⚠️ Bulk invite email delivery failed for {}", email);
-            }
+            emailService.sendInviteEmail(email, onboardingLink, otp, tempPassword);
+            log.info("✅ Bulk invite email successfully sent to: {}", email);
 
             log.info("📩 Bulk invite sent to: {}", email);
 

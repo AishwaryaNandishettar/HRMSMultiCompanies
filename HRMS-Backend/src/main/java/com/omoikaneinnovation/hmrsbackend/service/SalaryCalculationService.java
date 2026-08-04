@@ -78,11 +78,11 @@ public class SalaryCalculationService {
 
         // ✅ PRIORITY 1: Check if payroll table already has manual attendance values
         boolean usePayrollAttendance = false;
-        if (existingPayroll.getWorkingDays() != null && existingPayroll.getWorkingDays() > 0) {
+        if (existingPayroll.getWorkingDays() > 0) {
             // Use values from payroll table (manually set in Update Payroll page)
             totalWorkingDays = existingPayroll.getWorkingDays();
-            presentDays = existingPayroll.getPaidDays() != null ? existingPayroll.getPaidDays() : 0;
-            lopDays = existingPayroll.getLopDays() != null ? existingPayroll.getLopDays() : 0;
+            presentDays = existingPayroll.getPaidDays() > 0 ? existingPayroll.getPaidDays() : 0;
+            lopDays = existingPayroll.getLopDays() > 0 ? existingPayroll.getLopDays() : 0;
             absentDays = totalWorkingDays - presentDays;
             attendancePercentage = totalWorkingDays > 0 ? (presentDays * 100.0 / totalWorkingDays) : 0.0;
             usePayrollAttendance = true;

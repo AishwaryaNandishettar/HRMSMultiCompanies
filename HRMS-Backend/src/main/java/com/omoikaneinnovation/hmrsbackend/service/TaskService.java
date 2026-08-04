@@ -21,7 +21,7 @@ public class TaskService {
     public Task createTask(Task task) {
         if (task.getAssigneeName() != null) {
     userRepo.findAll().stream()
-            .filter(u -> task.getAssigneeName().equalsIgnoreCase(u.getFullName()))
+            .filter(u -> task.getAssigneeName().equalsIgnoreCase(u.getName()))
             .findFirst()
             .ifPresent(user -> task.setAssigneeId(user.getEmployeeId()));
 }
@@ -108,13 +108,7 @@ assignedByManager.forEach(t ->
         if (updated.getPriority() != null) existing.setPriority(updated.getPriority());
         if (updated.getAssignee() != null) existing.setAssignee(updated.getAssignee());
         if (updated.getDueDate() != null) existing.setDueDate(updated.getDueDate());
-// SAVE ACCEPT / REJECT ACTION
-if (updated.getTaskAction() != null) {
-    existing.setTaskAction(updated.getTaskAction());
-    existing.getHistory().add(
-        "Task action changed to: " + updated.getTaskAction()
-    );
-}
+        // Note: taskAction field doesn't exist in Task model - removed
 
         existing.setUpdatedAt(new Date());
         return repo.save(existing);
