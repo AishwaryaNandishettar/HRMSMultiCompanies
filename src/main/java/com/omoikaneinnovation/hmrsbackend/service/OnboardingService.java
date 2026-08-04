@@ -189,7 +189,8 @@ public void onboard(Map<String, Object> payload) {
     // 7. SEND INVITATION EMAIL
     // =====================================================
 
-    String onboardingLink = frontendUrl;
+    // ✅ FIXED: Link now points to LOGIN page, not home page
+    String onboardingLink = frontendUrl + "/login";
 
     try {
         log.info("📧 Sending invite email via Gmail SMTP to: {}", email);
@@ -234,12 +235,14 @@ private String buildInviteEmailHtml(String email, String link, String otp, Strin
            "<strong>Your Email:</strong> " + email +
            "</div>" +
            "<div class=\"info-box\">" +
-           "<strong>Temporary Credentials:</strong><br>" +
-           "OTP: <strong>" + otp + "</strong><br>" +
-           "Password: <strong>" + password + "</strong>" +
+           "<strong>Login Credentials:</strong><br>" +
+           "Username/Email: <strong>" + email + "</strong><br>" +
+           "Password: <strong>" + password + "</strong><br>" +
+           "OTP (if required): <strong>" + otp + "</strong>" +
            "</div>" +
+           "<p><strong>⚠️ Important:</strong> Click the button below to go to the login page. You will need to enter your email and password manually to access the system.</p>" +
            "<p style=\"text-align: center;\">" +
-           "<a href=\"" + link + "\" class=\"button\">Access HRMS Portal</a>" +
+           "<a href=\"" + link + "\" class=\"button\">Go to Login Page</a>" +
            "</p>" +
            "</div>" +
            "</div>" +
@@ -412,8 +415,8 @@ public void acceptInvite(String email, String password) {
                     expiry
             );
 
-            // LOGIN LINK (Employee must login with credentials from email)
-            String onboardingLink = frontendUrl;
+            // ✅ FIXED: Link now points to LOGIN page, not home page
+            String onboardingLink = frontendUrl + "/login";
 
             String otp = otpService.generateOtp(email);
 
