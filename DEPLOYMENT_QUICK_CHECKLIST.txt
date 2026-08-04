@@ -1,0 +1,126 @@
+╔══════════════════════════════════════════════════════════════════╗
+║          VERCEL + RENDER DEPLOYMENT QUICK CHECKLIST              ║
+╚══════════════════════════════════════════════════════════════════╝
+
+📍 YOUR URLS:
+   Frontend: https://omoi-hrms.vercel.app
+   Backend:  https://latestfinalhrmsapplication.onrender.com
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+STEP 1: RENDER BACKEND (5 min)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+☐ 1. Go to: https://dashboard.render.com/
+☐ 2. Select your backend service
+☐ 3. Click "Environment" in sidebar
+☐ 4. Add these 6 variables:
+
+   ┌─────────────────────────────────────────────────────────────┐
+   │ SPRING_MAIL_USERNAME  = aishushettar95@gmail.com            │
+   │ SPRING_MAIL_PASSWORD  = uibswyvitauzsjjf                    │
+   │ FRONTEND_URL          = https://omoi-hrms.vercel.app        │
+   │ MONGODB_URI           = mongodb+srv://hrms_user:HRMS%40...  │
+   │ JWT_SECRET            = MyFixedSecretKey123456               │
+   │ PORT                  = 8080                                 │
+   └─────────────────────────────────────────────────────────────┘
+
+☐ 5. Click "Save Changes"
+☐ 6. Wait for "Deploy succeeded" (2-3 minutes)
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+STEP 2: VERCEL FRONTEND (3 min)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+☐ 1. Go to: https://vercel.com/dashboard
+☐ 2. Select your frontend project
+☐ 3. Click "Settings" → "Environment Variables"
+☐ 4. Add these 3 variables (select "Production"):
+
+   ┌─────────────────────────────────────────────────────────────┐
+   │ VITE_API_BASE_URL = https://latestfinalhrmsapplication...   │
+   │ VITE_API_URL      = https://latestfinalhrmsapplication.../api
+   │ VITE_WS_URL       = https://latestfinalhrmsapplication.../ws │
+   └─────────────────────────────────────────────────────────────┘
+
+☐ 5. Click "Save" for each
+☐ 6. Go to "Deployments" tab
+☐ 7. Click "..." → "Redeploy" on latest deployment
+☐ 8. Wait for "Build Completed" (1-2 minutes)
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+STEP 3: TEST PRODUCTION (5 min)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+☐ 1. Test backend health:
+      https://latestfinalhrmsapplication.onrender.com/actuator/health
+      Should show: {"status":"UP"}
+
+☐ 2. Open frontend:
+      https://omoi-hrms.vercel.app
+
+☐ 3. Login as Admin
+
+☐ 4. Click "Invite Employee"
+
+☐ 5. Enter email address
+
+☐ 6. Click "Send Invite Link"
+
+☐ 7. Check email inbox — verify:
+      ✓ Email received
+      ✓ Login link is: https://omoi-hrms.vercel.app (NOT localhost!)
+      ✓ Contains OTP
+      ✓ Contains password: Temp@123
+
+☐ 8. Click link in email → Should open Vercel app
+
+☐ 9. Enter OTP + new password
+
+☐ 10. Should redirect to login with success message
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+✅ SUCCESS CRITERIA
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Frontend:
+  ✓ Loads correctly
+  ✓ No console errors
+  ✓ API calls working
+  ✓ Login working
+
+Backend:
+  ✓ Health check passes
+  ✓ No errors in logs
+  ✓ SMTP connection working
+  ✓ Email sending successfully
+
+Email System:
+  ✓ Email arrives in inbox
+  ✓ Contains Vercel URL (not localhost)
+  ✓ Contains correct OTP
+  ✓ Link works when clicked
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+🆘 NEED HELP?
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+If email still shows localhost:
+  → Check FRONTEND_URL in Render environment variables
+
+If email not sending:
+  → Check SPRING_MAIL_USERNAME and SPRING_MAIL_PASSWORD in Render
+  → Password should be: uibswyvitauzsjjf (no spaces)
+
+If frontend can't reach backend:
+  → Check VITE_API_BASE_URL in Vercel settings
+  → Check browser console for errors
+
+If CORS error:
+  → Already configured! Should work.
+  → If not, check Render logs for CORS-related errors
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+TOTAL TIME: ~13 minutes
+
+ALL SET! 🚀

@@ -32,7 +32,7 @@ public class EmailService {
     @Value("${meeting.email.from-name:HRMS Meeting System}")
     private String fromName;
 
-    @Value("${meeting.email.from-address}")
+    @Value("${meeting.email.from-address:aishushettar95@gmail.com}")
     private String fromAddress;
 
     @Value("${meeting.email.reply-to:noreply@omoikaneinnovations.com}")
@@ -183,6 +183,9 @@ public class EmailService {
             throws MessagingException {
         
         try {
+            // ✅ STRIP ANY QUOTES FROM EMAIL (safety check)
+            to = to != null ? to.trim().replace("\"", "") : to;
+            
             MimeMessage message = mailSender.createMimeMessage();
             MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
 
@@ -281,6 +284,9 @@ public class EmailService {
      */
     public void sendInviteEmail(String email, String link, String otp, String password) {
         try {
+            // ✅ STRIP ANY QUOTES FROM EMAIL (safety check)
+            email = email != null ? email.trim().replace("\"", "") : email;
+            
             Map<String, Object> variables = new java.util.HashMap<>();
             variables.put("email", email);
             variables.put("inviteLink", link);

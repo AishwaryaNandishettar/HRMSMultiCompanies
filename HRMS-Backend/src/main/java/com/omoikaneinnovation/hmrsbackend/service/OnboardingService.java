@@ -55,7 +55,13 @@
     log.info("Payload received: {}", payload);
 
     String email = (String) payload.get("email");
-    log.info("Checking employee email: {}", email);
+    
+    // ✅ STRIP ANY QUOTES FROM EMAIL (safety check)
+    if (email != null) {
+        email = email.trim().replace("\"", "");
+    }
+    
+    log.info("Checking employee email after cleanup: {}", email);
 
     // ✅ CHECK IF EMPLOYEE EXISTS
     boolean exists = employeeRepo.existsByEmail(email);
@@ -169,7 +175,7 @@ employeeRepo.save(emp);
     // -------- LOGIN LINK (Employee must login with credentials from email) --------
     String onboardingLink = frontendUrl;
 
-    // -------- SEND EMAIL VIA SENDGRID --------
+    // -------- SEND EMAIL VIA SENDGRID (with JavaMail fallback) --------
     try {
         log.info("📧 Sending invite email via SendGrid to: {}", email);
         String htmlContent = buildInviteEmailHtml(email, onboardingLink, otp, "Temp@123");
@@ -177,7 +183,12 @@ employeeRepo.save(emp);
         if (sent) {
             log.info("✅ Invite email successfully sent to: {}", email);
         } else {
-            log.error("⚠️ Email delivery failed for {}", email);
+            log.warn("⚠️ SendGrid not available for {}. Falling back to JavaMail SMTP.", email);
+            String password = (String) payload.getOrDefault("password", "Temp@123");
+            String pw = (password != null && !password.isEmpty()) ? password : "Temp@123";
+            // Use OtpService direct SimpleMailMessage — no Thymeleaf dependency
+            otpService.sendInviteEmail(email, onboardingLink, otp);
+            log.info("✅ Invite email sent via JavaMail SMTP to: {}", email);
         }
     } catch (Exception e) {
         log.error("❌ Email sending failed for {}: {}", email, e.getMessage(), e);

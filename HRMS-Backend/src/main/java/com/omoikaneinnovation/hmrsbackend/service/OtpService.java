@@ -73,29 +73,33 @@ public class OtpService {
     // ✅ NEW METHOD (SEND OTP + LINK IN ONE EMAIL)
     public void sendInviteEmail(String email, String link, String otp) {
 
+        // ✅ STRIP ANY QUOTES FROM EMAIL (safety check)
+        email = email != null ? email.trim().replace("\"", "") : email;
+        
         SimpleMailMessage message = new SimpleMailMessage();
 
         message.setTo(email);
-        message.setSubject("HRMS Invite - Login Details");
-       System.out.println("📩 Sending email to: " + email);
+        message.setSubject("HRMS Invite - Your Login Details");
+        System.out.println("📩 [OtpService] Preparing invite email to: " + email);
         message.setText(
                 "Hello,\n\n" +
-                "You are invited to HRMS.\n\n" +
-
-                "Login Details:\n" +
-                "Email: " + email + "\n" +
-                "Temporary Password (OTP): " + otp + "\n\n" +
-
-                "Click below link:\n" +
+                "You have been invited to join HRMS - Omoikane Innovations.\n\n" +
+                "=== Your Login Details ===\n" +
+                "Email    : " + email + "\n" +
+                "Password : Temp@123\n" +
+                "OTP      : " + otp + "\n\n" +
+                "=== Login Here ===\n" +
                 link + "\n\n" +
-
-                "👉 Use OTP as temporary password\n" +
-                "👉 Set new password after login\n\n" +
-
-                "Thanks,\nHR Team"
+                "Steps:\n" +
+                "1. Visit the link above\n" +
+                "2. Login with your email and password: Temp@123\n" +
+                "3. Change your password after first login\n\n" +
+                "If you have any questions, contact HR.\n\n" +
+                "Thanks,\nHR Team - Omoikane Innovations"
         );
 
+        System.out.println("📤 [OtpService] Calling mailSender.send() for: " + email);
         mailSender.send(message);
-        System.out.println("✅ Email sent successfully");
+        System.out.println("✅ [OtpService] Email sent successfully to: " + email);
     }
 }

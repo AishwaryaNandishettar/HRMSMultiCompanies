@@ -14,7 +14,7 @@ export default function InviteEmployee() {
 
       const apiBase =
         import.meta.env.VITE_API_BASE_URL ||
-        'https://trowel-eldercare-scouting.ngrok-free.dev';
+        'http://localhost:8082';
 
       await axios.post(`${apiBase}/api/onboarding/invite`, {
         email,
@@ -42,13 +42,13 @@ export default function InviteEmployee() {
 
     const apiBase =
       import.meta.env.VITE_API_BASE_URL ||
-      "https://trowel-eldercare-scouting.ngrok-free.dev";
+      "http://localhost:8082";
 
     const token = localStorage.getItem("token");
 
     // Pass the payload array expected by the controller
     const response = await axios.post(
-      `${apiBase}/api/onboarding/invite-all`,
+      `${apiBase}/api/onboarding/bulk-invite`,
       employeesToInvite, // Array of employee objects { email, fullName, department, designation }
       {
         headers: {

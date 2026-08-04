@@ -32,7 +32,7 @@ export default function InviteAccept() {
     // fetch email using token
     const fetchData = async () => {
       try {
-        const apiBase = import.meta.env.VITE_API_BASE_URL || 'https://trowel-eldercare-scouting.ngrok-free.dev';
+        const apiBase = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8082';
         const res = await axios.get(
           `${apiBase}/api/onboarding/validate?token=${t}`
         );
