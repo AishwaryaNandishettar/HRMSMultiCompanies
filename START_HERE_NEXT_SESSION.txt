@@ -1,0 +1,99 @@
+╔═══════════════════════════════════════════════════════════════╗
+║                                                               ║
+║   EMPLOYEE DIRECTORY FIX - START HERE                        ║
+║                                                               ║
+╚═══════════════════════════════════════════════════════════════╝
+
+PROBLEM:
+--------
+Frontend Employee Directory shows WRONG employees (test data like 
+"Rahul Sharma") instead of real MongoDB employees (like "Lata Benakop").
+
+
+SOLUTION STEPS:
+---------------
+
+STEP 1: READ THE DOCUMENTATION
+   Open file: NEXT_SESSION_FIX_EMPLOYEE_DIRECTORY.md
+   This explains the full issue and solution.
+
+
+STEP 2: DIAGNOSE WHAT'S IN DATABASE
+   cd "d:\New folder\HRMSProject (2)\HRMSProject\HRMS-Backend"
+   node check_mongodb_data.js
+   
+   OR double-click: RUN_DIAGNOSIS_FIRST.bat
+   
+   This will show:
+   - What companyId admin users have
+   - What companyId employees have
+   - Whether data is correct or needs fixing
+
+
+STEP 3: FIX THE DATA (if diagnosis shows issues)
+   node fix_all_employee_companyid.js
+   
+   OR double-click: RUN_FIX_EMPLOYEES.bat
+   
+   This will:
+   - Set ALL admin users to companyId="omoikaneinnovations"
+   - Set ALL employees to companyId="omoikaneinnovations"
+
+
+STEP 4: RESTART BACKEND
+   Stop backend (Ctrl+C)
+   mvn spring-boot:run
+   
+   Watch logs for:
+   "✅ Fetching employees for company: omoikaneinnovations"
+
+
+STEP 5: CLEAR BROWSER CACHE
+   1. Press F12 (DevTools)
+   2. Go to "Application" tab
+   3. Click "Clear site data"
+   4. Close browser completely
+   5. Reopen and go to http://localhost:5173
+
+
+STEP 6: TEST
+   1. Login with: Aishwarya@company.com
+   2. Go to Employee Directory
+   3. Should see: Lata Benakop, Swati Yadav, Nikita Benakop
+   4. Should NOT see: Rahul Sharma, Rahul Mandre, Silk Smitha
+
+
+STEP 7: COMMIT AND PUSH
+   git add .
+   git commit -m "Fix: Set all employees to companyId omoikaneinnovations"
+   git push origin main
+
+
+FILES CREATED:
+--------------
+✅ check_mongodb_data.js           - Diagnose database
+✅ fix_all_employee_companyid.js   - Fix all data
+✅ RUN_DIAGNOSIS_FIRST.bat         - Run diagnosis (Windows)
+✅ RUN_FIX_EMPLOYEES.bat           - Run fix (Windows)
+✅ NEXT_SESSION_FIX_EMPLOYEE_DIRECTORY.md - Full documentation
+
+
+QUICK START:
+------------
+1. Double-click: RUN_DIAGNOSIS_FIRST.bat
+2. Read the output
+3. If issues found, double-click: RUN_FIX_EMPLOYEES.bat
+4. Follow STEP 4-7 above
+
+
+NEED HELP?
+----------
+Read: NEXT_SESSION_FIX_EMPLOYEE_DIRECTORY.md
+This has detailed explanations and troubleshooting steps.
+
+
+═══════════════════════════════════════════════════════════════
+
+START WITH: RUN_DIAGNOSIS_FIRST.bat
+
+═══════════════════════════════════════════════════════════════
