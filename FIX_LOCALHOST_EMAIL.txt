@@ -1,0 +1,76 @@
+╔═══════════════════════════════════════════════════════════════╗
+║                                                               ║
+║   FIX LOCALHOST EMAIL - Quick Instructions                   ║
+║                                                               ║
+╚═══════════════════════════════════════════════════════════════╝
+
+PROBLEM: Emails not sending from localhost
+
+SOLUTION: Use local backend (localhost:8082) for development
+
+
+STEPS TO FIX:
+-------------
+
+1. Check Local Backend Running
+
+   Open terminal and run:
+   
+   cd "d:\New folder\HRMSProject (2)\HRMSProject\HRMS-Backend"
+   mvn spring-boot:run
+   
+   Wait for: "Started HmrsBackendApplication"
+
+
+2. Restart Frontend
+
+   In frontend terminal:
+   - Press Ctrl+C to stop
+   - Run:
+   
+   cd "d:\New folder\HRMSProject (2)\HRMSProject\HRMS-Frontend"
+   npm run dev
+   
+   Wait for: "➜  Local:   http://localhost:5173/"
+
+
+3. Test Email
+
+   - Go to: http://localhost:5173
+   - Login: Aishwarya@company.com / admin123
+   - Invite employee
+   - ✅ Email should work now!
+
+
+HOW IT WORKS:
+-------------
+
+Created .env.local file that points to LOCAL backend:
+- Frontend: localhost:5173
+- Backend: localhost:8082 (LOCAL)
+- Email: Gmail SMTP (works on localhost)
+
+Vercel still uses production backend:
+- Frontend: omoi-hrms.vercel.app
+- Backend: Render (production)
+- Email: Resend HTTP API
+
+
+WHY THIS FIXES IT:
+------------------
+
+Local backend can use Gmail SMTP directly (port 587 not blocked)
+Production backend (Render) uses Resend HTTP API fallback
+
+
+BOTH WORK:
+----------
+✅ Localhost → Local backend → Gmail SMTP → Emails work
+✅ Vercel → Render backend → Resend HTTP API → Emails work
+
+
+═══════════════════════════════════════════════════════════════
+
+RUN LOCAL BACKEND + RESTART FRONTEND NOW!
+
+═══════════════════════════════════════════════════════════════
