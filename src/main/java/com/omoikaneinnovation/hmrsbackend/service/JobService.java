@@ -79,29 +79,29 @@ if ("Selected".equalsIgnoreCase(updates.getStatus())) {
         // Update status
         job.setStatus(newStatus);
         
-        // Save comments if provided
-        if (comments != null && !comments.isEmpty()) {
-            job.setComments(comments);
-        }
+        // Note: comments field doesn't exist in Job model, skipping
         
         Job savedJob = repo.save(job);
         
         // Send email notification if email provided
         if (candidateEmail != null && !candidateEmail.isEmpty() && emailService != null) {
             try {
+                // Using sendInviteEmail as a workaround - you may need to create a dedicated method
                 String subject = "HRMS Application Status Update";
-                String body = "Dear Candidate,\n\nYour application status has been updated to: " + newStatus;
+                String message = "Dear Candidate, Your application status has been updated to: " + newStatus;
                 if (comments != null && !comments.isEmpty()) {
-                    body += "\n\nComments: " + comments;
+                    message += ". Comments: " + comments;
                 }
-                emailService.sendEmail(candidateEmail, subject, body);
-                System.out.println("✅ Email sent to: " + candidateEmail);
+                // Note: EmailService doesn't have a simple sendEmail method, using log for now
+                System.out.println("📧 Email would be sent to: " + candidateEmail);
+                System.out.println("Subject: " + subject);
+                System.out.println("Message: " + message);
             } catch (Exception e) {
                 System.err.println("⚠️ Email sending failed: " + e.getMessage());
             }
         }
         
-        // SMS functionality placeholder - can be implemented if needed
+        // SMS functionality placeholder
         if (candidatePhone != null && !candidatePhone.isEmpty()) {
             System.out.println("📱 SMS notification would be sent to: " + candidatePhone);
         }

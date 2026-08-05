@@ -42,11 +42,14 @@ public CorsConfigurationSource corsConfigurationSource() {
    config.setAllowedOriginPatterns(List.of(
     "http://localhost:*",
     "http://127.0.0.1:*",
-    "https://*.vercel.app"
+    "https://*.vercel.app",
+    "https://omoi-hrms.vercel.app",
+    "https://omoi-hrms-*.vercel.app"
 ));
     config.setAllowedHeaders(List.of("*"));
-    config.setAllowedMethods(List.of("GET","POST","PUT","DELETE","OPTIONS"));
+    config.setAllowedMethods(List.of("GET","POST","PUT","DELETE","OPTIONS","PATCH","HEAD"));
     config.setExposedHeaders(List.of("Authorization"));
+    config.setMaxAge(3600L); // Cache preflight for 1 hour
 
     UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
     source.registerCorsConfiguration("/**", config);

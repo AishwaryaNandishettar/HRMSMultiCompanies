@@ -22,12 +22,12 @@ import java.util.concurrent.CompletableFuture;
 
 @Slf4j
 @Service
-@RequiredArgsConstructor
 public class EmailService {
 
     private final JavaMailSender mailSender;
     private final TemplateEngine templateEngine;
     private final EmailQueueRepository emailQueueRepository;
+    private final ResendHttpEmailService resendService;
 
     @Value("${meeting.email.from-name:HRMS Meeting System}")
     private String fromName;
@@ -37,6 +37,17 @@ public class EmailService {
 
     @Value("${meeting.email.reply-to:noreply@omoikaneinnovations.com}")
     private String replyToAddress;
+    
+    @Value("${resend.enabled:true}")
+    private boolean resendEnabled;
+
+    public EmailService(JavaMailSender mailSender, TemplateEngine templateEngine, 
+                       EmailQueueRepository emailQueueRepository, ResendHttpEmailService resendService) {
+        this.mailSender = mailSender;
+        this.templateEngine = templateEngine;
+        this.emailQueueRepository = emailQueueRepository;
+        this.resendService = resendService;
+    }
 
     /**
      * Queue email for asynchronous sending
@@ -167,11 +178,13 @@ public class EmailService {
 
     /**
      * Send single email using Thymeleaf template
+     * Falls back to Resend HTTP API if SMTP fails
      */
     private void sendSingleEmail(String to, String subject, String templateName, Map<String, Object> variables) 
             throws MessagingException {
         
         try {
+            // Try SMTP first
             MimeMessage message = mailSender.createMimeMessage();
             MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
 
@@ -195,18 +208,36 @@ public class EmailService {
             helper.setText(htmlContent, true);
 
             log.info("Calling mailSender.send()");
-            log.info("SMTP CONFIG → host={}, port={}, username={}, fromAddress={}",
-                    System.getProperty("spring.mail.host", "N/A"),
-                    System.getProperty("spring.mail.port", "N/A"),
-                    System.getProperty("spring.mail.username", "N/A"),
-                    fromAddress);
             mailSender.send(message);
-            log.info("mailSender.send() completed");
-            log.info("✅ Email sent successfully to: {}", to);
+            log.info("✅ SMTP: Email sent successfully to: {}", to);
             
-        } catch (Exception e) {
-            log.error("❌ Failed to send email to {} | error: {}", to, e.getMessage(), e);
-            throw new MessagingException("Failed to send email to " + to + ": " + e.getMessage(), e);
+        } catch (Exception smtpError) {
+            log.warn("⚠️ SMTP Failed for {}: {}. Trying Resend HTTP API...", to, smtpError.getMessage());
+            
+            // Fallback to Resend HTTP API
+            if (resendEnabled) {
+                try {
+                    Context context = new Context();
+                    if (variables != null) {
+                        context.setVariables(variables);
+                    }
+                    String htmlContent = templateEngine.process("email/" + templateName, context);
+                    
+                    boolean sent = resendService.sendEmail(to, subject, htmlContent);
+                    if (sent) {
+                        log.info("✅ Resend: Email sent successfully to: {}", to);
+                        return; // Success!
+                    } else {
+                        log.error("❌ Resend: Failed to send email to: {}", to);
+                    }
+                } catch (Exception resendError) {
+                    log.error("❌ Resend: Exception sending email to {}: {}", to, resendError.getMessage());
+                }
+            }
+            
+            // Both methods failed
+            log.error("❌ All methods failed to send email to: {}", to);
+            throw new MessagingException("Failed to send email to " + to + ": " + smtpError.getMessage(), smtpError);
         }
     }
 
