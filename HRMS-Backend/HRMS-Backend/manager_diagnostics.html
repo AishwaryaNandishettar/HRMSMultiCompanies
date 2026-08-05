@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Manager Relationship Diagnostics</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            max-width: 1200px;
+            margin: 50px auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #2c3e50;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .section {
+            margin-bottom: 30px;
+            padding: 20px;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            background-color: #fafafa;
+        }
+        .section h3 {
+            color: #34495e;
+            margin-bottom: 15px;
+        }
+        button {
+            background-color: #3498db;
+            color: white;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            margin-right: 10px;
+            margin-bottom: 10px;
+        }
+        button:hover {
+            background-color: #2980b9;
+        }
+        .fix-btn {
+            background-color: #e74c3c;
+        }
+        .fix-btn:hover {
+            background-color: #c0392b;
+        }
+        .result {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 5px;
+            white-space: pre-wrap;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        .success {
+            background-color: #d4edda;
+            border: 1px solid #c3e6cb;
+            color: #155724;
+        }
+        .error {
+            background-color: #f8d7da;
+            border: 1px solid #f5c6cb;
+            color: #721c24;
+        }
+        .info {
+            background-color: #d1ecf1;
+            border: 1px solid #bee5eb;
+            color: #0c5460;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+        th {
+            background-color: #f2f2f2;
+        }
+        .issue {
+            background-color: #fff3cd;
+            color: #856404;
+        }
+        .good {
+            background-color: #d4edda;
+            color: #155724;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔍 Manager-Employee Relationship Diagnostics</h1>
+
+        <!-- Check Relationships -->
+        <div class="section">
+            <h3>📊 Check Current Relationships</h3>
+            <p>This will show all users and their manager relationships, highlighting any issues.</p>
+            <button onclick="checkRelationships()">Check All Relationships</button>
+            <div id="relationshipResult"></div>
+        </div>
+
+        <!-- Test Specific Manager -->
+        <div class="section">
+            <h3>👥 Test Specific Manager</h3>
+            <p>Check what team members a specific manager should see:</p>
+            <input type="text" id="managerEmail" placeholder="Enter manager email (e.g., Padmanabh@omoi.com)" style="width: 300px; padding: 8px; margin-right: 10px;">
+            <button onclick="checkTeam()">Check Team</button>
+            <div id="teamResult"></div>
+        </div>
+
+        <!-- Auto-Fix Known Issues -->
+        <div class="section">
+            <h3>🔧 Auto-Fix Known Relationships</h3>
+            <p>This will automatically fix the known manager relationships:</p>
+            <ul>
+                <li><strong>Adhviti</strong> (adhviti@gmail.com) → <strong>Padmanabh</strong> (Padmanabh@omoi.com)</li>
+                <li><strong>Mahesh</strong> (mahesh@gmail.com) → <strong>Aishwarya</strong> (Aishmanager@omoi.com)</li>
+            </ul>
+            <button class="fix-btn" onclick="autoFix()">Auto-Fix Relationships</button>
+            <div id="fixResult"></div>
+        </div>
+
+        <!-- Manual Fix -->
+        <div class="section">
+            <h3>⚙️ Manual Relationship Fix</h3>
+            <p>Manually set a manager relationship:</p>
+            <input type="text" id="userEmail" placeholder="Employee email" style="width: 200px; padding: 8px; margin-right: 10px;">
+            <input type="text" id="newManagerEmail" placeholder="Manager email" style="width: 200px; padding: 8px; margin-right: 10px;">
+            <button onclick="manualFix()">Set Relationship</button>
+            <div id="manualResult"></div>
+        </div>
+    </div>
+
+    <script>
+        const BASE_URL = 'http://localhost:8082/api/diagnostic';
+
+        async function checkRelationships() {
+            const resultDiv = document.getElementById('relationshipResult');
+            resultDiv.innerHTML = '<div class="info">Checking relationships...</div>';
+
+            try {
+                const response = await fetch(`${BASE_URL}/manager-relationships`);
+                const data = await response.json();
+
+                let html = `<div class="info">Total Users: ${data.totalUsers}<br>Issues Found: ${data.issueCount}</div>`;
+
+                if (data.issues.length > 0) {
+                    html += '<div class="error">Issues:<br>' + data.issues.join('<br>') + '</div>';
+                }
+
+                html += '<table>';
+                html += '<tr><th>Employee Email</th><th>Employee Name</th><th>Manager Email</th><th>Manager Exists</th><th>Status</th></tr>';
+
+                data.relationships.forEach(rel => {
+                    const statusClass = rel.managerExists === 'YES' ? 'good' : 
+                                      rel.managerExists === 'NO_MANAGER_SET' ? '' : 'issue';
+                    html += `<tr class="${statusClass}">
+                        <td>${rel.email || '-'}</td>
+                        <td>${rel.name || '-'}</td>
+                        <td>${rel.managerEmail || '-'}</td>
+                        <td>${rel.managerExists}</td>
+                        <td>${rel.managerExists === 'YES' ? '✅ Good' : 
+                               rel.managerExists === 'NO_MANAGER_SET' ? '⚪ No Manager' : '❌ Issue'}</td>
+                    </tr>`;
+                });
+
+                html += '</table>';
+                resultDiv.innerHTML = html;
+
+            } catch (error) {
+                resultDiv.innerHTML = `<div class="error">Error checking relationships: ${error.message}</div>`;
+            }
+        }
+
+        async function checkTeam() {
+            const managerEmail = document.getElementById('managerEmail').value;
+            const resultDiv = document.getElementById('teamResult');
+
+            if (!managerEmail) {
+                resultDiv.innerHTML = '<div class="error">Please enter a manager email</div>';
+                return;
+            }
+
+            resultDiv.innerHTML = '<div class="info">Checking team...</div>';
+
+            try {
+                const response = await fetch(`${BASE_URL}/team/${encodeURIComponent(managerEmail)}`);
+                const data = await response.json();
+
+                let html = `<div class="info">Manager: ${data.managerEmail}<br>Team Size: ${data.teamSize}</div>`;
+
+                if (data.teamSize > 0) {
+                    html += '<table>';
+                    html += '<tr><th>Employee Email</th><th>Employee Name</th><th>Employee ID</th><th>User ID</th></tr>';
+                    
+                    data.team.forEach(member => {
+                        html += `<tr>
+                            <td>${member.email}</td>
+                            <td>${member.name || '-'}</td>
+                            <td>${member.employeeId || '-'}</td>
+                            <td>${member.userId}</td>
+                        </tr>`;
+                    });
+                    
+                    html += '</table>';
+                } else {
+                    html += '<div class="error">No team members found for this manager</div>';
+                }
+
+                resultDiv.innerHTML = html;
+
+            } catch (error) {
+                resultDiv.innerHTML = `<div class="error">Error checking team: ${error.message}</div>`;
+            }
+        }
+
+        async function autoFix() {
+            const resultDiv = document.getElementById('fixResult');
+            resultDiv.innerHTML = '<div class="info">Auto-fixing relationships...</div>';
+
+            try {
+                const response = await fetch(`${BASE_URL}/auto-fix-relationships`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                const data = await response.json();
+
+                let html = `<div class="success">Fixed: ${data.fixedCount}<br>Errors: ${data.errorCount}</div>`;
+
+                if (data.fixed.length > 0) {
+                    html += '<div class="success">Successfully Fixed:<br>' + data.fixed.join('<br>') + '</div>';
+                }
+
+                if (data.errors.length > 0) {
+                    html += '<div class="error">Errors:<br>' + data.errors.join('<br>') + '</div>';
+                }
+
+                resultDiv.innerHTML = html;
+
+            } catch (error) {
+                resultDiv.innerHTML = `<div class="error">Error auto-fixing: ${error.message}</div>`;
+            }
+        }
+
+        async function manualFix() {
+            const userEmail = document.getElementById('userEmail').value;
+            const managerEmail = document.getElementById('newManagerEmail').value;
+            const resultDiv = document.getElementById('manualResult');
+
+            if (!userEmail || !managerEmail) {
+                resultDiv.innerHTML = '<div class="error">Please enter both employee and manager emails</div>';
+                return;
+            }
+
+            resultDiv.innerHTML = '<div class="info">Setting relationship...</div>';
+
+            try {
+                const response = await fetch(`${BASE_URL}/fix-manager-relationships`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify([{
+                        userEmail: userEmail,
+                        managerEmail: managerEmail
+                    }])
+                });
+
+                const data = await response.json();
+
+                let html = `<div class="success">Success: ${data.successCount}<br>Errors: ${data.errorCount}</div>`;
+
+                if (data.success.length > 0) {
+                    html += '<div class="success">Success:<br>' + data.success.join('<br>') + '</div>';
+                }
+
+                if (data.errors.length > 0) {
+                    html += '<div class="error">Errors:<br>' + data.errors.join('<br>') + '</div>';
+                }
+
+                resultDiv.innerHTML = html;
+
+            } catch (error) {
+                resultDiv.innerHTML = `<div class="error">Error setting relationship: ${error.message}</div>`;
+            }
+        }
+
+        // Auto-load relationship check on page load
+        window.addEventListener('load', checkRelationships);
+    </script>
+</body>
+</html>

@@ -4,7 +4,8 @@ import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Controller;
 
-
+// ✅ ADD THIS IMPORT
+import com.omoikaneinnovation.hmrsbackend.model.TaskMessage;
 
 @Controller
 public class TaskChatController {

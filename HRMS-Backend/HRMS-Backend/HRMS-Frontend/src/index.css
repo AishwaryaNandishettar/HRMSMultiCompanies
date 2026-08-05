@@ -1,0 +1,201 @@
+/* ============================================
+   GLOBAL RESET & BASE
+   ============================================ */
+*,
+*::before,
+*::after {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: Verdana, Geneva, Tahoma, sans-serif;
+  word-wrap: break-word;
+}
+
+/* ============================================
+   VIEWPORT & ROOT
+   ============================================ */
+html,
+body,
+#root {
+  width: 100%;
+  min-height: 100dvh; /* stable viewport height — fixes mobile browser bar overlap */
+}
+
+html {
+  font-size: 16px;
+  -webkit-text-size-adjust: 100%;
+  scroll-behavior: smooth;
+}
+
+body {
+  overflow-x: hidden;
+  background: #fff;
+  /* fluid base font using clamp(min, preferred, max) */
+  font-size: clamp(0.875rem, 1vw + 0.5rem, 1.125rem);
+  line-height: 1.6;
+}
+
+/* ============================================
+   FLUID TYPOGRAPHY WITH clamp()
+   ============================================ */
+h1 { font-size: clamp(1.5rem,  4vw + 0.5rem, 3rem);   }
+h2 { font-size: clamp(1.25rem, 3vw + 0.4rem, 2.25rem); }
+h3 { font-size: clamp(1.1rem,  2.5vw + 0.3rem, 1.75rem); }
+h4 { font-size: clamp(1rem,    2vw + 0.25rem, 1.375rem); }
+h5 { font-size: clamp(0.95rem, 1.5vw + 0.2rem, 1.125rem); }
+h6 { font-size: clamp(0.875rem, 1vw + 0.15rem, 1rem); }
+
+p  { font-size: clamp(0.875rem, 1vw + 0.4rem, 1.0625rem); }
+
+/* ============================================
+   RESPONSIVE MEDIA
+   ============================================ */
+img,
+video,
+canvas,
+svg {
+  max-width: 100%;
+  height: auto;
+  display: block;
+}
+
+/* ============================================
+   RESPONSIVE TABLES
+   ============================================ */
+table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+/* Scrollable table wrapper — prevents horizontal page overflow */
+.table-wrapper {
+  width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* ============================================
+   FORM ELEMENTS
+   ============================================ */
+input,
+select,
+textarea,
+button {
+  font: inherit;
+  max-width: 100%;
+}
+
+/* ============================================
+   LAYOUT UTILITY CLASSES
+   ============================================ */
+
+/* Container — centers content with responsive padding */
+.container {
+  width: 100%;
+  max-width: 1280px;
+  margin-inline: auto;
+  padding-inline: clamp(1rem, 4vw, 2.5rem);
+}
+
+.container-sm { max-width: 768px;  margin-inline: auto; padding-inline: clamp(1rem, 3vw, 2rem); }
+.container-md { max-width: 1024px; margin-inline: auto; padding-inline: clamp(1rem, 3vw, 2rem); }
+.container-lg { max-width: 1440px; margin-inline: auto; padding-inline: clamp(1rem, 4vw, 3rem); }
+
+/* ============================================
+   FLEX UTILITIES
+   ============================================ */
+.flex         { display: flex; }
+.flex-col     { display: flex; flex-direction: column; }
+.flex-wrap    { flex-wrap: wrap; }
+.flex-center  { display: flex; align-items: center; justify-content: center; }
+.flex-between { display: flex; align-items: center; justify-content: space-between; }
+.flex-start   { display: flex; align-items: center; justify-content: flex-start; }
+.flex-end     { display: flex; align-items: center; justify-content: flex-end; }
+.flex-gap-sm  { gap: clamp(0.5rem,  1vw, 0.75rem); }
+.flex-gap     { gap: clamp(0.75rem, 2vw, 1.25rem); }
+.flex-gap-lg  { gap: clamp(1rem,    3vw, 2rem); }
+
+/* ============================================
+   GRID UTILITIES
+   ============================================ */
+/* Auto-fit responsive grid — columns shrink to fit */
+.grid          { display: grid; gap: clamp(0.75rem, 2vw, 1.5rem); }
+.grid-auto     { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 260px), 1fr)); gap: clamp(0.75rem, 2vw, 1.5rem); }
+.grid-2        { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 300px), 1fr)); gap: clamp(0.75rem, 2vw, 1.5rem); }
+.grid-3        { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 220px), 1fr)); gap: clamp(0.75rem, 2vw, 1.5rem); }
+.grid-4        { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 180px), 1fr)); gap: clamp(0.75rem, 2vw, 1.5rem); }
+
+/* ============================================
+   SPACING UTILITIES
+   ============================================ */
+.mt-auto { margin-top: auto; }
+.mb-auto { margin-bottom: auto; }
+.ml-auto { margin-left: auto; }
+.mr-auto { margin-right: auto; }
+
+.p-sm  { padding: clamp(0.5rem,  1.5vw, 0.75rem); }
+.p-md  { padding: clamp(0.75rem, 2vw,   1.25rem); }
+.p-lg  { padding: clamp(1rem,    3vw,   2rem); }
+
+.gap-sm { gap: clamp(0.5rem,  1vw, 0.75rem); }
+.gap-md { gap: clamp(0.75rem, 2vw, 1.25rem); }
+.gap-lg { gap: clamp(1rem,    3vw, 2rem); }
+
+/* ============================================
+   TEXT UTILITIES
+   ============================================ */
+.text-center { text-align: center; }
+.text-left   { text-align: left; }
+.text-right  { text-align: right; }
+.text-sm     { font-size: clamp(0.75rem,  1vw + 0.25rem, 0.875rem); }
+.text-base   { font-size: clamp(0.875rem, 1vw + 0.4rem,  1rem); }
+.text-lg     { font-size: clamp(1rem,     2vw + 0.3rem,  1.25rem); }
+.text-xl     { font-size: clamp(1.125rem, 2.5vw + 0.3rem, 1.5rem); }
+.text-muted  { color: #6b7280; }
+.text-truncate {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+/* ============================================
+   DISPLAY UTILITIES
+   ============================================ */
+.w-full   { width: 100%; }
+.h-full   { height: 100%; }
+.h-screen { min-height: 100dvh; }
+.hidden   { display: none; }
+.block    { display: block; }
+.inline   { display: inline; }
+.inline-block { display: inline-block; }
+
+/* ============================================
+   RESPONSIVE BREAKPOINT HELPERS
+   ============================================ */
+/* Hide on mobile (< 640px) */
+@media (max-width: 639px) {
+  .hide-mobile { display: none !important; }
+}
+/* Hide on tablet (640px – 1023px) */
+@media (min-width: 640px) and (max-width: 1023px) {
+  .hide-tablet { display: none !important; }
+}
+/* Hide on desktop (≥ 1024px) */
+@media (min-width: 1024px) {
+  .hide-desktop { display: none !important; }
+}
+/* Show only on mobile */
+@media (min-width: 640px) {
+  .show-mobile-only { display: none !important; }
+}
+
+/* ============================================
+   CARD UTILITY
+   ============================================ */
+.card {
+  background: #fff;
+  border-radius: clamp(0.5rem, 1.5vw, 1rem);
+  padding: clamp(1rem, 3vw, 2rem);
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
+  width: 100%;
+}

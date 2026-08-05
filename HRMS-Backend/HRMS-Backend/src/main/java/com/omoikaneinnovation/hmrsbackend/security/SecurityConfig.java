@@ -42,11 +42,14 @@ public CorsConfigurationSource corsConfigurationSource() {
    config.setAllowedOriginPatterns(List.of(
     "http://localhost:*",
     "http://127.0.0.1:*",
-    "https://*.vercel.app"
+    "https://*.vercel.app",
+    "https://omoi-hrms.vercel.app",
+    "https://omoi-hrms-*.vercel.app"
 ));
     config.setAllowedHeaders(List.of("*"));
-    config.setAllowedMethods(List.of("GET","POST","PUT","DELETE","OPTIONS"));
+    config.setAllowedMethods(List.of("GET","POST","PUT","DELETE","OPTIONS","PATCH","HEAD"));
     config.setExposedHeaders(List.of("Authorization"));
+    config.setMaxAge(3600L); // Cache preflight for 1 hour
 
     UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
     source.registerCorsConfiguration("/**", config);
@@ -92,7 +95,7 @@ public CorsConfigurationSource corsConfigurationSource() {
             .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
     // PUBLIC APIs
      .requestMatchers("/error").permitAll()
-    .requestMatchers("/uploads/**").permitAll()
+    
     .requestMatchers("/api/onboarding/**").permitAll()
     .requestMatchers("/test/**").permitAll()
     .requestMatchers("/api/otp/**").permitAll()
@@ -109,7 +112,6 @@ public CorsConfigurationSource corsConfigurationSource() {
     // ROLE BASED APIs
       .requestMatchers("/api/employee/create").permitAll()
       .requestMatchers("/api/employee/all").permitAll()
-      .requestMatchers("/api/employee/bulk-upload").permitAll()
       .requestMatchers("/api/employee/**").hasAnyRole("ADMIN","HR","EMPLOYEE","MANAGER")
     .requestMatchers("/api/admin/**").hasRole("ADMIN")
     .requestMatchers("/api/hr/**").hasRole("HR")
@@ -125,7 +127,7 @@ public CorsConfigurationSource corsConfigurationSource() {
     
     .requestMatchers("/api/reimbursements/**").permitAll()
 .requestMatchers("/api/insurance/**").permitAll()
-
+.requestMatchers("/api/insurance-management/**").permitAll()
 .requestMatchers("/api/payroll/**").permitAll()
 .requestMatchers("/api/recruitment/**").permitAll()
 .requestMatchers("/api/financial/**").permitAll()
@@ -141,11 +143,8 @@ public CorsConfigurationSource corsConfigurationSource() {
 .requestMatchers("/api/departments/**").permitAll()
 .requestMatchers("/api/events/**").permitAll()
 .requestMatchers("/api/notifications/**").permitAll()
-.requestMatchers("/api/diagnostic/**").permitAll()
 .requestMatchers("/api/helpdesk/**").authenticated()
 
-// 🔥 ADD THIS HERE
-.requestMatchers("/api/livekit/**").authenticated()
   // ✅ CHAT APIs - Allow authenticated users
   .requestMatchers("/api/chat/**").authenticated()
   .requestMatchers("/api/meetings/**").authenticated()

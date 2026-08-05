@@ -1,0 +1,245 @@
+    package com.omoikaneinnovation.hmrsbackend.service;
+
+    import com.omoikaneinnovation.hmrsbackend.model.User;
+    import com.omoikaneinnovation.hmrsbackend.repository.UserRepository;
+    import org.springframework.beans.factory.annotation.Autowired;
+    import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+    import org.springframework.stereotype.Service;
+    import java.util.List;
+    import java.util.Optional;
+    import java.time.LocalDate;
+
+    import com.omoikaneinnovation.hmrsbackend.model.Employee;
+
+    @Service
+    public class EmployeeService {
+
+        @Autowired
+        private UserRepository userRepository;
+
+        @Autowired
+        private BCryptPasswordEncoder passwordEncoder;
+
+
+    @Autowired
+    private com.omoikaneinnovation.hmrsbackend.repository.EmployeeRepository employeeRepo;
+
+    public List<Employee> getAllEmployees(String companyId) {
+    // First try to get employees by companyId
+    List<Employee> employees = employeeRepo.findByCompanyId(companyId);
+    
+    // If no employees found by companyId, return all employees (fallback)
+    // This handles cases where companyId wasn't set on existing employees
+    if (employees.isEmpty()) {
+        System.out.println("⚠ No employees found for companyId: " + companyId + ", returning all employees");
+        employees = employeeRepo.findAll();
+    }
+    
+    return employees;
+}
+       public User createEmployee(String name, String email, String password, String companyId) {
+
+    User user = new User();
+    user.setName(name);
+    user.setEmail(email);
+    user.setPassword(passwordEncoder.encode(password));
+    user.setRole("EMPLOYEE");
+    user.setActive(true);
+   // ✅ ADD THIS (VERY IMPORTANT)
+    user.setCompanyId(companyId); // ✅ USE PARAM
+
+
+    User savedUser = userRepository.save(user);
+
+    Employee emp = new Employee();
+    emp.setFullName(name);
+    emp.setEmail(email);
+    emp.setStatus("ACTIVE");
+     // ✅ now this will NOT be null
+    emp.setCompanyId(savedUser.getCompanyId());
+
+    emp.setDepartment("IT");
+    emp.setDesignation("Employee");
+
+    employeeRepo.save(emp);
+
+    return savedUser;
+}
+      public List<Employee> getCurrentMonthBirthdays() {
+    int currentMonth = LocalDate.now().getMonthValue();
+
+    return employeeRepo.findAll().stream()
+            .filter(emp -> {
+                if (emp.getDob() == null) return false;
+                return LocalDate.parse(emp.getDob()).getMonthValue() == currentMonth;
+            })
+            .toList();
+    }
+
+    public Employee updateEmployee(String employeeId, com.omoikaneinnovation.hmrsbackend.dto.EmployeeUpdateDTO dto) {
+        // ✅ FIX: Handle duplicate employeeId issue safely
+        List<Employee> employees = employeeRepo.findAll().stream()
+            .filter(e -> employeeId.equals(e.getEmployeeId()) || employeeId.equals(e.getId()))
+            .toList();
+            
+        Employee employee = null;
+        if (!employees.isEmpty()) {
+            // If multiple employees found with same employeeId, use the first one
+            employee = employees.get(0);
+            if (employees.size() > 1) {
+                System.out.println("⚠️ Warning: Multiple employees found with ID: " + employeeId + 
+                    ". Using first match: " + employee.getFullName());
+            }
+        } else {
+            // ✅ FALLBACK: try matching by email (handles cases where employeeId wasn't set at creation)
+            if (dto.getEmail() != null && !dto.getEmail().trim().isEmpty()) {
+                employee = employeeRepo.findByEmail(dto.getEmail()).orElse(null);
+                if (employee != null) {
+                    System.out.println("✅ Found employee by email fallback: " + employee.getFullName());
+                    // Also stamp the employeeId onto the record so future lookups work
+                    if (employee.getEmployeeId() == null || employee.getEmployeeId().isBlank()) {
+                        employee.setEmployeeId(employeeId);
+                    }
+                }
+            }
+            if (employee == null) {
+                throw new RuntimeException("Employee not found with ID: " + employeeId);
+            }
+        }
+        
+        System.out.println("✅ Found employee: " + employee.getFullName() + " (ID: " + employeeId + ")");
+
+        // Update fields if provided
+        if (dto.getFullName() != null && !dto.getFullName().trim().isEmpty()) {
+            employee.setFullName(dto.getFullName());
+            
+            // ✅ FIX: Sync name to User table
+            Optional<User> userOpt = userRepository.findByEmail(employee.getEmail());
+            if (userOpt.isPresent()) {
+                User user = userOpt.get();
+                user.setName(dto.getFullName());
+                userRepository.save(user);
+                System.out.println("✅ Synced employee name to User table: " + dto.getFullName());
+            }
+        }
+        if (dto.getDepartment() != null && !dto.getDepartment().trim().isEmpty()) {
+            employee.setDepartment(dto.getDepartment());
+            
+            // ✅ FIX: Sync department to User table
+            Optional<User> userOpt = userRepository.findByEmail(employee.getEmail());
+            if (userOpt.isPresent()) {
+                User user = userOpt.get();
+                user.setDepartment(dto.getDepartment());
+                userRepository.save(user);
+            }
+        }
+        if (dto.getDesignation() != null && !dto.getDesignation().trim().isEmpty()) {
+            employee.setDesignation(dto.getDesignation());
+            
+            // ✅ FIX: Sync designation to User table
+            Optional<User> userOpt = userRepository.findByEmail(employee.getEmail());
+            if (userOpt.isPresent()) {
+                User user = userOpt.get();
+                user.setDesignation(dto.getDesignation());
+                userRepository.save(user);
+            }
+        }
+        if (dto.getEmail() != null && !dto.getEmail().trim().isEmpty()
+                && !dto.getEmail().equalsIgnoreCase(employee.getEmail())) {
+            // Only overwrite email if it's actually being changed to something different
+            employee.setEmail(dto.getEmail());
+        }
+
+        // Statutory / bank fields (allow empty string to clear a value)
+        if (dto.getBankAccountNumber() != null) employee.setBankAccountNumber(dto.getBankAccountNumber());
+        if (dto.getIfsc() != null) employee.setIfsc(dto.getIfsc());
+        if (dto.getUan() != null) employee.setUan(dto.getUan());
+        if (dto.getPfMemberId() != null) employee.setPfMemberId(dto.getPfMemberId());
+        if (dto.getPf() != null) employee.setPf(dto.getPf());
+        if (dto.getEsic() != null) employee.setEsic(dto.getEsic());
+        if (dto.getDesignationChanged() != null) employee.setDesignationChanged(dto.getDesignationChanged());
+        if (dto.getDesignationChangedDate() != null) employee.setDesignationChangedDate(dto.getDesignationChangedDate());
+
+        // New fields - ✅ IMPORTANT: Manager update logic
+        if (dto.getLocation() != null) employee.setLocation(dto.getLocation());
+        if (dto.getManager() != null) employee.setManager(dto.getManager());
+        if (dto.getManagerEmail() != null) {
+            String oldManagerEmail = employee.getManagerEmail();
+            employee.setManagerEmail(dto.getManagerEmail());
+            System.out.println("✅ Manager updated: " + oldManagerEmail + " → " + dto.getManagerEmail());
+            
+            // ✅ FIX: Sync manager changes to User table for attendance visibility
+            Optional<User> userOpt = userRepository.findByEmail(employee.getEmail());
+            if (userOpt.isPresent()) {
+                User user = userOpt.get();
+                user.setManagerEmail(dto.getManagerEmail());
+                if (dto.getManager() != null) {
+                    user.setManagerName(dto.getManager());
+                }
+                userRepository.save(user);
+                System.out.println("✅ Synced manager changes to User table for: " + employee.getEmail());
+            } else {
+                System.out.println("⚠️ Warning: User not found for email: " + employee.getEmail());
+            }
+        }
+        if (dto.getDob() != null && !dto.getDob().trim().isEmpty()) employee.setDob(dto.getDob());
+        if (dto.getDoj() != null && !dto.getDoj().trim().isEmpty()) employee.setDoj(dto.getDoj());
+        if (dto.getExitDate() != null) employee.setExitDate(dto.getExitDate());
+        if (dto.getStatus() != null && !dto.getStatus().trim().isEmpty()) employee.setStatus(dto.getStatus());
+
+        // Appraisal / compensation fields (admin-only)
+        if (dto.getCtc() != null) employee.setCtc(dto.getCtc());
+        if (dto.getHikeValue() != null) employee.setHikeValue(dto.getHikeValue());
+        if (dto.getHikePercent() != null) employee.setHikePercent(dto.getHikePercent());
+        if (dto.getHikeYear() != null) employee.setHikeYear(dto.getHikeYear());
+        if (dto.getAppraisalRating() != null) employee.setAppraisalRating(dto.getAppraisalRating());
+        if (dto.getAppraisalRemarks() != null) employee.setAppraisalRemarks(dto.getAppraisalRemarks());
+
+        // ── Append to appraisal history when hikeYear is provided ──
+        // Only add a new history record when an actual appraisal (hikeYear) is being saved.
+        // If the same year already exists in history, update that record instead of duplicating.
+        if (dto.getHikeYear() != null && !dto.getHikeYear().trim().isEmpty()) {
+            java.util.List<Employee.AppraisalRecord> history = employee.getAppraisalHistory();
+            String year = dto.getHikeYear().trim();
+
+            // Check if this year already has a record
+            Employee.AppraisalRecord existing = history.stream()
+                .filter(r -> year.equals(r.getHikeYear()))
+                .findFirst()
+                .orElse(null);
+
+            if (existing != null) {
+                // Update the existing record for this year
+                if (dto.getHikePercent() != null)    existing.setHikePercent(dto.getHikePercent());
+                if (dto.getHikeValue() != null)       existing.setHikeValue(dto.getHikeValue());
+                if (dto.getCtc() != null)             existing.setCtcAfterHike(dto.getCtc());
+                if (dto.getAppraisalRating() != null) existing.setAppraisalRating(dto.getAppraisalRating());
+                if (dto.getAppraisalRemarks() != null) existing.setAppraisalRemarks(dto.getAppraisalRemarks());
+                existing.setDesignation(employee.getDesignation());
+                existing.setRecordedAt(java.time.LocalDate.now().toString());
+                System.out.println("✅ Updated existing appraisal history record for year: " + year);
+            } else {
+                // Add a brand-new record for this year
+                Employee.AppraisalRecord record = new Employee.AppraisalRecord();
+                record.setHikeYear(year);
+                record.setHikePercent(dto.getHikePercent());
+                record.setHikeValue(dto.getHikeValue());
+                record.setCtcAfterHike(dto.getCtc());
+                record.setAppraisalRating(dto.getAppraisalRating());
+                record.setAppraisalRemarks(dto.getAppraisalRemarks());
+                record.setDesignation(employee.getDesignation());
+                record.setRecordedAt(java.time.LocalDate.now().toString());
+                history.add(record);
+                employee.setAppraisalHistory(history);
+                System.out.println("✅ Added new appraisal history record for year: " + year);
+            }
+        }
+
+        Employee saved = employeeRepo.save(employee);
+        System.out.println("✅ Employee updated successfully: " + saved.getFullName());
+        
+        return saved;
+    }
+
+    
+    }

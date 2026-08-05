@@ -1,6 +1,5 @@
 package com.omoikaneinnovation.hmrsbackend.model;
 import lombok.Data;
-
 import lombok.*;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
@@ -42,6 +41,5 @@ private String pincode;
 
     private String description;
 
-    @Builder.Default
     private String status = "Pending";
 }

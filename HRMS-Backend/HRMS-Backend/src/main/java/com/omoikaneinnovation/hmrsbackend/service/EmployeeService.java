@@ -46,7 +46,7 @@
     user.setRole("EMPLOYEE");
     user.setActive(true);
    // ✅ ADD THIS (VERY IMPORTANT)
-    user.setCompanyId(companyId); // ✅ USE PARAM
+  user.setCompanyId(companyId != null ? companyId : "omoi");// ✅ USE PARAM
 
 
     User savedUser = userRepository.save(user);
@@ -91,23 +91,8 @@
                     ". Using first match: " + employee.getFullName());
             }
         } else {
-            // ✅ FALLBACK: try matching by email (handles cases where employeeId wasn't set at creation)
-            if (dto.getEmail() != null && !dto.getEmail().trim().isEmpty()) {
-                employee = employeeRepo.findByEmail(dto.getEmail()).orElse(null);
-                if (employee != null) {
-                    System.out.println("✅ Found employee by email fallback: " + employee.getFullName());
-                    // Also stamp the employeeId onto the record so future lookups work
-                    if (employee.getEmployeeId() == null || employee.getEmployeeId().isBlank()) {
-                        employee.setEmployeeId(employeeId);
-                    }
-                }
-            }
-            if (employee == null) {
-                throw new RuntimeException("Employee not found with ID: " + employeeId);
-            }
+            throw new RuntimeException("Employee not found with ID: " + employeeId);
         }
-        
-        System.out.println("✅ Found employee: " + employee.getFullName() + " (ID: " + employeeId + ")");
 
         // Update fields if provided
         if (dto.getFullName() != null && !dto.getFullName().trim().isEmpty()) {
@@ -144,11 +129,31 @@
                 userRepository.save(user);
             }
         }
-        if (dto.getEmail() != null && !dto.getEmail().trim().isEmpty()
-                && !dto.getEmail().equalsIgnoreCase(employee.getEmail())) {
-            // Only overwrite email if it's actually being changed to something different
-            employee.setEmail(dto.getEmail());
+      if (dto.getEmail() != null && !dto.getEmail().trim().isEmpty()) {
+    String oldEmail = employee.getEmail();
+    String newEmail = dto.getEmail().trim();
+    
+    // ✅ Check if new email is different from current email
+    if (!oldEmail.equalsIgnoreCase(newEmail)) {
+        // ✅ Check if new email already exists in another employee record
+        Optional<Employee> existingEmp = employeeRepo.findByEmail(newEmail);
+        if (existingEmp.isPresent() && !existingEmp.get().getId().equals(employee.getId())) {
+            throw new RuntimeException("Email already exists: " + newEmail);
         }
+        
+        // ✅ Update employee email
+        employee.setEmail(newEmail);
+        
+        // ✅ Update user email if user exists
+        Optional<User> userOpt = userRepository.findByEmail(oldEmail);
+        if (userOpt.isPresent()) {
+            User user = userOpt.get();
+            user.setEmail(newEmail);
+            userRepository.save(user);
+            System.out.println("✅ Email updated: " + oldEmail + " → " + newEmail);
+        }
+    }
+}
 
         // Statutory / bank fields (allow empty string to clear a value)
         if (dto.getBankAccountNumber() != null) employee.setBankAccountNumber(dto.getBankAccountNumber());
@@ -160,7 +165,7 @@
         if (dto.getDesignationChanged() != null) employee.setDesignationChanged(dto.getDesignationChanged());
         if (dto.getDesignationChangedDate() != null) employee.setDesignationChangedDate(dto.getDesignationChangedDate());
 
-        // New fields - ✅ IMPORTANT: Manager update logic
+        // New fields
         if (dto.getLocation() != null) employee.setLocation(dto.getLocation());
         if (dto.getManager() != null) employee.setManager(dto.getManager());
         if (dto.getManagerEmail() != null) {
@@ -173,9 +178,7 @@
             if (userOpt.isPresent()) {
                 User user = userOpt.get();
                 user.setManagerEmail(dto.getManagerEmail());
-                if (dto.getManager() != null) {
-                    user.setManagerName(dto.getManager());
-                }
+user.setManagerName(dto.getManager());
                 userRepository.save(user);
                 System.out.println("✅ Synced manager changes to User table for: " + employee.getEmail());
             } else {
@@ -187,59 +190,40 @@
         if (dto.getExitDate() != null) employee.setExitDate(dto.getExitDate());
         if (dto.getStatus() != null && !dto.getStatus().trim().isEmpty()) employee.setStatus(dto.getStatus());
 
-        // Appraisal / compensation fields (admin-only)
-        if (dto.getCtc() != null) employee.setCtc(dto.getCtc());
-        if (dto.getHikeValue() != null) employee.setHikeValue(dto.getHikeValue());
-        if (dto.getHikePercent() != null) employee.setHikePercent(dto.getHikePercent());
-        if (dto.getHikeYear() != null) employee.setHikeYear(dto.getHikeYear());
-        if (dto.getAppraisalRating() != null) employee.setAppraisalRating(dto.getAppraisalRating());
-        if (dto.getAppraisalRemarks() != null) employee.setAppraisalRemarks(dto.getAppraisalRemarks());
-
-        // ── Append to appraisal history when hikeYear is provided ──
-        // Only add a new history record when an actual appraisal (hikeYear) is being saved.
-        // If the same year already exists in history, update that record instead of duplicating.
-        if (dto.getHikeYear() != null && !dto.getHikeYear().trim().isEmpty()) {
-            java.util.List<Employee.AppraisalRecord> history = employee.getAppraisalHistory();
-            String year = dto.getHikeYear().trim();
-
-            // Check if this year already has a record
-            Employee.AppraisalRecord existing = history.stream()
-                .filter(r -> year.equals(r.getHikeYear()))
-                .findFirst()
-                .orElse(null);
-
-            if (existing != null) {
-                // Update the existing record for this year
-                if (dto.getHikePercent() != null)    existing.setHikePercent(dto.getHikePercent());
-                if (dto.getHikeValue() != null)       existing.setHikeValue(dto.getHikeValue());
-                if (dto.getCtc() != null)             existing.setCtcAfterHike(dto.getCtc());
-                if (dto.getAppraisalRating() != null) existing.setAppraisalRating(dto.getAppraisalRating());
-                if (dto.getAppraisalRemarks() != null) existing.setAppraisalRemarks(dto.getAppraisalRemarks());
-                existing.setDesignation(employee.getDesignation());
-                existing.setRecordedAt(java.time.LocalDate.now().toString());
-                System.out.println("✅ Updated existing appraisal history record for year: " + year);
-            } else {
-                // Add a brand-new record for this year
-                Employee.AppraisalRecord record = new Employee.AppraisalRecord();
-                record.setHikeYear(year);
-                record.setHikePercent(dto.getHikePercent());
-                record.setHikeValue(dto.getHikeValue());
-                record.setCtcAfterHike(dto.getCtc());
-                record.setAppraisalRating(dto.getAppraisalRating());
-                record.setAppraisalRemarks(dto.getAppraisalRemarks());
-                record.setDesignation(employee.getDesignation());
-                record.setRecordedAt(java.time.LocalDate.now().toString());
-                history.add(record);
-                employee.setAppraisalHistory(history);
-                System.out.println("✅ Added new appraisal history record for year: " + year);
-            }
-        }
-
         Employee saved = employeeRepo.save(employee);
         System.out.println("✅ Employee updated successfully: " + saved.getFullName());
         
         return saved;
     }
+   public List<Employee> getEmployeesByManager(String companyId, String managerEmail) {
 
-    
-    }
+    System.out.println("========== MANAGER FILTER ==========");
+    System.out.println("Company = " + companyId);
+    System.out.println("Manager = " + managerEmail);
+
+    List<Employee> employees =
+            employeeRepo.findByCompanyIdAndManagerEmail(companyId, managerEmail);
+
+    System.out.println("Found = " + employees.size());
+
+    employees.forEach(e ->
+        System.out.println(
+            e.getFullName() + " -> " +
+            e.getManagerEmail()
+        )
+    );
+
+    // Add manager's own record
+    employeeRepo.findByEmail(managerEmail).ifPresent(manager -> {
+        boolean exists = employees.stream()
+                .anyMatch(e -> e.getEmail().equalsIgnoreCase(managerEmail));
+
+        if (!exists) {
+            employees.add(manager);
+        }
+    });
+
+    return employees;
+}
+
+}

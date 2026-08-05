@@ -1,0 +1,382 @@
+/* MAIN CONTAINER */
+
+.navbarContainer {
+  height: 42px;
+  background-color: rgb(21, 210, 223);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0 20px;
+
+  position: sticky;
+  top: 0;
+  z-index: 10;   /* 🔥 increase this */
+}
+
+/* LEFT */
+
+.navbarLeft {
+  display: flex;
+  align-items: center;
+  height: 100%;
+}
+
+.logo {
+  height: 40px;
+  width: auto;
+  object-fit: contain;
+  border-radius: 10px;
+}
+
+/* RIGHT */
+
+.navbarRight {
+  display: flex;
+  align-items: center;
+}
+
+/* USER INFO */
+
+.userInfo {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-right: 6px;
+  color: white;
+}
+
+.username {
+  font-weight: 600;
+  font-size: 15px;
+  color: #fff;
+  margin-bottom: 2px;
+}
+
+.userEmail {
+  display: flex;
+  align-items: center;
+  font-size: 13px;
+  color: #eafaf3;
+}
+
+/* ICONS */
+
+.copyIcon {
+  margin-left: 6px;
+  cursor: pointer;
+  font-size: 15px;
+}
+
+.icon {
+  font-size: 28px;
+  cursor: pointer;
+  color: white;
+  margin-right: 10px;
+}
+
+/* AVATAR */
+
+.userMenu {
+  position: relative;
+}
+
+.userdp {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: #2d6cdf;
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 20px;
+  cursor: pointer;
+  overflow: hidden;
+  border: 2px solid #fff;
+}
+
+.userdpImg {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 50%;
+}
+
+/* DROPDOWN */
+
+.dropdownMenu {
+  position: absolute;
+  top: 55px;
+  right: 0;
+  background: white;
+  border-radius: 8px;
+  border: 1px solid #ddd;
+  min-width: 150px;
+  display: flex;
+  flex-direction: column;
+  padding: 8px 0;
+  z-index: 1300;
+}
+
+.dropdownItem {
+  background: none;
+  border: none;
+  padding: 10px 15px;
+  text-align: left;
+  width: 100%;
+  font-size: 14px;
+  cursor: pointer;
+  color: #333;
+}
+
+.dropdownItem:hover {
+  background-color: #f2f2f2;
+}
+
+/* OVERLAY */
+
+.overlay {
+  position: fixed;
+  inset: 0;
+  background: transparent;
+  z-index: 1000;
+}
+
+/* ── HAMBURGER (mobile only) ── */
+.hamburger {
+  display: none;
+  background: none;
+  border: none;
+  color: white;
+  font-size: 24px;
+  cursor: pointer;
+  padding: 4px 8px;
+  margin-right: 8px;
+  align-items: center;
+  justify-content: center;
+}
+
+@media (max-width: 768px) {
+  .hamburger {
+    display: flex;
+  }
+
+  /* Hide user info text on very small screens to save space */
+  .userInfo {
+    display: none;
+  }
+
+  .navbarContainer {
+    padding: 0 12px;
+  }
+
+  .logo {
+    height: 44px;
+  }
+}
+.bellContainer {
+  position: relative;
+  cursor: pointer;
+}
+
+.badge {
+  position: absolute;
+  top: -5px;
+  right: -5px;
+  background: red;
+  color: white;
+  font-size: 11px;
+  padding: 2px 6px;
+  border-radius: 50%;
+}
+
+.dropdown {
+  position: absolute;
+  right: 0;
+  top: 35px;
+  width: 250px;
+  background: white;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  z-index: 9999;
+  max-height: 300px;
+  overflow-y: auto;
+}
+
+.notify {
+  padding: 10px;
+  border-bottom: 1px solid #eee;
+}
+
+.unread {
+  background: #f5faff;
+  font-weight: 600;
+}
+
+.read {
+  background: white;
+  color: gray;
+}
+.userdpImg {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid white;
+}
+
+
+.navbarLeft {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.navbarRight {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+
+.logo {
+  height: 40px;
+}
+
+/* Hide hamburger by default */
+.hamburger {
+  display: none;
+  font-size: 22px;
+  background: none;
+  border: none;
+  cursor: pointer;
+}
+@media (max-width: 768px) {
+
+  .navbarContainer {
+    padding: 10px;
+  }
+  @media (max-width: 768px) {
+  .navbar {
+    position: fixed;
+    width: 100%;
+  }
+}
+
+  /* Show hamburger */
+  .hamburger {
+    display: block;
+  }
+
+  /* Hide full user info */
+  .userInfo {
+    display: none;
+  }
+
+  /* Reduce gaps */
+  .navbarRight {
+    gap: 10px;
+  }
+
+  /* Smaller logo */
+  .logo {
+    height: 32px;
+  }
+
+  /* Notification dropdown full width */
+  .dropdown {
+    position: absolute;
+    right: 10px;
+    top: 60px;
+    width: 90%;
+    max-height: 300px;
+    overflow-y: auto;
+  }
+
+  /* User dropdown fix */
+  .dropdownMenu {
+    right: 10px;
+    width: 150px;
+  }
+}
+@media (min-width: 769px) and (max-width: 1024px) {
+
+  .userInfo {
+    font-size: 13px;
+  }
+
+  .logo {
+    height: 36px;
+  }
+
+  .navbarRight {
+    gap: 15px;
+  }
+}
+.userdp {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: #4a90e2;
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+  overflow: hidden;
+}
+
+.userdpImg {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.icon {
+  font-size: 20px;
+  cursor: pointer;
+}
+
+@media (max-width: 768px) {
+  .userdp {
+    width: 32px;
+    height: 32px;
+  }
+
+  .icon {
+    font-size: 18px;
+  }
+}
+.bellContainer {
+  position: relative;
+}
+
+.badge {
+  position: absolute;
+  top: -5px;
+  right: -8px;
+  background: red;
+  color: white;
+  font-size: 10px;
+  padding: 2px 6px;
+  border-radius: 50%;
+}
+.hamburger {
+  display: none;
+  font-size: 22px;
+  background: none;
+  border: none;
+  cursor: pointer;
+}
+
+/* MOBILE */
+@media (max-width: 768px) {
+  .hamburger {
+    display: block;
+  }
+
+  .userInfo {
+    display: none;
+  }
+}
+

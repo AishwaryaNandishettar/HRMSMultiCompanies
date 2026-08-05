@@ -1,7 +1,5 @@
 package com.omoikaneinnovation.hmrsbackend.dto;
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+
 public class EmployeeUpdateDTO {
     private String fullName;
     private String employeeId;
@@ -25,14 +23,6 @@ public class EmployeeUpdateDTO {
     private String esic;
     private String designationChanged;
     private String designationChangedDate;
-
-    // ── Appraisal / Compensation fields ──
-    private String ctc;
-    private String hikeValue;
-    private String hikePercent;
-    private String hikeYear;
-    private String appraisalRating;
-    private String appraisalRemarks;
 
     public String getFullName() { return fullName; }
     public void setFullName(String fullName) { this.fullName = fullName; }
@@ -93,22 +83,4 @@ public class EmployeeUpdateDTO {
 
     public String getDesignationChangedDate() { return designationChangedDate; }
     public void setDesignationChangedDate(String designationChangedDate) { this.designationChangedDate = designationChangedDate; }
-
-    public String getCtc() { return ctc; }
-    public void setCtc(String ctc) { this.ctc = ctc; }
-
-    public String getHikeValue() { return hikeValue; }
-    public void setHikeValue(String hikeValue) { this.hikeValue = hikeValue; }
-
-    public String getHikePercent() { return hikePercent; }
-    public void setHikePercent(String hikePercent) { this.hikePercent = hikePercent; }
-
-    public String getHikeYear() { return hikeYear; }
-    public void setHikeYear(String hikeYear) { this.hikeYear = hikeYear; }
-
-    public String getAppraisalRating() { return appraisalRating; }
-    public void setAppraisalRating(String appraisalRating) { this.appraisalRating = appraisalRating; }
-
-    public String getAppraisalRemarks() { return appraisalRemarks; }
-    public void setAppraisalRemarks(String appraisalRemarks) { this.appraisalRemarks = appraisalRemarks; }
 }

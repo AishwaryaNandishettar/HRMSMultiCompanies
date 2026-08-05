@@ -1,0 +1,40 @@
+====================================
+RENDER BACKEND ENVIRONMENT VARIABLES
+====================================
+Copy these values to Render dashboard → Environment tab
+
+1. SPRING_MAIL_USERNAME
+   Value: aishushettar95@gmail.com
+
+2. SPRING_MAIL_PASSWORD
+   Value: uibswyvitauzsjjf
+
+3. FRONTEND_URL
+   Value: https://omoi-hrms.vercel.app
+
+4. MONGODB_URI
+   Value: mongodb+srv://hrms_user:HRMS%4012345@cluster0.aexpf8t.mongodb.net/Data_base_hrms?retryWrites=true&w=majority&appName=Cluster0
+
+5. JWT_SECRET
+   Value: MyFixedSecretKey123456
+
+6. PORT
+   Value: 8080
+
+====================================
+IMPORTANT NOTES:
+====================================
+- FRONTEND_URL must be the Vercel URL (not localhost!)
+- This makes the email invitation link point to your deployed frontend
+- SPRING_MAIL_PASSWORD is your Gmail App Password (without spaces)
+- After adding these, click "Save Changes" and wait for Render to redeploy
+
+====================================
+HOW TO ADD IN RENDER:
+====================================
+1. Go to: https://dashboard.render.com/
+2. Select your backend service (HRMS-Backend or similar name)
+3. Click "Environment" in the left sidebar
+4. Click "Add Environment Variable" for each one above
+5. After all are added, click "Save Changes"
+6. Render will automatically redeploy (takes 2-3 minutes)

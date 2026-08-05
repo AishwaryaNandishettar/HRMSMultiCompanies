@@ -195,49 +195,47 @@ private OfferLetterEmailService mailService;
     }
 
     @PostMapping("/send-offer-letter")
-    public ResponseEntity<?> sendOfferLetter(
-            @RequestParam("to") String to,
-            @RequestParam("subject") String subject,
-            @RequestParam("candidateName") String candidateName,
-            @RequestParam("file") MultipartFile file
-    ) {
+public ResponseEntity<?> sendOfferLetter(
+        @RequestParam("to") String to,
+        @RequestParam("subject") String subject,
+        @RequestParam("candidateName") String candidateName,
+        @RequestParam("file") MultipartFile file
+) {
 
-        try {
-            System.out.println("=== EMAIL SENDING REQUEST ===");
-            System.out.println("To: " + to);
-            System.out.println("Subject: " + subject);
-            System.out.println("Candidate: " + candidateName);
-            System.out.println("File: " + file.getOriginalFilename());
-            System.out.println("File Size: " + file.getSize() + " bytes");
-            System.out.println("=============================");
+    try {
 
-            mailService.sendOfferLetter(
-                    to,
-                    subject,
-                    candidateName,
-                    file
-            );
-
-            System.out.println("✅ Email sent successfully to: " + to);
-            
-            Map<String, String> response = new HashMap<>();
-            response.put("status", "success");
-            response.put("message", "Email sent successfully to " + to);
-            
-            return ResponseEntity.ok(response);
-
-        } catch (Exception e) {
-            System.err.println("❌ EMAIL SENDING FAILED");
-            System.err.println("Error: " + e.getMessage());
-            e.printStackTrace();
-
-            Map<String, String> errorResponse = new HashMap<>();
-            errorResponse.put("status", "error");
-            errorResponse.put("message", "Failed to send email: " + e.getMessage());
-            
-            return ResponseEntity
-                    .status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(errorResponse);
+        // ✅ CHECK EMPTY FILE
+        if (file == null || file.isEmpty()) {
+            throw new RuntimeException("Uploaded PDF is empty");
         }
+
+ System.out.println("========== OFFER LETTER ==========");
+        System.out.println("TO: " + to);
+        System.out.println("SUBJECT: " + subject);
+        System.out.println("NAME: " + candidateName);
+        System.out.println("FILE: " + file.getOriginalFilename());
+        System.out.println("SIZE: " + file.getSize());
+        mailService.sendOfferLetter(
+                to,
+                subject,
+                candidateName,
+                file
+        );
+
+        return ResponseEntity.ok("Email sent");
+
+    } 
+ catch (Exception e) {
+
+        e.printStackTrace();
+
+        Map<String,Object> error = new HashMap<>();
+        error.put("type", e.getClass().getName());
+        error.put("message", e.getMessage());
+
+        return ResponseEntity
+                .status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body(error);
     }
+}
 }

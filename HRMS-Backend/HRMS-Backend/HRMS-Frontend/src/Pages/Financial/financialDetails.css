@@ -1,0 +1,71 @@
+.fd-page {
+  padding: 20px;
+  background: #f8fafc;
+}
+
+.fd-page h2 {
+  margin-bottom: 15px;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  background: white;
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+th {
+  background: #0f172a;
+  color: white;
+  padding: 10px;
+}
+
+td {
+  padding: 10px;
+  border-bottom: 1px solid #eee;
+}
+
+tr:hover {
+  background: #f1f5f9;
+}
+.fd-header{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  margin-bottom:20px;
+}
+
+.fd-header input{
+  padding:8px;
+  border:1px solid #ddd;
+  border-radius:6px;
+  cursor:pointer;
+}
+.fd-header{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  margin-bottom:20px;
+}
+.fd-header{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  width:100%;
+  margin-bottom:20px;
+}
+
+.fd-header h2{
+  margin:0;
+}
+
+.export-btn{
+  background:#7c3aed;
+  color:#fff;
+  border:none;
+  padding:10px 18px;
+  border-radius:6px;
+  cursor:pointer;
+  font-weight:600;
+}

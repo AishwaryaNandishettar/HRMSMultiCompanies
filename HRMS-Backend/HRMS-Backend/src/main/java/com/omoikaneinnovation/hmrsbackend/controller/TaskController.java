@@ -89,6 +89,4 @@ public class TaskController {
         String reason = body != null ? body.getOrDefault("rejectReason", "Needs revision") : "Needs revision";
         return service.rejectSubmission(id, reason);
     }
-
-    
 }

@@ -22,21 +22,32 @@ import java.util.concurrent.CompletableFuture;
 
 @Slf4j
 @Service
-@RequiredArgsConstructor
 public class EmailService {
 
     private final JavaMailSender mailSender;
     private final TemplateEngine templateEngine;
     private final EmailQueueRepository emailQueueRepository;
+    private final ResendHttpEmailService resendService;
 
     @Value("${meeting.email.from-name:HRMS Meeting System}")
     private String fromName;
 
-    @Value("${meeting.email.from-address:aishushettar95@gmail.com}")
+    @Value("${meeting.email.from-address:noreply@omoikaneinnovations.com}")
     private String fromAddress;
 
     @Value("${meeting.email.reply-to:noreply@omoikaneinnovations.com}")
     private String replyToAddress;
+    
+    @Value("${resend.enabled:true}")
+    private boolean resendEnabled;
+
+    public EmailService(JavaMailSender mailSender, TemplateEngine templateEngine, 
+                       EmailQueueRepository emailQueueRepository, ResendHttpEmailService resendService) {
+        this.mailSender = mailSender;
+        this.templateEngine = templateEngine;
+        this.emailQueueRepository = emailQueueRepository;
+        this.resendService = resendService;
+    }
 
     /**
      * Queue email for asynchronous sending
@@ -112,17 +123,12 @@ public class EmailService {
         return CompletableFuture.completedFuture(null);
     }
 
-    /**
-     * Process individual email from queue
-     */
     private void processEmailQueue(EmailQueue emailQueue) {
         try {
-            // Update status to processing
             emailQueue.setStatus(EmailQueue.EmailStatus.PROCESSING);
             emailQueue.setLastAttemptAt(Instant.now());
             emailQueueRepository.save(emailQueue);
 
-            // Send emails to all recipients
             boolean allSent = true;
             for (String recipient : emailQueue.getRecipients()) {
                 try {
@@ -135,12 +141,10 @@ public class EmailService {
             }
 
             if (allSent) {
-                // Mark as sent
                 emailQueue.setStatus(EmailQueue.EmailStatus.SENT);
                 emailQueue.setSentAt(Instant.now());
                 log.info("Email queue {} processed successfully", emailQueue.getId());
             } else {
-                // Mark as failed for retry
                 handleEmailFailure(emailQueue, "Failed to send to some recipients");
             }
 
@@ -152,9 +156,6 @@ public class EmailService {
         }
     }
 
-    /**
-     * Handle email sending failure
-     */
     private void handleEmailFailure(EmailQueue emailQueue, String errorMessage) {
         emailQueue.setRetryCount(emailQueue.getRetryCount() + 1);
         emailQueue.setErrorMessage(errorMessage);
@@ -166,8 +167,7 @@ public class EmailService {
                     emailQueue.getId(), emailQueue.getRetryCount());
         } else {
             emailQueue.setStatus(EmailQueue.EmailStatus.PENDING);
-            // Schedule retry with exponential backoff
-            long delayMinutes = (long) Math.pow(2, emailQueue.getRetryCount()) * 5; // 5, 10, 20 minutes
+            long delayMinutes = (long) Math.pow(2, emailQueue.getRetryCount()) * 5;
             emailQueue.setScheduledAt(Instant.now().plusSeconds(delayMinutes * 60));
             log.warn("Email queue {} will be retried in {} minutes (attempt {})", 
                     emailQueue.getId(), delayMinutes, emailQueue.getRetryCount() + 1);
@@ -177,24 +177,28 @@ public class EmailService {
     }
 
     /**
-     * Send single email using template
+     * Send single email using Thymeleaf template
+     * Falls back to Resend HTTP API if SMTP fails
      */
     private void sendSingleEmail(String to, String subject, String templateName, Map<String, Object> variables) 
             throws MessagingException {
         
         try {
-            // ✅ STRIP ANY QUOTES FROM EMAIL (safety check)
-            to = to != null ? to.trim().replace("\"", "") : to;
-            
+            // Try SMTP first
             MimeMessage message = mailSender.createMimeMessage();
             MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
 
-            // Set email properties — from must match the authenticated SMTP account
-            helper.setFrom(fromAddress); // use simple form to avoid UnsupportedEncodingException
+            log.info("================================");
+            log.info("FROM ADDRESS : {}", fromAddress);
+            log.info("TO           : {}", to);
+            log.info("SUBJECT      : {}", subject);
+            log.info("================================");
+
+            helper.setFrom(fromAddress, fromName);
+            helper.setReplyTo(replyToAddress);
             helper.setTo(to);
             helper.setSubject(subject);
 
-            // Process template
             Context context = new Context();
             if (variables != null) {
                 context.setVariables(variables);
@@ -203,21 +207,40 @@ public class EmailService {
             String htmlContent = templateEngine.process("email/" + templateName, context);
             helper.setText(htmlContent, true);
 
-            log.info("📤 Sending email to: {} | from: {} | subject: {}", to, fromAddress, subject);
-
-            // Send email
+            log.info("Calling mailSender.send()");
             mailSender.send(message);
-            log.info("✅ Email sent successfully to: {}", to);
+            log.info("✅ SMTP: Email sent successfully to: {}", to);
             
-        } catch (Exception e) {
-            log.error("❌ Failed to send email to {} | error: {}", to, e.getMessage(), e);
-            throw new MessagingException("Failed to send email to " + to + ": " + e.getMessage(), e);
+        } catch (Exception smtpError) {
+            log.warn("⚠️ SMTP Failed for {}: {}. Trying Resend HTTP API...", to, smtpError.getMessage());
+            
+            // Fallback to Resend HTTP API
+            if (resendEnabled) {
+                try {
+                    Context context = new Context();
+                    if (variables != null) {
+                        context.setVariables(variables);
+                    }
+                    String htmlContent = templateEngine.process("email/" + templateName, context);
+                    
+                    boolean sent = resendService.sendEmail(to, subject, htmlContent);
+                    if (sent) {
+                        log.info("✅ Resend: Email sent successfully to: {}", to);
+                        return; // Success!
+                    } else {
+                        log.error("❌ Resend: Failed to send email to: {}", to);
+                    }
+                } catch (Exception resendError) {
+                    log.error("❌ Resend: Exception sending email to {}: {}", to, resendError.getMessage());
+                }
+            }
+            
+            // Both methods failed
+            log.error("❌ All methods failed to send email to: {}", to);
+            throw new MessagingException("Failed to send email to " + to + ": " + smtpError.getMessage(), smtpError);
         }
     }
 
-    /**
-     * Cancel queued emails for a meeting
-     */
     public void cancelQueuedEmails(String meetingId) {
         try {
             List<EmailQueue> queuedEmails = emailQueueRepository.findByMeetingId(meetingId);
@@ -236,9 +259,6 @@ public class EmailService {
         }
     }
 
-    /**
-     * Get email queue statistics
-     */
     public Map<String, Long> getEmailQueueStats() {
         return Map.of(
                 "pending", emailQueueRepository.countByStatus(EmailQueue.EmailStatus.PENDING),
@@ -249,9 +269,6 @@ public class EmailService {
         );
     }
 
-    /**
-     * Legacy method for OTP emails (backward compatibility)
-     */
     public void sendOtp(String email, String otp) {
         try {
             Map<String, Object> variables = Map.of(
@@ -262,31 +279,25 @@ public class EmailService {
             EmailRequest emailRequest = EmailRequest.builder()
                     .to(email)
                     .subject("Your OTP Code - HRMS")
-                    .templateName("otp-email") // You'll need to create this template
+                    .templateName("otp-email")
                     .templateVariables(variables)
-                    .emailType(EmailRequest.EmailType.MEETING_INVITATION) // Reusing enum
+                    .emailType(EmailRequest.EmailType.MEETING_INVITATION)
                     .scheduledTime(Instant.now())
                     .build();
 
-            // Send immediately for OTP
             sendEmailImmediately(emailRequest);
             
         } catch (Exception e) {
             log.error("Failed to send OTP email to {}: {}", email, e.getMessage(), e);
-            // Fallback to simple email
             sendSimpleOtpEmail(email, otp);
         }
     }
 
     /**
-     * Legacy method for invite emails (backward compatibility)
-     * NOTE: Synchronous — called directly, no async wrapper, so errors surface immediately.
+     * Synchronous invite email used by OnboardingService
      */
     public void sendInviteEmail(String email, String link, String otp, String password) {
         try {
-            // ✅ STRIP ANY QUOTES FROM EMAIL (safety check)
-            email = email != null ? email.trim().replace("\"", "") : email;
-            
             Map<String, Object> variables = new java.util.HashMap<>();
             variables.put("email", email);
             variables.put("inviteLink", link);
@@ -295,6 +306,7 @@ public class EmailService {
 
             log.info("📧 Sending invite email to: {} with link: {}", email, link);
             sendSingleEmail(email, "HRMS Invitation - Welcome!", "invite-email", variables);
+
             log.info("✅ Invite email sent successfully to: {}", email);
 
         } catch (Exception e) {
@@ -303,9 +315,6 @@ public class EmailService {
         }
     }
 
-    /**
-     * Fallback method for simple OTP email
-     */
     private void sendSimpleOtpEmail(String email, String otp) {
         try {
             sendSingleEmail(email, "Your OTP Code - HRMS", "simple-otp", 
@@ -315,9 +324,6 @@ public class EmailService {
         }
     }
 
-    /**
-     * Fallback method for simple invite email
-     */
     private void sendSimpleInviteEmail(String email, String link, String otp) {
         try {
             sendSingleEmail(email, "HRMS Invitation - Welcome!", "simple-invite", 

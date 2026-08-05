@@ -7,7 +7,6 @@ import java.time.Instant;
 import java.util.List;
 import java.util.Map;
 
-import lombok.*;
 @Document(collection = "onboarding_records")
 public class OnboardingRecord {
 

@@ -51,34 +51,4 @@ public List<Attendance> getByUser(@PathVariable String userId) {
     public List<AttendanceDTO> getAllAttendance() {
         return attendanceService.getAllAttendance();
     }
-
-    @DeleteMapping("/{id}")
-    public String deleteAttendance(@PathVariable String id) {
-        return attendanceService.deleteAttendance(id);
-    }
-
-    /**
-     * Manager can update/edit attendance for their team members
-     * This allows managers to mark absent employees as present
-     */
-    @PutMapping("/manager-edit")
-    public String managerEditAttendance(@RequestBody Map<String, String> payload) {
-        String userId = payload.get("userId");
-        String date = payload.get("date");
-        String status = payload.get("status");
-        String checkIn = payload.get("checkIn");
-        String checkOut = payload.get("checkOut");
-        String managerEmail = payload.get("managerEmail");
-        
-        return attendanceService.managerEditAttendance(userId, date, status, checkIn, checkOut, managerEmail);
-    }
-    
-    /**
-     * Backfill missing empId data in all attendance records
-     * This ensures timesheet shows correct EMP IDs after page refresh
-     */
-    @PostMapping("/backfill-empids")
-    public String backfillEmpIds() {
-        return attendanceService.backfillAttendanceData();
-    }
 }

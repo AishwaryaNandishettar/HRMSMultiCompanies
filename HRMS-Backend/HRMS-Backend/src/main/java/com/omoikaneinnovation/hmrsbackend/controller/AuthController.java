@@ -16,7 +16,19 @@ import com.omoikaneinnovation.hmrsbackend.dto.ChangePasswordRequest;
 import java.util.HashMap;
 import java.util.Map;
 
-@CrossOrigin(origins = {"http://localhost:5173", "http://localhost:5176", "http://127.0.0.1:5173", "http://127.0.0.1:5176", "https://hrmsbackendfullrenderingapplication.vercel.app", "https://hrmsbackendfrontendapp.vercel.app", "https://hrmsbackendapplication.vercel.app"})
+@CrossOrigin(origins = {
+    "http://localhost:5173",   // Omoi HR Works
+    "http://localhost:5176",   // TalentHub Solutions (company-a)
+    "http://localhost:5177",   // WorkForce Pro (company-b)
+    "http://localhost:5178",   // PeopleSync Enterprise (company-c)
+    "http://127.0.0.1:5173",
+    "http://127.0.0.1:5176",
+    "http://127.0.0.1:5177",
+    "http://127.0.0.1:5178",
+    "https://hrmsbackendfullrenderingapplication.vercel.app",
+    "https://hrmsbackendfrontendapp.vercel.app",
+    "https://hrmsbackendapplication.vercel.app"
+})
 @RestController
 @RequestMapping("/api/auth")
 
@@ -54,8 +66,8 @@ public class AuthController {
   // 🔥 ADD THIS HERE
     System.out.println("EMAIL: " + request.getEmail());
     System.out.println("PASSWORD INPUT: " + request.getPassword());
-    System.out.println("COMPANY ID FROM REQUEST: " + request.getCompanyId());
-    System.out.println("TENANT ID FROM REQUEST: " + request.getTenantId());
+    System.out.println("TENANT ID: " + request.getTenantId());
+    
         // Debug log
         System.out.println("Login attempt for email: " + request.getEmail());
 
@@ -63,59 +75,94 @@ public class AuthController {
                 request.getEmail(),
                 request.getPassword()
         );
+     
         System.out.println("USER FOUND: " + (user != null));
 
         if (user == null) {
             System.out.println("Login failed for email: " + request.getEmail());
             return ResponseEntity.status(401).body("Invalid credentials");
         }
+   System.out.println("==================================");
+System.out.println("Logged User : " + user.getEmail());
+System.out.println("CompanyId   : " + user.getCompanyId());
+System.out.println("TenantId    : " + request.getTenantId());
+System.out.println("==================================");
+
+        // ✅ STRICT MULTI-TENANT VALIDATION: Enforce company isolation
+        String requestTenantId = request.getTenantId();
+        String userCompanyId = user.getCompanyId();
+        
+        System.out.println("🔍 STRICT TENANT VALIDATION:");
+        System.out.println("  Request Tenant ID: " + requestTenantId);
+        System.out.println("  User Company ID: " + userCompanyId);
+        
+        // SCENARIO 1: Accessing a specific tenant portal (company-a, company-b, company-c)
+        if (requestTenantId != null && !requestTenantId.isEmpty()) {
+            System.out.println("  Portal Type: Client Portal (" + requestTenantId + ")");
+            
+            // User MUST have a matching companyId
+            if (userCompanyId == null || userCompanyId.isEmpty()) {
+                System.out.println("❌ Login denied: User has no company assigned");
+                return ResponseEntity.status(403).body("Access denied: Your account is not associated with any company. Please contact your administrator.");
+            }
+            
+            if (!requestTenantId.equals(userCompanyId)) {
+                System.out.println("❌ Login denied: Tenant mismatch");
+                System.out.println("   Expected: " + userCompanyId);
+                System.out.println("   Attempted: " + requestTenantId);
+                return ResponseEntity.status(403).body("Access denied: You do not have permission to access this company portal. Please login through your company's portal.");
+            }
+            
+            System.out.println("✅ Tenant validation passed for client portal");
+        } 
+        // SCENARIO 2: Accessing default HRMS portal (Omoi portal)
+        else {
+            System.out.println("  Portal Type: Default HRMS Portal (Omoi)");
+            
+            // User MUST NOT have a companyId (Omoi employees only)
+            if (userCompanyId != null && !userCompanyId.isEmpty()) {
+                System.out.println("❌ Login denied: Client employee attempting to access Omoi portal");
+                System.out.println("   User belongs to: " + userCompanyId);
+                
+                // Provide helpful error message with correct portal
+                String correctPortal = "your company's portal";
+                if ("company-a".equals(userCompanyId)) {
+                    correctPortal = "TalentHub portal (port 5176)";
+                } else if ("company-b".equals(userCompanyId)) {
+                    correctPortal = "WorkforcePro portal (port 5177)";
+                } else if ("company-c".equals(userCompanyId)) {
+                    correctPortal = "PeopleSync portal (port 5178)";
+                }
+                
+                return ResponseEntity.status(403).body("Access denied: Please login through " + correctPortal + ". This portal is only for Omoi employees.");
+            }
+            
+            System.out.println("✅ Validation passed for Omoi portal (user has no companyId)");
+        }
 
         System.out.println("Login successful for: " + user.getEmail());
-        
-        // ✅ DETECT OMOI EMPLOYEES BY EMAIL DOMAIN
-        String userEmail = user.getEmail().toLowerCase();
-        boolean isOmoiEmployee = userEmail.endsWith("@omoikaneinnovations.com") || 
-                                 userEmail.endsWith("@omoi.com") ||
-                                 user.getCompanyId() == null;
-        
-        // ✅ GET PORTAL IDENTIFIER (try both companyId and tenantId from request)
-        String requestedPortal = request.getTenantId() != null ? request.getTenantId() : request.getCompanyId();
-        
-        // ✅ DETECT PORTAL TYPE FROM REQUEST
-        boolean isOmoiPortal = (requestedPortal == null || 
-                               requestedPortal.trim().isEmpty() || 
-                               "omoi".equalsIgnoreCase(requestedPortal) ||
-                               "null".equalsIgnoreCase(requestedPortal));
-        
-        System.out.println("🔒 COMPANY VALIDATION:");
-        System.out.println("   User Email: " + userEmail);
-        System.out.println("   Is Omoi Employee: " + isOmoiEmployee);
-        System.out.println("   Requested Portal: " + requestedPortal);
-        System.out.println("   Is Omoi Portal: " + isOmoiPortal);
-        
-        // ✅ BLOCK OMOI EMPLOYEES FROM OTHER COMPANY PORTALS
-        if (isOmoiEmployee && !isOmoiPortal) {
-            System.out.println("❌ BLOCKED: Omoi employee " + user.getEmail() + " tried to login to " + requestedPortal + " portal");
-            return ResponseEntity.status(403).body("Access denied. Omoi employees can only access Omoi portal.");
-        }
-        
-        // ✅ BLOCK NON-OMOI USERS FROM OMOI PORTAL  
-        if (!isOmoiEmployee && isOmoiPortal) {
-            System.out.println("❌ BLOCKED: Non-Omoi user " + user.getEmail() + " tried to login to Omoi portal");
-            return ResponseEntity.status(403).body("Access denied. Only Omoi employees can access Omoi portal.");
-        }
-        
-        // ✅ BLOCK USERS FROM ACCESSING WRONG COMPANY PORTAL
-        String userCompanyId = user.getCompanyId();
-        if (!isOmoiEmployee && userCompanyId != null && requestedPortal != null && 
-            !userCompanyId.equals(requestedPortal) && !requestedPortal.trim().isEmpty()) {
-            System.out.println("❌ BLOCKED: User " + user.getEmail() + " (company: " + userCompanyId + ") tried to login to " + requestedPortal);
-            return ResponseEntity.status(403).body("Access denied. You cannot access other company portals.");
-        }
-        
-        System.out.println("✅ ACCESS GRANTED for " + user.getEmail());
 
+       // ✅ AUTO-DETECT MANAGER ROLE: Check if this person is a manager
        String role = user.getRole() != null ? user.getRole() : "EMPLOYEE";
+       
+       // Check if anyone reports to this user in the User collection
+       java.util.List<User> subordinatesInUsers = repo.findByManagerEmail(user.getEmail());
+       
+       // ✅ Also check if anyone reports to this user in the Employee collection
+       java.util.List<Employee> subordinatesInEmployees = employeeRepository.findByManagerEmail(user.getEmail());
+       
+       int totalSubordinates = subordinatesInUsers.size() + subordinatesInEmployees.size();
+       
+       if (totalSubordinates > 0 && !"admin".equalsIgnoreCase(role)) {
+           role = "MANAGER"; // Auto-promote to manager if they have reports
+           System.out.println("✅ Auto-detected MANAGER role for " + user.getEmail() + 
+               " (has " + totalSubordinates + " reports: " + 
+               subordinatesInUsers.size() + " in Users, " + 
+               subordinatesInEmployees.size() + " in Employees)");
+       } else {
+           System.out.println("ℹ️ User " + user.getEmail() + " remains as " + role + 
+               " (found " + totalSubordinates + " reports)");
+       }
 
 String token = jwtUtil.generateToken(
         user.getEmail(),
@@ -139,7 +186,7 @@ String token = jwtUtil.generateToken(
         res.empId = emp != null ? emp.getEmployeeId() : user.getEmployeeId();
         res.employeeId = emp != null ? emp.getEmployeeId() : user.getEmployeeId();
 
-        System.out.println("🔥 LOGIN RESPONSE: id=" + res.id + ", empId=" + res.empId + ", name=" + res.name);
+        System.out.println("🔥 LOGIN RESPONSE: id=" + res.id + ", empId=" + res.empId + ", name=" + res.name + ", role=" + res.role);
 
         return ResponseEntity.ok(res);
     }

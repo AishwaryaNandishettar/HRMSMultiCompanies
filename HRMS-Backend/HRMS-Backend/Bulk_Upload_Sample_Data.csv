@@ -1,0 +1,6 @@
+fullName,employeeId,email,phone,department,designation,location,manager,dob,doj,bankAccountNumber,ifsc,uan,pf,esic,previousCompany,previousDesignation,totalExperience,aadhaar,pan
+Rajesh Kumar,EMP001,rajesh.kumar@company.com,9876543210,IT,Software Engineer,Bangalore,Vishnu Vardhan,1992-05-15,2024-01-15,1234567890123456,SBIN0001234,123456789012,PF123456,ESI789012,TCS,Junior Developer,3.5,123456789012,ABCDE1234F
+Priya Sharma,EMP002,priya.sharma@company.com,9876543211,HR,HR Manager,Bangalore,Vishnu Vardhan,1990-08-22,2024-01-20,2345678901234567,HDFC0002345,234567890123,PF234567,ESI890123,Infosys,HR Executive,5.0,234567890123,BCDEF2345G
+Amit Patel,EMP003,amit.patel@company.com,9876543212,Finance,Accountant,Mumbai,Padmanabh,1993-12-10,2024-02-01,3456789012345678,ICIC0003456,345678901234,PF345678,ESI901234,Wipro,Junior Accountant,2.0,345678901234,CDEFG3456H
+Sneha Reddy,EMP004,sneha.reddy@company.com,9876543213,Marketing,Marketing Manager,Hyderabad,Shambuling Madli,1991-03-18,2024-02-15,4567890123456789,AXIS0004567,456789012345,PF456789,ESI012345,HCL,Marketing Executive,4.5,456789012345,DEFGH4567I
+Vikram Singh,EMP005,vikram.singh@company.com,9876543214,IT,Senior Developer,Bangalore,Vishnu Vardhan,1988-07-25,2024-03-01,5678901234567890,SBIN0005678,567890123456,PF567890,ESI123456,Accenture,Developer,6.0,567890123456,EFGHI5678J

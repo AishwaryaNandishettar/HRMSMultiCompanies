@@ -1,0 +1,18 @@
+package com.omoikaneinnovation.hmrsbackend.model;
+
+
+import org.springframework.data.annotation.Id;
+import org.springframework.data.mongodb.core.mapping.Document;
+
+import lombok.*;
+import java.util.List;
+
+@Data
+@AllArgsConstructor
+@NoArgsConstructor
+public class Review {
+    private String reviewer;
+    private String quarter;
+    private double rating;
+    private String comments;
+}

@@ -1,10 +1,8 @@
 package com.omoikaneinnovation.hmrsbackend.model;
-import lombok.*;
+
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 import java.time.Instant;
-import java.util.ArrayList;
-import java.util.List;
 import org.springframework.data.mongodb.core.index.Indexed;
 
 @Document(collection = "employees")
@@ -20,6 +18,7 @@ public class Employee {
     private String designation;
     private String joiningDate;
     private String doj;  // ✅ ADD THIS (alias for joiningDate)
+    
 private String dob;
     private String userId;
     private String companyId;
@@ -27,8 +26,6 @@ private String dob;
     private Instant createdAt = Instant.now();
     private String managerEmail;
     private String manager;  // ✅ ADD THIS (manager name)
-    private String reportingHead;  // ✅ Reporting Head name
-    private String hrName;  // ✅ HR Business Partner name
     private String location;  // ✅ ADD THIS (work location)
     private String exitDate;  // ✅ ADD THIS (exit date)
     private String image;  // ✅ ADD THIS (profile image)
@@ -38,49 +35,6 @@ private String dob;
     private String hikePercent;  // ✅ ADD THIS (hike percentage)
     private String hikeYear;  // ✅ ADD THIS (hike year)
     private String incrementLetter;  // ✅ ADD THIS (increment letter status)
-    private String appraisalRating;  // ✅ Appraisal rating (e.g. "Exceeds Expectations")
-    private String appraisalRemarks; // ✅ Appraisal remarks (e.g. "Outstanding performance")
-
-    // ── Appraisal History (list of all yearly appraisals) ──
-    private List<AppraisalRecord> appraisalHistory = new ArrayList<>();
-
-    // ── Inner class to hold one year's appraisal snapshot ──
-    public static class AppraisalRecord {
-        private String hikeYear;
-        private String hikePercent;
-        private String hikeValue;
-        private String ctcAfterHike;      // CTC after this hike was applied
-        private String appraisalRating;
-        private String appraisalRemarks;
-        private String designation;       // designation at the time of appraisal
-        private String recordedAt;        // ISO date string when admin saved this
-
-        public AppraisalRecord() {}
-
-        public String getHikeYear() { return hikeYear; }
-        public void setHikeYear(String hikeYear) { this.hikeYear = hikeYear; }
-
-        public String getHikePercent() { return hikePercent; }
-        public void setHikePercent(String hikePercent) { this.hikePercent = hikePercent; }
-
-        public String getHikeValue() { return hikeValue; }
-        public void setHikeValue(String hikeValue) { this.hikeValue = hikeValue; }
-
-        public String getCtcAfterHike() { return ctcAfterHike; }
-        public void setCtcAfterHike(String ctcAfterHike) { this.ctcAfterHike = ctcAfterHike; }
-
-        public String getAppraisalRating() { return appraisalRating; }
-        public void setAppraisalRating(String appraisalRating) { this.appraisalRating = appraisalRating; }
-
-        public String getAppraisalRemarks() { return appraisalRemarks; }
-        public void setAppraisalRemarks(String appraisalRemarks) { this.appraisalRemarks = appraisalRemarks; }
-
-        public String getDesignation() { return designation; }
-        public void setDesignation(String designation) { this.designation = designation; }
-
-        public String getRecordedAt() { return recordedAt; }
-        public void setRecordedAt(String recordedAt) { this.recordedAt = recordedAt; }
-    }
 
     // ── New statutory / bank fields ──
     private String bankAccountNumber;
@@ -91,13 +45,6 @@ private String dob;
     private String esic;
     private String designationChanged;
     private String designationChangedDate;
-
-    // ── Document fields (Base64 or URLs) ──
-    private String resumeDocument;      // Resume file
-    private String aadhaarDocument;     // Aadhaar file
-    private String offerLetterDocument; // Offer Letter file
-    private String panDocument;         // PAN Card file
-    private String educationDocument;   // Education Certificate file
 
 
     public String getManagerEmail() {
@@ -208,20 +155,6 @@ public void setDob(String dob) {
         this.manager = manager;
     }
 
-    public String getReportingHead() {
-        return reportingHead;
-    }
-    public void setReportingHead(String reportingHead) {
-        this.reportingHead = reportingHead;
-    }
-
-    public String getHrName() {
-        return hrName;
-    }
-    public void setHrName(String hrName) {
-        this.hrName = hrName;
-    }
-
     public String getLocation() {
         return location;
     }
@@ -285,20 +218,6 @@ public void setDob(String dob) {
         this.incrementLetter = incrementLetter;
     }
 
-    public String getAppraisalRating() {
-        return appraisalRating;
-    }
-    public void setAppraisalRating(String appraisalRating) {
-        this.appraisalRating = appraisalRating;
-    }
-
-    public String getAppraisalRemarks() {
-        return appraisalRemarks;
-    }
-    public void setAppraisalRemarks(String appraisalRemarks) {
-        this.appraisalRemarks = appraisalRemarks;
-    }
-
     // ── New statutory / bank fields ──
     public String getBankAccountNumber() { return bankAccountNumber; }
     public void setBankAccountNumber(String bankAccountNumber) { this.bankAccountNumber = bankAccountNumber; }
@@ -323,29 +242,4 @@ public void setDob(String dob) {
 
     public String getDesignationChangedDate() { return designationChangedDate; }
     public void setDesignationChangedDate(String designationChangedDate) { this.designationChangedDate = designationChangedDate; }
-
-    // ── Document getters and setters ──
-    public String getResumeDocument() { return resumeDocument; }
-    public void setResumeDocument(String resumeDocument) { this.resumeDocument = resumeDocument; }
-
-    public String getAadhaarDocument() { return aadhaarDocument; }
-    public void setAadhaarDocument(String aadhaarDocument) { this.aadhaarDocument = aadhaarDocument; }
-
-    public String getOfferLetterDocument() { return offerLetterDocument; }
-    public void setOfferLetterDocument(String offerLetterDocument) { this.offerLetterDocument = offerLetterDocument; }
-
-    public String getPanDocument() { return panDocument; }
-    public void setPanDocument(String panDocument) { this.panDocument = panDocument; }
-
-    public String getEducationDocument() { return educationDocument; }
-    public void setEducationDocument(String educationDocument) { this.educationDocument = educationDocument; }
-
-    // ── Appraisal History getter/setter ──
-    public List<AppraisalRecord> getAppraisalHistory() {
-        if (appraisalHistory == null) appraisalHistory = new ArrayList<>();
-        return appraisalHistory;
-    }
-    public void setAppraisalHistory(List<AppraisalRecord> appraisalHistory) {
-        this.appraisalHistory = appraisalHistory;
-    }
 }

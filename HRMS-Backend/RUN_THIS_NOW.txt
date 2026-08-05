@@ -1,0 +1,56 @@
+═══════════════════════════════════════════════════════════════
+  FIX EMPLOYEE DIRECTORY - EASY METHOD
+═══════════════════════════════════════════════════════════════
+
+STEP 1: Open Command Prompt (CMD, not PowerShell)
+──────────────────────────────────────────────────────────────
+Press Windows Key
+Type: cmd
+Press Enter
+
+
+STEP 2: Run These Commands
+──────────────────────────────────────────────────────────────
+cd "d:\New folder\HRMSProject (2)\HRMSProject\HRMS-Backend"
+.\fix_employee_directory.bat
+
+
+STEP 3: Wait for Completion
+──────────────────────────────────────────────────────────────
+The script will:
+✓ Install MongoDB driver (if needed)
+✓ Connect to your MongoDB
+✓ Update all employees to same companyId
+✓ Show you the results
+
+
+STEP 4: Restart Backend
+──────────────────────────────────────────────────────────────
+Stop current backend (Ctrl+C)
+Then run: mvn spring-boot:run
+
+
+STEP 5: Clear Browser Cache
+──────────────────────────────────────────────────────────────
+1. Press F12 in Chrome
+2. Go to "Application" tab
+3. Click "Clear site data"
+4. Close and reopen browser
+
+
+STEP 6: Test
+──────────────────────────────────────────────────────────────
+1. Go to http://localhost:5173
+2. Login
+3. Check Employee Directory
+4. Should show correct employees now!
+
+═══════════════════════════════════════════════════════════════
+
+ALTERNATIVE: If batch file doesn't work, run directly:
+──────────────────────────────────────────────────────────────
+cd "d:\New folder\HRMSProject (2)\HRMSProject\HRMS-Backend"
+npm install mongodb --no-save
+node fix_employee_directory_node.js
+
+═══════════════════════════════════════════════════════════════

@@ -1,7 +1,6 @@
 package com.omoikaneinnovation.hmrsbackend.model;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
-
 import lombok.*;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
@@ -23,6 +22,9 @@ public class Meeting {
     private String description;
     private List<String> participantEmails;
     private String createdByEmail;
+    private Instant repeatUntil;
+private Integer repeatCount;
+private List<String> daysOfWeek;
     
     // ✅ ADD REMARKS FIELD
     private String remarks;
@@ -43,14 +45,4 @@ public class Meeting {
     // ✅ ADD REPEAT FIELD (used in frontend)
     @Builder.Default
     private String repeat = "none"; // Default repeat
-
-    // ✅ ADD REPEAT UNTIL (end date for recurring meetings)
-    @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss.SSSX", timezone = "UTC")
-    private Instant repeatUntil;
-
-    // ✅ ADD REPEAT COUNT (max occurrences for recurring meetings)
-    private Integer repeatCount;
-
-    // ✅ ADD DAYS OF WEEK (for weekly recurring meetings, e.g. ["MON","WED","FRI"])
-    private List<String> daysOfWeek;
 }

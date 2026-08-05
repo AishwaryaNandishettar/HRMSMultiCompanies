@@ -1,0 +1,76 @@
+// api/employeeApi.js
+import api from "./axios";
+
+// ✅ GET ALL EMPLOYEES
+export const getAllEmployees = async () => {
+  const response = await api.get("/api/employee/all");
+  console.log("🔍 getAllEmployees API response:", response);
+  return response.data;
+};
+
+// ✅ GET BIRTHDAYS (ONLY THIS ONE KEEP)
+export const getBirthdays = async () => {
+  const response = await api.get("/api/employee/birthdays/current-month");
+  console.log("🔍 getBirthdays API response:", response);
+  return response.data;
+};
+
+
+export const fetchEmployeesAsUsers = async () => {
+  const response = await api.get("/api/employee/as-users");
+  return response.data;
+};
+
+export const fetchAllParticipants = async () => {
+  const response = await api.get("/api/employee/participants");
+  return response.data;
+};
+
+export const searchParticipants = async (query) => {
+  const response = await api.get("/api/employee/participants/search", {
+    params: { query: query || "" }
+  });
+  return response.data;
+};
+
+export const fetchAllEmployees = async () => {
+  const response = await api.get("/api/employee/all");
+  return response.data;
+};
+
+// ✅ SEED DUMMY APPRAISAL HISTORY — testing only
+export const seedAppraisalHistory = async () => {
+  const response = await api.post("/api/employee/seed-appraisal-history");
+  return response.data;
+};
+
+export const updateEmployee = async (id, data) => {
+  // If data is FormData, convert it to JSON object
+  let jsonData = {};
+  
+  if (data instanceof FormData) {
+    // Convert FormData to JSON
+    for (let [key, value] of data.entries()) {
+      jsonData[key] = value;
+    }
+  } else {
+    jsonData = data;
+  }
+
+  console.log("🔧 Sending update request:", {
+    id,
+    data: jsonData
+  });
+
+  const response = await api.put(
+    `/api/employee/update/${id}`,
+    jsonData,
+    {
+      headers: {
+        "Content-Type": "application/json",
+      },
+    }
+  );
+
+  return response.data;
+};

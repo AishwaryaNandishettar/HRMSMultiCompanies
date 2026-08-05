@@ -1,0 +1,31 @@
+# Quick Commands to Push to GitHub
+
+# 1. Navigate to your project root
+cd E:/HRMSProject
+
+# 2. Initialize git (if not already done)
+git init
+
+# 3. Add remote repository
+git remote add origin https://github.com/AishwaryaNandishettar/HRMSMultiCompanies.git
+
+# If remote already exists, update it:
+# git remote set-url origin https://github.com/AishwaryaNandishettar/HRMSMultiCompanies.git
+
+# 4. Check git status
+git status
+
+# 5. Add all files
+git add .
+
+# 6. Commit
+git commit -m "Initial commit: Multi-tenant HRMS (Omoi, TalentHub, Workforce Pro, PeopleSync)"
+
+# 7. Set main branch
+git branch -M main
+
+# 8. Push to GitHub
+git push -u origin main
+
+# If you get authentication error, use Personal Access Token as password
+# Generate token at: https://github.com/settings/tokens

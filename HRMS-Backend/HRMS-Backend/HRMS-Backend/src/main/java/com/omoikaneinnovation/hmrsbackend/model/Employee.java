@@ -1,0 +1,351 @@
+package com.omoikaneinnovation.hmrsbackend.model;
+import lombok.*;
+import org.springframework.data.annotation.Id;
+import org.springframework.data.mongodb.core.mapping.Document;
+import java.time.Instant;
+import java.util.ArrayList;
+import java.util.List;
+import org.springframework.data.mongodb.core.index.Indexed;
+
+@Document(collection = "employees")
+public class Employee {
+
+    @Id
+    private String id;
+     @Indexed(unique = true)
+    private String employeeId;
+    private String fullName;
+    private String email;
+    private String department;
+    private String designation;
+    private String joiningDate;
+    private String doj;  // ✅ ADD THIS (alias for joiningDate)
+private String dob;
+    private String userId;
+    private String companyId;
+    private String status; // INVITED, ACTIVE, DISABLED
+    private Instant createdAt = Instant.now();
+    private String managerEmail;
+    private String manager;  // ✅ ADD THIS (manager name)
+    private String reportingHead;  // ✅ Reporting Head name
+    private String hrName;  // ✅ HR Business Partner name
+    private String location;  // ✅ ADD THIS (work location)
+    private String exitDate;  // ✅ ADD THIS (exit date)
+    private String image;  // ✅ ADD THIS (profile image)
+    private String tenure;  // ✅ ADD THIS (tenure in years)
+    private String ctc;  // ✅ ADD THIS (cost to company)
+    private String hikeValue;  // ✅ ADD THIS (hike value)
+    private String hikePercent;  // ✅ ADD THIS (hike percentage)
+    private String hikeYear;  // ✅ ADD THIS (hike year)
+    private String incrementLetter;  // ✅ ADD THIS (increment letter status)
+    private String appraisalRating;  // ✅ Appraisal rating (e.g. "Exceeds Expectations")
+    private String appraisalRemarks; // ✅ Appraisal remarks (e.g. "Outstanding performance")
+
+    // ── Appraisal History (list of all yearly appraisals) ──
+    private List<AppraisalRecord> appraisalHistory = new ArrayList<>();
+
+    // ── Inner class to hold one year's appraisal snapshot ──
+    public static class AppraisalRecord {
+        private String hikeYear;
+        private String hikePercent;
+        private String hikeValue;
+        private String ctcAfterHike;      // CTC after this hike was applied
+        private String appraisalRating;
+        private String appraisalRemarks;
+        private String designation;       // designation at the time of appraisal
+        private String recordedAt;        // ISO date string when admin saved this
+
+        public AppraisalRecord() {}
+
+        public String getHikeYear() { return hikeYear; }
+        public void setHikeYear(String hikeYear) { this.hikeYear = hikeYear; }
+
+        public String getHikePercent() { return hikePercent; }
+        public void setHikePercent(String hikePercent) { this.hikePercent = hikePercent; }
+
+        public String getHikeValue() { return hikeValue; }
+        public void setHikeValue(String hikeValue) { this.hikeValue = hikeValue; }
+
+        public String getCtcAfterHike() { return ctcAfterHike; }
+        public void setCtcAfterHike(String ctcAfterHike) { this.ctcAfterHike = ctcAfterHike; }
+
+        public String getAppraisalRating() { return appraisalRating; }
+        public void setAppraisalRating(String appraisalRating) { this.appraisalRating = appraisalRating; }
+
+        public String getAppraisalRemarks() { return appraisalRemarks; }
+        public void setAppraisalRemarks(String appraisalRemarks) { this.appraisalRemarks = appraisalRemarks; }
+
+        public String getDesignation() { return designation; }
+        public void setDesignation(String designation) { this.designation = designation; }
+
+        public String getRecordedAt() { return recordedAt; }
+        public void setRecordedAt(String recordedAt) { this.recordedAt = recordedAt; }
+    }
+
+    // ── New statutory / bank fields ──
+    private String bankAccountNumber;
+    private String ifsc;
+    private String uan;
+    private String pfMemberId;
+    private String pf;
+    private String esic;
+    private String designationChanged;
+    private String designationChangedDate;
+
+    // ── Document fields (Base64 or URLs) ──
+    private String resumeDocument;      // Resume file
+    private String aadhaarDocument;     // Aadhaar file
+    private String offerLetterDocument; // Offer Letter file
+    private String panDocument;         // PAN Card file
+    private String educationDocument;   // Education Certificate file
+
+
+    public String getManagerEmail() {
+    return managerEmail;
+}
+
+public void setManagerEmail(String managerEmail) {
+    this.managerEmail = managerEmail;
+}
+
+    public String getId() {
+        return id;
+    }
+    public void setId(String id) {
+        this.id = id;
+    }
+
+    public String getEmployeeId() {
+        return employeeId;
+    }
+    public void setEmployeeId(String employeeId) {
+        this.employeeId = employeeId;
+    }
+
+    public String getFullName() {
+        return fullName;
+    }
+    public void setFullName(String fullName) {
+        this.fullName = fullName;
+    }
+
+public String getCompanyId() {
+    return companyId;
+}
+
+public void setCompanyId(String companyId) {
+    this.companyId = companyId;
+}
+    public String getEmail() {
+        return email;
+    }
+    public void setEmail(String email) {
+        this.email = email;
+    }
+
+    public String getDepartment() {
+        return department;
+    }
+    public void setDepartment(String department) {
+        this.department = department;
+    }
+
+    public String getDesignation() {
+        return designation;
+    }
+    public void setDesignation(String designation) {
+        this.designation = designation;
+    }
+
+    public String getJoiningDate() {
+        return joiningDate;
+    }
+    public void setJoiningDate(String joiningDate) {
+        this.joiningDate = joiningDate;
+    }
+
+    public String getDob() {
+    return dob;
+}
+
+public void setDob(String dob) {
+    this.dob = dob;
+}
+
+    public String getUserId() {
+        return userId;
+    }
+    public void setUserId(String userId) {
+        this.userId = userId;
+    }
+
+    public String getStatus() {
+        return status;
+    }
+    public void setStatus(String status) {
+        this.status = status;
+    }
+
+    public Instant getCreatedAt() {
+        return createdAt;
+    }
+    public void setCreatedAt(Instant createdAt) {
+        this.createdAt = createdAt;
+    }
+
+    // ✅ ADD GETTERS AND SETTERS FOR NEW FIELDS
+    public String getDoj() {
+        return doj != null ? doj : joiningDate;  // Fallback to joiningDate
+    }
+    public void setDoj(String doj) {
+        this.doj = doj;
+    }
+
+    public String getManager() {
+        return manager;
+    }
+    public void setManager(String manager) {
+        this.manager = manager;
+    }
+
+    public String getReportingHead() {
+        return reportingHead;
+    }
+    public void setReportingHead(String reportingHead) {
+        this.reportingHead = reportingHead;
+    }
+
+    public String getHrName() {
+        return hrName;
+    }
+    public void setHrName(String hrName) {
+        this.hrName = hrName;
+    }
+
+    public String getLocation() {
+        return location;
+    }
+    public void setLocation(String location) {
+        this.location = location;
+    }
+
+    public String getExitDate() {
+        return exitDate;
+    }
+    public void setExitDate(String exitDate) {
+        this.exitDate = exitDate;
+    }
+
+    public String getImage() {
+        return image;
+    }
+    public void setImage(String image) {
+        this.image = image;
+    }
+
+    public String getTenure() {
+        return tenure;
+    }
+    public void setTenure(String tenure) {
+        this.tenure = tenure;
+    }
+
+    public String getCtc() {
+        return ctc;
+    }
+    public void setCtc(String ctc) {
+        this.ctc = ctc;
+    }
+
+    public String getHikeValue() {
+        return hikeValue;
+    }
+    public void setHikeValue(String hikeValue) {
+        this.hikeValue = hikeValue;
+    }
+
+    public String getHikePercent() {
+        return hikePercent;
+    }
+    public void setHikePercent(String hikePercent) {
+        this.hikePercent = hikePercent;
+    }
+
+    public String getHikeYear() {
+        return hikeYear;
+    }
+    public void setHikeYear(String hikeYear) {
+        this.hikeYear = hikeYear;
+    }
+
+    public String getIncrementLetter() {
+        return incrementLetter;
+    }
+    public void setIncrementLetter(String incrementLetter) {
+        this.incrementLetter = incrementLetter;
+    }
+
+    public String getAppraisalRating() {
+        return appraisalRating;
+    }
+    public void setAppraisalRating(String appraisalRating) {
+        this.appraisalRating = appraisalRating;
+    }
+
+    public String getAppraisalRemarks() {
+        return appraisalRemarks;
+    }
+    public void setAppraisalRemarks(String appraisalRemarks) {
+        this.appraisalRemarks = appraisalRemarks;
+    }
+
+    // ── New statutory / bank fields ──
+    public String getBankAccountNumber() { return bankAccountNumber; }
+    public void setBankAccountNumber(String bankAccountNumber) { this.bankAccountNumber = bankAccountNumber; }
+
+    public String getIfsc() { return ifsc; }
+    public void setIfsc(String ifsc) { this.ifsc = ifsc; }
+
+    public String getUan() { return uan; }
+    public void setUan(String uan) { this.uan = uan; }
+
+    public String getPfMemberId() { return pfMemberId; }
+    public void setPfMemberId(String pfMemberId) { this.pfMemberId = pfMemberId; }
+
+    public String getPf() { return pf; }
+    public void setPf(String pf) { this.pf = pf; }
+
+    public String getEsic() { return esic; }
+    public void setEsic(String esic) { this.esic = esic; }
+
+    public String getDesignationChanged() { return designationChanged; }
+    public void setDesignationChanged(String designationChanged) { this.designationChanged = designationChanged; }
+
+    public String getDesignationChangedDate() { return designationChangedDate; }
+    public void setDesignationChangedDate(String designationChangedDate) { this.designationChangedDate = designationChangedDate; }
+
+    // ── Document getters and setters ──
+    public String getResumeDocument() { return resumeDocument; }
+    public void setResumeDocument(String resumeDocument) { this.resumeDocument = resumeDocument; }
+
+    public String getAadhaarDocument() { return aadhaarDocument; }
+    public void setAadhaarDocument(String aadhaarDocument) { this.aadhaarDocument = aadhaarDocument; }
+
+    public String getOfferLetterDocument() { return offerLetterDocument; }
+    public void setOfferLetterDocument(String offerLetterDocument) { this.offerLetterDocument = offerLetterDocument; }
+
+    public String getPanDocument() { return panDocument; }
+    public void setPanDocument(String panDocument) { this.panDocument = panDocument; }
+
+    public String getEducationDocument() { return educationDocument; }
+    public void setEducationDocument(String educationDocument) { this.educationDocument = educationDocument; }
+
+    // ── Appraisal History getter/setter ──
+    public List<AppraisalRecord> getAppraisalHistory() {
+        if (appraisalHistory == null) appraisalHistory = new ArrayList<>();
+        return appraisalHistory;
+    }
+    public void setAppraisalHistory(List<AppraisalRecord> appraisalHistory) {
+        this.appraisalHistory = appraisalHistory;
+    }
+}

@@ -1,0 +1,14 @@
+{
+  "buildCommand": "npm run build",
+  "outputDirectory": "dist",
+  "framework": "vite",
+  "installCommand": "npm install --legacy-peer-deps",
+  "rewrites": [
+    { "source": "/(.*)", "destination": "/index.html" }
+  ],
+  "build": {
+    "env": {
+      "VITE_API_BASE_URL": "https://latestfinalhrmsapplication.onrender.com"
+    }
+  }
+}

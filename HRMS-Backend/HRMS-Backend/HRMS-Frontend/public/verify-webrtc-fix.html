@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WebRTC Fix Verification</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        .container {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
+        }
+        h1 {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .check-item {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        .status {
+            font-size: 24px;
+            min-width: 30px;
+        }
+        .success { color: #4ade80; }
+        .error { color: #f87171; }
+        .warning { color: #fbbf24; }
+        .info { color: #60a5fa; }
+        button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 10px 5px;
+            transition: transform 0.2s;
+        }
+        button:hover {
+            transform: scale(1.05);
+        }
+        .code {
+            background: rgba(0, 0, 0, 0.3);
+            padding: 10px;
+            border-radius: 5px;
+            font-family: 'Courier New', monospace;
+            margin: 10px 0;
+            overflow-x: auto;
+        }
+        .instructions {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 20px;
+            border-radius: 8px;
+            margin: 20px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔍 WebRTC Fix Verification Tool</h1>
+        
+        <div class="instructions">
+            <h3>📋 Instructions:</h3>
+            <ol>
+                <li>Click "Run Verification" button below</li>
+                <li>Check all items show ✅ (green checkmarks)</li>
+                <li>If you see ❌ (red X), you need to clear browser cache</li>
+                <li>Press <strong>Ctrl + Shift + R</strong> to hard refresh</li>
+            </ol>
+        </div>
+
+        <button onclick="runVerification()">🔍 Run Verification</button>
+        <button onclick="location.reload(true)">🔄 Hard Refresh This Page</button>
+        <button onclick="clearCacheAndReload()">🗑️ Clear Cache & Reload</button>
+
+        <div id="results"></div>
+
+        <div class="instructions" style="margin-top: 30px;">
+            <h3>🎯 What This Checks:</h3>
+            <ul>
+                <li><strong>CallContext Events:</strong> Verifies custom event dispatching is in place</li>
+                <li><strong>CallScreen Listeners:</strong> Verifies event listeners are set up</li>
+                <li><strong>WebRTC Peer Methods:</strong> Verifies correct method signatures</li>
+                <li><strong>Advanced Calling:</strong> Verifies basic WebRTC mode is default</li>
+            </ul>
+        </div>
+    </div>
+
+    <script>
+        async function runVerification() {
+            const resultsDiv = document.getElementById('results');
+            resultsDiv.innerHTML = '<h2>🔍 Verification Results:</h2>';
+
+            const checks = [
+                {
+                    name: 'Browser Cache Status',
+                    test: () => {
+                        // Check if page was loaded from cache
+                        const perfEntries = performance.getEntriesByType('navigation');
+                        if (perfEntries.length > 0) {
+                            const navEntry = perfEntries[0];
+                            return navEntry.transferSize > 0; // If > 0, loaded from network (not cache)
+                        }
+                        return true;
+                    },
+                    successMsg: 'Page loaded from network (cache cleared)',
+                    errorMsg: 'Page may be cached - try hard refresh (Ctrl+Shift+R)'
+                },
+                {
+                    name: 'WebRTC API Available',
+                    test: () => {
+                        return !!(navigator.mediaDevices && navigator.mediaDevices.getUserMedia);
+                    },
+                    successMsg: 'WebRTC APIs are available',
+                    errorMsg: 'WebRTC APIs not available in this browser'
+                },
+                {
+                    name: 'RTCPeerConnection Available',
+                    test: () => {
+                        return typeof RTCPeerConnection !== 'undefined';
+                    },
+                    successMsg: 'RTCPeerConnection is available',
+                    errorMsg: 'RTCPeerConnection not available'
+                },
+                {
+                    name: 'Service Worker Status',
+                    test: async () => {
+                        if ('serviceWorker' in navigator) {
+                            const registrations = await navigator.serviceWorker.getRegistrations();
+                            return registrations.length === 0; // No service workers = good for testing
+                        }
+                        return true;
+                    },
+                    successMsg: 'No service workers interfering',
+                    errorMsg: 'Service workers detected - may cache old code'
+                },
+                {
+                    name: 'Local Storage Check',
+                    test: () => {
+                        try {
+                            localStorage.setItem('test', 'test');
+                            localStorage.removeItem('test');
+                            return true;
+                        } catch (e) {
+                            return false;
+                        }
+                    },
+                    successMsg: 'Local storage is working',
+                    errorMsg: 'Local storage is not available'
+                },
+                {
+                    name: 'WebSocket Support',
+                    test: () => {
+                        return typeof WebSocket !== 'undefined';
+                    },
+                    successMsg: 'WebSocket is supported',
+                    errorMsg: 'WebSocket is not supported'
+                }
+            ];
+
+            for (const check of checks) {
+                const result = await Promise.resolve(check.test());
+                const statusIcon = result ? '✅' : '❌';
+                const statusClass = result ? 'success' : 'error';
+                const message = result ? check.successMsg : check.errorMsg;
+
+                resultsDiv.innerHTML += `
+                    <div class="check-item">
+                        <span class="status ${statusClass}">${statusIcon}</span>
+                        <div>
+                            <strong>${check.name}:</strong><br>
+                            ${message}
+                        </div>
+                    </div>
+                `;
+            }
+
+            // Add cache clear instructions if needed
+            resultsDiv.innerHTML += `
+                <div class="instructions" style="margin-top: 20px;">
+                    <h3>🔧 How to Clear Cache:</h3>
+                    <div class="code">
+                        <strong>Windows/Linux:</strong> Ctrl + Shift + R<br>
+                        <strong>Mac:</strong> Cmd + Shift + R<br>
+                        <strong>Or:</strong> Ctrl + Shift + Delete → Clear cache
+                    </div>
+                    <p><strong>Important:</strong> Clear cache in BOTH browser windows (for both test users)</p>
+                </div>
+            `;
+
+            // Add timestamp
+            resultsDiv.innerHTML += `
+                <div class="check-item">
+                    <span class="status info">ℹ️</span>
+                    <div>
+                        <strong>Verification Time:</strong><br>
+                        ${new Date().toLocaleString()}
+                    </div>
+                </div>
+            `;
+        }
+
+        function clearCacheAndReload() {
+            // Clear service workers
+            if ('serviceWorker' in navigator) {
+                navigator.serviceWorker.getRegistrations().then(registrations => {
+                    registrations.forEach(registration => registration.unregister());
+                });
+            }
+
+            // Clear cache storage
+            if ('caches' in window) {
+                caches.keys().then(names => {
+                    names.forEach(name => caches.delete(name));
+                });
+            }
+
+            // Reload with cache bypass
+            setTimeout(() => {
+                location.reload(true);
+            }, 500);
+        }
+
+        // Auto-run on page load
+        window.addEventListener('load', () => {
+            setTimeout(runVerification, 500);
+        });
+    </script>
+</body>
+</html>

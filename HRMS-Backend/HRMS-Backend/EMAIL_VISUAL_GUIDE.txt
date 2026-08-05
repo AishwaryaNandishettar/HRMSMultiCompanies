@@ -1,0 +1,235 @@
+═══════════════════════════════════════════════════════════════════════════════
+                    📧 EMAIL NOT RECEIVED - VISUAL FIX GUIDE
+═══════════════════════════════════════════════════════════════════════════════
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                        🚀 QUICK FIX (3 MINUTES)                             │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+Step 1: Generate Gmail App Password
+┌───────────────────────────────────────────────┐
+│ Go to: myaccount.google.com/apppasswords     │
+│                                               │
+│ Select App:    [Mail ▼]                      │
+│ Select Device: [Other ▼] → Type "HRMS"       │
+│                                               │
+│ Click [Generate]                              │
+│                                               │
+│ Copy: abcd efgh ijkl mnop                     │
+│ Remove spaces: abcdefghijklmnop              │
+└───────────────────────────────────────────────┘
+
+Step 2: Update application.properties
+┌───────────────────────────────────────────────┐
+│ File: HRMS-Backend/src/main/resources/        │
+│       application.properties                  │
+│                                               │
+│ spring.mail.username=aishushettar95@gmail.com│
+│ spring.mail.password=abcdefghijklmnop        │
+│                     ^^^^^^^^^^^^^^^^^^        │
+│                     Paste here!               │
+└───────────────────────────────────────────────┘
+
+Step 3: Restart Backend
+┌───────────────────────────────────────────────┐
+│ $ cd HRMSProject/HRMS-Backend                 │
+│ $ ./mvnw spring-boot:run                      │
+│                                               │
+│ Wait for: "Started HRMSBackend in X seconds" │
+└───────────────────────────────────────────────┘
+
+Step 4: Test Email
+┌───────────────────────────────────────────────┐
+│ 1. Open: test-email.html in browser          │
+│ 2. Enter email address                        │
+│ 3. Click [Send Test Email]                    │
+│ 4. Watch backend console                      │
+└───────────────────────────────────────────────┘
+
+═══════════════════════════════════════════════════════════════════════════════
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                     ✅ SUCCESS LOOKS LIKE THIS                              │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+Backend Console:
+┌───────────────────────────────────────────────┐
+│ 🔵 Testing email send to: your@email.com     │
+│ 📩 Bulk invite sent to: your@email.com       │
+│ ✅ Test email sent successfully              │
+│ Email sent successfully to: your@email.com    │
+└───────────────────────────────────────────────┘
+
+Browser Response:
+┌───────────────────────────────────────────────┐
+│ {                                             │
+│   "success": true,                            │
+│   "message": "Test email sent to..."          │
+│ }                                             │
+└───────────────────────────────────────────────┘
+
+Gmail Inbox:
+┌───────────────────────────────────────────────┐
+│ 📧 From: aishushettar95@gmail.com            │
+│    Subject: HRMS Invitation - Welcome!        │
+│    Content: Onboarding link + OTP             │
+└───────────────────────────────────────────────┘
+
+═══════════════════════════════════════════════════════════════════════════════
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                     ❌ ERRORS & HOW TO FIX                                  │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+Error 1: Authentication Failed
+┌───────────────────────────────────────────────┐
+│ ❌ 535-5.7.8 Username and Password not       │
+│    accepted                                   │
+│                                               │
+│ Cause: Wrong Gmail App Password               │
+│                                               │
+│ Fix: Generate new App Password (see above)    │
+└───────────────────────────────────────────────┘
+
+Error 2: Connection Timeout
+┌───────────────────────────────────────────────┐
+│ ❌ Connection timed out to smtp.gmail.com:587│
+│                                               │
+│ Cause: Firewall blocking SMTP port            │
+│                                               │
+│ Fix: Try port 465 instead:                    │
+│      spring.mail.port=465                     │
+│      spring.mail.properties.mail.smtp.        │
+│      ssl.enable=true                          │
+└───────────────────────────────────────────────┘
+
+Error 3: Backend Not Running
+┌───────────────────────────────────────────────┐
+│ ❌ Connection refused to localhost:8082      │
+│                                               │
+│ Cause: Backend not started                    │
+│                                               │
+│ Fix: Start backend:                           │
+│      cd HRMSProject/HRMS-Backend              │
+│      ./mvnw spring-boot:run                   │
+└───────────────────────────────────────────────┘
+
+Error 4: Email in Spam
+┌───────────────────────────────────────────────┐
+│ ℹ️  Backend shows success but no email       │
+│                                               │
+│ Cause: Gmail marked as spam                   │
+│                                               │
+│ Fix: Check Gmail → Spam folder                │
+│      Mark as "Not spam"                       │
+└───────────────────────────────────────────────┘
+
+═══════════════════════════════════════════════════════════════════════════════
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                     📋 TESTING CHECKLIST                                    │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+Before Testing:
+  [ ] Backend running on port 8082
+  [ ] Backend console visible (can see logs)
+  [ ] Gmail App Password is correct (16 chars, no spaces)
+  [ ] 2-Step Verification enabled on Gmail
+
+During Testing:
+  [ ] Opened test-email.html in browser
+  [ ] Entered email address
+  [ ] Clicked "Send Test Email"
+  [ ] Watching backend console
+
+After Testing:
+  [ ] Checked Gmail Inbox
+  [ ] Checked Gmail Spam folder
+  [ ] Checked Promotions tab
+  [ ] Checked Updates tab
+  [ ] Waited 2-5 minutes
+  [ ] Tried different email if needed
+
+═══════════════════════════════════════════════════════════════════════════════
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                     🎯 WHERE TO FIND THINGS                                 │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+Test Tools:
+  📄 test-email.html                  → Open in browser to test
+  📄 EMAIL_FIX_SUMMARY.md             → Complete summary
+  📄 EMAIL_TROUBLESHOOTING_STEPS.md   → Step-by-step guide
+  📄 EMAIL_FIX_QUICK_REFERENCE.md     → Quick reference card
+
+Backend Files:
+  📄 EmployeeController.java          → Test endpoint added here
+  📄 OnboardingService.java           → Sends invitation emails
+  📄 EmailService.java                → SMTP email sending
+  📄 application.properties           → Email configuration
+
+Email Configuration:
+  File: HRMSProject/HRMS-Backend/src/main/resources/application.properties
+  
+  Look for:
+    spring.mail.username=aishushettar95@gmail.com
+    spring.mail.password=bbfskhrhtnujkokk
+                         ^^^^^^^^^^^^^^^^
+                         Update this!
+
+═══════════════════════════════════════════════════════════════════════════════
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                     📞 IMMEDIATE ACTION                                     │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+RIGHT NOW, do these 4 things:
+
+1️⃣  Restart Backend
+    $ cd HRMSProject/HRMS-Backend
+    $ ./mvnw spring-boot:run
+
+2️⃣  Open Test Page
+    Open: HRMSProject/test-email.html in browser
+
+3️⃣  Send Test Email
+    Click [Send Test Email] button
+
+4️⃣  Watch Console
+    Look at backend console for logs
+
+═══════════════════════════════════════════════════════════════════════════════
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                     🆘 STILL NOT WORKING?                                   │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+Share these 3 things:
+
+1. Backend Console Output
+   What do you see when you click "Send Test Email"?
+   Copy the full error message (in red)
+
+2. Test Page Response
+   What message did test-email.html show?
+   Success or error?
+
+3. Gmail Status
+   Did you:
+   - Generate NEW App Password?
+   - Check ALL Gmail folders (Inbox, Spam, Promotions)?
+   - Wait 5 minutes?
+
+═══════════════════════════════════════════════════════════════════════════════
+
+                         💡 99% OF ISSUES ARE:
+
+                    1. Wrong Gmail App Password (60%)
+                    2. Email in Spam folder (25%)
+                    3. Wrong configuration (10%)
+                    4. Firewall/port issue (5%)
+
+                      ✅ THE TEST ENDPOINT WILL
+                         TELL US WHICH ONE!
+
+═══════════════════════════════════════════════════════════════════════════════

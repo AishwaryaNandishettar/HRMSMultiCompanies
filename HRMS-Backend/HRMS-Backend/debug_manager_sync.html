@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Manager Sync Debug</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; }
+        .section { margin: 20px 0; padding: 15px; border: 1px solid #ddd; }
+        .user-card { margin: 10px 0; padding: 10px; background: #f5f5f5; }
+        .error { color: red; }
+        .success { color: green; }
+        button { padding: 10px 20px; margin: 5px; }
+    </style>
+</head>
+<body>
+    <h1>Manager Sync Diagnostic Tool</h1>
+    
+    <div class="section">
+        <h2>1. Check User Table Manager Assignments</h2>
+        <button onclick="checkUserManagers()">Check User Manager Assignments</button>
+        <div id="userManagerResults"></div>
+    </div>
+
+    <div class="section">
+        <h2>2. Check Employee Table Manager Assignments</h2>
+        <button onclick="checkEmployeeManagers()">Check Employee Manager Assignments</button>
+        <div id="employeeManagerResults"></div>
+    </div>
+
+    <div class="section">
+        <h2>3. Check Team Members for Padmanabh</h2>
+        <button onclick="checkTeamMembers()">Check Padmanabh's Team</button>
+        <div id="teamResults"></div>
+    </div>
+
+    <div class="section">
+        <h2>4. Check Recent Attendance Records</h2>
+        <button onclick="checkAttendanceRecords()">Check Recent Attendance</button>
+        <div id="attendanceResults"></div>
+    </div>
+
+    <div class="section">
+        <h2>5. Force Sync Manager Data</h2>
+        <button onclick="forceSyncManagers()">Force Sync All Manager Data</button>
+        <div id="syncResults"></div>
+    </div>
+
+    <script>
+        const API_BASE = 'http://localhost:8082/api';
+
+        async function checkUserManagers() {
+            try {
+                const response = await fetch(`${API_BASE}/diagnostic/user-managers`);
+                const data = await response.json();
+                
+                let html = '<h3>User Manager Assignments:</h3>';
+                data.forEach(user => {
+                    html += `<div class="user-card">
+                        <strong>${user.name || user.email}</strong><br>
+                        Email: ${user.email}<br>
+                        Manager Email: ${user.managerEmail || 'NOT SET'}<br>
+                        Manager Name: ${user.managerName || 'NOT SET'}<br>
+                        Role: ${user.role}
+                    </div>`;
+                });
+                
+                document.getElementById('userManagerResults').innerHTML = html;
+            } catch (error) {
+                document.getElementById('userManagerResults').innerHTML = 
+                    `<div class="error">Error: ${error.message}</div>`;
+            }
+        }
+
+        async function checkEmployeeManagers() {
+            try {
+                const response = await fetch(`${API_BASE}/diagnostic/employee-managers`);
+                const data = await response.json();
+                
+                let html = '<h3>Employee Manager Assignments:</h3>';
+                data.forEach(emp => {
+                    html += `<div class="user-card">
+                        <strong>${emp.fullName}</strong><br>
+                        Email: ${emp.email}<br>
+                        Manager Email: ${emp.managerEmail || 'NOT SET'}<br>
+                        Manager: ${emp.manager || 'NOT SET'}
+                    </div>`;
+                });
+                
+                document.getElementById('employeeManagerResults').innerHTML = html;
+            } catch (error) {
+                document.getElementById('employeeManagerResults').innerHTML = 
+                    `<div class="error">Error: ${error.message}</div>`;
+            }
+        }
+
+        async function checkTeamMembers() {
+            try {
+                const response = await fetch(`${API_BASE}/diagnostic/team-members?managerEmail=Padmanabh@omoi.com`);
+                const data = await response.json();
+                
+                let html = '<h3>Team Members for Padmanabh@omoi.com:</h3>';
+                html += `<p>Found ${data.length} team members</p>`;
+                
+                data.forEach(member => {
+                    html += `<div class="user-card">
+                        <strong>${member.name || member.email}</strong><br>
+                        Email: ${member.email}<br>
+                        Manager Email: ${member.managerEmail}<br>
+                        User ID: ${member.id}
+                    </div>`;
+                });
+                
+                document.getElementById('teamResults').innerHTML = html;
+            } catch (error) {
+                document.getElementById('teamResults').innerHTML = 
+                    `<div class="error">Error: ${error.message}</div>`;
+            }
+        }
+
+        async function checkAttendanceRecords() {
+            try {
+                const response = await fetch(`${API_BASE}/diagnostic/recent-attendance?days=3`);
+                const data = await response.json();
+                
+                let html = '<h3>Recent Attendance Records:</h3>';
+                data.forEach(record => {
+                    html += `<div class="user-card">
+                        <strong>${record.name}</strong> (${record.empId})<br>
+                        Date: ${record.date}<br>
+                        Check-in: ${record.checkIn || 'N/A'}<br>
+                        Manager Email: ${record.managerEmail || 'NOT SET'}<br>
+                        Reporting Manager: ${record.reportingManager || 'NOT SET'}
+                    </div>`;
+                });
+                
+                document.getElementById('attendanceResults').innerHTML = html;
+            } catch (error) {
+                document.getElementById('attendanceResults').innerHTML = 
+                    `<div class="error">Error: ${error.message}</div>`;
+            }
+        }
+
+        async function forceSyncManagers() {
+            try {
+                const response = await fetch(`${API_BASE}/diagnostic/sync-managers`, {
+                    method: 'POST'
+                });
+                const data = await response.json();
+                
+                document.getElementById('syncResults').innerHTML = 
+                    `<div class="success">Sync completed. ${data.message}</div>`;
+            } catch (error) {
+                document.getElementById('syncResults').innerHTML = 
+                    `<div class="error">Error: ${error.message}</div>`;
+            }
+        }
+    </script>
+</body>
+</html>

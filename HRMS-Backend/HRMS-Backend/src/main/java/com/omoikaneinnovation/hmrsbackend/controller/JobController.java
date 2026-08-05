@@ -2,51 +2,26 @@ package com.omoikaneinnovation.hmrsbackend.controller;
 
 import com.omoikaneinnovation.hmrsbackend.model.Job;
 import com.omoikaneinnovation.hmrsbackend.service.JobService;
-import com.omoikaneinnovation.hmrsbackend.service.SmsService;
-import com.omoikaneinnovation.hmrsbackend.service.JobNotificationService;
-import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
+import org.springframework.http.ResponseEntity;
 import java.util.Map;
+import java.util.List;
 
 @RestController
 @RequestMapping("/api/jobs")
-@CrossOrigin(originPatterns = {"http://localhost:*", "https://*.vercel.app", "https://*.ngrok-free.dev"})
+@CrossOrigin(originPatterns = {"http://localhost:*", "https://*.ngrok-free.dev"})
 public class JobController {
 
     private final JobService service;
-    private final SmsService smsService;
-    private final JobNotificationService jobNotificationService; // ✅ NEW: Job notification service
 
-    public JobController(JobService service, SmsService smsService, JobNotificationService jobNotificationService) {
+    public JobController(JobService service) {
         this.service = service;
-        this.smsService = smsService;
-        this.jobNotificationService = jobNotificationService;
     }
 
     // CREATE JOB
     @PostMapping("/create")
     public Job createJob(@RequestBody Job job) {
-        System.out.println("📝 Creating new job: " + job.getJobTitle());
-        
-        // Create the job
-        Job createdJob = service.createJob(job);
-        
-        // ✅ NEW: Send notification to all employees if job status is "Open"
-        if (createdJob != null && "Open".equalsIgnoreCase(createdJob.getStatus())) {
-            try {
-                System.out.println("📧 Triggering job notifications for: " + createdJob.getJobTitle());
-                jobNotificationService.notifyEmployeesAboutNewJob(createdJob);
-            } catch (Exception e) {
-                System.err.println("⚠️ Failed to send job notifications (job still created): " + e.getMessage());
-                // Don't fail the job creation if notifications fail
-            }
-        } else {
-            System.out.println("ℹ️ Job status is not 'Open', skipping notifications");
-        }
-        
-        return createdJob;
+        return service.createJob(job);
     }
 
     // GET ALL JOBS
@@ -55,22 +30,7 @@ public class JobController {
         return service.getAllJobs();
     }
 
-    // ✅ NEW: GET ONLY OPEN JOBS (for internal job board)
-    @GetMapping("/open")
-    public List<Job> getOpenJobs() {
-        System.out.println("📋 Fetching all open jobs for internal job board");
-        List<Job> allJobs = service.getAllJobs();
-        
-        // Filter only jobs with status "Open"
-        List<Job> openJobs = allJobs.stream()
-                .filter(job -> "Open".equalsIgnoreCase(job.getStatus()))
-                .toList();
-        
-        System.out.println("✅ Found " + openJobs.size() + " open positions");
-        return openJobs;
-    }
-
-    // UPDATE STATUS (simple)
+    // UPDATE STATUS
     @PutMapping("/status/{id}")
     public Job updateStatus(@PathVariable String id,
                             @RequestParam String status) {
@@ -83,108 +43,115 @@ public class JobController {
         return service.updateJob(id, updates);
     }
 
-    // ✅ NEW: UPDATE STATUS + SAVE COMMENTS + SEND EMAIL + SEND SMS
-    @PostMapping("/update-status")
-    public ResponseEntity<?> updateStatusWithEmail(@RequestBody Map<String, String> request) {
-        try {
-            String candidateId    = request.get("candidateId");
-            String newStatus      = request.get("newStatus");
-            String comments       = request.get("comments");
-            String candidateEmail = request.get("candidateEmail");
-            String candidatePhone = request.get("candidatePhone"); // ✅ NEW: Accept phone number
-
-            // ✅ DEBUG: Log all received parameters
-            System.out.println("=== UPDATE STATUS REQUEST DEBUG ===");
-            System.out.println("candidateId: " + candidateId);
-            System.out.println("newStatus: " + newStatus);
-            System.out.println("comments: " + comments);
-            System.out.println("candidateEmail: " + candidateEmail);
-            System.out.println("candidatePhone: " + candidatePhone);
-            System.out.println("Full request: " + request);
-            System.out.println("===================================");
-
-            if (candidateId == null || newStatus == null) {
-                return ResponseEntity.badRequest()
-                        .body(Map.of("success", false, "message", "candidateId and newStatus are required"));
-            }
-
-            Job updated = service.updateStatusWithEmailAndSms(candidateId, newStatus, comments, candidateEmail, candidatePhone);
-
-            return ResponseEntity.ok(Map.of(
-                    "success", true,
-                    "message", "Status updated successfully! " +
-                              "📧 Email sent to " + candidateEmail + 
-                              (candidatePhone != null && !candidatePhone.trim().isEmpty() 
-                                ? " | 📱 SMS notification sent to " + candidatePhone 
-                                : " | ⚠️ No phone number provided for SMS"),
-                    "candidate", updated
-            ));
-
-        } catch (Exception e) {
-            System.err.println("❌ Error in updateStatusWithEmail: " + e.getMessage());
-            e.printStackTrace();
-            return ResponseEntity.status(500)
-                    .body(Map.of("success", false, "message", e.getMessage()));
-        }
-    }
-
     @DeleteMapping("/{id}")
     public void deleteJob(@PathVariable String id) {
         service.deleteJob(id);
     }
 
-    // ✅ NEW: GET HR CONTACT INFORMATION
-    @GetMapping("/hr-contacts")
-    public ResponseEntity<?> getHrContacts() {
-        return ResponseEntity.ok(Map.of(
-                "contacts", List.of(
-                        Map.of("name", "Padmanabh", "phone", "9663743316", "role", "HR Manager"),
-                        Map.of("name", "Aishwarya", "phone", "9606408912", "role", "HR Executive")
-                ),
-                "message", "SMS notifications are sent to these HR contacts for all recruitment updates"
-        ));
-    }
-
-    // ✅ DEBUG: Test SMS functionality
-    @PostMapping("/test-sms")
-    public ResponseEntity<?> testSms(@RequestBody Map<String, String> request) {
+    /**
+     * ✅ NEW: Update candidate status + Send Email + Send SMS
+     * This endpoint handles the complete workflow:
+     * 1. Update database
+     * 2. Send email to candidate (if email provided)
+     * 3. Send SMS to candidate (if phone provided)
+     * 4. Send SMS to HR team (Padmanabh/Aishwarya based on assignedTo)
+     */
+    @PostMapping("/update-status")
+    public ResponseEntity<?> updateStatusAndSendEmailSms(@RequestBody Map<String, Object> data) {
         try {
-            String phoneNumber = request.get("phoneNumber");
-            String message = request.get("message");
-            
-            if (phoneNumber == null || message == null) {
+            System.out.println("📥 Received update-status request: " + data);
+
+            // Extract data from request
+            String candidateId = (String) data.get("candidateId");
+            String candidateName = (String) data.get("candidateName");
+            String candidateEmail = (String) data.get("candidateEmail");
+            String candidatePhone = (String) data.get("candidatePhone");
+            String newStatus = (String) data.get("newStatus");
+            String comments = (String) data.get("comments");
+
+            // Validate required fields
+            if (candidateId == null || newStatus == null) {
                 return ResponseEntity.badRequest()
-                        .body(Map.of("success", false, "message", "phoneNumber and message are required"));
+                    .body(Map.of("error", "Missing required fields: candidateId and newStatus are required"));
             }
-            
-            System.out.println("🧪 TEST SMS REQUEST:");
-            System.out.println("Phone: " + phoneNumber);
-            System.out.println("Message: " + message);
-            
-            // Use injected SMS service for testing
-            smsService.sendCandidateStatusSms(phoneNumber, "TestUser", "Test Job", "Selected");
-            
+
+            System.out.println("✅ Parsed data:");
+            System.out.println("   - Candidate ID: " + candidateId);
+            System.out.println("   - Candidate Name: " + candidateName);
+            System.out.println("   - Email: " + candidateEmail);
+            System.out.println("   - Phone: " + candidatePhone);
+            System.out.println("   - New Status: " + newStatus);
+            System.out.println("   - Comments: " + comments);
+
+            // Call JobService to update status + send email + send SMS
+            // This method handles:
+            // 1. Database update
+            // 2. Email notification to candidate
+            // 3. SMS notification to candidate
+            Job updatedJob = service.updateStatusWithEmailAndSms(
+                candidateId, 
+                newStatus, 
+                comments, 
+                candidateEmail, 
+                candidatePhone
+            );
+
+            System.out.println("✅ Status updated successfully for candidate: " + candidateName);
+
+            // Return success response
             return ResponseEntity.ok(Map.of(
-                    "success", true,
-                    "message", "Test SMS sent to " + phoneNumber + " via Twilio/Fast2SMS"
+                "success", true,
+                "message", "Status updated successfully! Email and SMS notifications sent.",
+                "candidate", updatedJob.getJobTitle(),
+                "newStatus", newStatus,
+                "emailSent", candidateEmail != null && !candidateEmail.isEmpty(),
+                "smsSent", candidatePhone != null && !candidatePhone.isEmpty()
             ));
-            
+
         } catch (Exception e) {
-            System.err.println("❌ Test SMS Error: " + e.getMessage());
+            System.err.println("❌ Error in updateStatusAndSendEmailSms: " + e.getMessage());
             e.printStackTrace();
+
             return ResponseEntity.status(500)
-                    .body(Map.of("success", false, "message", e.getMessage()));
+                .body(Map.of(
+                    "success", false,
+                    "error", "Failed to update status: " + e.getMessage()
+                ));
         }
     }
-    
-    // ✅ NEW: Check Twilio Configuration
-    @GetMapping("/twilio-status")
-    public ResponseEntity<?> checkTwilioStatus() {
-        return ResponseEntity.ok(Map.of(
-                "twilioEnabled", "Check application.properties for twilio.enabled",
-                "accountSid", "Check application.properties for twilio.account.sid",
-                "phoneNumber", "Check application.properties for twilio.phone.number",
-                "message", "Update your Twilio credentials in application.properties to enable SMS"
-        ));
+
+    /**
+     * ✅ TEST ENDPOINT: Test SMS functionality (placeholder)
+     * GET /api/jobs/test-sms?phone=9606408912&message=Test
+     */
+    @GetMapping("/test-sms")
+    @CrossOrigin(origins = "*")
+    public ResponseEntity<?> testSms(@RequestParam String phone, 
+                                    @RequestParam(defaultValue = "Test message from HRMS system") String message) {
+        try {
+            System.out.println("🧪 SMS Test Request:");
+            System.out.println("   - Phone: " + phone);
+            System.out.println("   - Message: " + message);
+
+            // SMS functionality placeholder
+            System.out.println("📱 SMS would be sent to: " + phone);
+
+            return ResponseEntity.ok(Map.of(
+                "success", true,
+                "message", "SMS test endpoint called successfully!",
+                "phone", phone,
+                "note", "SMS functionality is a placeholder - implement with Twilio/MSG91 if needed"
+            ));
+
+        } catch (Exception e) {
+            System.err.println("❌ Test SMS failed: " + e.getMessage());
+            e.printStackTrace();
+
+            return ResponseEntity.status(500)
+                .body(Map.of(
+                    "success", false,
+                    "error", "Test SMS failed: " + e.getMessage()
+                ));
+        }
     }
 }
