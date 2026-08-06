@@ -3,7 +3,13 @@ import api from "./axios";
 
 // ✅ GET ALL EMPLOYEES
 export const getAllEmployees = async () => {
-  const response = await api.get("/api/employee/all");
+  const response = await api.get("/api/employee/all", {
+    headers: {
+      'Cache-Control': 'no-cache, no-store, must-revalidate',
+      'Pragma': 'no-cache',
+      'Expires': '0'
+    }
+  });
   console.log("🔍 getAllEmployees API response:", response);
   return response.data;
 };
@@ -34,7 +40,13 @@ export const searchParticipants = async (query) => {
 };
 
 export const fetchAllEmployees = async () => {
-  const response = await api.get("/api/employee/all");
+  const response = await api.get("/api/employee/all", {
+    headers: {
+      'Cache-Control': 'no-cache, no-store, must-revalidate',
+      'Pragma': 'no-cache',
+      'Expires': '0'
+    }
+  });
   return response.data;
 };
 

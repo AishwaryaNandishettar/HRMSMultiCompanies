@@ -3,15 +3,16 @@
  * Tests if email sending works before integrating with full backend
  */
 
-require('dotenv').config();
 const nodemailer = require('nodemailer');
 
 // Email configuration
-const transporter = nodemailer.createTransporter({
-  service: 'gmail',
+const transporter = nodemailer.createTransport({
+  host: 'smtp.gmail.com',
+  port: 587,
+  secure: false,
   auth: {
-    user: process.env.EMAIL_USER || 'your-email@gmail.com', // Change this
-    pass: process.env.EMAIL_PASSWORD || 'your-app-password'  // Change this
+    user: 'aishushettar95@gmail.com',
+    pass: 'uiurdbkdhtexubjr'
   }
 });
 
@@ -20,19 +21,10 @@ async function testEmail() {
     console.log('📧 Testing email sending...');
 
     const info = await transporter.sendMail({
-      from: process.env.EMAIL_USER || 'your-email@gmail.com',
-      to: 'your-test-email@gmail.com', // Change this to your email
-      subject: '🎉 Test Email - Recruitment Status Update',
-      text: `
-Dear Test Candidate,
-
-This is a test email from your HRMS Recruitment System.
-
-If you receive this email, the email notification feature is working correctly!
-
-Best regards,
-HR Team
-      `
+      from: 'aishushettar95@gmail.com',
+      to: 'aishushettar95@gmail.com',
+      subject: '🎉 Test Email - HRMS System Test',
+      text: 'This is a test email to verify Gmail SMTP configuration works correctly!'
     });
 
     console.log('✅ Email sent successfully!');

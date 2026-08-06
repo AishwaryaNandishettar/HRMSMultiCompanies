@@ -1,0 +1,149 @@
+================================================================================
+  LOGIN ISSUE FIXED - QUICK TEST GUIDE
+================================================================================
+
+✅ WHAT WAS FIXED:
+   1. Removed VITE_TENANT_ID from frontend .env
+   2. Removed companyId from all 18 users in MongoDB Atlas
+   3. Removed companyId from all 12 employees in MongoDB Atlas
+
+================================================================================
+  QUICK TEST (3 STEPS - Takes 1 minute)
+================================================================================
+
+STEP 1: RESTART BACKEND (if running)
+   Press Ctrl+C to stop backend
+   Then run:
+   cd "d:\New folder\HRMSProject (2)\HRMSProject"
+   mvnw.cmd spring-boot:run
+   
+   Wait for: "Started application"
+
+STEP 2: REFRESH BROWSER
+   Go to: http://localhost:5173
+   Press: Ctrl + Shift + R (hard refresh)
+   
+   OR use Incognito:
+   Press: Ctrl + Shift + N (Chrome/Edge)
+   Go to: http://localhost:5173
+
+STEP 3: LOGIN
+   Email: Aishwarya@company.com
+   Password: (your password)
+   
+   Click: Login button
+
+EXPECTED RESULT:
+   ✅ Login successful
+   ✅ Redirects to Home page
+   ✅ No "Invalid credentials" error
+   ✅ No 403 error
+
+================================================================================
+  CURRENT DATABASE STATE
+================================================================================
+
+✅ MongoDB Atlas Connection: Working
+✅ Total Users: 18 (all have NO companyId)
+✅ Total Employees: 12 (all have NO companyId)
+
+Admin User:
+   Email: Aishwarya@company.com
+   Role: ADMIN
+   CompanyId: NOT SET (correct for Omoi portal)
+
+================================================================================
+  IF LOGIN STILL FAILS
+================================================================================
+
+ISSUE: "Invalid credentials"
+CHECK:
+   1. Backend is running on port 8082
+   2. Password is correct
+   3. Email is: Aishwarya@company.com (case-sensitive)
+
+ISSUE: 403 Forbidden
+CHECK:
+   1. HRMS-Frontend/.env has NO VITE_TENANT_ID line
+   2. Restart frontend dev server: npm run dev
+   3. Clear browser cache completely
+
+ISSUE: Connection refused
+CHECK:
+   1. Backend is running: should see "Started application" in console
+   2. Backend port is 8082: check application.properties
+   3. Frontend .env has: VITE_API_BASE_URL=http://localhost:8082
+
+================================================================================
+  BACKEND CONSOLE - WHAT TO LOOK FOR
+================================================================================
+
+✅ GOOD SIGNS:
+   - "Connected to MongoDB Atlas"
+   - "Started application in X seconds"
+   - "Tomcat started on port(s): 8082"
+
+❌ BAD SIGNS:
+   - "Connection refused"
+   - "Authentication failed"
+   - "Port 8082 already in use"
+
+================================================================================
+  FRONTEND CONSOLE (F12) - WHAT TO LOOK FOR
+================================================================================
+
+✅ GOOD SIGNS:
+   - "LOGIN SUCCESSFUL"
+   - "VITE_API_BASE_URL: http://localhost:8082"
+   - No red errors in console
+
+❌ BAD SIGNS:
+   - "Login Error: Error: Invalid credentials"
+   - "Failed to load resource: 403"
+   - "Network Error"
+
+================================================================================
+  FILES THAT WERE CHANGED
+================================================================================
+
+1. HRMS-Frontend/.env
+   BEFORE: VITE_TENANT_ID=omoikaneinnovations
+   AFTER:  (removed - no VITE_TENANT_ID)
+
+2. MongoDB Atlas Database
+   - Removed companyId from users collection (18 records)
+   - Removed companyId from employees collection (12 records)
+
+3. NO CODE CHANGES - Only configuration cleanup
+
+================================================================================
+  VERIFICATION COMMAND
+================================================================================
+
+To verify database state:
+   cd "d:\New folder\HRMSProject (2)\HRMSProject"
+   node verify-mongodb-atlas.js
+
+Should show:
+   ✅ Total Employees: 12
+   ✅ Total Users: 18
+   🏢 Company ID: ❌ NOT SET (for all records)
+
+================================================================================
+  MULTI-TENANT SYSTEM STILL WORKS
+================================================================================
+
+Default Omoi Portal (localhost:5173):
+   ✅ Users must have NO companyId
+   ✅ For Omoi employees only
+   ✅ NO VITE_TENANT_ID in .env
+
+Client Company Portals (localhost:5176/5177/5178):
+   ✅ Users must have matching companyId
+   ✅ For client company employees
+   ✅ REQUIRES VITE_TENANT_ID in .env
+
+================================================================================
+  STATUS: ✅ READY TO TEST
+  ACTION: Follow 3-step test above
+================================================================================

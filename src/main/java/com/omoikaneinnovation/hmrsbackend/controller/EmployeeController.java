@@ -69,7 +69,11 @@ public ResponseEntity<?> getAllEmployees(Principal principal) {
         // Get the logged-in user's company ID
         if (principal == null) {
             System.out.println("⚠ No user logged in, returning empty list");
-            return ResponseEntity.ok(new ArrayList<>());
+            return ResponseEntity.ok()
+                    .header("Cache-Control", "no-cache, no-store, must-revalidate")
+                    .header("Pragma", "no-cache")
+                    .header("Expires", "0")
+                    .body(new ArrayList<>());
         }
 
         String email = principal.getName();
@@ -95,11 +99,19 @@ if ("MANAGER".equalsIgnoreCase(user.getRole())) {
 }
         System.out.println("✅ Found " + employees.size() + " employees");
 
-        return ResponseEntity.ok(employees);
+        return ResponseEntity.ok()
+                .header("Cache-Control", "no-cache, no-store, must-revalidate")
+                .header("Pragma", "no-cache")
+                .header("Expires", "0")
+                .body(employees);
     } catch (Exception e) {
         System.err.println("❌ Error fetching employees: " + e.getMessage());
         e.printStackTrace();
-        return ResponseEntity.ok(new ArrayList<>());
+        return ResponseEntity.ok()
+                .header("Cache-Control", "no-cache, no-store, must-revalidate")
+                .header("Pragma", "no-cache")
+                .header("Expires", "0")
+                .body(new ArrayList<>());
     }
 }
 

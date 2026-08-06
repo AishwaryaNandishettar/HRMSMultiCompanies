@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Email Invite - HRMS</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        
+        .container {
+            background: white;
+            padding: 40px;
+            border-radius: 16px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            max-width: 500px;
+            width: 100%;
+        }
+        
+        h1 {
+            color: #667eea;
+            margin-bottom: 10px;
+            font-size: 28px;
+        }
+        
+        .subtitle {
+            color: #6b7280;
+            margin-bottom: 30px;
+            font-size: 14px;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 8px;
+            color: #374151;
+            font-weight: 500;
+        }
+        
+        input {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e5e7eb;
+            border-radius: 8px;
+            font-size: 14px;
+            transition: border-color 0.3s;
+        }
+        
+        input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        
+        button {
+            width: 100%;
+            padding: 14px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+        
+        button:hover {
+            transform: translateY(-2px);
+        }
+        
+        button:active {
+            transform: translateY(0);
+        }
+        
+        button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+        
+        .result {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 8px;
+            display: none;
+        }
+        
+        .result.success {
+            background: #d1fae5;
+            border: 2px solid #10b981;
+            color: #065f46;
+        }
+        
+        .result.error {
+            background: #fee2e2;
+            border: 2px solid #ef4444;
+            color: #991b1b;
+        }
+        
+        .status {
+            text-align: center;
+            margin-top: 20px;
+            padding: 10px;
+            background: #f3f4f6;
+            border-radius: 8px;
+            font-size: 12px;
+            color: #6b7280;
+        }
+        
+        .status.connected {
+            background: #d1fae5;
+            color: #065f46;
+        }
+        
+        .status.disconnected {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>📧 Test Email Invite</h1>
+        <p class="subtitle">Send a test invitation email from HRMS</p>
+        
+        <form id="inviteForm">
+            <div class="form-group">
+                <label for="email">Employee Email Address:</label>
+                <input 
+                    type="email" 
+                    id="email" 
+                    name="email" 
+                    placeholder="Enter email address"
+                    required
+                />
+            </div>
+            
+            <div class="form-group">
+                <label for="fullName">Full Name:</label>
+                <input 
+                    type="text" 
+                    id="fullName" 
+                    name="fullName" 
+                    placeholder="Enter full name"
+                    value="Test Employee"
+                    required
+                />
+            </div>
+            
+            <div class="form-group">
+                <label for="department">Department:</label>
+                <input 
+                    type="text" 
+                    id="department" 
+                    name="department" 
+                    placeholder="Enter department"
+                    value="IT"
+                    required
+                />
+            </div>
+            
+            <div class="form-group">
+                <label for="designation">Designation:</label>
+                <input 
+                    type="text" 
+                    id="designation" 
+                    name="designation" 
+                    placeholder="Enter designation"
+                    value="Developer"
+                    required
+                />
+            </div>
+            
+            <button type="submit" id="submitBtn">
+                📨 Send Invite Email
+            </button>
+        </form>
+        
+        <div id="result" class="result"></div>
+        
+        <div id="status" class="status">
+            Checking backend connection...
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = 'http://localhost:8082';
+        const form = document.getElementById('inviteForm');
+        const resultDiv = document.getElementById('result');
+        const statusDiv = document.getElementById('status');
+        const submitBtn = document.getElementById('submitBtn');
+
+        // Check backend connection
+        async function checkBackend() {
+            try {
+                const response = await fetch(`${API_BASE}/api/onboarding/all`, {
+                    method: 'GET',
+                });
+                
+                if (response.ok) {
+                    statusDiv.textContent = '✅ Backend Connected (http://localhost:8082)';
+                    statusDiv.className = 'status connected';
+                } else {
+                    statusDiv.textContent = '⚠️ Backend running but check authentication';
+                    statusDiv.className = 'status';
+                }
+            } catch (error) {
+                statusDiv.textContent = '❌ Backend Not Connected - Start backend first!';
+                statusDiv.className = 'status disconnected';
+                submitBtn.disabled = true;
+            }
+        }
+
+        // Send invite
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const email = document.getElementById('email').value.trim();
+            const fullName = document.getElementById('fullName').value.trim();
+            const department = document.getElementById('department').value.trim();
+            const designation = document.getElementById('designation').value.trim();
+            
+            if (!email) {
+                showResult('Please enter an email address', 'error');
+                return;
+            }
+            
+            submitBtn.disabled = true;
+            submitBtn.textContent = '📤 Sending...';
+            resultDiv.style.display = 'none';
+            
+            try {
+                const response = await fetch(`${API_BASE}/api/onboarding/invite`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        email: email,
+                        fullName: fullName,
+                        department: department,
+                        designation: designation,
+                        password: 'Temp@123'
+                    })
+                });
+                
+                const data = await response.text();
+                
+                if (response.ok) {
+                    showResult(
+                        `✅ Success! Invitation sent to ${email}<br><br>` +
+                        `Check your email inbox (and spam folder) in 10-30 seconds.<br><br>` +
+                        `The email will come from: aishushettar95@gmail.com`,
+                        'success'
+                    );
+                    form.reset();
+                } else {
+                    showResult(`❌ Error: ${data}`, 'error');
+                }
+                
+            } catch (error) {
+                showResult(
+                    `❌ Failed to send invite<br><br>` +
+                    `Error: ${error.message}<br><br>` +
+                    `Make sure backend is running on http://localhost:8082`,
+                    'error'
+                );
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.textContent = '📨 Send Invite Email';
+            }
+        });
+
+        function showResult(message, type) {
+            resultDiv.innerHTML = message;
+            resultDiv.className = `result ${type}`;
+            resultDiv.style.display = 'block';
+        }
+
+        // Check backend on load
+        checkBackend();
+        
+        // Re-check every 5 seconds
+        setInterval(checkBackend, 5000);
+    </script>
+</body>
+</html>

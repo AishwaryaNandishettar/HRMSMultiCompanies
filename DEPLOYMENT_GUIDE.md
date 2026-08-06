@@ -1,329 +1,338 @@
-# Multi-Tenant HRMS Deployment Guide
+# 🚀 HRMS Deployment Guide - Localhost & Vercel
 
-## Overview
+## 📋 Overview
 
-This guide covers deploying three separate instances of the HRMS system for three different companies, each with unique branding but sharing the same codebase and database.
+This guide covers:
+- ✅ Testing email invitations on localhost
+- 🌐 Deploying backend to Railway/Render
+- 🌐 Deploying frontend to Vercel
+- ✉️ Ensuring email invitations work in production
 
 ---
 
-## Architecture
+## 🏠 PART 1: Localhost Setup (Testing)
+
+### **Step 1: Prerequisites**
+
+Ensure you have:
+- ✅ Node.js (v16+)
+- ✅ Java 17+
+- ✅ Maven
+- ✅ MongoDB (local or Atlas)
+
+### **Step 2: Configure Environment**
+
+The application is already configured! Just verify:
+
+**File: `application.properties`**
+```properties
+frontend.url=${FRONTEND_URL:http://localhost:5173}
+spring.mail.username=aishushettar95@gmail.com
+spring.mail.password=uiurdbkdhtexubjr
+```
+
+### **Step 3: Start Backend**
+
+```bash
+cd "d:\New folder\HRMSProject (2)\HRMSProject"
+
+# Option A: Using Maven wrapper
+mvnw spring-boot:run
+
+# Option B: Using Maven
+mvn spring-boot:run
+
+# Backend will start on: http://localhost:8082
+```
+
+### **Step 4: Start Frontend**
+
+```bash
+cd "d:\New folder\HRMSProject (2)\HRMSProject\HRMS-Frontend"
+
+# Install dependencies (first time only)
+npm install
+
+# Start development server
+npm run dev
+
+# Frontend will start on: http://localhost:5173
+```
+
+### **Step 5: Test Email Invitation**
+
+**Method A: Using Test Script**
+
+1. Edit `quick-test-email.js`:
+```javascript
+const TEST_EMAIL = 'your-email@gmail.com'; // Change this
+```
+
+2. Run the test:
+```bash
+npm install axios
+node quick-test-email.js
+```
+
+**Method B: Using UI**
+
+1. Open http://localhost:5173
+2. Login as admin (or HR)
+3. Navigate to employee management
+4. Click "Invite Employee"
+5. Enter email and details
+6. Click "Send Invite Link"
+
+### **Step 6: Verify Email**
+
+Check the email inbox. You should receive:
 
 ```
-GitHub Repository (HRMS-MultiCompany)
-    ↓
-    ├── Company A (TalentHub Solutions - Blue Theme)
-    │   ├── Frontend: Vercel
-    │   └── Backend: Render
-    │
-    ├── Company B (WorkForce Pro - Green Theme)
-    │   ├── Frontend: Vercel
-    │   └── Backend: Render
-    │
-    └── Company C (PeopleSync Enterprise - Purple Theme)
-        ├── Frontend: Vercel
-        └── Backend: Render
-        
-All connect to → MongoDB Atlas (Shared Database)
+Subject: HRMS Invitation - Welcome!
+
+Application Link: http://localhost:5173
+Username: employee@example.com
+Temporary Password: Temp@123
+
+[Complete Your Profile] Button
 ```
 
 ---
 
-## Prerequisites
+## 🌐 PART 2: Production Deployment
 
-- GitHub account with HRMS-MultiCompany repository
-- Vercel account (free tier supports 3 projects)
-- Render account (free tier available)
-- MongoDB Atlas account (existing database)
+### **Backend Deployment (Railway/Render)**
 
----
+#### **Option A: Railway**
 
-## Part 1: Backend Deployment (Render)
+1. **Create Railway Account**
+   - Go to https://railway.app
+   - Sign up with GitHub
 
-### Step 1: Deploy Company A Backend
+2. **Create New Project**
+   - Click "New Project"
+   - Select "Deploy from GitHub repo"
+   - Select your HRMS repository
 
-1. **Login to Render Dashboard**
-   - Go to: https://dashboard.render.com
-   - Sign in with your GitHub account
-
-2. **Create New Web Service**
-   - Click "New +" → "Web Service"
-   - Connect your GitHub repository: `HRMS-MultiCompany`
-   - Select the repository
-
-3. **Configure Service**
-   - **Name**: `hrms-backend-company-a`
-   - **Region**: Choose closest to your users
-   - **Branch**: `main`
-   - **Root Directory**: `HRMS-Backend`
-   - **Runtime**: `Java`
-   - **Build Command**: `mvn clean package -DskipTests`
-   - **Start Command**: `java -jar target/hmrs-backend-0.0.1-SNAPSHOT.jar`
-
-4. **Set Environment Variables**
+3. **Configure Environment Variables**
    ```
-   MONGODB_URI=mongodb+srv://hrms_user:HRMS%4012345@cluster0.aexpf8t.mongodb.net/Data_base_hrms?retryWrites=true&w=majority&appName=Cluster0
-   SPRING_PROFILES_ACTIVE=prod
+   FRONTEND_URL=https://your-app.vercel.app
+   MONGODB_URI=mongodb+srv://user:pass@cluster.mongodb.net/hrms_db
    SPRING_MAIL_USERNAME=aishushettar95@gmail.com
-   SPRING_MAIL_PASSWORD=bbfskhrhtnujkokk
-   JWT_SECRET=MyFixedSecretKey123456
-   SERVER_PORT=8082
+   SPRING_MAIL_PASSWORD=uiurdbkdhtexubjr
    ```
 
-5. **Deploy**
+4. **Deploy**
+   - Railway will auto-detect Spring Boot
+   - Wait for deployment to complete
+   - Copy the generated URL: `https://your-app.railway.app`
+
+#### **Option B: Render**
+
+1. **Create Render Account**
+   - Go to https://render.com
+   - Sign up
+
+2. **Create Web Service**
+   - Click "New +" → "Web Service"
+   - Connect GitHub repository
+   - Configure:
+     - **Name**: hrms-backend
+     - **Environment**: Java
+     - **Build Command**: `./mvnw clean package -DskipTests`
+     - **Start Command**: `java -jar target/HRMS-Backend-0.0.1-SNAPSHOT.jar`
+
+3. **Set Environment Variables** (same as Railway above)
+
+4. **Deploy**
    - Click "Create Web Service"
-   - Wait for deployment (5-10 minutes)
-   - Copy the deployment URL (e.g., `https://hrms-backend-company-a.onrender.com`)
-
-### Step 2: Deploy Company B Backend
-
-Repeat the same steps as Company A with these changes:
-- **Name**: `hrms-backend-company-b`
-- Use the **same environment variables** (shared database)
-- Copy the deployment URL
-
-### Step 3: Deploy Company C Backend
-
-Repeat the same steps as Company A with these changes:
-- **Name**: `hrms-backend-company-c`
-- Use the **same environment variables** (shared database)
-- Copy the deployment URL
+   - Copy the URL: `https://hrms-backend.onrender.com`
 
 ---
 
-## Part 2: Frontend Deployment (Vercel)
+### **Frontend Deployment (Vercel)**
 
-### Step 1: Deploy Company A Frontend
-
-1. **Login to Vercel Dashboard**
-   - Go to: https://vercel.com/dashboard
-   - Sign in with your GitHub account
+1. **Create Vercel Account**
+   - Go to https://vercel.com
+   - Sign up with GitHub
 
 2. **Import Project**
-   - Click "Add New..." → "Project"
-   - Import `HRMS-MultiCompany` repository
+   - Click "Add New" → "Project"
+   - Import your GitHub repository
+   - **Root Directory**: `HRMSProject/HRMS-Frontend`
 
-3. **Configure Project**
-   - **Project Name**: `hrms-frontend-company-a`
-   - **Framework Preset**: `Vite`
-   - **Root Directory**: `HRMS-Frontend`
-   - **Build Command**: `npm run build:company-a` (or leave default and set env vars)
-   - **Output Directory**: `dist`
+3. **Configure Build Settings**
+   ```
+   Framework Preset: Vite
+   Build Command: npm run build
+   Output Directory: dist
+   Install Command: npm install
+   ```
 
 4. **Set Environment Variables**
    ```
-   VITE_TENANT_ID=company-a
-   VITE_API_BASE_URL=[Company A Render Backend URL]
-   VITE_API_URL=[Company A Render Backend URL]/api
-   VITE_WS_URL=[Company A Render Backend URL]/ws
-   VITE_TURN_USERNAME=51e40078dfabc57d54164c2f
-   VITE_TURN_CREDENTIAL=KJnavaquyonnUlkx
-   ```
-
-   **Example** (replace with actual URL):
-   ```
-   VITE_TENANT_ID=company-a
-   VITE_API_BASE_URL=https://hrms-backend-company-a.onrender.com
-   VITE_API_URL=https://hrms-backend-company-a.onrender.com/api
-   VITE_WS_URL=https://hrms-backend-company-a.onrender.com/ws
-   VITE_TURN_USERNAME=51e40078dfabc57d54164c2f
-   VITE_TURN_CREDENTIAL=KJnavaquyonnUlkx
+   VITE_API_BASE_URL=https://your-backend.railway.app
    ```
 
 5. **Deploy**
    - Click "Deploy"
-   - Wait for deployment (2-5 minutes)
-   - Copy the deployment URL (e.g., `https://hrms-frontend-company-a.vercel.app`)
+   - Wait for deployment
+   - Copy the URL: `https://your-hrms.vercel.app`
 
-### Step 2: Deploy Company B Frontend
+---
 
-1. **Import Project Again**
-   - Click "Add New..." → "Project"
-   - Import the same `HRMS-MultiCompany` repository
+### **Connect Backend to Frontend**
 
-2. **Configure Project**
-   - **Project Name**: `hrms-frontend-company-b`
-   - **Framework Preset**: `Vite`
-   - **Root Directory**: `HRMS-Frontend`
-
-3. **Set Environment Variables**
+1. **Update Backend Environment**
+   
+   Go to Railway/Render dashboard and update:
    ```
-   VITE_TENANT_ID=company-b
-   VITE_API_BASE_URL=[Company B Render Backend URL]
-   VITE_API_URL=[Company B Render Backend URL]/api
-   VITE_WS_URL=[Company B Render Backend URL]/ws
-   VITE_TURN_USERNAME=51e40078dfabc57d54164c2f
-   VITE_TURN_CREDENTIAL=KJnavaquyonnUlkx
+   FRONTEND_URL=https://your-hrms.vercel.app
    ```
 
-4. **Deploy** and copy the URL
-
-### Step 3: Deploy Company C Frontend
-
-Repeat the same steps as Company B with these changes:
-- **Project Name**: `hrms-frontend-company-c`
-- **VITE_TENANT_ID**: `company-c`
-- Point API URLs to Company C Render backend
+2. **Redeploy Backend**
+   - Railway: Automatically redeploys
+   - Render: Click "Manual Deploy" → "Deploy latest commit"
 
 ---
 
-## Part 3: Verification
+## ✅ Testing Production Deployment
 
-### Test Company A
-1. Open Company A frontend URL
-2. Verify **TalentHub Solutions** branding (blue theme, "TH" logo)
-3. Test login functionality
-4. Verify all features work
+### **1. Test Backend Health**
 
-### Test Company B
-1. Open Company B frontend URL
-2. Verify **WorkForce Pro** branding (green theme, "WP" logo)
-3. Test login functionality
-4. Verify all features work
-
-### Test Company C
-1. Open Company C frontend URL
-2. Verify **PeopleSync Enterprise** branding (purple theme, "PS" logo)
-3. Test login functionality
-4. Verify all features work
-
----
-
-## Environment Variables Reference
-
-### Required Frontend Variables (Vercel)
-| Variable | Description | Example |
-|----------|-------------|---------|
-| `VITE_TENANT_ID` | Company identifier | `company-a`, `company-b`, `company-c` |
-| `VITE_API_BASE_URL` | Backend base URL | `https://hrms-backend-company-a.onrender.com` |
-| `VITE_API_URL` | Backend API URL | `https://hrms-backend-company-a.onrender.com/api` |
-| `VITE_WS_URL` | WebSocket URL | `https://hrms-backend-company-a.onrender.com/ws` |
-| `VITE_TURN_USERNAME` | WebRTC TURN username | (from config) |
-| `VITE_TURN_CREDENTIAL` | WebRTC TURN credential | (from config) |
-
-### Required Backend Variables (Render)
-| Variable | Description | Example |
-|----------|-------------|---------|
-| `MONGODB_URI` | MongoDB connection string | (shared across all backends) |
-| `SPRING_PROFILES_ACTIVE` | Spring profile | `prod` |
-| `SPRING_MAIL_USERNAME` | Email service username | (from config) |
-| `SPRING_MAIL_PASSWORD` | Email service password | (from config) |
-| `JWT_SECRET` | JWT signing secret | (shared across all backends) |
-| `SERVER_PORT` | Backend port | `8082` |
-
----
-
-## Local Development
-
-### Run Company A Locally
 ```bash
+curl https://your-backend.railway.app/actuator/health
+```
+
+Expected response:
+```json
+{"status":"UP"}
+```
+
+### **2. Test Email Invitation**
+
+```bash
+curl -X POST https://your-backend.railway.app/api/onboarding/invite \
+  -H "Content-Type: application/json" \
+  -d '{
+    "email": "test@example.com",
+    "fullName": "Test User",
+    "department": "IT",
+    "designation": "Developer"
+  }'
+```
+
+### **3. Verify Email Content**
+
+The email should now contain:
+```
+Application Link: https://your-hrms.vercel.app
+Username: test@example.com
+Temporary Password: Temp@123
+```
+
+✅ **The link should point to your Vercel URL, not localhost!**
+
+---
+
+## 🔧 Troubleshooting
+
+### **Problem: Email has localhost URL in production**
+
+**Solution:**
+- Verify `FRONTEND_URL` environment variable is set correctly
+- Redeploy backend after changing environment variables
+- Check backend logs to confirm the correct URL is being used
+
+### **Problem: Email not received in production**
+
+**Check 1: Backend Logs**
+```bash
+# Railway: View logs in dashboard
+# Render: View logs in service dashboard
+```
+
+Look for:
+```
+📧 Sending invite email to: test@example.com
+🔗 Onboarding Link: https://your-hrms.vercel.app
+✅ Invite email sent successfully
+```
+
+**Check 2: SMTP Connection**
+- Ensure Gmail credentials are correct
+- Check if deployment platform allows SMTP connections
+- Some platforms block port 587 - check documentation
+
+**Check 3: Firewall/Security**
+- Railway: SMTP is allowed ✅
+- Render: SMTP is allowed ✅
+- Heroku: Requires SendGrid add-on ⚠️
+
+### **Problem: Frontend can't connect to backend**
+
+**Solution:**
+- Verify `VITE_API_BASE_URL` in Vercel
+- Check CORS configuration in backend
+- Verify backend is running and accessible
+
+---
+
+## 📊 Environment Variables Checklist
+
+### **Backend (Railway/Render)**
+
+| Variable | Localhost | Production |
+|----------|-----------|------------|
+| `FRONTEND_URL` | `http://localhost:5173` | `https://your-hrms.vercel.app` |
+| `MONGODB_URI` | `mongodb://localhost:27017/hrms` | `mongodb+srv://...` |
+| `SPRING_MAIL_USERNAME` | `aishushettar95@gmail.com` | Same |
+| `SPRING_MAIL_PASSWORD` | App password | Same |
+
+### **Frontend (Vercel)**
+
+| Variable | Localhost | Production |
+|----------|-----------|------------|
+| `VITE_API_BASE_URL` | `http://localhost:8082` | `https://your-backend.railway.app` |
+
+---
+
+## 🎯 Quick Deployment Commands
+
+### **Deploy Backend to Railway**
+```bash
+# Railway CLI
+railway login
+railway link
+railway up
+```
+
+### **Deploy Frontend to Vercel**
+```bash
+# Vercel CLI
+npm i -g vercel
+vercel login
 cd HRMS-Frontend
-npm run dev:company-a
-# Opens on http://localhost:5173 with Company A theme
-```
-
-### Run Company B Locally
-```bash
-cd HRMS-Frontend
-npm run dev:company-b
-# Opens on http://localhost:5173 with Company B theme
-```
-
-### Run Company C Locally
-```bash
-cd HRMS-Frontend
-npm run dev:company-c
-# Opens on http://localhost:5173 with Company C theme
-```
-
-### Run Backend Locally
-```bash
-cd HRMS-Backend
-mvn spring-boot:run
-# Runs on http://localhost:8082
+vercel --prod
 ```
 
 ---
 
-## Troubleshooting
+## 📞 Support & Resources
 
-### Frontend Not Loading Theme
-- Check that `VITE_TENANT_ID` is set correctly
-- Verify environment variables are saved in Vercel
-- Trigger a redeploy after changing environment variables
+### **Documentation**
+- Railway: https://docs.railway.app
+- Render: https://render.com/docs
+- Vercel: https://vercel.com/docs
 
-### Backend Connection Error
-- Verify backend is running (check Render logs)
-- Check that API URLs match backend deployment URL
-- Ensure MongoDB connection string is correct
+### **Gmail App Password**
+- Guide: https://support.google.com/accounts/answer/185833
 
-### CORS Errors
-- Verify backend allows requests from frontend domain
-- Check CORS configuration in Spring Boot application
-
-### Build Failures
-- Check Render build logs for Maven errors
-- Check Vercel build logs for npm/Vite errors
-- Verify all dependencies are installed
+### **MongoDB Atlas**
+- Setup: https://www.mongodb.com/cloud/atlas
 
 ---
 
-## Updating Deployments
+**🎉 Your HRMS is now ready for production!**
 
-### Update Frontend (Vercel)
-1. Push changes to GitHub
-2. Vercel auto-deploys from `main` branch
-3. Or manually trigger redeploy from Vercel dashboard
-
-### Update Backend (Render)
-1. Push changes to GitHub
-2. Render auto-deploys from `main` branch
-3. Or manually trigger redeploy from Render dashboard
-
-### Update Environment Variables
-**Vercel:**
-- Go to Project Settings → Environment Variables
-- Update variables
-- Trigger redeploy
-
-**Render:**
-- Go to Service Dashboard → Environment
-- Update variables
-- Service auto-restarts
-
----
-
-## Deployment URLs
-
-After completing deployment, document your URLs here:
-
-### Company A (TalentHub Solutions)
-- **Frontend**: https://hrms-frontend-company-a.vercel.app
-- **Backend**: https://hrms-backend-company-a.onrender.com
-
-### Company B (WorkForce Pro)
-- **Frontend**: https://hrms-frontend-company-b.vercel.app
-- **Backend**: https://hrms-backend-company-b.onrender.com
-
-### Company C (PeopleSync Enterprise)
-- **Frontend**: https://hrms-frontend-company-c.vercel.app
-- **Backend**: https://hrms-backend-company-c.onrender.com
-
----
-
-## Notes
-
-- All three backends share the same MongoDB database
-- All three deployments use the same codebase
-- Only environment variables differ between companies
-- Logo files can be updated without redeployment (just replace files in `/public/logos/`)
-- Theme colors can be changed by updating JSON files and redeploying
-
----
-
-## Support
-
-For issues or questions:
-1. Check Vercel/Render logs
-2. Review console errors in browser
-3. Verify environment variables are correct
-4. Check MongoDB connection status
+The invitation emails will work seamlessly on both localhost and production with the correct URLs automatically!
