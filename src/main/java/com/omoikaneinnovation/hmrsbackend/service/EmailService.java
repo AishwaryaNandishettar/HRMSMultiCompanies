@@ -201,6 +201,9 @@ public class EmailService {
      * SENDGRID - PRIMARY EMAIL SERVICE
      * ============================================================
      */
+    log.info("🔍 DEBUG: sendGridEnabled = {}", sendGridEnabled);
+    log.info("🔍 DEBUG: sendGridService = {}", sendGridService != null ? "Available" : "NULL");
+    
     if (sendGridEnabled) {
 
         try {
