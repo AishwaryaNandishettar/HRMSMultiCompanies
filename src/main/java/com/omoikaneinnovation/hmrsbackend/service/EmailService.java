@@ -180,56 +180,133 @@ public class EmailService {
      * Send single email using Thymeleaf template
      * Falls back to SendGrid HTTP API if SMTP fails
      */
-    private void sendSingleEmail(String to, String subject, String templateName, Map<String, Object> variables) 
-            throws MessagingException {
-        
-        // Generate HTML content from template
-        Context context = new Context();
-        if (variables != null) {
-            context.setVariables(variables);
-        }
-        String htmlContent = templateEngine.process("email/" + templateName, context);
-        
-        // Try SendGrid first (recommended for production)
-        if (sendGridEnabled) {
-            try {
-                log.info("📧 Sending email via SendGrid to: {}", to);
-                log.info("📬 Subject: {}", subject);
-                
-                boolean sent = sendGridService.sendEmail(to, subject, htmlContent);
-                if (sent) {
-                    log.info("✅ SendGrid: Email sent successfully to: {}", to);
-                    return; // Success!
-                } else {
-                    log.warn("⚠️ SendGrid failed, trying SMTP fallback...");
-                }
-            } catch (Exception sendGridError) {
-                log.warn("⚠️ SendGrid exception: {}, trying SMTP fallback...", sendGridError.getMessage());
-            }
-        }
-        
-        // Fallback to SMTP if SendGrid is disabled or failed
+   private void sendSingleEmail(
+        String to,
+        String subject,
+        String templateName,
+        Map<String, Object> variables) throws MessagingException {
+
+    // Generate HTML content from template
+    Context context = new Context();
+
+    if (variables != null) {
+        context.setVariables(variables);
+    }
+
+    String htmlContent =
+            templateEngine.process("email/" + templateName, context);
+
+    /*
+     * ============================================================
+     * SENDGRID - PRIMARY EMAIL SERVICE
+     * ============================================================
+     */
+    if (sendGridEnabled) {
+
         try {
-            MimeMessage message = mailSender.createMimeMessage();
-            MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
 
-            log.info("📧 Trying SMTP for: {}", to);
-            log.info("📬 From: {}", fromAddress);
+            log.info("================================");
+            log.info("📧 EMAIL PROVIDER: SENDGRID");
+            log.info("📧 TO: {}", to);
+            log.info("📧 SUBJECT: {}", subject);
+            log.info("================================");
 
-            helper.setFrom(fromAddress, fromName);
-            helper.setReplyTo(replyToAddress);
-            helper.setTo(to);
-            helper.setSubject(subject);
-            helper.setText(htmlContent, true);
+            boolean sent =
+                    sendGridService.sendEmail(
+                            to,
+                            subject,
+                            htmlContent
+                    );
 
-            mailSender.send(message);
-            log.info("✅ SMTP: Email sent successfully to: {}", to);
-            
-        } catch (Exception smtpError) {
-            log.error("❌ All email methods failed for {}: {}", to, smtpError.getMessage());
-            throw new MessagingException("Failed to send email to " + to, smtpError);
+            if (sent) {
+
+                log.info(
+                        "✅ SENDGRID EMAIL SENT SUCCESSFULLY TO: {}",
+                        to
+                );
+
+                return;
+
+            } else {
+
+                log.error(
+                        "❌ SENDGRID FAILED TO SEND EMAIL TO: {}",
+                        to
+                );
+
+                throw new MessagingException(
+                        "SendGrid failed to send email to " + to
+                );
+            }
+
+        } catch (Exception sendGridError) {
+
+            log.error(
+                    "❌ SENDGRID ERROR FOR {}: {}",
+                    to,
+                    sendGridError.getMessage(),
+                    sendGridError
+            );
+
+            throw new MessagingException(
+                    "SendGrid email failed for " + to,
+                    sendGridError
+            );
         }
     }
+
+    /*
+     * ============================================================
+     * SMTP FALLBACK
+     *
+     * Only used when SENDGRID_ENABLED=false.
+     * ============================================================
+     */
+    try {
+
+        log.info("================================");
+        log.info("📧 EMAIL PROVIDER: SMTP");
+        log.info("📧 TO: {}", to);
+        log.info("================================");
+
+        MimeMessage message =
+                mailSender.createMimeMessage();
+
+        MimeMessageHelper helper =
+                new MimeMessageHelper(
+                        message,
+                        true,
+                        "UTF-8"
+                );
+
+        helper.setFrom(fromAddress, fromName);
+        helper.setReplyTo(replyToAddress);
+        helper.setTo(to);
+        helper.setSubject(subject);
+        helper.setText(htmlContent, true);
+
+        mailSender.send(message);
+
+        log.info(
+                "✅ SMTP EMAIL SENT SUCCESSFULLY TO: {}",
+                to
+        );
+
+    } catch (Exception smtpError) {
+
+        log.error(
+                "❌ SMTP EMAIL FAILED FOR {}: {}",
+                to,
+                smtpError.getMessage(),
+                smtpError
+        );
+
+        throw new MessagingException(
+                "SMTP email failed for " + to,
+                smtpError
+        );
+    }
+}
 
     public void cancelQueuedEmails(String meetingId) {
         try {
