@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test Production API</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+        }
+        .test-box {
+            background: #f0f0f0;
+            padding: 20px;
+            border-radius: 8px;
+            margin: 20px 0;
+        }
+        button {
+            background: #6366f1;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        button:hover {
+            background: #4f46e5;
+        }
+        .result {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 4px;
+            white-space: pre-wrap;
+        }
+        .success {
+            background: #d1fae5;
+            color: #065f46;
+        }
+        .error {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+        input {
+            width: 100%;
+            padding: 10px;
+            font-size: 16px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            margin: 10px 0;
+        }
+    </style>
+</head>
+<body>
+    <h1>🔍 Test Production Backend API</h1>
+    
+    <div class="test-box">
+        <h2>Test 1: Check Backend Health</h2>
+        <p>This will test if your Render backend is responding</p>
+        <button onclick="testBackendHealth()">Test Backend</button>
+        <div id="health-result"></div>
+    </div>
+
+    <div class="test-box">
+        <h2>Test 2: Send Test Invite Email</h2>
+        <p>Enter your email to receive a test invitation:</p>
+        <input type="email" id="testEmail" placeholder="your-email@gmail.com" />
+        <button onclick="sendTestInvite()">Send Test Invite</button>
+        <div id="invite-result"></div>
+    </div>
+
+    <div class="test-box">
+        <h2>Test 3: Check Frontend Environment</h2>
+        <button onclick="checkEnvironment()">Check Environment Variables</button>
+        <div id="env-result"></div>
+    </div>
+
+    <script>
+        const BACKEND_URL = 'https://latestfinalhrmsapplication.onrender.com';
+
+        async function testBackendHealth() {
+            const resultDiv = document.getElementById('health-result');
+            resultDiv.innerHTML = '<p>⏳ Testing backend...</p>';
+            
+            try {
+                const response = await fetch(`${BACKEND_URL}/api/health`, {
+                    method: 'GET',
+                });
+                
+                if (response.ok) {
+                    const data = await response.text();
+                    resultDiv.innerHTML = `<div class="result success">✅ Backend is responding!\n\nResponse: ${data}</div>`;
+                } else {
+                    resultDiv.innerHTML = `<div class="result error">⚠️ Backend returned status: ${response.status}</div>`;
+                }
+            } catch (error) {
+                resultDiv.innerHTML = `<div class="result error">❌ Backend connection failed!\n\nError: ${error.message}\n\nThis means either:\n1. Backend is not deployed\n2. CORS is blocking the request\n3. Backend URL is incorrect</div>`;
+            }
+        }
+
+        async function sendTestInvite() {
+            const email = document.getElementById('testEmail').value;
+            const resultDiv = document.getElementById('invite-result');
+            
+            if (!email) {
+                resultDiv.innerHTML = '<div class="result error">❌ Please enter an email address</div>';
+                return;
+            }
+
+            resultDiv.innerHTML = '<p>⏳ Sending test invite...</p>';
+            
+            try {
+                const response = await fetch(`${BACKEND_URL}/api/onboarding/invite`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        email: email,
+                        fullName: 'Test User',
+                        department: 'IT',
+                        designation: 'Developer'
+                    })
+                });
+                
+                if (response.ok) {
+                    resultDiv.innerHTML = `<div class="result success">✅ Invite sent successfully!\n\nCheck your email: ${email}\n\nIf you don't receive it:\n1. Check spam folder\n2. Check Render logs for errors\n3. Verify FRONTEND_URL is set on Render</div>`;
+                } else {
+                    const errorText = await response.text();
+                    resultDiv.innerHTML = `<div class="result error">❌ Failed to send invite!\n\nStatus: ${response.status}\nError: ${errorText}</div>`;
+                }
+            } catch (error) {
+                resultDiv.innerHTML = `<div class="result error">❌ Request failed!\n\nError: ${error.message}</div>`;
+            }
+        }
+
+        function checkEnvironment() {
+            const resultDiv = document.getElementById('env-result');
+            
+            const envInfo = `
+Backend URL: ${BACKEND_URL}
+Current Page: ${window.location.href}
+
+Note: This test page doesn't use environment variables.
+Your actual Vercel app should have:
+- VITE_API_BASE_URL=${BACKEND_URL}
+- VITE_API_URL=${BACKEND_URL}/api
+            `.trim();
+            
+            resultDiv.innerHTML = `<div class="result success">${envInfo}</div>`;
+        }
+    </script>
+</body>
+</html>
