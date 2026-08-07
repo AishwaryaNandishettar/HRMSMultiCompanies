@@ -27,7 +27,7 @@ public class EmailService {
     private final JavaMailSender mailSender;
     private final TemplateEngine templateEngine;
     private final EmailQueueRepository emailQueueRepository;
-    private final ResendHttpEmailService resendService;
+    private final SendGridEmailService sendGridService;
 
     @Value("${meeting.email.from-name:HRMS Meeting System}")
     private String fromName;
@@ -38,15 +38,15 @@ public class EmailService {
     @Value("${meeting.email.reply-to:noreply@omoikaneinnovations.com}")
     private String replyToAddress;
     
-    @Value("${resend.enabled:true}")
-    private boolean resendEnabled;
+    @Value("${sendgrid.enabled:true}")
+    private boolean sendGridEnabled;
 
     public EmailService(JavaMailSender mailSender, TemplateEngine templateEngine, 
-                       EmailQueueRepository emailQueueRepository, ResendHttpEmailService resendService) {
+                       EmailQueueRepository emailQueueRepository, SendGridEmailService sendGridService) {
         this.mailSender = mailSender;
         this.templateEngine = templateEngine;
         this.emailQueueRepository = emailQueueRepository;
-        this.resendService = resendService;
+        this.sendGridService = sendGridService;
     }
 
     /**
@@ -178,66 +178,56 @@ public class EmailService {
 
     /**
      * Send single email using Thymeleaf template
-     * Falls back to Resend HTTP API if SMTP fails
+     * Falls back to SendGrid HTTP API if SMTP fails
      */
     private void sendSingleEmail(String to, String subject, String templateName, Map<String, Object> variables) 
             throws MessagingException {
         
+        // Generate HTML content from template
+        Context context = new Context();
+        if (variables != null) {
+            context.setVariables(variables);
+        }
+        String htmlContent = templateEngine.process("email/" + templateName, context);
+        
+        // Try SendGrid first (recommended for production)
+        if (sendGridEnabled) {
+            try {
+                log.info("📧 Sending email via SendGrid to: {}", to);
+                log.info("📬 Subject: {}", subject);
+                
+                boolean sent = sendGridService.sendEmail(to, subject, htmlContent);
+                if (sent) {
+                    log.info("✅ SendGrid: Email sent successfully to: {}", to);
+                    return; // Success!
+                } else {
+                    log.warn("⚠️ SendGrid failed, trying SMTP fallback...");
+                }
+            } catch (Exception sendGridError) {
+                log.warn("⚠️ SendGrid exception: {}, trying SMTP fallback...", sendGridError.getMessage());
+            }
+        }
+        
+        // Fallback to SMTP if SendGrid is disabled or failed
         try {
-            // Try SMTP first
             MimeMessage message = mailSender.createMimeMessage();
             MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
 
-            log.info("================================");
-            log.info("FROM ADDRESS : {}", fromAddress);
-            log.info("TO           : {}", to);
-            log.info("SUBJECT      : {}", subject);
-            log.info("================================");
+            log.info("📧 Trying SMTP for: {}", to);
+            log.info("📬 From: {}", fromAddress);
 
             helper.setFrom(fromAddress, fromName);
             helper.setReplyTo(replyToAddress);
             helper.setTo(to);
             helper.setSubject(subject);
-
-            Context context = new Context();
-            if (variables != null) {
-                context.setVariables(variables);
-            }
-            
-            String htmlContent = templateEngine.process("email/" + templateName, context);
             helper.setText(htmlContent, true);
 
-            log.info("Calling mailSender.send()");
             mailSender.send(message);
             log.info("✅ SMTP: Email sent successfully to: {}", to);
             
         } catch (Exception smtpError) {
-            log.warn("⚠️ SMTP Failed for {}: {}. Trying Resend HTTP API...", to, smtpError.getMessage());
-            
-            // Fallback to Resend HTTP API
-            if (resendEnabled) {
-                try {
-                    Context context = new Context();
-                    if (variables != null) {
-                        context.setVariables(variables);
-                    }
-                    String htmlContent = templateEngine.process("email/" + templateName, context);
-                    
-                    boolean sent = resendService.sendEmail(to, subject, htmlContent);
-                    if (sent) {
-                        log.info("✅ Resend: Email sent successfully to: {}", to);
-                        return; // Success!
-                    } else {
-                        log.error("❌ Resend: Failed to send email to: {}", to);
-                    }
-                } catch (Exception resendError) {
-                    log.error("❌ Resend: Exception sending email to {}: {}", to, resendError.getMessage());
-                }
-            }
-            
-            // Both methods failed
-            log.error("❌ All methods failed to send email to: {}", to);
-            throw new MessagingException("Failed to send email to " + to + ": " + smtpError.getMessage(), smtpError);
+            log.error("❌ All email methods failed for {}: {}", to, smtpError.getMessage());
+            throw new MessagingException("Failed to send email to " + to, smtpError);
         }
     }
 

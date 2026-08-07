@@ -1,66 +1,55 @@
 package com.omoikaneinnovation.hmrsbackend.service;
 
+import com.sendgrid.*;
+import com.sendgrid.helpers.mail.Mail;
+import com.sendgrid.helpers.mail.objects.Content;
+import com.sendgrid.helpers.mail.objects.Email;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.*;
 import org.springframework.stereotype.Service;
-import org.springframework.web.client.RestTemplate;
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.io.IOException;
 
 @Slf4j
 @Service
 public class SendGridEmailService {
 
-    @Value("${sendgrid.api.key:}")
+    @Value("${sendgrid.api.key}")
     private String sendGridApiKey;
 
-    @Value("${meeting.email.from-address:aishushettar95@gmail.com}")
-    private String fromAddress;
+    @Value("${sendgrid.from.email:noreply@yourdomain.com}")
+    private String fromEmail;
 
-    private final RestTemplate restTemplate = new RestTemplate();
+    @Value("${sendgrid.from.name:HRMS System}")
+    private String fromName;
 
     public boolean sendEmail(String toEmail, String subject, String htmlContent) {
-        // SendGrid disabled - no API key configured, skip silently
-        if (sendGridApiKey == null || sendGridApiKey.isBlank()) {
-            log.warn("SendGrid API key not configured. Skipping email to: {}", toEmail);
-            return false;
-        }
         try {
-            String url = "https://api.sendgrid.com/v3/mail/send";
-            log.info("Sending email via SendGrid to: {}", toEmail);
-            HttpHeaders headers = new HttpHeaders();
-            headers.setContentType(MediaType.APPLICATION_JSON);
-            headers.set("Authorization", "Bearer " + sendGridApiKey);
-            Map<String, Object> toObj = new HashMap<>();
-            toObj.put("email", toEmail);
-            Map<String, Object> fromObj = new HashMap<>();
-            fromObj.put("email", fromAddress);
-            fromObj.put("name", "HRMS - Omoikane Innovations");
-            Map<String, Object> content = new HashMap<>();
-            content.put("type", "text/html");
-            content.put("value", htmlContent);
-            Map<String, Object> personalization = new HashMap<>();
-            personalization.put("to", List.of(toObj));
-            personalization.put("subject", subject);
-            Map<String, Object> payload = new HashMap<>();
-            payload.put("personalizations", List.of(personalization));
-            payload.put("from", fromObj);
-            payload.put("subject", subject);
-            payload.put("content", List.of(content));
-            HttpEntity<Map<String, Object>> request = new HttpEntity<>(payload, headers);
-            ResponseEntity<String> response = restTemplate.exchange(url, HttpMethod.POST, request, String.class);
-            if (response.getStatusCode() == HttpStatus.ACCEPTED || response.getStatusCode() == HttpStatus.OK) {
-                log.info("Email sent successfully via SendGrid to: {}", toEmail);
+            Email from = new Email(fromEmail, fromName);
+            Email to = new Email(toEmail);
+            Content content = new Content("text/html", htmlContent);
+            Mail mail = new Mail(from, subject, to, content);
+
+            SendGrid sg = new SendGrid(sendGridApiKey);
+            Request request = new Request();
+            
+            request.setMethod(Method.POST);
+            request.setEndpoint("mail/send");
+            request.setBody(mail.build());
+
+            Response response = sg.api(request);
+
+            if (response.getStatusCode() >= 200 && response.getStatusCode() < 300) {
+                log.info("✅ SendGrid: Email sent successfully to: {} (Status: {})", toEmail, response.getStatusCode());
                 return true;
             } else {
-                log.error("SendGrid failed. Status: {} Body: {}", response.getStatusCode(), response.getBody());
+                log.error("❌ SendGrid: Failed to send email. Status: {}, Body: {}", 
+                         response.getStatusCode(), response.getBody());
                 return false;
             }
-        } catch (Exception e) {
-            log.error("SendGrid error for {}: {}", toEmail, e.getMessage());
+
+        } catch (IOException e) {
+            log.error("❌ SendGrid: Exception sending email to {}: {}", toEmail, e.getMessage(), e);
             return false;
         }
     }
