@@ -25,8 +25,9 @@
         @Value("${frontend.url:http://localhost:5173}")
         private String frontendUrl;
 
-        @Value("${spring.mail.username}")
-        private String fromEmail;
+        // Removed: Not needed anymore since EmailService handles sending
+        // @Value("${spring.mail.username}")
+        // private String fromEmail;
 
         @Autowired
         private EmployeeRepository employeeRepo;
@@ -199,7 +200,6 @@ public void onboard(Map<String, Object> payload) {
     try {
         log.info("📧 Sending invite email to: {}", email);
         log.info("🔗 Onboarding Link: {}", onboardingLink);
-        log.info("📬 From Email: {}", fromEmail);
 
         emailService.sendInviteEmail(
             email,
