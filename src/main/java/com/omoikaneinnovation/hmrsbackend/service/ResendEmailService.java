@@ -8,6 +8,7 @@ import org.springframework.web.client.RestTemplate;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.List;
 
 @Slf4j
 @Service
@@ -24,28 +25,73 @@ public class ResendEmailService {
     public boolean sendEmail(String toEmail, String subject, String htmlContent) {
         try {
             String url = "https://api.resend.com/emails";
+            
+            // Prepare email data with enhanced deliverability settings
             Map<String, Object> emailData = new HashMap<>();
+            
+            // Use proper email format
             emailData.put("from", fromName + " <" + fromEmail + ">");
             emailData.put("to", new String[]{toEmail});
             emailData.put("subject", subject);
             emailData.put("html", htmlContent);
+            
+            // Add reply-to for better engagement
             emailData.put("reply_to", fromEmail);
-            String textContent = htmlContent.replaceAll("<[^>]*>", "").replaceAll("\\s+", " ").trim();
+
+            // Add plain text version (CRITICAL for spam avoidance)
+            String textContent = htmlContent
+                .replaceAll("<style[^>]*>.*?</style>", "")
+                .replaceAll("<script[^>]*>.*?</script>", "")
+                .replaceAll("<[^>]*>", "")
+                .replaceAll("&nbsp;", " ")
+                .replaceAll("&amp;", "&")
+                .replaceAll("&lt;", "<")
+                .replaceAll("&gt;", ">")
+                .replaceAll("\\s+", " ")
+                .trim();
             emailData.put("text", textContent);
+
+            // Add custom headers to improve deliverability
+            Map<String, String> customHeaders = new HashMap<>();
+            customHeaders.put("X-Entity-Ref-ID", "hrms-system-" + System.currentTimeMillis());
+            customHeaders.put("X-Mailer", "HRMS-Backend-v1.0");
+            customHeaders.put("List-Unsubscribe", "<mailto:" + fromEmail + "?subject=unsubscribe>");
+            emailData.put("headers", customHeaders);
+
+            // Add tags for tracking and categorization
+            emailData.put("tags", List.of(
+                Map.of("name", "category", "value", "transactional"),
+                Map.of("name", "environment", "value", "production")
+            ));
+
+            // Prepare HTTP request
             HttpHeaders headers = new HttpHeaders();
             headers.setContentType(MediaType.APPLICATION_JSON);
             headers.set("Authorization", "Bearer " + resendApiKey);
-            HttpEntity<String> request = new HttpEntity<>(objectMapper.writeValueAsString(emailData), headers);
+            headers.set("User-Agent", "HRMS-Backend/1.0");
+
+            HttpEntity<String> request = new HttpEntity<>(
+                objectMapper.writeValueAsString(emailData), 
+                headers
+            );
+
+            // Send email
             ResponseEntity<String> response = restTemplate.postForEntity(url, request, String.class);
+
             if (response.getStatusCode().is2xxSuccessful()) {
-                log.info("✅ Resend: Email sent successfully to: {} (Status: {})", toEmail, response.getStatusCode());
+                log.info("✅ Resend: Email sent successfully to: {} (Status: {})", 
+                         toEmail, response.getStatusCode());
+                log.debug("Response body: {}", response.getBody());
                 return true;
             } else {
-                log.error("❌ Resend: Failed to send email. Status: {}, Body: {}", response.getStatusCode(), response.getBody());
+                log.error("❌ Resend: Failed to send email. Status: {}, Body: {}", 
+                         response.getStatusCode(), response.getBody());
                 return false;
             }
+
         } catch (Exception e) {
-            log.error("❌ Resend: Exception sending email to {}: {}", toEmail, e.getMessage(), e);
+            log.error("❌ Resend: Exception sending email to {}: {}", 
+                     toEmail, e.getMessage(), e);
             return false;
         }
     }

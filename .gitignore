@@ -12,3 +12,11 @@ build/
 **/.env
 *.env
 HRMS-Backend/.env
+
+# Documentation with secrets - ignore
+CHECK_RENDER_ENV_VARS.md
+FINAL_RENDER_DEPLOYMENT.md
+test-new-sendgrid-key.js
+test-sendgrid-fixed.js
+*sendgrid*.js
+*sendgrid*.md

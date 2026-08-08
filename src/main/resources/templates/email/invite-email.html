@@ -1,15 +1,25 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org">
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Employee Invitation</title>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <meta name="x-apple-disable-message-reformatting">
+    <title>Employee Invitation - HRMS</title>
     <style>
+        /* Email client resets */
+        body, table, td, a { -webkit-text-size-adjust: 100%; -ms-text-size-adjust: 100%; }
+        table, td { mso-table-lspace: 0pt; mso-table-rspace: 0pt; }
+        img { -ms-interpolation-mode: bicubic; border: 0; height: auto; line-height: 100%; outline: none; text-decoration: none; }
+        
         body {
             font-family: Arial, sans-serif;
             line-height: 1.6;
             color: #333;
             background-color: #f4f4f4;
+            margin: 0;
+            padding: 0;
+            width: 100% !important;
         }
         .container {
             max-width: 600px;
@@ -58,15 +68,21 @@
         .action-button {
             display: inline-block;
             background-color: #6366f1;
-            color: white;
-            padding: 12px 30px;
-            border-radius: 4px;
+            color: #ffffff !important;
+            padding: 14px 40px;
+            border-radius: 6px;
             text-decoration: none;
-            margin-top: 20px;
+            margin: 20px 0;
             font-weight: bold;
+            font-size: 16px;
+            text-align: center;
         }
         .action-button:hover {
             background-color: #4f46e5;
+        }
+        .button-container {
+            text-align: center;
+            margin: 30px 0;
         }
         .next-steps {
             background-color: #f0fdf4;
@@ -137,47 +153,49 @@
         </ol>
     </div>
 
-        </div>
+    </div>
 
     <!-- LOGIN CREDENTIALS START -->
     <div class="company-info">
-
+        <h3 style="color: #6366f1; margin-top: 0;">🔐 Your Login Credentials</h3>
+        
         <p>
-            <span class="label">Application Link:</span>
-            <span class="value">
-                <a th:href="${inviteLink}" th:text="${inviteLink}"></a>
-            </span>
-        </p>
-
-        <p>
-            <span class="label">Username:</span>
+            <span class="label">Your Email:</span>
             <span class="value" th:text="${email}"></span>
         </p>
 
         <p>
-            <span class="label">Temporary Password:</span>
-            <span class="value" th:text="${password}"></span>
+            <span class="label">Temporary OTP:</span>
+            <span class="value" style="font-family: monospace; font-size: 18px; font-weight: bold; color: #dc2626;" th:text="${password}"></span>
         </p>
 
+        <p style="color: #dc2626; font-size: 14px; margin-top: 15px;">
+            ⚠️ <strong>Important:</strong> Please change this temporary password after your first login for security purposes.
+        </p>
     </div>
     <!-- LOGIN CREDENTIALS END -->
 
-    <p>
-       <a th:href="${inviteLink}" class="action-button">
-            Complete Your Profile
-       </a>
-    </p>
-    <p>
-       <a th:href="${inviteLink}" class="action-button">
-    Complete Your Profile
-</a>
-    </p>
+    <div class="button-container">
+        <a th:href="${inviteLink}" class="action-button" style="color: #ffffff;">
+            Access HRMS Portal
+        </a>
+    </div>
 
-    <p>If you have any questions or need assistance getting started, please don't hesitate to reach out to the HR team.</p>
+    <p style="margin-top: 20px; color: #6b7280;">
+        <strong>Need Help?</strong> If you have any questions or need assistance getting started, 
+        please contact our HR team. We're here to help make your onboarding smooth and successful.
+    </p>
 
     <div class="footer">
-        <p>This is an automated email from HRMS. Please do not reply to this email.</p>
-        <p>&copy; 2026 Omoika Innovations. All rights reserved.</p>
+        <p><strong>HRMS - Human Resource Management System</strong></p>
+        <p>This is an automated message. Please do not reply directly to this email.</p>
+        <p>If you didn't request this invitation, please contact our HR department immediately.</p>
+        <p style="margin-top: 15px;">&copy; 2026 Omoikane Innovations. All rights reserved.</p>
+        <p style="margin-top: 10px; font-size: 11px;">
+            <a href="mailto:hr@omoikaneinnovations.com" style="color: #6366f1; text-decoration: none;">Contact HR</a> | 
+            <a href="#" style="color: #6366f1; text-decoration: none;">Privacy Policy</a> | 
+            <a href="#" style="color: #6366f1; text-decoration: none;">Unsubscribe</a>
+        </p>
     </div>
 </div>
 </body>

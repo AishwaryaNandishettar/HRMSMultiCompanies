@@ -27,7 +27,7 @@ public class EmailService {
     private final JavaMailSender mailSender;
     private final TemplateEngine templateEngine;
     private final EmailQueueRepository emailQueueRepository;
-    private final SendGridEmailService sendGridService;
+    private final ResendEmailService resendService;
 
     @Value("${meeting.email.from-name:HRMS Meeting System}")
     private String fromName;
@@ -38,15 +38,15 @@ public class EmailService {
     @Value("${meeting.email.reply-to:noreply@omoikaneinnovations.com}")
     private String replyToAddress;
     
-    @Value("${sendgrid.enabled:true}")
-    private boolean sendGridEnabled;
+    @Value("${resend.enabled:true}")
+    private boolean resendEnabled;
 
     public EmailService(JavaMailSender mailSender, TemplateEngine templateEngine, 
-                       EmailQueueRepository emailQueueRepository, SendGridEmailService sendGridService) {
+                       EmailQueueRepository emailQueueRepository, ResendEmailService resendService) {
         this.mailSender = mailSender;
         this.templateEngine = templateEngine;
         this.emailQueueRepository = emailQueueRepository;
-        this.sendGridService = sendGridService;
+        this.resendService = resendService;
     }
 
     /**
@@ -178,7 +178,7 @@ public class EmailService {
 
     /**
      * Send single email using Thymeleaf template
-     * Falls back to SendGrid HTTP API if SMTP fails
+     * Falls back to SMTP if Resend fails
      */
    private void sendSingleEmail(
         String to,
@@ -198,24 +198,24 @@ public class EmailService {
 
     /*
      * ============================================================
-     * SENDGRID - PRIMARY EMAIL SERVICE
+     * RESEND - PRIMARY EMAIL SERVICE
      * ============================================================
      */
-    log.info("🔍 DEBUG: sendGridEnabled = {}", sendGridEnabled);
-    log.info("🔍 DEBUG: sendGridService = {}", sendGridService != null ? "Available" : "NULL");
+    log.info("🔍 DEBUG: resendEnabled = {}", resendEnabled);
+    log.info("🔍 DEBUG: resendService = {}", resendService != null ? "Available" : "NULL");
     
-    if (sendGridEnabled) {
+    if (resendEnabled) {
 
         try {
 
             log.info("================================");
-            log.info("📧 EMAIL PROVIDER: SENDGRID");
+            log.info("📧 EMAIL PROVIDER: RESEND");
             log.info("📧 TO: {}", to);
             log.info("📧 SUBJECT: {}", subject);
             log.info("================================");
 
             boolean sent =
-                    sendGridService.sendEmail(
+                    resendService.sendEmail(
                             to,
                             subject,
                             htmlContent
@@ -224,7 +224,7 @@ public class EmailService {
             if (sent) {
 
                 log.info(
-                        "✅ SENDGRID EMAIL SENT SUCCESSFULLY TO: {}",
+                        "✅ RESEND EMAIL SENT SUCCESSFULLY TO: {}",
                         to
                 );
 
@@ -233,27 +233,27 @@ public class EmailService {
             } else {
 
                 log.error(
-                        "❌ SENDGRID FAILED TO SEND EMAIL TO: {}",
+                        "❌ RESEND FAILED TO SEND EMAIL TO: {}",
                         to
                 );
 
                 throw new MessagingException(
-                        "SendGrid failed to send email to " + to
+                        "Resend failed to send email to " + to
                 );
             }
 
-        } catch (Exception sendGridError) {
+        } catch (Exception resendError) {
 
             log.error(
-                    "❌ SENDGRID ERROR FOR {}: {}",
+                    "❌ RESEND ERROR FOR {}: {}",
                     to,
-                    sendGridError.getMessage(),
-                    sendGridError
+                    resendError.getMessage(),
+                    resendError
             );
 
             throw new MessagingException(
-                    "SendGrid email failed for " + to,
-                    sendGridError
+                    "Resend email failed for " + to,
+                    resendError
             );
         }
     }
@@ -262,7 +262,7 @@ public class EmailService {
      * ============================================================
      * SMTP FALLBACK
      *
-     * Only used when SENDGRID_ENABLED=false.
+     * Only used when RESEND_ENABLED=false.
      * ============================================================
      */
     try {
