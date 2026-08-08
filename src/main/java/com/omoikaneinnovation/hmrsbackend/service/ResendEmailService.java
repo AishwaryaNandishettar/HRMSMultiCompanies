@@ -27,18 +27,17 @@ public class ResendEmailService {
     private final RestTemplate restTemplate = new RestTemplate();
     private final ObjectMapper objectMapper = new ObjectMapper();
     
-    // Log configuration at startup
     public ResendEmailService() {
-        log.info("✅ ResendEmailService initialized");
+        log.info("✅✅✅ ResendEmailService initialized - HTTP API ONLY");
     }
     
     @jakarta.annotation.PostConstruct
     public void init() {
         log.info("═══════════════════════════════════════");
-        log.info("📧 RESEND EMAIL SERVICE CONFIGURATION");
+        log.info("📧 RESEND EMAIL SERVICE - HTTP API MODE");
         log.info("📧 From Email: {}", fromEmail);
         log.info("📧 From Name: {}", fromName);
-        log.info("📧 API Key configured: {}", resendApiKey != null && !resendApiKey.isBlank() ? "YES" : "NO");
+        log.info("📧 API Key configured: {}", resendApiKey != null && !resendApiKey.isBlank() ? "YES (" + resendApiKey.substring(0, Math.min(10, resendApiKey.length())) + "...)" : "NO");
         log.info("═══════════════════════════════════════");
     }
 
