@@ -63,13 +63,13 @@ public void onboard(Map<String, Object> payload) {
     Employee emp;
 
     // =====================================================
-    // 1. FIND EXISTING EMPLOYEE
+    // 1. FIND EXISTING EMPLOYEE (including INVITED status)
     // =====================================================
     emp = employeeRepo.findByEmail(email).orElse(null);
 
     if (emp != null) {
 
-        log.info("Existing employee found: {}", email);
+        log.info("Existing employee found: {} with status: {}", email, emp.getStatus());
 
         // =================================================
         // 2. FIND EXISTING USER
@@ -130,11 +130,12 @@ public void onboard(Map<String, Object> payload) {
             emp.setDesignation((String) payload.get("designation"));
         }
 
-        emp.setStatus("ACTIVE");
+        // ⚠️ IMPORTANT: Keep status as INVITED until they accept the invitation
+        emp.setStatus("INVITED");
 
         employeeRepo.save(emp);
 
-        log.info("Existing employee prepared for invitation: {}", email);
+        log.info("Existing employee updated for invitation: {}", email);
 
     } else {
 
@@ -159,7 +160,7 @@ public void onboard(Map<String, Object> payload) {
         user = userRepo.save(user);
 
         // =====================================================
-        // 5. CREATE NEW EMPLOYEE
+        // 5. CREATE NEW EMPLOYEE (only if doesn't exist)
         // =====================================================
 
         emp = new Employee();
@@ -175,11 +176,11 @@ public void onboard(Map<String, Object> payload) {
         emp.setDepartment((String) payload.get("department"));
         emp.setDesignation((String) payload.get("designation"));
         emp.setUserId(user.getId());
-        emp.setStatus("ACTIVE");
+        emp.setStatus("INVITED"); // Set as INVITED, not ACTIVE
 
         employeeRepo.save(emp);
 
-        log.info("New employee created: {}", email);
+        log.info("New employee created with INVITED status: {}", email);
     }
 
     // =====================================================
