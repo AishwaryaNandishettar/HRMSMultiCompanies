@@ -3,13 +3,11 @@ package com.omoikaneinnovation.hmrsbackend.service;
 import com.omoikaneinnovation.hmrsbackend.dto.EmailRequest;
 import com.omoikaneinnovation.hmrsbackend.model.EmailQueue;
 import com.omoikaneinnovation.hmrsbackend.repository.EmailQueueRepository;
-import jakarta.mail.MessagingException;
-import jakarta.mail.internet.MimeMessage;
-import lombok.RequiredArgsConstructor;
+
+
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.mail.javamail.JavaMailSender;
-import org.springframework.mail.javamail.MimeMessageHelper;
+
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.thymeleaf.TemplateEngine;
@@ -24,30 +22,26 @@ import java.util.concurrent.CompletableFuture;
 @Service
 public class EmailService {
 
-    private final JavaMailSender mailSender;
+   
     private final TemplateEngine templateEngine;
     private final EmailQueueRepository emailQueueRepository;
     private final ResendEmailService resendService;
 
-    @Value("${meeting.email.from-name:HRMS Meeting System}")
-    private String fromName;
-
-    @Value("${meeting.email.from-address:noreply@omoikaneinnovations.com}")
-    private String fromAddress;
-
-    @Value("${meeting.email.reply-to:noreply@omoikaneinnovations.com}")
-    private String replyToAddress;
+ 
     
     @Value("${resend.enabled:true}")
     private boolean resendEnabled;
 
-    public EmailService(JavaMailSender mailSender, TemplateEngine templateEngine, 
-                       EmailQueueRepository emailQueueRepository, ResendEmailService resendService) {
-        this.mailSender = mailSender;
-        this.templateEngine = templateEngine;
-        this.emailQueueRepository = emailQueueRepository;
-        this.resendService = resendService;
-    }
+   public EmailService(
+        TemplateEngine templateEngine,
+        EmailQueueRepository emailQueueRepository,
+        ResendEmailService resendService) {
+
+    this.templateEngine = templateEngine;
+    this.emailQueueRepository = emailQueueRepository;
+    this.resendService = resendService;
+}
+   
 
     /**
      * Queue email for asynchronous sending
@@ -180,13 +174,13 @@ public class EmailService {
      * Send single email using Thymeleaf template
      * Falls back to SMTP if Resend fails
      */
-   private void sendSingleEmail(
+  private void sendSingleEmail(
         String to,
         String subject,
         String templateName,
-        Map<String, Object> variables) throws MessagingException {
+        Map<String, Object> variables) throws Exception {
 
-    // Generate HTML content from template
+    // Generate HTML content from Thymeleaf template
     Context context = new Context();
 
     if (variables != null) {
@@ -196,117 +190,65 @@ public class EmailService {
     String htmlContent =
             templateEngine.process("email/" + templateName, context);
 
-    /*
-     * ============================================================
-     * RESEND - PRIMARY EMAIL SERVICE
-     * ============================================================
-     */
-    log.info("🔍 DEBUG: resendEnabled = {}", resendEnabled);
-    log.info("🔍 DEBUG: resendService = {}", resendService != null ? "Available" : "NULL");
-    
-    if (resendEnabled) {
+    // ============================================================
+    // RESEND - ONLY EMAIL PROVIDER
+    // ============================================================
 
-        try {
+    log.info("================================");
+    log.info("📧 EMAIL PROVIDER: RESEND");
+    log.info("📧 RESEND ENABLED: {}", resendEnabled);
+    log.info("📧 RESEND SERVICE: {}", resendService != null ? "Available" : "NULL");
+    log.info("📧 TO: {}", to);
+    log.info("📧 SUBJECT: {}", subject);
+    log.info("================================");
 
-            log.info("================================");
-            log.info("📧 EMAIL PROVIDER: RESEND");
-            log.info("📧 TO: {}", to);
-            log.info("📧 SUBJECT: {}", subject);
-            log.info("================================");
-
-            boolean sent =
-                    resendService.sendEmail(
-                            to,
-                            subject,
-                            htmlContent
-                    );
-
-            if (sent) {
-
-                log.info(
-                        "✅ RESEND EMAIL SENT SUCCESSFULLY TO: {}",
-                        to
-                );
-
-                return;
-
-            } else {
-
-                log.error(
-                        "❌ RESEND FAILED TO SEND EMAIL TO: {}",
-                        to
-                );
-
-                throw new MessagingException(
-                        "Resend failed to send email to " + to
-                );
-            }
-
-        } catch (Exception resendError) {
-
-            log.error(
-                    "❌ RESEND ERROR FOR {}: {}",
-                    to,
-                    resendError.getMessage(),
-                    resendError
-            );
-
-            throw new MessagingException(
-                    "Resend email failed for " + to,
-                    resendError
-            );
-        }
+    if (!resendEnabled) {
+        throw new Exception("Resend email service is disabled");
     }
 
-    /*
-     * ============================================================
-     * SMTP FALLBACK
-     *
-     * Only used when RESEND_ENABLED=false.
-     * ============================================================
-     */
+    if (resendService == null) {
+        throw new Exception("ResendEmailService is not available");
+    }
+
     try {
 
-        log.info("================================");
-        log.info("📧 EMAIL PROVIDER: SMTP");
-        log.info("📧 TO: {}", to);
-        log.info("================================");
-
-        MimeMessage message =
-                mailSender.createMimeMessage();
-
-        MimeMessageHelper helper =
-                new MimeMessageHelper(
-                        message,
-                        true,
-                        "UTF-8"
-                );
-
-        helper.setFrom(fromAddress, fromName);
-        helper.setReplyTo(replyToAddress);
-        helper.setTo(to);
-        helper.setSubject(subject);
-        helper.setText(htmlContent, true);
-
-        mailSender.send(message);
-
-        log.info(
-                "✅ SMTP EMAIL SENT SUCCESSFULLY TO: {}",
-                to
+        boolean sent = resendService.sendEmail(
+                to,
+                subject,
+                htmlContent
         );
 
-    } catch (Exception smtpError) {
+        if (sent) {
+
+            log.info(
+                    "✅ RESEND EMAIL SENT SUCCESSFULLY TO: {}",
+                    to
+            );
+
+        } else {
+
+            log.error(
+                    "❌ RESEND FAILED TO SEND EMAIL TO: {}",
+                    to
+            );
+
+            throw new Exception(
+                    "Resend failed to send email to " + to
+            );
+        }
+
+    } catch (Exception e) {
 
         log.error(
-                "❌ SMTP EMAIL FAILED FOR {}: {}",
+                "❌ RESEND ERROR FOR {}: {}",
                 to,
-                smtpError.getMessage(),
-                smtpError
+                e.getMessage(),
+                e
         );
 
-        throw new MessagingException(
-                "SMTP email failed for " + to,
-                smtpError
+        throw new Exception(
+                "Resend email failed for " + to,
+                e
         );
     }
 }
