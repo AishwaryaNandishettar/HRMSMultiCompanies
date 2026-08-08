@@ -67,11 +67,9 @@
             <artifactId>spring-boot-starter-data-mongodb</artifactId>
         </dependency>
 
-        <!-- ================= MAIL (OTP) ================= -->
-        <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-mail</artifactId>
-        </dependency>
+        <!-- ================= MAIL DEPENDENCY REMOVED ================= -->
+        <!-- We use Resend HTTP API instead of SMTP -->
+        <!-- spring-boot-starter-mail has been removed to prevent Gmail SMTP usage -->
 
         <!-- ================= THYMELEAF ================= -->
         <dependency>
