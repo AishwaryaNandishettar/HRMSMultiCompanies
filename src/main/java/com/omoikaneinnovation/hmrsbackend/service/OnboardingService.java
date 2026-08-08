@@ -185,21 +185,18 @@ public void onboard(Map<String, Object> payload) {
     }
 
     // =====================================================
-    // 6. GENERATE OTP
+    // 6. SEND INVITATION EMAIL WITH OTP
     // =====================================================
 
+    // Generate OTP and create invite acceptance link with email and OTP as query parameters
     String otp = otpService.generateOtp(email);
-
-    // =====================================================
-    // 7. SEND INVITATION EMAIL
-    // =====================================================
-
-    String onboardingLink = frontendUrl;
+    String onboardingLink = frontendUrl + "/invite-accept?email=" + email + "&otp=" + otp;
     String tempPassword = "Temp@123";
 
     try {
         log.info("📧 Sending invite email to: {}", email);
         log.info("🔗 Onboarding Link: {}", onboardingLink);
+        log.info("🔑 OTP: {}", otp);
 
         emailService.sendInviteEmail(
             email,
@@ -382,13 +379,14 @@ public void acceptInvite(String email, String password) {
                     expiry
             );
 
-            // LOGIN LINK (Employee must login with credentials from email)
-            String onboardingLink = frontendUrl;
+            // Generate OTP and create invite acceptance link
             String otp = otpService.generateOtp(email);
+            String onboardingLink = frontendUrl + "/invite-accept?email=" + email + "&otp=" + otp;
 
             // -------- SEND EMAIL --------
             log.info("📧 Sending bulk invite email to: {}", email);
             log.info("🔗 Link: {}", onboardingLink);
+            log.info("🔑 OTP: {}", otp);
             
             emailService.sendInviteEmail(email, onboardingLink, otp, tempPassword);
             
