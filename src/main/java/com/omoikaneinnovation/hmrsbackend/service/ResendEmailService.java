@@ -6,6 +6,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.http.*;
 import org.springframework.web.client.RestTemplate;
 import com.fasterxml.jackson.databind.ObjectMapper;
+
 import java.util.HashMap;
 import java.util.Map;
 import java.util.List;
@@ -13,85 +14,211 @@ import java.util.List;
 @Slf4j
 @Service
 public class ResendEmailService {
+
     @Value("${resend.api.key}")
     private String resendApiKey;
-    @Value("${resend.from.email:noreply@yourdomain.com}")
+
+    @Value("${resend.from.email:onboarding@resend.dev}")
     private String fromEmail;
+
     @Value("${resend.from.name:HRMS System}")
     private String fromName;
+
     private final RestTemplate restTemplate = new RestTemplate();
     private final ObjectMapper objectMapper = new ObjectMapper();
 
     public boolean sendEmail(String toEmail, String subject, String htmlContent) {
-        try {
-            String url = "https://api.resend.com/emails";
-            
-            // Prepare email data with enhanced deliverability settings
-            Map<String, Object> emailData = new HashMap<>();
-            
-            // Use proper email format
-            emailData.put("from", fromName + " <" + fromEmail + ">");
-            emailData.put("to", new String[]{toEmail});
-            emailData.put("subject", subject);
-            emailData.put("html", htmlContent);
-            
-            // Add reply-to for better engagement
-            emailData.put("reply_to", fromEmail);
 
-            // Add plain text version (CRITICAL for spam avoidance)
+        try {
+
+            String url = "https://api.resend.com/emails";
+
+            // =====================================================
+            // DEBUG
+            // =====================================================
+
+            log.info("==========================================");
+            log.info("📧 RESEND EMAIL");
+            log.info("📧 From: {}", fromName + " <" + fromEmail + ">");
+            log.info("📧 To: {}", toEmail);
+            log.info("📧 Subject: {}", subject);
+            log.info(
+                "🔑 Resend API Key configured: {}",
+                resendApiKey != null && !resendApiKey.isBlank() ? "YES" : "NO"
+            );
+            log.info("==========================================");
+
+            // =====================================================
+            // EMAIL DATA
+            // =====================================================
+
+            Map<String, Object> emailData = new HashMap<>();
+
+            emailData.put(
+                "from",
+                fromName + " <" + fromEmail + ">"
+            );
+
+            emailData.put(
+                "to",
+                List.of(toEmail)
+            );
+
+            emailData.put(
+                "subject",
+                subject
+            );
+
+            emailData.put(
+                "html",
+                htmlContent
+            );
+
+            // Reply-To
+            emailData.put(
+                "reply_to",
+                fromEmail
+            );
+
+            // =====================================================
+            // PLAIN TEXT VERSION
+            // =====================================================
+
             String textContent = htmlContent
-                .replaceAll("<style[^>]*>.*?</style>", "")
-                .replaceAll("<script[^>]*>.*?</script>", "")
-                .replaceAll("<[^>]*>", "")
-                .replaceAll("&nbsp;", " ")
-                .replaceAll("&amp;", "&")
-                .replaceAll("&lt;", "<")
-                .replaceAll("&gt;", ">")
-                .replaceAll("\\s+", " ")
-                .trim();
+                    .replaceAll("(?s)<style[^>]*>.*?</style>", "")
+                    .replaceAll("(?s)<script[^>]*>.*?</script>", "")
+                    .replaceAll("<[^>]*>", "")
+                    .replaceAll("&nbsp;", " ")
+                    .replaceAll("&amp;", "&")
+                    .replaceAll("&lt;", "<")
+                    .replaceAll("&gt;", ">")
+                    .replaceAll("\\s+", " ")
+                    .trim();
+
             emailData.put("text", textContent);
 
-            // Add custom headers to improve deliverability
+            // =====================================================
+            // HEADERS
+            // =====================================================
+
             Map<String, String> customHeaders = new HashMap<>();
-            customHeaders.put("X-Entity-Ref-ID", "hrms-system-" + System.currentTimeMillis());
-            customHeaders.put("X-Mailer", "HRMS-Backend-v1.0");
-            customHeaders.put("List-Unsubscribe", "<mailto:" + fromEmail + "?subject=unsubscribe>");
-            emailData.put("headers", customHeaders);
 
-            // Add tags for tracking and categorization
-            emailData.put("tags", List.of(
-                Map.of("name", "category", "value", "transactional"),
-                Map.of("name", "environment", "value", "production")
-            ));
+            customHeaders.put(
+                "X-Entity-Ref-ID",
+                "hrms-system-" + System.currentTimeMillis()
+            );
 
-            // Prepare HTTP request
+            customHeaders.put(
+                "X-Mailer",
+                "HRMS-Backend-v1.0"
+            );
+
+            emailData.put(
+                "headers",
+                customHeaders
+            );
+
+            // =====================================================
+            // TAGS
+            // =====================================================
+
+            emailData.put(
+                "tags",
+                List.of(
+                    Map.of(
+                        "name",
+                        "category",
+                        "value",
+                        "transactional"
+                    ),
+                    Map.of(
+                        "name",
+                        "environment",
+                        "value",
+                        "production"
+                    )
+                )
+            );
+
+            // =====================================================
+            // HTTP HEADERS
+            // =====================================================
+
             HttpHeaders headers = new HttpHeaders();
-            headers.setContentType(MediaType.APPLICATION_JSON);
-            headers.set("Authorization", "Bearer " + resendApiKey);
-            headers.set("User-Agent", "HRMS-Backend/1.0");
+
+            headers.setContentType(
+                MediaType.APPLICATION_JSON
+            );
+
+            headers.set(
+                "Authorization",
+                "Bearer " + resendApiKey
+            );
+
+            headers.set(
+                "User-Agent",
+                "HRMS-Backend/1.0"
+            );
+
+            // =====================================================
+            // REQUEST
+            // =====================================================
 
             HttpEntity<String> request = new HttpEntity<>(
-                objectMapper.writeValueAsString(emailData), 
+                objectMapper.writeValueAsString(emailData),
                 headers
             );
 
-            // Send email
-            ResponseEntity<String> response = restTemplate.postForEntity(url, request, String.class);
+            log.info("📤 Sending request to Resend...");
+
+            ResponseEntity<String> response =
+                    restTemplate.postForEntity(
+                        url,
+                        request,
+                        String.class
+                    );
+
+            // =====================================================
+            // RESPONSE
+            // =====================================================
+
+            log.info(
+                "📨 Resend response status: {}",
+                response.getStatusCode()
+            );
+
+            log.info(
+                "📨 Resend response body: {}",
+                response.getBody()
+            );
 
             if (response.getStatusCode().is2xxSuccessful()) {
-                log.info("✅ Resend: Email sent successfully to: {} (Status: {})", 
-                         toEmail, response.getStatusCode());
-                log.debug("Response body: {}", response.getBody());
+
+                log.info(
+                    "✅ EMAIL SENT SUCCESSFULLY TO: {}",
+                    toEmail
+                );
+
                 return true;
-            } else {
-                log.error("❌ Resend: Failed to send email. Status: {}, Body: {}", 
-                         response.getStatusCode(), response.getBody());
-                return false;
             }
 
+            log.error(
+                "❌ RESEND FAILED. Status: {}, Body: {}",
+                response.getStatusCode(),
+                response.getBody()
+            );
+
+            return false;
+
         } catch (Exception e) {
-            log.error("❌ Resend: Exception sending email to {}: {}", 
-                     toEmail, e.getMessage(), e);
+
+            log.error(
+                "❌ RESEND EMAIL ERROR TO {}: {}",
+                toEmail,
+                e.getMessage(),
+                e
+            );
+
             return false;
         }
     }

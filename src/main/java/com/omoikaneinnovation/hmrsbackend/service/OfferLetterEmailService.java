@@ -12,7 +12,7 @@ import jakarta.mail.internet.MimeMessage;
 @Service
 public class OfferLetterEmailService {
 
-    @Autowired
+    @Autowired(required = false)
     private JavaMailSender mailSender;
 
     public void sendOfferLetter(

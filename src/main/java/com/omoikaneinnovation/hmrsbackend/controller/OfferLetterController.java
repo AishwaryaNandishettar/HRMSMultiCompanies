@@ -17,7 +17,7 @@ import java.util.Map;
 @CrossOrigin(originPatterns = {"http://localhost:*", "https://*.ngrok-free.dev", "https://*.vercel.app"})
 public class OfferLetterController {
 
-    @Autowired
+    @Autowired(required = false)
     private JavaMailSender mailSender;
 
     @Autowired(required = false)

@@ -27,7 +27,7 @@ public class OtpService {
     @Autowired
     private EmailService emailService;
 
-    @Autowired
+    @Autowired(required = false)
     private JavaMailSender mailSender;
 
     // ✅ EXISTING METHOD (UNCHANGED)

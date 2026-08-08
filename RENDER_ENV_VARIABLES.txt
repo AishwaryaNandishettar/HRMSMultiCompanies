@@ -1,40 +1,71 @@
-====================================
-RENDER BACKEND ENVIRONMENT VARIABLES
-====================================
-Copy these values to Render dashboard → Environment tab
+╔═══════════════════════════════════════════════════════════════════════════╗
+║                  RENDER ENVIRONMENT VARIABLES                             ║
+║                  Copy these EXACTLY to Render Dashboard                   ║
+╚═══════════════════════════════════════════════════════════════════════════╝
 
-1. SPRING_MAIL_USERNAME
-   Value: aishushettar95@gmail.com
+📋 INSTRUCTIONS:
+1. Go to: https://dashboard.render.com
+2. Select your HRMS Backend service
+3. Click "Environment" tab
+4. Add/Update these variables
+5. Click "Save Changes"
+6. Render will automatically redeploy
 
-2. SPRING_MAIL_PASSWORD
-   Value: uibswyvitauzsjjf
 
-3. FRONTEND_URL
-   Value: https://omoi-hrms.vercel.app
+✅ REQUIRED VARIABLES (Set these):
 
-4. MONGODB_URI
-   Value: mongodb+srv://hrms_user:HRMS%4012345@cluster0.aexpf8t.mongodb.net/Data_base_hrms?retryWrites=true&w=majority&appName=Cluster0
+RESEND_ENABLED=true
 
-5. JWT_SECRET
-   Value: MyFixedSecretKey123456
+RESEND_API_KEY=re_your_actual_api_key_here
+(Get from: https://resend.com/api-keys)
 
-6. PORT
-   Value: 8080
+RESEND_FROM_EMAIL=onboarding@resend.dev
 
-====================================
-IMPORTANT NOTES:
-====================================
-- FRONTEND_URL must be the Vercel URL (not localhost!)
-- This makes the email invitation link point to your deployed frontend
-- SPRING_MAIL_PASSWORD is your Gmail App Password (without spaces)
-- After adding these, click "Save Changes" and wait for Render to redeploy
+RESEND_FROM_NAME=HRMS System
 
-====================================
-HOW TO ADD IN RENDER:
-====================================
-1. Go to: https://dashboard.render.com/
-2. Select your backend service (HRMS-Backend or similar name)
-3. Click "Environment" in the left sidebar
-4. Click "Add Environment Variable" for each one above
-5. After all are added, click "Save Changes"
-6. Render will automatically redeploy (takes 2-3 minutes)
+FRONTEND_URL=https://omoi-hrms.vercel.app
+
+MONGODB_URI=mongodb+srv://username:password@cluster.mongodb.net/hrms_db
+(Your actual MongoDB connection string)
+
+JWT_SECRET=MyFixedSecretKey123456
+
+PORT=8082
+
+
+❌ REMOVE THESE VARIABLES (Delete if they exist):
+
+GMAIL_USERNAME
+GMAIL_APP_PASSWORD
+spring.mail.host
+spring.mail.port
+spring.mail.username
+spring.mail.password
+
+
+═══════════════════════════════════════════════════════════════════════════
+
+🎯 TESTING EMAIL:
+
+For initial testing, use:
+   RESEND_FROM_EMAIL=onboarding@resend.dev
+
+This is Resend's testing email address that works without domain verification.
+
+📧 PRODUCTION EMAIL (Later):
+
+Once you verify your domain with Resend, change to:
+   RESEND_FROM_EMAIL=noreply@omoikaneinnovations.com
+
+
+═══════════════════════════════════════════════════════════════════════════
+
+✅ AFTER SETTING VARIABLES:
+
+1. Save changes in Render
+2. Wait for automatic redeployment
+3. Check logs for: "📧 EMAIL PROVIDER: RESEND"
+4. Test by sending an invitation email
+
+
+═══════════════════════════════════════════════════════════════════════════

@@ -2,6 +2,7 @@ package com.omoikaneinnovation.hmrsbackend.service;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.stereotype.Service;
@@ -15,14 +16,16 @@ import jakarta.mail.internet.MimeMessage;
  * - Security risks
  * 
  * Use only for testing or small-scale applications
+ * This service is DISABLED when resend.enabled=true
  */
 @Slf4j
 @Service
+@ConditionalOnProperty(name = "resend.enabled", havingValue = "false", matchIfMissing = false)
 public class GmailSmtpService {
 
     private final JavaMailSender mailSender;
 
-    @Value("${spring.mail.username}")
+    @Value("${spring.mail.username:#{null}}")
     private String fromEmail;
 
     @Value("${spring.mail.from-name:HRMS System}")

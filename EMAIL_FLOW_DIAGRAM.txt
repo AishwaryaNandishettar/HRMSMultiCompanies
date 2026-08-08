@@ -1,0 +1,262 @@
+═══════════════════════════════════════════════════════════════════════════════
+                          EMAIL SYSTEM ARCHITECTURE
+═══════════════════════════════════════════════════════════════════════════════
+
+
+BEFORE FIX (❌ FAILING)
+═══════════════════════════════════════════════════════════════════════════════
+
+┌─────────────────┐
+│   Frontend      │
+│  User clicks    │
+│  "Send Invites" │
+└────────┬────────┘
+         │
+         │ POST /api/employees/bulk-onboard
+         ▼
+┌─────────────────────────────────────────┐
+│     OnboardingService.java              │
+│  sendInvitationEmail()                  │
+└────────┬────────────────────────────────┘
+         │
+         │ emailService.sendInviteEmail()
+         ▼
+┌─────────────────────────────────────────┐
+│     EmailService.java                   │
+│  sendSingleEmail()                      │
+└────────┬────────────────────────────────┘
+         │
+         │ Should use ResendEmailService
+         │ BUT...
+         ▼
+┌─────────────────────────────────────────┐
+│     EmailConfig.java                    │
+│  ❌ JavaMailSender bean created         │
+│  ❌ Requires Gmail SMTP properties      │
+│  ❌ Properties not set (removed)        │
+└────────┬────────────────────────────────┘
+         │
+         │ Tries to connect...
+         ▼
+┌─────────────────────────────────────────┐
+│     smtp.gmail.com:587                  │
+│  ❌ Connection attempt...               │
+│  ❌ Timeout after 10 seconds            │
+│  ❌ SocketTimeoutException              │
+└─────────────────────────────────────────┘
+         │
+         ▼
+    ❌ EMAIL FAILED
+
+
+AFTER FIX (✅ WORKING)
+═══════════════════════════════════════════════════════════════════════════════
+
+┌─────────────────┐
+│   Frontend      │
+│  User clicks    │
+│  "Send Invites" │
+└────────┬────────┘
+         │
+         │ POST /api/employees/bulk-onboard
+         ▼
+┌─────────────────────────────────────────┐
+│     OnboardingService.java              │
+│  sendInvitationEmail()                  │
+└────────┬────────────────────────────────┘
+         │
+         │ emailService.sendInviteEmail()
+         ▼
+┌─────────────────────────────────────────┐
+│     EmailService.java                   │
+│  ✅ Check: resendEnabled = true         │
+│  ✅ Use: resendService.sendEmail()      │
+└────────┬────────────────────────────────┘
+         │
+         │ resendService.sendEmail()
+         ▼
+┌─────────────────────────────────────────┐
+│     ResendEmailService.java             │
+│  ✅ HTTP POST to Resend API             │
+│  ✅ Authorization: Bearer re_xxxxx      │
+│  ✅ Body: from, to, subject, html       │
+└────────┬────────────────────────────────┘
+         │
+         │ HTTPS request
+         ▼
+┌─────────────────────────────────────────┐
+│     https://api.resend.com/emails       │
+│  ✅ Process email                       │
+│  ✅ Return 200 OK                       │
+│  ✅ Email ID: 49a3999c-0ce1-4ea6...    │
+└────────┬────────────────────────────────┘
+         │
+         │ Deliver email
+         ▼
+┌─────────────────────────────────────────┐
+│     Recipient's Inbox                   │
+│  ✅ Email delivered                     │
+│  ✅ Subject: HRMS Invitation            │
+│  ✅ From: HRMS System                   │
+└─────────────────────────────────────────┘
+         │
+         ▼
+    ✅ EMAIL SUCCESS
+
+
+BEAN CREATION LOGIC
+═══════════════════════════════════════════════════════════════════════════════
+
+BEFORE FIX:
+────────────────────────────────────────────────────────────────────────────
+
+Application Startup
+         │
+         ▼
+┌─────────────────────────────────────────┐
+│  EmailConfig.java                       │
+│  @Bean JavaMailSender javaMailSender()  │
+│  ❌ Always created                      │
+└────────┬────────────────────────────────┘
+         │
+         │ Needs these properties:
+         │ - spring.mail.host
+         │ - spring.mail.username
+         │ - spring.mail.password
+         ▼
+┌─────────────────────────────────────────┐
+│  application.properties                 │
+│  ❌ Properties removed                  │
+│  ❌ Bean creation tries anyway          │
+└────────┬────────────────────────────────┘
+         │
+         ▼
+┌─────────────────────────────────────────┐
+│  GmailSmtpService                       │
+│  @Autowired JavaMailSender mailSender   │
+│  ❌ Always created                      │
+│  ❌ Tries to inject JavaMailSender      │
+└─────────────────────────────────────────┘
+         │
+         ▼
+    ❌ Connects to Gmail SMTP
+    ❌ Connection fails
+
+
+AFTER FIX:
+────────────────────────────────────────────────────────────────────────────
+
+Application Startup
+         │
+         ▼
+┌─────────────────────────────────────────┐
+│  Check environment variable             │
+│  RESEND_ENABLED = true                  │
+└────────┬────────────────────────────────┘
+         │
+         ▼
+┌─────────────────────────────────────────┐
+│  EmailConfig.java                       │
+│  @ConditionalOnProperty                 │
+│  (resend.enabled = false)               │
+│  ✅ Condition NOT met                   │
+│  ✅ JavaMailSender NOT created          │
+└─────────────────────────────────────────┘
+         │
+         ▼
+┌─────────────────────────────────────────┐
+│  GmailSmtpService                       │
+│  @ConditionalOnProperty                 │
+│  (resend.enabled = false)               │
+│  ✅ Condition NOT met                   │
+│  ✅ Service NOT created                 │
+└─────────────────────────────────────────┘
+         │
+         ▼
+┌─────────────────────────────────────────┐
+│  ResendEmailService                     │
+│  ✅ Always available                    │
+│  ✅ Used for all emails                 │
+└─────────────────────────────────────────┘
+         │
+         ▼
+    ✅ No Gmail SMTP connections
+    ✅ All emails via Resend API
+
+
+CONFIGURATION FLOW
+═══════════════════════════════════════════════════════════════════════════════
+
+Render Environment Variables
+    │
+    ├─► RESEND_ENABLED=true
+    │   └─► Controls bean creation
+    │       ├─► JavaMailSender: NOT created ✅
+    │       └─► GmailSmtpService: NOT created ✅
+    │
+    ├─► RESEND_API_KEY=re_xxxxx
+    │   └─► Used by ResendEmailService
+    │       └─► Authorization header
+    │
+    ├─► RESEND_FROM_EMAIL=onboarding@resend.dev
+    │   └─► Email sender address
+    │
+    └─► RESEND_FROM_NAME=HRMS System
+        └─► Display name in email client
+
+
+KEY CLASSES
+═══════════════════════════════════════════════════════════════════════════════
+
+1. EmailConfig.java
+   ├─► Creates JavaMailSender bean
+   ├─► Only when resend.enabled=false
+   └─► ✅ Conditional creation
+
+2. GmailSmtpService.java
+   ├─► Gmail SMTP implementation
+   ├─► Only active when resend.enabled=false
+   └─► ✅ Conditionally disabled
+
+3. ResendEmailService.java
+   ├─► Resend API implementation
+   ├─► Always available
+   └─► ✅ Primary email service
+
+4. EmailService.java
+   ├─► Main email orchestration
+   ├─► Checks resendEnabled flag
+   ├─► Uses ResendEmailService when true
+   └─► ✅ Correct routing
+
+5. OnboardingService.java
+   ├─► Business logic
+   ├─► Calls EmailService
+   └─► ✅ No changes needed
+
+
+ERROR HANDLING
+═══════════════════════════════════════════════════════════════════════════════
+
+BEFORE:
+    Email send → Gmail SMTP → Timeout → ❌ Error logged → User sees failure
+
+AFTER:
+    Email send → Resend API → 200 OK → ✅ Success logged → User sees success
+
+
+SUCCESS METRICS
+═══════════════════════════════════════════════════════════════════════════════
+
+✅ Application starts successfully
+✅ No Gmail SMTP connection attempts
+✅ Logs show "EMAIL PROVIDER: RESEND"
+✅ HTTP 200 OK from Resend API
+✅ Email delivered to inbox
+✅ Frontend shows success message
+✅ Resend dashboard shows delivery
+
+
+═══════════════════════════════════════════════════════════════════════════════
+                              END OF DIAGRAM
+═══════════════════════════════════════════════════════════════════════════════

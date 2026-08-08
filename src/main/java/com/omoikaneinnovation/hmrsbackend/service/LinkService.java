@@ -17,7 +17,7 @@ public class LinkService {
     @Autowired
     private JwtUtil jwtUtil;
 
-    @Autowired
+    @Autowired(required = false)
     private JavaMailSender mailSender;
 
     public void sendSecureLink(String userEmail, long expiryMillis) {

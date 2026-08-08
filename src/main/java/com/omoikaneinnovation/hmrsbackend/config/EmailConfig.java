@@ -1,6 +1,7 @@
 package com.omoikaneinnovation.hmrsbackend.config;
 
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.mail.javamail.JavaMailSender;
@@ -19,16 +20,16 @@ import java.util.concurrent.Executor;
 @EnableScheduling
 public class EmailConfig {
 
-    @Value("${spring.mail.host}")
+    @Value("${spring.mail.host:#{null}}")
     private String mailHost;
 
-    @Value("${spring.mail.port}")
+    @Value("${spring.mail.port:587}")
     private int mailPort;
 
-    @Value("${spring.mail.username}")
+    @Value("${spring.mail.username:#{null}}")
     private String mailUsername;
 
-    @Value("${spring.mail.password}")
+    @Value("${spring.mail.password:#{null}}")
     private String mailPassword;
 
     @Value("${spring.task.execution.pool.core-size:5}")
@@ -40,7 +41,12 @@ public class EmailConfig {
     @Value("${spring.task.execution.pool.queue-capacity:100}")
     private int queueCapacity;
 
+    /**
+     * JavaMailSender bean - ONLY created when using SMTP (not Resend)
+     * This bean is disabled when resend.enabled=true
+     */
     @Bean
+    @ConditionalOnProperty(name = "resend.enabled", havingValue = "false", matchIfMissing = false)
     public JavaMailSender javaMailSender() {
         // Disable SSL certificate validation for development
         disableSSLValidation();
@@ -56,13 +62,13 @@ public class EmailConfig {
         props.put("mail.transport.protocol", "smtp");
         props.put("mail.smtp.auth", "true");
         props.put("mail.smtp.starttls.enable", "true");
-        props.put("mail.smtp.starttls.required", "false"); // Changed to false
-        props.put("mail.smtp.ssl.trust", "*"); // Trust all hosts
-        props.put("mail.smtp.ssl.checkserveridentity", "false"); // Disable server identity check
+        props.put("mail.smtp.starttls.required", "false");
+        props.put("mail.smtp.ssl.trust", "*");
+        props.put("mail.smtp.ssl.checkserveridentity", "false");
         props.put("mail.smtp.connectiontimeout", "10000");
         props.put("mail.smtp.timeout", "10000");
         props.put("mail.smtp.writetimeout", "10000");
-        props.put("mail.debug", "true"); // Enable debug for troubleshooting
+        props.put("mail.debug", "true");
         
         return mailSender;
     }
