@@ -21,11 +21,20 @@ import java.util.concurrent.Executor;
 public class EmailConfig {
 
     // ===============================================
-    // NO JAVAMAIL CONFIGURATION
+    // SMTP CONFIGURATION (Fallback only, not used on Render)
     // ===============================================
-    // JavaMailSender bean has been completely removed
-    // We use Resend HTTP API only (no SMTP)
-    // ===============================================
+    
+    @Value("${spring.mail.host:smtp.gmail.com}")
+    private String mailHost;
+
+    @Value("${spring.mail.port:587}")
+    private int mailPort;
+
+    @Value("${spring.mail.username:#{null}}")
+    private String mailUsername;
+
+    @Value("${spring.mail.password:#{null}}")
+    private String mailPassword;
 
     @Value("${spring.task.execution.pool.core-size:5}")
     private int corePoolSize;
@@ -35,6 +44,39 @@ public class EmailConfig {
 
     @Value("${spring.task.execution.pool.queue-capacity:100}")
     private int queueCapacity;
+
+    /**
+     * JavaMailSender bean - created but NOT USED when Resend is enabled
+     * Only exists as fallback for local development
+     */
+    @Bean
+    public JavaMailSender javaMailSender() {
+        JavaMailSenderImpl mailSender = new JavaMailSenderImpl();
+        
+        if (mailHost != null) {
+            mailSender.setHost(mailHost);
+        }
+        mailSender.setPort(mailPort);
+        
+        if (mailUsername != null) {
+            mailSender.setUsername(mailUsername);
+        }
+        if (mailPassword != null) {
+            mailSender.setPassword(mailPassword);
+        }
+        
+        Properties props = mailSender.getJavaMailProperties();
+        props.put("mail.transport.protocol", "smtp");
+        props.put("mail.smtp.auth", "true");
+        props.put("mail.smtp.starttls.enable", "true");
+        props.put("mail.smtp.starttls.required", "false");
+        props.put("mail.smtp.ssl.trust", "*");
+        props.put("mail.smtp.connectiontimeout", "10000");
+        props.put("mail.smtp.timeout", "10000");
+        props.put("mail.smtp.writetimeout", "10000");
+        
+        return mailSender;
+    }
 
     @Bean(name = "emailTaskExecutor")
     public Executor emailTaskExecutor() {
