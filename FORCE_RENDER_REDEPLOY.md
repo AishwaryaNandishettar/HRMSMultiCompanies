@@ -1,77 +1,138 @@
-# 🔄 Force Render to Redeploy with New SendGrid Code
+# 🚨 FORCE Render to Redeploy with New Code
 
-## The Issue:
-Render may still be running the old code that uses Resend. We need to force it to pull the latest SendGrid code from GitHub.
+## Problem
+Render is still running OLD code that uses Gmail SMTP, even though:
+- ✅ You updated environment variables
+- ✅ You committed and pushed the fixed code
+- ❌ Render hasn't picked up the changes
 
-## STEPS:
+## Solution: Force Clear Cache and Redeploy
 
-### 1. Go to Render Dashboard
-https://dashboard.render.com
+### Step 1: Clear Build Cache
 
-### 2. Click on Your Service
-Click on: **LatestFinalHrmsApplication**
+1. Go to https://dashboard.render.com
+2. Click on your **HRMS Backend** service
+3. Click **"Settings"** (left sidebar)
+4. Scroll down to **"Build & Deploy"** section
+5. Find **"Clear build cache"** button
+6. Click **"Clear Build Cache"**
+7. Confirm the action
 
-### 3. Force Manual Deploy
-- Click **"Manual Deploy"** button (top right)
-- Select **"Deploy latest commit"**
-- Click **"Deploy"**
+### Step 2: Manual Deploy with Clean Build
 
-### 4. Watch the Deployment
-- Click on **"Logs"** tab
-- Wait for deployment to complete (2-5 minutes)
-- Look for: **"Build successful"** and **"Live"** status
+1. Go back to your service dashboard
+2. Click **"Manual Deploy"** (top right dropdown)
+3. Select **"Clear build cache & deploy"**
+4. Wait for deployment (3-5 minutes)
 
-### 5. Check for SendGrid Logs
-After deployment completes, try sending an invite from Vercel, then check logs for:
+### Step 3: Monitor Deployment Logs
 
-**✅ Success:**
+Watch the logs during deployment. You should see:
+
 ```
-📧 Sending email via SendGrid to: [email]
-✅ SendGrid: Email sent successfully
-```
-
-**❌ Still using old code (Resend):**
-```
-❌ DETAILED ERROR sending email via Resend HTTP API
-```
-
-If you still see Resend errors, the deployment didn't work properly.
-
-### 6. If Still Failing - Clear Build Cache
-
-Sometimes Render caches old builds. To clear:
-
-1. Go to your service settings
-2. Scroll to bottom
-3. Click **"Clear build cache & deploy"**
-4. Wait for rebuild (takes longer, 5-10 minutes)
-
-## Alternative: Check Build Logs
-
-1. Click on the latest deployment
-2. Look at **Build logs** (not runtime logs)
-3. Search for `SendGridEmailService` in the logs
-4. If you DON'T see it, the new code isn't being compiled
-
-This means there might be a Java compilation error preventing the new code from building.
-
-## If Build Fails:
-
-Look for errors like:
-```
-error: cannot find symbol
-symbol: class SendGridEmailService
+==> Building...
+==> Cloning from GitHub...
+==> Running: mvn clean install -DskipTests
+==> BUILD SUCCESS
+==> Starting application...
 ```
 
-This would mean the SendGrid dependency isn't loading properly.
+### Step 4: Check Application Startup Logs
 
-## Next Steps After Successful Deployment:
+After deployment completes, check the application logs. Look for:
 
-1. Open Vercel app: https://omoi-hrms.vercel.app
-2. Login and send invite
-3. Check Gmail inbox
-4. Should receive email! ✅
+```
+✅ SSL certificate validation disabled for development
+✅ Started HRMSApplication in X seconds
+```
+
+**Most importantly, you should NOT see:**
+```
+❌ Creating JavaMailSender bean...
+❌ DEBUG SMTP: trying to connect...
+```
+
+### Step 5: Test Email Sending
+
+1. Go to https://omoi-hrms.vercel.app
+2. Send a test invitation
+3. Watch Render logs for:
+   ```
+   ================================
+   📧 EMAIL PROVIDER: RESEND
+   📧 RESEND ENABLED: true
+   ✅ RESEND EMAIL SENT SUCCESSFULLY
+   ================================
+   ```
 
 ---
 
-**DO THIS NOW:** Go to Render → Manual Deploy → Deploy latest commit
+## Alternative: Trigger Redeploy via Git
+
+If the above doesn't work, make a small change and commit:
+
+```bash
+cd "d:\New folder\HRMSProject (2)\HRMSProject"
+
+# Add a comment to trigger rebuild
+echo "# Force redeploy" >> README.md
+
+git add README.md
+git commit -m "Force redeploy"
+git push origin main
+```
+
+Render will automatically redeploy when it detects a new commit.
+
+---
+
+## Verify Environment Variables Are Loaded
+
+After redeployment, check the logs for these lines at startup:
+
+```
+resend.enabled = true
+resend.from.email = onboarding@resend.dev
+```
+
+If you see these, the environment variables are loaded correctly.
+
+---
+
+## If STILL Not Working
+
+### Check Render Service URL
+
+Make sure you're checking logs for the CORRECT service:
+- Go to Render Dashboard
+- Verify the service name
+- Check if there are multiple services running
+- Make sure you're not checking an old/stopped service
+
+### Check Deploy Branch
+
+1. In Render → Settings
+2. Find **"Branch"** setting
+3. Make sure it's set to **"main"** (or your correct branch)
+4. If it's set to a different branch, change it and redeploy
+
+### Check Build Command
+
+1. In Render → Settings → "Build & Deploy"
+2. Verify **Build Command**: `mvn clean install -DskipTests`
+3. Verify **Start Command**: `java -jar target/*.jar`
+
+---
+
+## Expected Timeline
+
+- Clear cache: 10 seconds
+- Build: 2-3 minutes
+- Start: 30-60 seconds
+- **Total: ~4 minutes**
+
+After this, emails should work immediately!
+
+---
+
+**Do this NOW and report back with the new logs!** 🚀

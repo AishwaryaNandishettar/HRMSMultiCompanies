@@ -1,0 +1,207 @@
+═══════════════════════════════════════════════════════════════════════════════
+            🚨 CRITICAL: Your Render Environment Variables Are WRONG!
+═══════════════════════════════════════════════════════════════════════════════
+
+
+YOUR CURRENT RENDER CONFIG (❌ WRONG - CAUSING GMAIL SMTP ERRORS):
+───────────────────────────────────────────────────────────────────────────────
+
+RESEND_FROM_EMAIL=aishushettar95@gmail.com          ← ❌ THIS IS GMAIL!
+spring.mail.username=aishushettar95@gmail.com        ← ❌ DELETE!
+spring.mail.password=some_password                   ← ❌ DELETE!
+spring.mail.host=smtp.gmail.com                      ← ❌ DELETE!
+spring.mail.port=587                                 ← ❌ DELETE!
+
+RESULT: Application tries to use Gmail SMTP → Connection timeout → FAIL ❌
+
+
+CORRECT RENDER CONFIG (✅ WHAT YOU NEED):
+───────────────────────────────────────────────────────────────────────────────
+
+RESEND_ENABLED=true
+RESEND_API_KEY=re_your_actual_key_here              ← ✅ Get from resend.com
+RESEND_FROM_EMAIL=onboarding@resend.dev             ← ✅ RESEND EMAIL, NOT GMAIL!
+RESEND_FROM_NAME=HRMS System
+
+RESULT: Application uses Resend API → 200 OK → Emails delivered ✅
+
+
+═══════════════════════════════════════════════════════════════════════════════
+                              THE KEY DIFFERENCE
+═══════════════════════════════════════════════════════════════════════════════
+
+❌ WRONG:  RESEND_FROM_EMAIL=aishushettar95@gmail.com
+           └─► Gmail domain triggers Gmail SMTP
+           └─► Tries to connect to smtp.gmail.com:587
+           └─► Timeout → Failure
+
+✅ CORRECT: RESEND_FROM_EMAIL=onboarding@resend.dev
+            └─► Resend domain triggers Resend API
+            └─► HTTP POST to api.resend.com
+            └─► Success → Email delivered
+
+
+═══════════════════════════════════════════════════════════════════════════════
+                         WHAT YOUR LOGS CURRENTLY SHOW
+═══════════════════════════════════════════════════════════════════════════════
+
+2026-08-08T12:03:53.101Z  INFO  c.o.hmrsbackend.service.EmailService
+FROM ADDRESS : aishushettar95@gmail.com               ← ❌ Gmail address!
+TO           : mahesh.panchal756@gmail.com
+SUBJECT      : HRMS Invitation - Welcome!
+
+DEBUG SMTP: trying to connect to host "smtp.gmail.com"  ← ❌ Gmail SMTP!
+DEBUG SMTP: port 587, isSSL false
+
+[10 seconds later...]
+
+java.net.SocketTimeoutException: Connect timed out    ← ❌ Failed!
+
+
+═══════════════════════════════════════════════════════════════════════════════
+                        WHAT LOGS SHOULD SHOW AFTER FIX
+═══════════════════════════════════════════════════════════════════════════════
+
+2026-08-08T12:10:00.000Z  INFO  c.o.hmrsbackend.service.EmailService
+================================
+📧 EMAIL PROVIDER: RESEND                             ← ✅ Using Resend!
+📧 RESEND ENABLED: true
+📧 RESEND SERVICE: Available
+📧 TO: mahesh.panchal756@gmail.com
+================================
+
+📧 RESEND EMAIL
+📧 From: HRMS System <onboarding@resend.dev>          ← ✅ Resend email!
+📧 To: mahesh.panchal756@gmail.com
+🔑 Resend API Key configured: YES
+
+📤 Sending request to Resend...
+📨 Resend response status: 200 OK                     ← ✅ Success!
+📨 Resend response body: {"id":"49a3999c-0ce1..."}
+
+✅ RESEND EMAIL SENT SUCCESSFULLY                     ← ✅ Email sent!
+
+
+═══════════════════════════════════════════════════════════════════════════════
+                           QUICK FIX INSTRUCTIONS
+═══════════════════════════════════════════════════════════════════════════════
+
+STEP 1: Go to Render Dashboard
+        https://dashboard.render.com
+        ↓
+STEP 2: Click your HRMS Backend service
+        ↓
+STEP 3: Click "Environment" tab
+        ↓
+STEP 4: CHANGE this variable:
+        ────────────────────────────────────────────────────────
+        RESEND_FROM_EMAIL
+        
+        FROM:  aishushettar95@gmail.com  ❌
+        TO:    onboarding@resend.dev     ✅
+        ────────────────────────────────────────────────────────
+        ↓
+STEP 5: DELETE these variables (if they exist):
+        ────────────────────────────────────────────────────────
+        spring.mail.username          ❌ DELETE
+        spring.mail.password          ❌ DELETE
+        spring.mail.host              ❌ DELETE
+        spring.mail.port              ❌ DELETE
+        GMAIL_USERNAME                ❌ DELETE
+        GMAIL_APP_PASSWORD            ❌ DELETE
+        ────────────────────────────────────────────────────────
+        ↓
+STEP 6: VERIFY these exist:
+        ────────────────────────────────────────────────────────
+        RESEND_ENABLED=true                      ✅
+        RESEND_API_KEY=re_xxxxxxxxxxxxx          ✅
+        RESEND_FROM_EMAIL=onboarding@resend.dev  ✅
+        RESEND_FROM_NAME=HRMS System             ✅
+        ────────────────────────────────────────────────────────
+        ↓
+STEP 7: Click "Save Changes"
+        (Render will auto-redeploy)
+        ↓
+STEP 8: Wait 2-3 minutes for deployment
+        ↓
+STEP 9: Check logs for "📧 EMAIL PROVIDER: RESEND"
+        ↓
+STEP 10: Send test invitation email
+        ↓
+        ✅ SUCCESS!
+
+
+═══════════════════════════════════════════════════════════════════════════════
+                        WHY onboarding@resend.dev?
+═══════════════════════════════════════════════════════════════════════════════
+
+Q: Why not use my Gmail address?
+A: ❌ Gmail addresses don't work with Resend API!
+   ❌ Gmail requires SMTP configuration
+   ❌ You don't want to use Gmail anyway (that's why we switched!)
+
+Q: Why onboarding@resend.dev?
+A: ✅ It's Resend's official test email address
+   ✅ Works immediately without domain verification
+   ✅ Perfect for testing and development
+   ✅ Free to use
+
+Q: Can I use my own domain email?
+A: ✅ Yes, but AFTER you verify your domain with Resend!
+   1. Go to Resend Dashboard → Domains
+   2. Add your domain (e.g., omoikaneinnovations.com)
+   3. Add DNS records (SPF, DKIM, Return-Path)
+   4. Wait for verification
+   5. Then you can use: noreply@omoikaneinnovations.com
+
+
+═══════════════════════════════════════════════════════════════════════════════
+                        COMPLETE ENVIRONMENT VARIABLES
+═══════════════════════════════════════════════════════════════════════════════
+
+Copy these EXACTLY to your Render Dashboard:
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│ KEY                        │ VALUE                                          │
+├─────────────────────────────────────────────────────────────────────────────┤
+│ MONGODB_URI                │ mongodb+srv://your-connection-string           │
+│ FRONTEND_URL               │ https://omoi-hrms.vercel.app                   │
+│ PORT                       │ 8082                                           │
+│ JWT_SECRET                 │ MyFixedSecretKey123456                         │
+│                            │                                                │
+│ RESEND_ENABLED             │ true                                           │
+│ RESEND_API_KEY             │ re_your_actual_api_key_here                    │
+│ RESEND_FROM_EMAIL          │ onboarding@resend.dev                          │
+│ RESEND_FROM_NAME           │ HRMS System                                    │
+│                            │                                                │
+│ MEETING_EMAIL_FROM_ADDRESS │ onboarding@resend.dev                          │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+DO NOT INCLUDE:
+❌ spring.mail.*
+❌ GMAIL_*
+❌ Any Gmail addresses
+
+
+═══════════════════════════════════════════════════════════════════════════════
+                              SUMMARY
+═══════════════════════════════════════════════════════════════════════════════
+
+PROBLEM:
+  You set RESEND_FROM_EMAIL to a Gmail address
+  → Application thinks you want Gmail SMTP
+  → Tries to connect to smtp.gmail.com
+  → Connection fails
+
+SOLUTION:
+  Change RESEND_FROM_EMAIL to: onboarding@resend.dev
+  → Application uses Resend API
+  → HTTP POST to api.resend.com
+  → Emails sent successfully ✅
+
+
+═══════════════════════════════════════════════════════════════════════════════
+
+🚨 DO THIS NOW: Change RESEND_FROM_EMAIL in Render to: onboarding@resend.dev
+
+═══════════════════════════════════════════════════════════════════════════════

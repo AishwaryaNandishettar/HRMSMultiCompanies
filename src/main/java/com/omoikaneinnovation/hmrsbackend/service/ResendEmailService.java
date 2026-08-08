@@ -26,6 +26,21 @@ public class ResendEmailService {
 
     private final RestTemplate restTemplate = new RestTemplate();
     private final ObjectMapper objectMapper = new ObjectMapper();
+    
+    // Log configuration at startup
+    public ResendEmailService() {
+        log.info("✅ ResendEmailService initialized");
+    }
+    
+    @jakarta.annotation.PostConstruct
+    public void init() {
+        log.info("═══════════════════════════════════════");
+        log.info("📧 RESEND EMAIL SERVICE CONFIGURATION");
+        log.info("📧 From Email: {}", fromEmail);
+        log.info("📧 From Name: {}", fromName);
+        log.info("📧 API Key configured: {}", resendApiKey != null && !resendApiKey.isBlank() ? "YES" : "NO");
+        log.info("═══════════════════════════════════════");
+    }
 
     public boolean sendEmail(String toEmail, String subject, String htmlContent) {
 

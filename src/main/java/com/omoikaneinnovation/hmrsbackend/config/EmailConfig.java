@@ -48,6 +48,10 @@ public class EmailConfig {
     @Bean
     @ConditionalOnProperty(name = "resend.enabled", havingValue = "false", matchIfMissing = false)
     public JavaMailSender javaMailSender() {
+        System.out.println("⚠️ WARNING: JavaMailSender bean is being created!");
+        System.out.println("⚠️ This means resend.enabled=false or not set correctly!");
+        System.out.println("⚠️ Check your Render environment variables!");
+        
         // Disable SSL certificate validation for development
         disableSSLValidation();
         
